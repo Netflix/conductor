@@ -12,10 +12,13 @@
  */
 package com.netflix.conductor.rest.controllers;
 
+import static com.netflix.conductor.rest.config.RequestMappingConstants.METADATA;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.service.MetadataService;
 import io.swagger.v3.oas.annotations.Operation;
+import java.util.List;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,11 +28,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-
-import static com.netflix.conductor.rest.config.RequestMappingConstants.METADATA;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequestMapping(value = METADATA)
@@ -55,8 +53,9 @@ public class MetadataResource {
 
     @Operation(summary = "Retrieves workflow definition along with blueprint")
     @GetMapping("/workflow/{name}")
-    public WorkflowDef get(@PathVariable("name") String name,
-        @RequestParam(value = "version", required = false) Integer version) {
+    public WorkflowDef get(
+            @PathVariable("name") String name,
+            @RequestParam(value = "version", required = false) Integer version) {
         return metadataService.getWorkflowDef(name, version);
     }
 
@@ -67,9 +66,11 @@ public class MetadataResource {
     }
 
     @DeleteMapping("/workflow/{name}/{version}")
-    @Operation(summary = "Removes workflow definition. It does not remove workflows associated with the definition.")
-    public void unregisterWorkflowDef(@PathVariable("name") String name,
-        @PathVariable("version") Integer version) {
+    @Operation(
+            summary =
+                    "Removes workflow definition. It does not remove workflows associated with the definition.")
+    public void unregisterWorkflowDef(
+            @PathVariable("name") String name, @PathVariable("version") Integer version) {
         metadataService.unregisterWorkflowDef(name, version);
     }
 

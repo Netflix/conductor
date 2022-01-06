@@ -17,45 +17,42 @@ package com.netflix.conductor.es7.dao.query.parser.internal;
 
 import java.io.InputStream;
 
-/**
- * @author Viren
- *
- */
+/** @author Viren */
 public class BooleanOp extends AbstractNode {
 
-	private String value;
+    private String value;
 
-	public BooleanOp(InputStream is) throws ParserException {
-		super(is);
-	}
+    public BooleanOp(InputStream is) throws ParserException {
+        super(is);
+    }
 
-	@Override
-	protected void _parse() throws Exception {
-		byte[] buffer = peek(3);
-		if(buffer.length > 1 && buffer[0] == 'O' && buffer[1] == 'R'){
-			this.value = "OR";
-		}else if(buffer.length > 2 && buffer[0] == 'A' && buffer[1] == 'N' && buffer[2] == 'D'){
-			this.value = "AND";
-		}else {
-			throw new ParserException("No valid boolean operator found...");
-		}
-		read(this.value.length());
-	}
+    @Override
+    protected void _parse() throws Exception {
+        byte[] buffer = peek(3);
+        if (buffer.length > 1 && buffer[0] == 'O' && buffer[1] == 'R') {
+            this.value = "OR";
+        } else if (buffer.length > 2 && buffer[0] == 'A' && buffer[1] == 'N' && buffer[2] == 'D') {
+            this.value = "AND";
+        } else {
+            throw new ParserException("No valid boolean operator found...");
+        }
+        read(this.value.length());
+    }
 
-	@Override
-	public String toString(){
-		return " " + value + " ";
-	}
+    @Override
+    public String toString() {
+        return " " + value + " ";
+    }
 
-	public String getOperator(){
-		return value;
-	}
+    public String getOperator() {
+        return value;
+    }
 
-	public boolean isAnd(){
-		return "AND".equals(value);
-	}
+    public boolean isAnd() {
+        return "AND".equals(value);
+    }
 
-	public boolean isOr(){
-		return "OR".equals(value);
-	}
+    public boolean isOr() {
+        return "OR".equals(value);
+    }
 }

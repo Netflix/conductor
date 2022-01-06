@@ -12,6 +12,20 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -28,27 +42,12 @@ import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.ExecutionLockService;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestDoWhile {
 
@@ -87,8 +86,19 @@ public class TestDoWhile {
         when(properties.getActiveWorkerLastPollTimeout()).thenReturn(Duration.ofSeconds(100));
         when(properties.getTaskExecutionPostponeDuration()).thenReturn(Duration.ofSeconds(60));
         when(properties.getWorkflowOffsetTimeout()).thenReturn(Duration.ofSeconds(30));
-        provider = spy(new WorkflowExecutor(deciderService, metadataDAO, queueDAO, metadataMapperService,
-            workflowStatusListener, executionDAOFacade, properties, executionLockService, systemTaskRegistry, parametersUtils));
+        provider =
+                spy(
+                        new WorkflowExecutor(
+                                deciderService,
+                                metadataDAO,
+                                queueDAO,
+                                metadataMapperService,
+                                workflowStatusListener,
+                                executionDAOFacade,
+                                properties,
+                                executionLockService,
+                                systemTaskRegistry,
+                                parametersUtils));
         WorkflowTask loopWorkflowTask1 = new WorkflowTask();
         loopWorkflowTask1.setTaskReferenceName("task1");
         loopWorkflowTask1.setName("task1");
@@ -118,8 +128,10 @@ public class TestDoWhile {
         loopWorkflowTask.setTaskReferenceName("loopTask");
         loopWorkflowTask.setType(TaskType.DO_WHILE.name());
         loopWorkflowTask.setName("loopTask");
-        loopWorkflowTask.setLoopCondition("if ($.loopTask['iteration'] < 1) { false; } else { true; }");
-        loopWorkflowTask.setLoopOver(Arrays.asList(task1.getWorkflowTask(), task2.getWorkflowTask()));
+        loopWorkflowTask.setLoopCondition(
+                "if ($.loopTask['iteration'] < 1) { false; } else { true; }");
+        loopWorkflowTask.setLoopOver(
+                Arrays.asList(task1.getWorkflowTask(), task2.getWorkflowTask()));
         loopTask.setWorkflowTask(loopWorkflowTask);
         doWhile = new DoWhile(parametersUtils);
         loopTaskDef = mock(TaskDef.class);
@@ -128,14 +140,17 @@ public class TestDoWhile {
         doReturn(task2).when(workflow).getTaskByRefName(task2.getReferenceTaskName());
         doReturn(task1).when(workflow).getTaskByRefName("task1__2");
         doReturn(task2).when(workflow).getTaskByRefName("task2__2");
-        doReturn(new HashMap<>()).when(parametersUtils)
-            .getTaskInputV2(isA(Map.class), isA(Workflow.class), isA(String.class), isA(TaskDef.class));
+        doReturn(new HashMap<>())
+                .when(parametersUtils)
+                .getTaskInputV2(
+                        isA(Map.class), isA(Workflow.class), isA(String.class), isA(TaskDef.class));
     }
 
     @Test
     public void testSingleSuccessfulIteration() {
         doReturn(Arrays.asList(task1, task2)).when(workflow).getTasks();
-        loopWorkflowTask.setLoopCondition("if ($.loopTask['iteration'] < 1) { true; } else { false; }");
+        loopWorkflowTask.setLoopCondition(
+                "if ($.loopTask['iteration'] < 1) { true; } else { false; }");
         boolean success = doWhile.execute(workflow, loopTask, provider);
         assertTrue(success);
         verify(provider, times(0)).scheduleNextIteration(loopTask, workflow);
@@ -168,7 +183,8 @@ public class TestDoWhile {
     public void testSingleIteration() {
         loopTask.setStatus(Task.Status.IN_PROGRESS);
         doReturn(Arrays.asList(task1, task2)).when(workflow).getTasks();
-        loopWorkflowTask.setLoopCondition("if ($.loopTask['iteration'] > 1) { false; } else { true; }");
+        loopWorkflowTask.setLoopCondition(
+                "if ($.loopTask['iteration'] > 1) { false; } else { true; }");
         doNothing().when(provider).scheduleNextIteration(loopTask, workflow);
         boolean success = doWhile.execute(workflow, loopTask, provider);
         assertTrue(success);
@@ -199,9 +215,13 @@ public class TestDoWhile {
         loopTask.setInputData(output);
         loopTask.setStatus(Task.Status.IN_PROGRESS);
         loopWorkflowTask.setInputParameters(output);
-        doReturn(output).when(parametersUtils)
-            .getTaskInputV2(loopTask.getWorkflowTask().getInputParameters(), workflow, loopTask.getTaskId(),
-                loopTaskDef);
+        doReturn(output)
+                .when(parametersUtils)
+                .getTaskInputV2(
+                        loopTask.getWorkflowTask().getInputParameters(),
+                        workflow,
+                        loopTask.getTaskId(),
+                        loopTaskDef);
         doReturn(Arrays.asList(task1, task2)).when(workflow).getTasks();
         loopWorkflowTask.setLoopCondition("if ($.value == 1) { false; } else { true; }");
         doNothing().when(provider).scheduleNextIteration(loopTask, workflow);
@@ -215,7 +235,8 @@ public class TestDoWhile {
     public void testSecondIteration() {
         loopTask.setStatus(Task.Status.IN_PROGRESS);
         doReturn(Arrays.asList(task1, task2)).when(workflow).getTasks();
-        loopWorkflowTask.setLoopCondition("if ($.loopTask['iteration'] > 1) { false; } else { true; }");
+        loopWorkflowTask.setLoopCondition(
+                "if ($.loopTask['iteration'] > 1) { false; } else { true; }");
         doNothing().when(provider).scheduleNextIteration(loopTask, workflow);
         boolean success = doWhile.execute(workflow, loopTask, provider);
         assertTrue(success);

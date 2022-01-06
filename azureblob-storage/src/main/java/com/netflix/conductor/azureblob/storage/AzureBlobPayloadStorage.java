@@ -39,11 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An implementation of {@link ExternalPayloadStorage} using Azure Blob for storing large JSON payload data.
+ * An implementation of {@link ExternalPayloadStorage} using Azure Blob for storing large JSON
+ * payload data.
  *
  * @see <a href="https://github.com/Azure/azure-sdk-for-java">Azure Java SDK</a>
  */
-
 public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AzureBlobPayloadStorage.class);
@@ -86,19 +86,18 @@ public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
             LOGGER.error(msg);
             throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, msg);
         }
-        blobContainerClient = blobContainerClientBuilder
-            .containerName(containerName)
-            .buildClient();
+        blobContainerClient = blobContainerClientBuilder.containerName(containerName).buildClient();
     }
 
     /**
-     * @param operation   the type of {@link Operation} to be performed
+     * @param operation the type of {@link Operation} to be performed
      * @param payloadType the {@link PayloadType} that is being accessed
-     * @return a {@link ExternalStorageLocation} object which contains the pre-signed URL and the azure blob name for
-     * the json payload
+     * @return a {@link ExternalStorageLocation} object which contains the pre-signed URL and the
+     *     azure blob name for the json payload
      */
     @Override
-    public ExternalStorageLocation getLocation(Operation operation, PayloadType payloadType, String path) {
+    public ExternalStorageLocation getLocation(
+            Operation operation, PayloadType payloadType, String path) {
         try {
             ExternalStorageLocation externalStorageLocation = new ExternalStorageLocation();
 
@@ -110,7 +109,8 @@ public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
             }
             externalStorageLocation.setPath(objectKey);
 
-            BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(objectKey).getBlockBlobClient();
+            BlockBlobClient blockBlobClient =
+                    blobContainerClient.getBlobClient(objectKey).getBlockBlobClient();
             String blobUrl = Utility.urlDecode(blockBlobClient.getBlobUrl());
 
             if (sasTokenCredential != null) {
@@ -123,11 +123,12 @@ public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
                     blobSASPermission.setWritePermission(true);
                     blobSASPermission.setCreatePermission(true);
                 }
-                BlobServiceSasSignatureValues blobServiceSasSignatureValues = new BlobServiceSasSignatureValues(
-                    OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(expirationSec),
-                    blobSASPermission
-                );
-                blobUrl = blobUrl + "?" + blockBlobClient.generateSas(blobServiceSasSignatureValues);
+                BlobServiceSasSignatureValues blobServiceSasSignatureValues =
+                        new BlobServiceSasSignatureValues(
+                                OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(expirationSec),
+                                blobSASPermission);
+                blobUrl =
+                        blobUrl + "?" + blockBlobClient.generateSas(blobServiceSasSignatureValues);
             }
 
             externalStorageLocation.setUri(blobUrl);
@@ -140,21 +141,30 @@ public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
     }
 
     /**
-     * Uploads the payload to the given azure blob name. It is expected that the caller retrieves the blob name using
-     * {@link #getLocation(Operation, PayloadType, String)} before making this call.
+     * Uploads the payload to the given azure blob name. It is expected that the caller retrieves
+     * the blob name using {@link #getLocation(Operation, PayloadType, String)} before making this
+     * call.
      *
-     * @param path        the name of the blob to be uploaded
-     * @param payload     an {@link InputStream} containing the json payload which is to be uploaded
+     * @param path the name of the blob to be uploaded
+     * @param payload an {@link InputStream} containing the json payload which is to be uploaded
      * @param payloadSize the size of the json payload in bytes
      */
     @Override
     public void upload(String path, InputStream payload, long payloadSize) {
         try {
-            BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(path).getBlockBlobClient();
-            BlobHttpHeaders blobHttpHeaders = new BlobHttpHeaders()
-                .setContentType(CONTENT_TYPE);
-            blockBlobClient.uploadWithResponse(payload, payloadSize, blobHttpHeaders,
-                null, null, null, null, null, Context.NONE);
+            BlockBlobClient blockBlobClient =
+                    blobContainerClient.getBlobClient(path).getBlockBlobClient();
+            BlobHttpHeaders blobHttpHeaders = new BlobHttpHeaders().setContentType(CONTENT_TYPE);
+            blockBlobClient.uploadWithResponse(
+                    payload,
+                    payloadSize,
+                    blobHttpHeaders,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Context.NONE);
         } catch (BlobStorageException | UncheckedIOException | UnexpectedLengthException e) {
             String msg = "Error communicating with Azure";
             LOGGER.error(msg, e);
@@ -166,15 +176,18 @@ public class AzureBlobPayloadStorage implements ExternalPayloadStorage {
      * Downloads the payload stored in an azure blob.
      *
      * @param path the path of the blob
-     * @return an input stream containing the contents of the object Caller is expected to close the input stream.
+     * @return an input stream containing the contents of the object Caller is expected to close the
+     *     input stream.
      */
     @Override
     public InputStream download(String path) {
         try {
-            BlockBlobClient blockBlobClient = blobContainerClient.getBlobClient(path).getBlockBlobClient();
+            BlockBlobClient blockBlobClient =
+                    blobContainerClient.getBlobClient(path).getBlockBlobClient();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // Avoid another call to the api to get the blob size
-            // ByteArrayOutputStream outputStream = new ByteArrayOutputStream(blockBlobClient.getProperties().value().blobSize());
+            // ByteArrayOutputStream outputStream = new
+            // ByteArrayOutputStream(blockBlobClient.getProperties().value().blobSize());
             blockBlobClient.download(outputStream);
             return new ByteArrayInputStream(outputStream.toByteArray());
         } catch (BlobStorageException | UncheckedIOException | NullPointerException e) {

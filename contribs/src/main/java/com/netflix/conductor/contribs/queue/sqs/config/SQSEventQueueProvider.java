@@ -16,13 +16,12 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.netflix.conductor.contribs.queue.sqs.SQSObservableQueue.Builder;
 import com.netflix.conductor.core.events.EventQueueProvider;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import rx.Scheduler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class SQSEventQueueProvider implements EventQueueProvider {
 
@@ -34,7 +33,8 @@ public class SQSEventQueueProvider implements EventQueueProvider {
     private final int visibilityTimeoutInSeconds;
     private final Scheduler scheduler;
 
-    public SQSEventQueueProvider(AmazonSQSClient client, SQSEventQueueProperties properties, Scheduler scheduler) {
+    public SQSEventQueueProvider(
+            AmazonSQSClient client, SQSEventQueueProperties properties, Scheduler scheduler) {
         this.client = client;
         this.batchSize = properties.getBatchSize();
         this.pollTimeInMS = properties.getPollTimeDuration().toMillis();
@@ -50,13 +50,16 @@ public class SQSEventQueueProvider implements EventQueueProvider {
     @Override
     @NonNull
     public ObservableQueue getQueue(String queueURI) {
-        return queues.computeIfAbsent(queueURI, q -> new Builder()
-            .withBatchSize(this.batchSize)
-            .withClient(client)
-            .withPollTimeInMS(this.pollTimeInMS)
-            .withQueueName(queueURI)
-            .withVisibilityTimeout(this.visibilityTimeoutInSeconds)
-            .withScheduler(scheduler)
-            .build());
+        return queues.computeIfAbsent(
+                queueURI,
+                q ->
+                        new Builder()
+                                .withBatchSize(this.batchSize)
+                                .withClient(client)
+                                .withPollTimeInMS(this.pollTimeInMS)
+                                .withQueueName(queueURI)
+                                .withVisibilityTimeout(this.visibilityTimeoutInSeconds)
+                                .withScheduler(scheduler)
+                                .build());
     }
 }

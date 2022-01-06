@@ -39,8 +39,8 @@ public class SummaryUtil {
     }
 
     /**
-     * Serializes the Workflow or Task's Input/Output object by Java's toString (default), or by a Json ObjectMapper
-     * (@see Configuration.isSummaryInputOutputJsonSerializationEnabled)
+     * Serializes the Workflow or Task's Input/Output object by Java's toString (default), or by a
+     * Json ObjectMapper (@see Configuration.isSummaryInputOutputJsonSerializationEnabled)
      *
      * @param object the Input or Output Object to serialize
      * @return the serialized string of the Input or Output object
@@ -53,7 +53,10 @@ public class SummaryUtil {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException e) {
-            logger.error("The provided value ({}) could not be serialized as Json", object.toString(), e);
+            logger.error(
+                    "The provided value ({}) could not be serialized as Json",
+                    object.toString(),
+                    e);
             throw new RuntimeException(e);
         }
     }

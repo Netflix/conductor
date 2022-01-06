@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.redis.dao;
 
+import static org.mockito.Mockito.mock;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.core.config.ConductorProperties;
@@ -27,16 +29,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.commands.JedisCommands;
 
-import static org.mockito.Mockito.mock;
-
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class RedisPollDataDAOTest extends PollDataDAOTest {
 
     private PollDataDAO redisPollDataDAO;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void init() {
@@ -45,7 +44,8 @@ public class RedisPollDataDAOTest extends PollDataDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisPollDataDAO = new RedisPollDataDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisPollDataDAO =
+                new RedisPollDataDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Override

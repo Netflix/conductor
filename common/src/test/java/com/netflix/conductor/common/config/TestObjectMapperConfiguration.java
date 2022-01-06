@@ -17,9 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Supplies the standard Conductor {@link ObjectMapper} for tests that need them.
- */
+/** Supplies the standard Conductor {@link ObjectMapper} for tests that need them. */
 @Configuration
 public class TestObjectMapperConfiguration {
 

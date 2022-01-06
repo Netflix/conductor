@@ -59,7 +59,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -82,7 +83,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -105,7 +107,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -135,7 +138,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -163,7 +167,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 1);
     }
 
@@ -185,7 +190,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -199,7 +205,7 @@ public class ConstraintParamUtilTest {
         workflowTask_1.setType(TaskType.TASK_TYPE_SIMPLE);
 
         Map<String, Object> inputParam = new HashMap<>();
-        inputParam.put("taskId", new String[]{""});
+        inputParam.put("taskId", new String[] {""});
         workflowTask_1.setInputParameters(inputParam);
 
         List<WorkflowTask> tasks = new ArrayList<>();
@@ -207,7 +213,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -229,7 +236,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 1);
     }
 
@@ -244,7 +252,8 @@ public class ConstraintParamUtilTest {
 
         Map<String, Object> inputParam = new HashMap<>();
         inputParam.put("NETFLIX_ENV", "${CPEWF_TASK_ID}");
-        inputParam.put("entryPoint", "/tools/pdfwatermarker_mux.py ${NETFLIX_ENV} ${CPEWF_TASK_ID} alpha");
+        inputParam.put(
+                "entryPoint", "/tools/pdfwatermarker_mux.py ${NETFLIX_ENV} ${CPEWF_TASK_ID} alpha");
         workflowTask_1.setInputParameters(inputParam);
 
         List<WorkflowTask> tasks = new ArrayList<>();
@@ -252,7 +261,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 
@@ -274,7 +284,8 @@ public class ConstraintParamUtilTest {
 
         workflowDef.setTasks(tasks);
 
-        List<String> results = ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
+        List<String> results =
+                ConstraintParamUtil.validateInputParam(inputParam, "task_1", workflowDef);
         assertEquals(results.size(), 0);
     }
 }

@@ -12,10 +12,10 @@
  */
 package com.netflix.conductor.es6.dao.query.parser.internal;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
 
 public class TestName extends TestAbstractParser {
 

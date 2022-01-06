@@ -33,8 +33,7 @@ public class EventResourceTest {
 
     private EventResource eventResource;
 
-    @Mock
-    private EventService mockEventService;
+    @Mock private EventService mockEventService;
 
     @Before
     public void setUp() {
@@ -68,7 +67,8 @@ public class EventResourceTest {
         eventResource.addEventHandler(eventHandler);
         List<EventHandler> listOfEventHandler = new ArrayList<>();
         listOfEventHandler.add(eventHandler);
-        when(mockEventService.getEventHandlersForEvent(anyString(), anyBoolean())).thenReturn(listOfEventHandler);
+        when(mockEventService.getEventHandlersForEvent(anyString(), anyBoolean()))
+                .thenReturn(listOfEventHandler);
         assertEquals(listOfEventHandler, eventResource.getEventHandlersForEvent("testEvent", true));
     }
 

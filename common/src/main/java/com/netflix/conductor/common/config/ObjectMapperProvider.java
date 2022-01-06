@@ -19,21 +19,20 @@ import com.netflix.conductor.common.jackson.JsonProtoModule;
 
 /**
  * A Factory class for creating a customized {@link ObjectMapper}. This is only used by the
- * conductor-client module and tests that rely on {@link ObjectMapper}.
- * See TestObjectMapperConfiguration.
+ * conductor-client module and tests that rely on {@link ObjectMapper}. See
+ * TestObjectMapperConfiguration.
  */
 public class ObjectMapperProvider {
 
     /**
-     * The customizations in this method are configured using {@link org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration}
+     * The customizations in this method are configured using {@link
+     * org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration}
      *
-     * Customizations are spread across,
-     * 1. {@link ObjectMapperBuilderConfiguration}
-     * 2. {@link ObjectMapperConfiguration}
-     * 3. {@link JsonProtoModule}
+     * <p>Customizations are spread across, 1. {@link ObjectMapperBuilderConfiguration} 2. {@link
+     * ObjectMapperConfiguration} 3. {@link JsonProtoModule}
      *
-     * IMPORTANT: Changes in this method need to be also performed in the default {@link ObjectMapper}
-     * that Spring Boot creates.
+     * <p>IMPORTANT: Changes in this method need to be also performed in the default {@link
+     * ObjectMapper} that Spring Boot creates.
      *
      * @see org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration
      */
@@ -43,7 +42,8 @@ public class ObjectMapperProvider {
         objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
         objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
         objectMapper.setDefaultPropertyInclusion(
-            JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
+                JsonInclude.Value.construct(
+                        JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
         objectMapper.registerModule(new JsonProtoModule());
         return objectMapper;
     }

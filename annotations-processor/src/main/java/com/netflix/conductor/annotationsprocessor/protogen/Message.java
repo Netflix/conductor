@@ -8,27 +8,25 @@ import com.netflix.conductor.annotationsprocessor.protogen.types.TypeMapper;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-
-import javax.lang.model.element.Modifier;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.lang.model.element.Modifier;
 
 public class Message extends AbstractMessage {
     public Message(Class<?> cls, MessageType parent) {
         super(cls, parent);
 
-        for (java.lang.reflect.Field field: clazz.getDeclaredFields()) {
+        for (java.lang.reflect.Field field : clazz.getDeclaredFields()) {
             ProtoField ann = field.getAnnotation(ProtoField.class);
-            if (ann == null)
-                continue;
+            if (ann == null) continue;
 
             fields.add(new MessageField(ann.id(), field));
         }
     }
 
     protected ProtoMessage getAnnotation() {
-        return (ProtoMessage)this.clazz.getAnnotation(ProtoMessage.class);
+        return (ProtoMessage) this.clazz.getAnnotation(ProtoMessage.class);
     }
 
     @Override
@@ -38,17 +36,16 @@ public class Message extends AbstractMessage {
 
     @Override
     protected void javaMapToProto(TypeSpec.Builder type) {
-        if (!getAnnotation().toProto() || getAnnotation().wrapper())
-            return;
+        if (!getAnnotation().toProto() || getAnnotation().wrapper()) return;
 
-        ClassName javaProtoType = (ClassName)this.type.getJavaProtoType();
+        ClassName javaProtoType = (ClassName) this.type.getJavaProtoType();
         MethodSpec.Builder method = MethodSpec.methodBuilder("toProto");
         method.addModifiers(Modifier.PUBLIC);
         method.returns(javaProtoType);
         method.addParameter(this.clazz, "from");
 
-        method.addStatement("$T to = $T.newBuilder()",
-                javaProtoType.nestedClass("Builder"), javaProtoType);
+        method.addStatement(
+                "$T to = $T.newBuilder()", javaProtoType.nestedClass("Builder"), javaProtoType);
 
         for (Field field : this.fields) {
             if (field instanceof MessageField) {
@@ -63,8 +60,7 @@ public class Message extends AbstractMessage {
 
     @Override
     protected void javaMapFromProto(TypeSpec.Builder type) {
-        if (!getAnnotation().fromProto() || getAnnotation().wrapper())
-            return;
+        if (!getAnnotation().fromProto() || getAnnotation().wrapper()) return;
 
         MethodSpec.Builder method = MethodSpec.methodBuilder("fromProto");
         method.addModifiers(Modifier.PUBLIC);
@@ -99,6 +95,7 @@ public class Message extends AbstractMessage {
         }
 
         private static Pattern CAMEL_CASE_RE = Pattern.compile("(?<=[a-z])[A-Z]");
+
         private static String toUnderscoreCase(String input) {
             Matcher m = CAMEL_CASE_RE.matcher(input);
             StringBuilder sb = new StringBuilder();
@@ -111,10 +108,9 @@ public class Message extends AbstractMessage {
 
         @Override
         public String getProtoTypeDeclaration() {
-            return String.format("%s %s = %d",
-                    getAbstractType().getProtoType(),
-                    toUnderscoreCase(getName()),
-                    getProtoIndex());
+            return String.format(
+                    "%s %s = %d",
+                    getAbstractType().getProtoType(), toUnderscoreCase(getName()), getProtoIndex());
         }
 
         @Override

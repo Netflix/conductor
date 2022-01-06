@@ -1,23 +1,22 @@
 package com.netflix.conductor.annotationsprocessor.protogen;
 
+import static org.junit.Assert.*;
+
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
-import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ProtoGenTest {
     private static final Charset charset = StandardCharsets.UTF_8;
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @Rule public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
     public void happyPath() throws Exception {
@@ -31,13 +30,13 @@ public class ProtoGenTest {
         File jarFile = new File("./build/libs/example.jar");
         assertTrue(jarFile.exists());
 
-        File mapperDir = new File(rootDir,"mapperDir");
+        File mapperDir = new File(rootDir, "mapperDir");
         mapperDir.mkdirs();
 
-        File protosDir = new File(rootDir,"protosDir");
+        File protosDir = new File(rootDir, "protosDir");
         protosDir.mkdirs();
 
-        File modelDir  = new File(protosDir,"model");
+        File modelDir = new File(protosDir, "model");
         modelDir.mkdirs();
 
         ProtoGen generator = new ProtoGen(protoPackage, javaPackage, goPackage);
@@ -47,11 +46,11 @@ public class ProtoGenTest {
 
         List<File> models = Lists.newArrayList(modelDir.listFiles());
         assertEquals(1, models.size());
-        File exampleProtoFile = models.stream().filter( f -> f.getName().equals("example.proto")).findFirst().get();
+        File exampleProtoFile =
+                models.stream().filter(f -> f.getName().equals("example.proto")).findFirst().get();
         assertTrue(exampleProtoFile.length() > 0);
         assertEquals(
                 Resources.asCharSource(Resources.getResource("example.proto.txt"), charset).read(),
                 Files.asCharSource(exampleProtoFile, charset).read());
     }
-    
 }

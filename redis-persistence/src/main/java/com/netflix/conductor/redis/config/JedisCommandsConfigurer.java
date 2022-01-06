@@ -30,17 +30,26 @@ abstract class JedisCommandsConfigurer {
     }
 
     @Bean(name = DEFAULT_CLIENT_INJECTION_NAME)
-    public JedisCommands jedisCommands(RedisProperties properties, ConductorProperties conductorProperties,
-        HostSupplier hostSupplier, TokenMapSupplier tokenMapSupplier) {
+    public JedisCommands jedisCommands(
+            RedisProperties properties,
+            ConductorProperties conductorProperties,
+            HostSupplier hostSupplier,
+            TokenMapSupplier tokenMapSupplier) {
         return createJedisCommands(properties, conductorProperties, hostSupplier, tokenMapSupplier);
     }
 
     @Bean(name = READ_CLIENT_INJECTION_NAME)
-    public JedisCommands readJedisCommands(RedisProperties properties, ConductorProperties conductorProperties,
-        HostSupplier hostSupplier, TokenMapSupplier tokenMapSupplier) {
+    public JedisCommands readJedisCommands(
+            RedisProperties properties,
+            ConductorProperties conductorProperties,
+            HostSupplier hostSupplier,
+            TokenMapSupplier tokenMapSupplier) {
         return createJedisCommands(properties, conductorProperties, hostSupplier, tokenMapSupplier);
     }
 
-    protected abstract JedisCommands createJedisCommands(RedisProperties properties,
-        ConductorProperties conductorProperties, HostSupplier hostSupplier, TokenMapSupplier tokenMapSupplier);
+    protected abstract JedisCommands createJedisCommands(
+            RedisProperties properties,
+            ConductorProperties conductorProperties,
+            HostSupplier hostSupplier,
+            TokenMapSupplier tokenMapSupplier);
 }

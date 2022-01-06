@@ -34,7 +34,8 @@ public class AMQPEventQueueProperties {
 
     private int port = PROTOCOL.PORT;
 
-    private Duration connectionTimeout = Duration.ofMillis(ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
+    private Duration connectionTimeout =
+            Duration.ofMillis(ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
 
     private boolean useNio = false;
 

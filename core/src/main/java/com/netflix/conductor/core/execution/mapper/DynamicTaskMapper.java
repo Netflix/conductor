@@ -32,8 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#DYNAMIC} to a {@link
- * Task} based on definition derived from the dynamic task name defined in {@link WorkflowTask#getInputParameters()}
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+ * TaskType#DYNAMIC} to a {@link Task} based on definition derived from the dynamic task name
+ * defined in {@link WorkflowTask#getInputParameters()}
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
@@ -58,12 +59,14 @@ public class DynamicTaskMapper implements TaskMapper {
     /**
      * This method maps a dynamic task to a {@link Task} based on the input params
      *
-     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link
-     *                           Workflow} and a string representation of the TaskId
-     * @return A {@link List} that contains a single {@link Task} with a {@link Task.Status#SCHEDULED}
+     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
+     *     WorkflowDef}, {@link Workflow} and a string representation of the TaskId
+     * @return A {@link List} that contains a single {@link Task} with a {@link
+     *     Task.Status#SCHEDULED}
      */
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) throws TerminateWorkflowException {
+    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext)
+            throws TerminateWorkflowException {
         LOGGER.debug("TaskMapperContext {} in DynamicTaskMapper", taskMapperContext);
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
@@ -77,8 +80,12 @@ public class DynamicTaskMapper implements TaskMapper {
         TaskDef taskDefinition = getDynamicTaskDefinition(taskToSchedule);
         taskToSchedule.setTaskDefinition(taskDefinition);
 
-        Map<String, Object> input = parametersUtils.getTaskInput(taskToSchedule.getInputParameters(), workflowInstance,
-            taskDefinition, taskMapperContext.getTaskId());
+        Map<String, Object> input =
+                parametersUtils.getTaskInput(
+                        taskToSchedule.getInputParameters(),
+                        workflowInstance,
+                        taskDefinition,
+                        taskMapperContext.getTaskId());
         Task dynamicTask = new Task();
         dynamicTask.setStartDelayInSeconds(taskToSchedule.getStartDelay());
         dynamicTask.setTaskId(taskMapperContext.getTaskId());
@@ -104,41 +111,55 @@ public class DynamicTaskMapper implements TaskMapper {
     /**
      * Helper method that looks into the input params and returns the dynamic task name
      *
-     * @param taskInput:     a map which contains different input parameters and also contains the mapping between the
-     *                       dynamic task name param and the actual name representing the dynamic task
+     * @param taskInput: a map which contains different input parameters and also contains the
+     *     mapping between the dynamic task name param and the actual name representing the dynamic
+     *     task
      * @param taskNameParam: the key that is used to look up the dynamic task name.
      * @return The name of the dynamic task
-     * @throws TerminateWorkflowException : In case is there is no value dynamic task name in the input parameters.
+     * @throws TerminateWorkflowException : In case is there is no value dynamic task name in the
+     *     input parameters.
      */
     @VisibleForTesting
-    String getDynamicTaskName(Map<String, Object> taskInput, String taskNameParam) throws TerminateWorkflowException {
+    String getDynamicTaskName(Map<String, Object> taskInput, String taskNameParam)
+            throws TerminateWorkflowException {
         return Optional.ofNullable(taskInput.get(taskNameParam))
-            .map(String::valueOf)
-            .orElseThrow(() -> {
-                String reason = String.format("Cannot map a dynamic task based on the parameter and input. " +
-                    "Parameter= %s, input= %s", taskNameParam, taskInput);
-                return new TerminateWorkflowException(reason);
-            });
+                .map(String::valueOf)
+                .orElseThrow(
+                        () -> {
+                            String reason =
+                                    String.format(
+                                            "Cannot map a dynamic task based on the parameter and input. "
+                                                    + "Parameter= %s, input= %s",
+                                            taskNameParam, taskInput);
+                            return new TerminateWorkflowException(reason);
+                        });
     }
 
     /**
      * This method gets the TaskDefinition for a specific {@link WorkflowTask}
      *
-     * @param taskToSchedule: An instance of {@link WorkflowTask} which has the name of the using which the {@link
-     *                        TaskDef} can be retrieved.
+     * @param taskToSchedule: An instance of {@link WorkflowTask} which has the name of the using
+     *     which the {@link TaskDef} can be retrieved.
      * @return An instance of TaskDefinition
      * @throws TerminateWorkflowException : in case of no workflow definition available
      */
     @VisibleForTesting
     TaskDef getDynamicTaskDefinition(WorkflowTask taskToSchedule)
-        throws TerminateWorkflowException { //TODO this is a common pattern in code base can be moved to DAO
+            throws TerminateWorkflowException { // TODO this is a common pattern in code base can
+        // be moved to
+        // DAO
         return Optional.ofNullable(taskToSchedule.getTaskDefinition())
-            .orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
-                .orElseThrow(() -> {
-                    String reason = String
-                        .format("Invalid task specified.  Cannot find task by name %s in the task definitions",
-                            taskToSchedule.getName());
-                    return new TerminateWorkflowException(reason);
-                }));
+                .orElseGet(
+                        () ->
+                                Optional.ofNullable(
+                                                metadataDAO.getTaskDef(taskToSchedule.getName()))
+                                        .orElseThrow(
+                                                () -> {
+                                                    String reason =
+                                                            String.format(
+                                                                    "Invalid task specified.  Cannot find task by name %s in the task definitions",
+                                                                    taskToSchedule.getName());
+                                                    return new TerminateWorkflowException(reason);
+                                                }));
     }
 }

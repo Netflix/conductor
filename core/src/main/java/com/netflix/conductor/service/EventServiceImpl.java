@@ -65,7 +65,7 @@ public class EventServiceImpl implements EventService {
     /**
      * Get event handlers for a given event.
      *
-     * @param event      Event Name
+     * @param event Event Name
      * @param activeOnly `true|false` for active only events
      * @return list of {@link EventHandler}
      */

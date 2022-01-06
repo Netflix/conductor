@@ -33,11 +33,9 @@ import org.mockito.Mock;
 
 public class AdminResourceTest {
 
-    @Mock
-    private AdminService mockAdminService;
+    @Mock private AdminService mockAdminService;
 
-    @Mock
-    private AdminResource adminResource;
+    @Mock private AdminResource adminResource;
 
     @Before
     public void before() {
@@ -59,7 +57,8 @@ public class AdminResourceTest {
         task.setReferenceTaskName("test");
         List<Task> listOfTask = new ArrayList<>();
         listOfTask.add(task);
-        when(mockAdminService.getListOfPendingTask(anyString(), anyInt(), anyInt())).thenReturn(listOfTask);
+        when(mockAdminService.getListOfPendingTask(anyString(), anyInt(), anyInt()))
+                .thenReturn(listOfTask);
         assertEquals(listOfTask, adminResource.view("testTask", 0, 100));
     }
 

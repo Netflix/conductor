@@ -16,12 +16,11 @@ import com.amazonaws.util.EC2MetadataUtils;
 import com.netflix.conductor.client.config.PropertyFactory;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface Worker {
 
@@ -36,19 +35,18 @@ public interface Worker {
      * Executes a task and returns the updated task.
      *
      * @param task Task to be executed.
-     * @return the {@link TaskResult} object If the task is not completed yet, return with the status as IN_PROGRESS.
+     * @return the {@link TaskResult} object If the task is not completed yet, return with the
+     *     status as IN_PROGRESS.
      */
     TaskResult execute(Task task);
 
     /**
-     * Called when the task coordinator fails to update the task to the server. Client should store the task id (in a
-     * database) and retry the update later
+     * Called when the task coordinator fails to update the task to the server. Client should store
+     * the task id (in a database) and retry the update later
      *
      * @param task Task which cannot be updated back to the server.
      */
-    default void onErrorUpdate(Task task) {
-
-    }
+    default void onErrorUpdate(Task task) {}
 
     /**
      * Override this method to pause the worker from polling.
@@ -72,8 +70,10 @@ public interface Worker {
             serverId = System.getenv("HOSTNAME");
         }
         if (serverId == null) {
-            serverId = (EC2MetadataUtils.getInstanceId() == null) ? System.getProperty("user.name")
-                : EC2MetadataUtils.getInstanceId();
+            serverId =
+                    (EC2MetadataUtils.getInstanceId() == null)
+                            ? System.getProperty("user.name")
+                            : EC2MetadataUtils.getInstanceId();
         }
         LoggerHolder.logger.debug("Setting worker id to {}", serverId);
         return serverId;

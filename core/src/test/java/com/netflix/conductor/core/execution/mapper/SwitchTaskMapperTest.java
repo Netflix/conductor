@@ -16,24 +16,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -48,29 +30,44 @@ import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
 import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, SwitchTaskMapperTest.TestConfiguration.class})
+@ContextConfiguration(
+        classes = {
+            TestObjectMapperConfiguration.class,
+            SwitchTaskMapperTest.TestConfiguration.class
+        })
 @RunWith(SpringRunner.class)
 public class SwitchTaskMapperTest {
 
     private ParametersUtils parametersUtils;
     private DeciderService deciderService;
-    //Subject
+    // Subject
     private SwitchTaskMapper switchTaskMapper;
 
     @Configuration
     @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans.
-    public static class TestConfiguration {
-    }
+    public static class TestConfiguration {}
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private Map<String, Evaluator> evaluators;
+    @Autowired private Map<String, Evaluator> evaluators;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     Map<String, Object> ip1;
     WorkflowTask task1;
@@ -107,15 +104,15 @@ public class SwitchTaskMapperTest {
     @Test
     public void getMappedTasks() {
 
-        //Given
-        //Task Definition
+        // Given
+        // Task Definition
         TaskDef taskDef = new TaskDef();
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("Id", "${workflow.input.Id}");
         List<Map<String, Object>> taskDefinitionInput = new LinkedList<>();
         taskDefinitionInput.add(inputMap);
 
-        //Switch task instance
+        // Switch task instance
         WorkflowTask switchTask = new WorkflowTask();
         switchTask.setType(TaskType.SWITCH.name());
         switchTask.setName("Switch");
@@ -124,12 +121,12 @@ public class SwitchTaskMapperTest {
         switchTask.getInputParameters().put("Id", "${workflow.input.Id}");
         switchTask.setEvaluatorType(JavascriptEvaluator.NAME);
         switchTask.setExpression(
-            "if ($.Id == null) 'bad input'; else if ( ($.Id != null && $.Id % 2 == 0)) 'even'; else 'odd'; ");
+                "if ($.Id == null) 'bad input'; else if ( ($.Id != null && $.Id % 2 == 0)) 'even'; else 'odd'; ");
         Map<String, List<WorkflowTask>> decisionCases = new HashMap<>();
         decisionCases.put("even", Collections.singletonList(task2));
         decisionCases.put("odd", Collections.singletonList(task3));
         switchTask.setDecisionCases(decisionCases);
-        //Workflow instance
+        // Workflow instance
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setSchemaVersion(2);
 
@@ -143,30 +140,32 @@ public class SwitchTaskMapperTest {
         body.put("input", taskDefinitionInput);
         taskDef.getInputTemplate().putAll(body);
 
-        Map<String, Object> input = parametersUtils.getTaskInput(switchTask.getInputParameters(),
-            workflowInstance, null, null);
+        Map<String, Object> input =
+                parametersUtils.getTaskInput(
+                        switchTask.getInputParameters(), workflowInstance, null, null);
 
         Task theTask = new Task();
         theTask.setReferenceTaskName("Foo");
         theTask.setTaskId(IDGenerator.generate());
 
         when(deciderService.getTasksToBeScheduled(workflowInstance, task2, 0, null))
-            .thenReturn(Collections.singletonList(theTask));
+                .thenReturn(Collections.singletonList(theTask));
 
-        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
-            .withWorkflowDefinition(workflowDef)
-            .withWorkflowInstance(workflowInstance)
-            .withTaskToSchedule(switchTask)
-            .withTaskInput(input)
-            .withRetryCount(0)
-            .withTaskId(IDGenerator.generate())
-            .withDeciderService(deciderService)
-            .build();
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowInstance(workflowInstance)
+                        .withTaskToSchedule(switchTask)
+                        .withTaskInput(input)
+                        .withRetryCount(0)
+                        .withTaskId(IDGenerator.generate())
+                        .withDeciderService(deciderService)
+                        .build();
 
-        //When
+        // When
         List<Task> mappedTasks = switchTaskMapper.getMappedTasks(taskMapperContext);
 
-        //Then
+        // Then
         assertEquals(2, mappedTasks.size());
         assertEquals("switchTask", mappedTasks.get(0).getReferenceTaskName());
         assertEquals("Foo", mappedTasks.get(1).getReferenceTaskName());
@@ -175,15 +174,15 @@ public class SwitchTaskMapperTest {
     @Test
     public void getMappedTasksWithValueParamEvaluator() {
 
-        //Given
-        //Task Definition
+        // Given
+        // Task Definition
         TaskDef taskDef = new TaskDef();
         Map<String, Object> inputMap = new HashMap<>();
         inputMap.put("Id", "${workflow.input.Id}");
         List<Map<String, Object>> taskDefinitionInput = new LinkedList<>();
         taskDefinitionInput.add(inputMap);
 
-        //Switch task instance
+        // Switch task instance
         WorkflowTask switchTask = new WorkflowTask();
         switchTask.setType(TaskType.SWITCH.name());
         switchTask.setName("Switch");
@@ -196,7 +195,7 @@ public class SwitchTaskMapperTest {
         decisionCases.put("even", Collections.singletonList(task2));
         decisionCases.put("odd", Collections.singletonList(task3));
         switchTask.setDecisionCases(decisionCases);
-        //Workflow instance
+        // Workflow instance
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setSchemaVersion(2);
 
@@ -210,30 +209,32 @@ public class SwitchTaskMapperTest {
         body.put("input", taskDefinitionInput);
         taskDef.getInputTemplate().putAll(body);
 
-        Map<String, Object> input = parametersUtils.getTaskInput(switchTask.getInputParameters(),
-              workflowInstance, null, null);
+        Map<String, Object> input =
+                parametersUtils.getTaskInput(
+                        switchTask.getInputParameters(), workflowInstance, null, null);
 
         Task theTask = new Task();
         theTask.setReferenceTaskName("Foo");
         theTask.setTaskId(IDGenerator.generate());
 
         when(deciderService.getTasksToBeScheduled(workflowInstance, task2, 0, null))
-              .thenReturn(Collections.singletonList(theTask));
+                .thenReturn(Collections.singletonList(theTask));
 
-        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
-              .withWorkflowDefinition(workflowDef)
-              .withWorkflowInstance(workflowInstance)
-              .withTaskToSchedule(switchTask)
-              .withTaskInput(input)
-              .withRetryCount(0)
-              .withTaskId(IDGenerator.generate())
-              .withDeciderService(deciderService)
-              .build();
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowInstance(workflowInstance)
+                        .withTaskToSchedule(switchTask)
+                        .withTaskInput(input)
+                        .withRetryCount(0)
+                        .withTaskId(IDGenerator.generate())
+                        .withDeciderService(deciderService)
+                        .build();
 
-        //When
+        // When
         List<Task> mappedTasks = switchTaskMapper.getMappedTasks(taskMapperContext);
 
-        //Then
+        // Then
         assertEquals(2, mappedTasks.size());
         assertEquals("switchTask", mappedTasks.get(0).getReferenceTaskName());
         assertEquals("Foo", mappedTasks.get(1).getReferenceTaskName());

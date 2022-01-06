@@ -36,7 +36,8 @@ public class MySQLConfiguration {
 
     @Bean
     @DependsOn({"flyway", "flywayInitializer"})
-    public MySQLMetadataDAO mySqlMetadataDAO(ObjectMapper objectMapper, DataSource dataSource, MySQLProperties properties) {
+    public MySQLMetadataDAO mySqlMetadataDAO(
+            ObjectMapper objectMapper, DataSource dataSource, MySQLProperties properties) {
         return new MySQLMetadataDAO(objectMapper, dataSource, properties);
     }
 

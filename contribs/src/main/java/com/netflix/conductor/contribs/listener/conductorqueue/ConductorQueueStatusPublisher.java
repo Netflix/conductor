@@ -24,12 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Publishes a {@link Message} containing a {@link WorkflowSummary} to the undlerying {@link QueueDAO} implementation on
- * a workflow completion or termination event.
+ * Publishes a {@link Message} containing a {@link WorkflowSummary} to the undlerying {@link
+ * QueueDAO} implementation on a workflow completion or termination event.
  */
 public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConductorQueueStatusPublisher.class);
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(ConductorQueueStatusPublisher.class);
     private final QueueDAO queueDAO;
     private final ObjectMapper objectMapper;
 
@@ -37,8 +38,10 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
     private final String failureStatusQueue;
     private final String finalizeStatusQueue;
 
-    public ConductorQueueStatusPublisher(QueueDAO queueDAO, ObjectMapper objectMapper,
-        ConductorQueueStatusPublisherProperties properties) {
+    public ConductorQueueStatusPublisher(
+            QueueDAO queueDAO,
+            ObjectMapper objectMapper,
+            ConductorQueueStatusPublisherProperties properties) {
         this.queueDAO = queueDAO;
         this.objectMapper = objectMapper;
         this.successStatusQueue = properties.getSuccessQueue();
@@ -70,7 +73,8 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
         try {
             jsonWfSummary = objectMapper.writeValueAsString(summary);
         } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to convert WorkflowSummary: {} to String. Exception: {}", summary, e);
+            LOGGER.error(
+                    "Failed to convert WorkflowSummary: {} to String. Exception: {}", summary, e);
             throw new RuntimeException(e);
         }
         return new Message(workflow.getWorkflowId(), jsonWfSummary, null);

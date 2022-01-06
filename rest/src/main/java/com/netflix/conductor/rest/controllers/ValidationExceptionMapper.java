@@ -32,9 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * This class converts Hibernate {@link ValidationException} into http response.
- */
+/** This class converts Hibernate {@link ValidationException} into http response. */
 @RestControllerAdvice
 @Order(ValidationExceptionMapper.ORDER)
 public class ValidationExceptionMapper {
@@ -46,7 +44,8 @@ public class ValidationExceptionMapper {
     private final String host = Utils.getServerId();
 
     @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> toResponse(HttpServletRequest request, ValidationException exception) {
+    public ResponseEntity<ErrorResponse> toResponse(
+            HttpServletRequest request, ValidationException exception) {
         logException(request, exception);
 
         HttpStatus httpStatus;
@@ -73,16 +72,23 @@ public class ValidationExceptionMapper {
         }
     }
 
-    private ErrorResponse constraintViolationExceptionToErrorResponse(ConstraintViolationException exception) {
+    private ErrorResponse constraintViolationExceptionToErrorResponse(
+            ConstraintViolationException exception) {
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
         errorResponse.setMessage("Validation failed, check below errors for detail.");
 
         List<ValidationError> validationErrors = new ArrayList<>();
 
-        exception.getConstraintViolations().forEach(e ->
-            validationErrors.add(new ValidationError(getViolationPath(e), e.getMessage(),
-                getViolationInvalidValue(e.getInvalidValue()))));
+        exception
+                .getConstraintViolations()
+                .forEach(
+                        e ->
+                                validationErrors.add(
+                                        new ValidationError(
+                                                getViolationPath(e),
+                                                e.getMessage(),
+                                                getViolationInvalidValue(e.getInvalidValue()))));
 
         errorResponse.setValidationErrors(validationErrors);
         return errorResponse;
@@ -130,7 +136,10 @@ public class ValidationExceptionMapper {
     }
 
     private void logException(HttpServletRequest request, ValidationException exception) {
-        LOGGER.error(String.format("Error %s url: '%s'", exception.getClass().getSimpleName(),
-            request.getRequestURI()), exception);
+        LOGGER.error(
+                String.format(
+                        "Error %s url: '%s'",
+                        exception.getClass().getSimpleName(), request.getRequestURI()),
+                exception);
     }
 }

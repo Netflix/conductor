@@ -25,7 +25,8 @@ import org.springframework.context.annotation.Configuration;
 public class MetricsRegistryConfiguration {
 
     public static final MetricRegistry METRIC_REGISTRY = new MetricRegistry();
-    public static final MetricsRegistry METRICS_REGISTRY = new MetricsRegistry(Clock.SYSTEM, METRIC_REGISTRY);
+    public static final MetricsRegistry METRICS_REGISTRY =
+            new MetricsRegistry(Clock.SYSTEM, METRIC_REGISTRY);
 
     static {
         Spectator.globalRegistry().add(METRICS_REGISTRY);
@@ -41,4 +42,3 @@ public class MetricsRegistryConfiguration {
         return METRICS_REGISTRY;
     }
 }
-

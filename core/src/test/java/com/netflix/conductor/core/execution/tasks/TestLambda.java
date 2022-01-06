@@ -12,20 +12,17 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
-import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-/**
- * @author x-ultra
- */
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Test;
+
+/** @author x-ultra */
 public class TestLambda {
 
     private final Workflow workflow = new Workflow();

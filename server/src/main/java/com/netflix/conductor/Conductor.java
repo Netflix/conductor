@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor;
 
+import java.io.IOException;
+import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -20,11 +22,9 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
-import java.util.Properties;
-
 // Prevents from the datasource beans to be loaded, AS they are needed only for specific databases.
-// In case that SQL database is selected this class will be imported back in the appropriate database persistence module.
+// In case that SQL database is selected this class will be imported back in the appropriate
+// database persistence module.
 @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
 public class Conductor {
 
@@ -37,10 +37,10 @@ public class Conductor {
     }
 
     /**
-     * Reads properties from the location specified in <code>CONDUCTOR_CONFIG_FILE</code>
-     * and sets them as system properties so they override the default properties.
-     * <p>
-     * Spring Boot property hierarchy is documented here,
+     * Reads properties from the location specified in <code>CONDUCTOR_CONFIG_FILE</code> and sets
+     * them as system properties so they override the default properties.
+     *
+     * <p>Spring Boot property hierarchy is documented here,
      * https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config
      *
      * @throws IOException if file can't be read.
@@ -52,9 +52,10 @@ public class Conductor {
             if (resource.exists()) {
                 Properties properties = new Properties();
                 properties.load(resource.getInputStream());
-                properties.forEach((key, value) -> System.setProperty((String) key, (String) value));
+                properties.forEach(
+                        (key, value) -> System.setProperty((String) key, (String) value));
                 log.info("Loaded {} properties from {}", properties.size(), configFile);
-            }else {
+            } else {
                 log.warn("Ignoring {} since it does not exist", configFile);
             }
         }

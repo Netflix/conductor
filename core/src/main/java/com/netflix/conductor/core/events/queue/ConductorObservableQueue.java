@@ -43,7 +43,11 @@ public class ConductorObservableQueue implements ObservableQueue {
     private final Scheduler scheduler;
     private volatile boolean running;
 
-    ConductorObservableQueue(String queueName, QueueDAO queueDAO, ConductorProperties properties, Scheduler scheduler) {
+    ConductorObservableQueue(
+            String queueName,
+            QueueDAO queueDAO,
+            ConductorProperties properties,
+            Scheduler scheduler) {
         this.queueName = queueName;
         this.queueDAO = queueDAO;
         this.pollTimeMS = properties.getEventQueuePollInterval().toMillis();
@@ -110,15 +114,19 @@ public class ConductorObservableQueue implements ObservableQueue {
 
     private OnSubscribe<Message> getOnSubscribe() {
         return subscriber -> {
-            Observable<Long> interval = Observable.interval(pollTimeMS, TimeUnit.MILLISECONDS, scheduler);
-            interval.flatMap((Long x) -> {
-                if (!isRunning()) {
-                    LOGGER.debug("Component stopped, skip listening for messages from Conductor Queue");
-                    return Observable.from(Collections.emptyList());
-                }
-                List<Message> messages = receiveMessages();
-                return Observable.from(messages);
-            }).subscribe(subscriber::onNext, subscriber::onError);
+            Observable<Long> interval =
+                    Observable.interval(pollTimeMS, TimeUnit.MILLISECONDS, scheduler);
+            interval.flatMap(
+                            (Long x) -> {
+                                if (!isRunning()) {
+                                    LOGGER.debug(
+                                            "Component stopped, skip listening for messages from Conductor Queue");
+                                    return Observable.from(Collections.emptyList());
+                                }
+                                List<Message> messages = receiveMessages();
+                                return Observable.from(messages);
+                            })
+                    .subscribe(subscriber::onNext, subscriber::onError);
         };
     }
 

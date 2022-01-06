@@ -12,32 +12,6 @@
  */
 package com.netflix.conductor.core.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.ExternalStorageLocation;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.utils.ExternalPayloadStorage;
-import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.unit.DataSize;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +22,31 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.ExternalStorageLocation;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.core.exception.TerminateWorkflowException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.unit.DataSize;
+
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class ExternalPayloadStorageUtilsTest {
@@ -55,14 +54,12 @@ public class ExternalPayloadStorageUtilsTest {
     private ExternalPayloadStorage externalPayloadStorage;
     private ExternalStorageLocation location;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     // Subject
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void setup() {
@@ -71,17 +68,23 @@ public class ExternalPayloadStorageUtilsTest {
         location = new ExternalStorageLocation();
         location.setPath("some/test/path");
 
-        when(properties.getWorkflowInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
-        when(properties.getMaxWorkflowInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
-        when(properties.getWorkflowOutputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
-        when(properties.getMaxWorkflowOutputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
+        when(properties.getWorkflowInputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10L));
+        when(properties.getMaxWorkflowInputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10240L));
+        when(properties.getWorkflowOutputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10L));
+        when(properties.getMaxWorkflowOutputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10240L));
         when(properties.getTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
-        when(properties.getMaxTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
+        when(properties.getMaxTaskInputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10240L));
         when(properties.getTaskOutputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
-        when(properties.getMaxTaskOutputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
+        when(properties.getMaxTaskOutputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10240L));
 
-        externalPayloadStorageUtils = new ExternalPayloadStorageUtils(externalPayloadStorage, properties,
-            objectMapper);
+        externalPayloadStorageUtils =
+                new ExternalPayloadStorageUtils(externalPayloadStorage, properties, objectMapper);
     }
 
     @Test
@@ -92,7 +95,8 @@ public class ExternalPayloadStorageUtilsTest {
         payload.put("key1", "value1");
         payload.put("key2", 200);
         byte[] payloadBytes = objectMapper.writeValueAsString(payload).getBytes();
-        when(externalPayloadStorage.download(path)).thenReturn(new ByteArrayInputStream(payloadBytes));
+        when(externalPayloadStorage.download(path))
+                .thenReturn(new ByteArrayInputStream(payloadBytes));
 
         Map<String, Object> result = externalPayloadStorageUtils.downloadPayload(path);
         assertNotNull(result);
@@ -104,21 +108,28 @@ public class ExternalPayloadStorageUtilsTest {
     public void testUploadTaskPayload() throws IOException {
         AtomicInteger uploadCount = new AtomicInteger(0);
 
-        InputStream stream = com.netflix.conductor.core.utils.ExternalPayloadStorageUtilsTest.class
-            .getResourceAsStream("/payload.json");
+        InputStream stream =
+                com.netflix.conductor.core.utils.ExternalPayloadStorageUtilsTest.class
+                        .getResourceAsStream("/payload.json");
         Map<String, Object> payload = objectMapper.readValue(stream, Map.class);
 
-        when(externalPayloadStorage
-            .getLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.TASK_INPUT, ""))
-            .thenReturn(location);
-        doAnswer(invocation -> {
-            uploadCount.incrementAndGet();
-            return null;
-        }).when(externalPayloadStorage).upload(anyString(), any(), anyLong());
+        when(externalPayloadStorage.getLocation(
+                        ExternalPayloadStorage.Operation.WRITE,
+                        ExternalPayloadStorage.PayloadType.TASK_INPUT,
+                        ""))
+                .thenReturn(location);
+        doAnswer(
+                        invocation -> {
+                            uploadCount.incrementAndGet();
+                            return null;
+                        })
+                .when(externalPayloadStorage)
+                .upload(anyString(), any(), anyLong());
 
         Task task = new Task();
         task.setInputData(payload);
-        externalPayloadStorageUtils.verifyAndUpload(task, ExternalPayloadStorage.PayloadType.TASK_INPUT);
+        externalPayloadStorageUtils.verifyAndUpload(
+                task, ExternalPayloadStorage.PayloadType.TASK_INPUT);
         assertTrue(task.getInputData().isEmpty());
         assertEquals(1, uploadCount.get());
         assertNotNull(task.getExternalInputPayloadStoragePath());
@@ -129,17 +140,23 @@ public class ExternalPayloadStorageUtilsTest {
     public void testUploadWorkflowPayload() throws IOException {
         AtomicInteger uploadCount = new AtomicInteger(0);
 
-        InputStream stream = com.netflix.conductor.core.utils.ExternalPayloadStorageUtilsTest.class
-            .getResourceAsStream("/payload.json");
+        InputStream stream =
+                com.netflix.conductor.core.utils.ExternalPayloadStorageUtilsTest.class
+                        .getResourceAsStream("/payload.json");
         Map<String, Object> payload = objectMapper.readValue(stream, Map.class);
 
-        when(externalPayloadStorage
-            .getLocation(ExternalPayloadStorage.Operation.WRITE, ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT,
-                "")).thenReturn(location);
-        doAnswer(invocation -> {
-            uploadCount.incrementAndGet();
-            return null;
-        }).when(externalPayloadStorage).upload(anyString(), any(), anyLong());
+        when(externalPayloadStorage.getLocation(
+                        ExternalPayloadStorage.Operation.WRITE,
+                        ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT,
+                        ""))
+                .thenReturn(location);
+        doAnswer(
+                        invocation -> {
+                            uploadCount.incrementAndGet();
+                            return null;
+                        })
+                .when(externalPayloadStorage)
+                .upload(anyString(), any(), anyLong());
 
         Workflow workflow = new Workflow();
         WorkflowDef def = new WorkflowDef();
@@ -147,7 +164,8 @@ public class ExternalPayloadStorageUtilsTest {
         def.setVersion(1);
         workflow.setOutput(payload);
         workflow.setWorkflowDefinition(def);
-        externalPayloadStorageUtils.verifyAndUpload(workflow, ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT);
+        externalPayloadStorageUtils.verifyAndUpload(
+                workflow, ExternalPayloadStorage.PayloadType.WORKFLOW_OUTPUT);
         assertTrue(workflow.getOutput().isEmpty());
         assertEquals(1, uploadCount.get());
         assertNotNull(workflow.getExternalOutputPayloadStoragePath());
@@ -161,13 +179,18 @@ public class ExternalPayloadStorageUtilsTest {
         location.setPath(path);
 
         when(externalPayloadStorage.getLocation(any(), any(), any())).thenReturn(location);
-        doAnswer(invocation -> {
-            uploadCount.incrementAndGet();
-            return null;
-        }).when(externalPayloadStorage).upload(anyString(), any(), anyLong());
+        doAnswer(
+                        invocation -> {
+                            uploadCount.incrementAndGet();
+                            return null;
+                        })
+                .when(externalPayloadStorage)
+                .upload(anyString(), any(), anyLong());
 
-        assertEquals(path, externalPayloadStorageUtils
-            .uploadHelper(new byte[]{}, 10L, ExternalPayloadStorage.PayloadType.TASK_OUTPUT));
+        assertEquals(
+                path,
+                externalPayloadStorageUtils.uploadHelper(
+                        new byte[] {}, 10L, ExternalPayloadStorage.PayloadType.TASK_OUTPUT));
         assertEquals(1, uploadCount.get());
     }
 
@@ -177,7 +200,8 @@ public class ExternalPayloadStorageUtilsTest {
         task.setInputData(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
-        externalPayloadStorageUtils.failTask(task, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
+        externalPayloadStorageUtils.failTask(
+                task, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
         assertNotNull(task);
         assertTrue(task.getInputData().isEmpty());
     }
@@ -188,7 +212,8 @@ public class ExternalPayloadStorageUtilsTest {
         task.setOutputData(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
-        externalPayloadStorageUtils.failTask(task, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
+        externalPayloadStorageUtils.failTask(
+                task, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
         assertNotNull(task);
         assertTrue(task.getOutputData().isEmpty());
     }
@@ -199,7 +224,8 @@ public class ExternalPayloadStorageUtilsTest {
         workflow.setInput(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
-        externalPayloadStorageUtils.failWorkflow(workflow, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
+        externalPayloadStorageUtils.failWorkflow(
+                workflow, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
         assertNotNull(workflow);
         assertTrue(workflow.getInput().isEmpty());
         assertEquals(Workflow.WorkflowStatus.FAILED, workflow.getStatus());
@@ -211,7 +237,8 @@ public class ExternalPayloadStorageUtilsTest {
         workflow.setOutput(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
-        externalPayloadStorageUtils.failWorkflow(workflow, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
+        externalPayloadStorageUtils.failWorkflow(
+                workflow, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
         assertNotNull(workflow);
         assertTrue(workflow.getOutput().isEmpty());
         assertEquals(Workflow.WorkflowStatus.FAILED, workflow.getStatus());

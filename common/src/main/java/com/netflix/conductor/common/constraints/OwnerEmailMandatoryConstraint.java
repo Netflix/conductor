@@ -13,23 +13,22 @@
  */
 package com.netflix.conductor.common.constraints;
 
-import com.google.common.base.Strings;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
+import com.google.common.base.Strings;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.TYPE;
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Payload;
 
 /**
- * This constraint class validates that owner email is non-empty, but only if configuration says owner email is
- * mandatory.
+ * This constraint class validates that owner email is non-empty, but only if configuration says
+ * owner email is mandatory.
  */
 @Documented
 @Constraint(validatedBy = OwnerEmailMandatoryConstraint.WorkflowTaskValidValidator.class)
@@ -43,11 +42,11 @@ public @interface OwnerEmailMandatoryConstraint {
 
     Class<? extends Payload>[] payload() default {};
 
-    class WorkflowTaskValidValidator implements ConstraintValidator<OwnerEmailMandatoryConstraint, String> {
+    class WorkflowTaskValidValidator
+            implements ConstraintValidator<OwnerEmailMandatoryConstraint, String> {
 
         @Override
-        public void initialize(OwnerEmailMandatoryConstraint constraintAnnotation) {
-        }
+        public void initialize(OwnerEmailMandatoryConstraint constraintAnnotation) {}
 
         @Override
         public boolean isValid(String ownerEmail, ConstraintValidatorContext context) {

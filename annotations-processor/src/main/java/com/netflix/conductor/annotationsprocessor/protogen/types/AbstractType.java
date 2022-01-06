@@ -2,7 +2,6 @@ package com.netflix.conductor.annotationsprocessor.protogen.types;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-
 import java.lang.reflect.Type;
 import java.util.Set;
 
@@ -24,11 +23,15 @@ public abstract class AbstractType {
     }
 
     public abstract String getProtoType();
+
     public abstract TypeName getRawJavaType();
+
     public abstract void mapToProto(String field, MethodSpec.Builder method);
+
     public abstract void mapFromProto(String field, MethodSpec.Builder method);
 
     public abstract void getDependencies(Set<String> deps);
+
     public abstract void generateAbstractMethods(Set<MethodSpec> specs);
 
     protected String javaMethodName(String m, String field) {
@@ -44,14 +47,11 @@ public abstract class AbstractType {
             int j = -1;
             while ((j = findWordBoundary(s, ++j)) != -1) {
                 out.append(normalizeWord(s.substring(i, j)));
-                if (j < len && s.charAt(j) == '_')
-                    j++;
+                if (j < len && s.charAt(j) == '_') j++;
                 i = j;
             }
-            if (i == 0)
-                return normalizeWord(s);
-            if (i < len)
-                out.append(normalizeWord(s.substring(i)));
+            if (i == 0) return normalizeWord(s);
+            if (i < len) out.append(normalizeWord(s.substring(i)));
             return out.toString();
         }
 
@@ -61,27 +61,23 @@ public abstract class AbstractType {
 
         private static int findWordBoundary(CharSequence sequence, int start) {
             int length = sequence.length();
-            if (start >= length)
-                return -1;
+            if (start >= length) return -1;
 
             if (isWordBoundary(sequence.charAt(start))) {
                 int i = start;
-                while (i < length && isWordBoundary(sequence.charAt(i)))
-                    i++;
+                while (i < length && isWordBoundary(sequence.charAt(i))) i++;
                 return i;
             } else {
                 for (int i = start; i < length; i++) {
                     final char c = sequence.charAt(i);
-                    if (c == '_' || isWordBoundary(c))
-                        return i;
+                    if (c == '_' || isWordBoundary(c)) return i;
                 }
                 return -1;
             }
         }
 
         private static String normalizeWord(String word) {
-            if (word.length() < 2)
-                return word.toUpperCase();
+            if (word.length() < 2) return word.toUpperCase();
             return word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase();
         }
     }

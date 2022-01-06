@@ -14,7 +14,6 @@ package com.netflix.conductor.common.metadata.workflow;
 
 import com.netflix.conductor.annotations.protogen.ProtoField;
 import com.netflix.conductor.annotations.protogen.ProtoMessage;
-
 import java.util.Map;
 
 @ProtoMessage

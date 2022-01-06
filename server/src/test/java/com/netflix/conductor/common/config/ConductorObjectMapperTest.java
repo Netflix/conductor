@@ -13,6 +13,11 @@
 
 package com.netflix.conductor.common.config;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.Any;
@@ -20,40 +25,35 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 /**
- * Tests the customized {@link ObjectMapper} that is used by
- * {@link com.netflix.conductor.Conductor} application.
+ * Tests the customized {@link ObjectMapper} that is used by {@link com.netflix.conductor.Conductor}
+ * application.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @RunWith(SpringRunner.class)
 public class ConductorObjectMapperTest {
 
-    @Autowired
-    ObjectMapper objectMapper;
+    @Autowired ObjectMapper objectMapper;
 
     @Test
     public void testSimpleMapping() throws IOException {
         assertTrue(objectMapper.canSerialize(Any.class));
 
-        Struct struct1 = Struct.newBuilder().putFields(
-                "some-key", Value.newBuilder().setStringValue("some-value").build()
-        ).build();
+        Struct struct1 =
+                Struct.newBuilder()
+                        .putFields(
+                                "some-key", Value.newBuilder().setStringValue("some-value").build())
+                        .build();
 
         Any source = Any.pack(struct1);
 
@@ -67,8 +67,7 @@ public class ConductorObjectMapperTest {
         assertTrue(struct2.containsFields("some-key"));
         assertEquals(
                 struct1.getFieldsOrThrow("some-key").getStringValue(),
-                struct2.getFieldsOrThrow("some-key").getStringValue()
-        );
+                struct2.getFieldsOrThrow("some-key").getStringValue());
     }
 
     @Test

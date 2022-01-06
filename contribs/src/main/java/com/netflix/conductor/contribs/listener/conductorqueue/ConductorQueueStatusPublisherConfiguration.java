@@ -22,12 +22,16 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(ConductorQueueStatusPublisherProperties.class)
-@ConditionalOnProperty(name = "conductor.workflow-status-listener.type", havingValue = "queue_publisher")
+@ConditionalOnProperty(
+        name = "conductor.workflow-status-listener.type",
+        havingValue = "queue_publisher")
 public class ConductorQueueStatusPublisherConfiguration {
 
     @Bean
-    public WorkflowStatusListener getWorkflowStatusListener(QueueDAO queueDAO,
-        ConductorQueueStatusPublisherProperties properties, ObjectMapper objectMapper) {
+    public WorkflowStatusListener getWorkflowStatusListener(
+            QueueDAO queueDAO,
+            ConductorQueueStatusPublisherProperties properties,
+            ObjectMapper objectMapper) {
         return new ConductorQueueStatusPublisher(queueDAO, objectMapper, properties);
     }
 }

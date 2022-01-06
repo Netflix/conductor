@@ -6,9 +6,8 @@ import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.grpc.EventServiceGrpc;
 import com.netflix.conductor.grpc.EventServicePb;
 import com.netflix.conductor.proto.EventHandlerPb;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Iterator;
+import org.apache.commons.lang3.StringUtils;
 
 public class EventClient extends ClientBase {
 
@@ -29,8 +28,7 @@ public class EventClient extends ClientBase {
         stub.addEventHandler(
                 EventServicePb.AddEventHandlerRequest.newBuilder()
                         .setHandler(protoMapper.toProto(eventHandler))
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -43,8 +41,7 @@ public class EventClient extends ClientBase {
         stub.updateEventHandler(
                 EventServicePb.UpdateEventHandlerRequest.newBuilder()
                         .setHandler(protoMapper.toProto(eventHandler))
-                        .build()
-        );
+                        .build());
     }
 
     /**
@@ -70,9 +67,7 @@ public class EventClient extends ClientBase {
      */
     public void unregisterEventHandler(String name) {
         Preconditions.checkArgument(StringUtils.isNotBlank(name), "Name cannot be blank");
-        stub.removeEventHandler(EventServicePb.RemoveEventHandlerRequest.newBuilder()
-                .setName(name)
-                .build()
-        );
+        stub.removeEventHandler(
+                EventServicePb.RemoveEventHandlerRequest.newBuilder().setName(name).build());
     }
 }

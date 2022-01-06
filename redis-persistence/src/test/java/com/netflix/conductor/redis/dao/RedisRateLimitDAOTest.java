@@ -12,6 +12,10 @@
  */
 package com.netflix.conductor.redis.dao;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -20,6 +24,7 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,20 +33,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.commands.JedisCommands;
 
-import java.util.UUID;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class RedisRateLimitDAOTest {
 
     private RedisRateLimitingDAO rateLimitingDao;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void init() {
@@ -50,7 +48,8 @@ public class RedisRateLimitDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        rateLimitingDao = new RedisRateLimitingDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        rateLimitingDao =
+                new RedisRateLimitingDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test

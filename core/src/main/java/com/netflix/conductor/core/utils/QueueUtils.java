@@ -22,8 +22,11 @@ public class QueueUtils {
     private static final String EXECUTION_NAME_SPACE_SEPARATOR = "@";
 
     public static String getQueueName(Task task) {
-        return getQueueName(task.getTaskType(), task.getDomain(), task.getIsolationGroupId(),
-            task.getExecutionNameSpace());
+        return getQueueName(
+                task.getTaskType(),
+                task.getDomain(),
+                task.getIsolationGroupId(),
+                task.getExecutionNameSpace());
     }
 
     /**
@@ -33,8 +36,8 @@ public class QueueUtils {
      * @param executionNameSpace
      * @return //domain:taskType@eexecutionNameSpace-isolationGroup
      */
-    public static String getQueueName(String taskType, String domain, String isolationGroup,
-        String executionNameSpace) {
+    public static String getQueueName(
+            String taskType, String domain, String isolationGroup, String executionNameSpace) {
 
         String queueName;
         if (domain == null) {
@@ -58,9 +61,10 @@ public class QueueUtils {
     }
 
     public static String getExecutionNameSpace(String queueName) {
-        if (StringUtils.contains(queueName, ISOLATION_SEPARATOR) && StringUtils
-            .contains(queueName, EXECUTION_NAME_SPACE_SEPARATOR)) {
-            return StringUtils.substringBetween(queueName, EXECUTION_NAME_SPACE_SEPARATOR, ISOLATION_SEPARATOR);
+        if (StringUtils.contains(queueName, ISOLATION_SEPARATOR)
+                && StringUtils.contains(queueName, EXECUTION_NAME_SPACE_SEPARATOR)) {
+            return StringUtils.substringBetween(
+                    queueName, EXECUTION_NAME_SPACE_SEPARATOR, ISOLATION_SEPARATOR);
         } else if (StringUtils.contains(queueName, EXECUTION_NAME_SPACE_SEPARATOR)) {
             return StringUtils.substringAfter(queueName, EXECUTION_NAME_SPACE_SEPARATOR);
         } else {

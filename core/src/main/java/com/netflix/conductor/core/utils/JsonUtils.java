@@ -17,9 +17,7 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 
-/**
- * This class contains utility functions for parsing/expanding JSON.
- */
+/** This class contains utility functions for parsing/expanding JSON. */
 @SuppressWarnings("unchecked")
 @Component
 public class JsonUtils {
@@ -69,7 +67,7 @@ public class JsonUtils {
             Object value = entry.getValue();
             if (value instanceof String) {
                 if (isJsonString(value.toString())) {
-                   entry.setValue(getJson(value.toString()));
+                    entry.setValue(getJson(value.toString()));
                 }
             } else if (value instanceof Map) {
                 expandMap((Map<String, Object>) value);
@@ -83,8 +81,8 @@ public class JsonUtils {
      * Used to obtain a JSONified object from a string
      *
      * @param jsonAsString the json object represented in string form
-     * @return the JSONified object representation if the input is a valid json string if the input is not a valid json
-     * string, it will be returned as-is and no exception is thrown
+     * @return the JSONified object representation if the input is a valid json string if the input
+     *     is not a valid json string, it will be returned as-is and no exception is thrown
      */
     private Object getJson(String jsonAsString) {
         try {

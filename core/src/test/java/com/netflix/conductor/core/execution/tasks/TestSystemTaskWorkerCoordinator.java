@@ -12,17 +12,16 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.core.config.ConductorProperties;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.time.Duration;
-import java.util.Collections;
-
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.netflix.conductor.core.config.ConductorProperties;
+import java.time.Duration;
+import java.util.Collections;
+import org.junit.Before;
+import org.junit.Test;
 
 public class TestSystemTaskWorkerCoordinator {
 
@@ -43,10 +42,12 @@ public class TestSystemTaskWorkerCoordinator {
     @Test
     public void testIsFromCoordinatorExecutionNameSpace() {
         doReturn("exeNS").when(properties).getSystemTaskWorkerExecutionNamespace();
-        SystemTaskWorkerCoordinator systemTaskWorkerCoordinator = new SystemTaskWorkerCoordinator(systemTaskWorker,
-                properties, Collections.emptySet());
+        SystemTaskWorkerCoordinator systemTaskWorkerCoordinator =
+                new SystemTaskWorkerCoordinator(
+                        systemTaskWorker, properties, Collections.emptySet());
         assertTrue(
-            systemTaskWorkerCoordinator.isFromCoordinatorExecutionNameSpace(new TaskWithExecutionNamespace()));
+                systemTaskWorkerCoordinator.isFromCoordinatorExecutionNameSpace(
+                        new TaskWithExecutionNamespace()));
     }
 
     static class TaskWithExecutionNamespace extends WorkflowSystemTask {

@@ -73,9 +73,10 @@ public class TaskResourceTest {
         listOfTasks.add(task);
 
         when(mockTaskService.batchPoll(anyString(), anyString(), anyString(), anyInt(), anyInt()))
-            .thenReturn(listOfTasks);
-        assertEquals(ResponseEntity.ok(listOfTasks), taskResource.batchPoll("SIMPLE", "123",
-            "test", 1, 100));
+                .thenReturn(listOfTasks);
+        assertEquals(
+                ResponseEntity.ok(listOfTasks),
+                taskResource.batchPoll("SIMPLE", "123", "test", 1, 100));
     }
 
     @Test
@@ -191,8 +192,7 @@ public class TaskResourceTest {
         List<TaskSummary> listOfTaskSummary = Collections.singletonList(taskSummary);
         SearchResult<TaskSummary> searchResult = new SearchResult<>(100, listOfTaskSummary);
 
-        when(mockTaskService.search(0, 100, "asc", "*", "*"))
-            .thenReturn(searchResult);
+        when(mockTaskService.search(0, 100, "asc", "*", "*")).thenReturn(searchResult);
         assertEquals(searchResult, taskResource.search(0, 100, "asc", "*", "*"));
     }
 
@@ -206,8 +206,7 @@ public class TaskResourceTest {
         List<Task> listOfTasks = Collections.singletonList(task);
         SearchResult<Task> searchResult = new SearchResult<>(100, listOfTasks);
 
-        when(mockTaskService.searchV2(0, 100, "asc", "*", "*"))
-            .thenReturn(searchResult);
+        when(mockTaskService.searchV2(0, 100, "asc", "*", "*")).thenReturn(searchResult);
         assertEquals(searchResult, taskResource.searchV2(0, 100, "asc", "*", "*"));
     }
 
@@ -215,8 +214,9 @@ public class TaskResourceTest {
     public void testGetExternalStorageLocation() {
         ExternalStorageLocation externalStorageLocation = mock(ExternalStorageLocation.class);
         when(mockTaskService.getExternalStorageLocation("path", "operation", "payloadType"))
-            .thenReturn(externalStorageLocation);
-        assertEquals(externalStorageLocation,
+                .thenReturn(externalStorageLocation);
+        assertEquals(
+                externalStorageLocation,
                 taskResource.getExternalStorageLocation("path", "operation", "payloadType"));
     }
 }

@@ -14,24 +14,21 @@ package com.netflix.conductor.core.execution.tasks;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_INLINE;
 
-import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
+import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * @author X-Ultra
- * <p>
- * Task that enables execute inline script at workflow execution. For example,
- * <pre>
+ *     <p>Task that enables execute inline script at workflow execution. For example,
+ *     <pre>
  * ...
  * {
  *  "tasks": [
@@ -49,9 +46,8 @@ import com.netflix.conductor.core.execution.evaluators.Evaluator;
  * }
  * ...
  * </pre>
- * then to use task output, e.g.  <code>script_test.output.testvalue</code>
- *
- * {@link Inline} is a replacement for deprecated {@link Lambda}
+ *     then to use task output, e.g. <code>script_test.output.testvalue</code> {@link Inline} is a
+ *     replacement for deprecated {@link Lambda}
  */
 @Component(TASK_TYPE_INLINE)
 public class Inline extends WorkflowSystemTask {
@@ -83,11 +79,15 @@ public class Inline extends WorkflowSystemTask {
             taskOutput.put("result", evalResult);
             task.setStatus(Task.Status.COMPLETED);
         } catch (Exception e) {
-            LOGGER.error("Failed to execute Inline Task: {} in workflow: {}", task.getTaskId(),
-                  workflow.getWorkflowId(), e);
+            LOGGER.error(
+                    "Failed to execute Inline Task: {} in workflow: {}",
+                    task.getTaskId(),
+                    workflow.getWorkflowId(),
+                    e);
             task.setStatus(Task.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
-            taskOutput.put("error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
+            taskOutput.put(
+                    "error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
         }
 
         return true;
@@ -96,20 +96,25 @@ public class Inline extends WorkflowSystemTask {
     private void checkEvaluatorType(String evaluatorType) {
         if (StringUtils.isBlank(evaluatorType)) {
             LOGGER.error("Empty {} in Inline task. ", QUERY_EVALUATOR_TYPE);
-            throw new TerminateWorkflowException("Empty '" + QUERY_EVALUATOR_TYPE
-                  + "' in Inline task's input parameters. A non-empty String value must be provided.");
+            throw new TerminateWorkflowException(
+                    "Empty '"
+                            + QUERY_EVALUATOR_TYPE
+                            + "' in Inline task's input parameters. A non-empty String value must be provided.");
         }
         if (evaluators.get(evaluatorType) == null) {
             LOGGER.error("Evaluator {} for Inline task not registered", evaluatorType);
-            throw new TerminateWorkflowException("Unknown evaluator '" + evaluatorType + "' in Inline task.");
+            throw new TerminateWorkflowException(
+                    "Unknown evaluator '" + evaluatorType + "' in Inline task.");
         }
     }
 
     private void checkExpression(String expression) {
         if (StringUtils.isBlank(expression)) {
             LOGGER.error("Empty {} in Inline task. ", QUERY_EXPRESSION_PARAMETER);
-            throw new TerminateWorkflowException("Empty '" + QUERY_EXPRESSION_PARAMETER
-                  + "' in Inline task's input parameters. A non-empty String value must be provided.");
+            throw new TerminateWorkflowException(
+                    "Empty '"
+                            + QUERY_EXPRESSION_PARAMETER
+                            + "' in Inline task's input parameters. A non-empty String value must be provided.");
         }
     }
 }

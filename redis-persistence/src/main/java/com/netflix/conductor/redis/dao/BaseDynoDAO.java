@@ -31,8 +31,11 @@ public class BaseDynoDAO {
     protected JedisProxy jedisProxy;
     protected ObjectMapper objectMapper;
 
-    protected BaseDynoDAO(JedisProxy jedisProxy, ObjectMapper objectMapper,
-        ConductorProperties conductorProperties, RedisProperties properties) {
+    protected BaseDynoDAO(
+            JedisProxy jedisProxy,
+            ObjectMapper objectMapper,
+            ConductorProperties conductorProperties,
+            RedisProperties properties) {
         this.jedisProxy = jedisProxy;
         this.objectMapper = objectMapper;
         this.conductorProperties = conductorProperties;
@@ -92,7 +95,11 @@ public class BaseDynoDAO {
     }
 
     void recordRedisDaoPayloadSize(String action, int size, String taskType, String workflowType) {
-        Monitors.recordDaoPayloadSize(DAO_NAME, action, StringUtils.defaultIfBlank(taskType, ""),
-            StringUtils.defaultIfBlank(workflowType, ""), size);
+        Monitors.recordDaoPayloadSize(
+                DAO_NAME,
+                action,
+                StringUtils.defaultIfBlank(taskType, ""),
+                StringUtils.defaultIfBlank(workflowType, ""),
+                size);
     }
 }

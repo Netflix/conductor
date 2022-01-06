@@ -12,10 +12,9 @@
  */
 package com.netflix.conductor.common.metadata.workflow;
 
+import com.google.protobuf.Any;
 import com.netflix.conductor.annotations.protogen.ProtoField;
 import com.netflix.conductor.annotations.protogen.ProtoMessage;
-import com.google.protobuf.Any;
-
 import java.util.Map;
 
 @ProtoMessage(toProto = false)

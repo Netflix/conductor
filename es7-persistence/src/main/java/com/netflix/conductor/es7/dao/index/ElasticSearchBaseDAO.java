@@ -34,7 +34,8 @@ abstract class ElasticSearchBaseDAO implements IndexDAO {
     ObjectMapper objectMapper;
 
     String loadTypeMappingSource(String path) throws IOException {
-        return applyIndexPrefixToTemplate(IOUtils.toString(ElasticSearchBaseDAO.class.getResourceAsStream(path)));
+        return applyIndexPrefixToTemplate(
+                IOUtils.toString(ElasticSearchBaseDAO.class.getResourceAsStream(path)));
     }
 
     private String applyIndexPrefixToTemplate(String text) throws JsonProcessingException {
@@ -44,25 +45,32 @@ abstract class ElasticSearchBaseDAO implements IndexDAO {
             JsonNode indexPatternsNodeValue = root.get(indexPatternsFieldName);
             if (indexPatternsNodeValue != null && indexPatternsNodeValue.isArray()) {
                 ArrayList<String> patternsWithPrefix = new ArrayList<>();
-                indexPatternsNodeValue.forEach(v -> {
-                    String patternText = v.asText();
-                    StringBuilder sb = new StringBuilder();
-                    if (patternText.startsWith("*")) {
-                        sb.append("*").append(indexPrefix).append("_").append(patternText.substring(1));
-                    } else {
-                        sb.append(indexPrefix).append("_").append(patternText);
-                    }
-                    patternsWithPrefix.add(sb.toString());
-                });
-                ((ObjectNode) root).set(indexPatternsFieldName, objectMapper.valueToTree(patternsWithPrefix));
-                System.out.println(objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
+                indexPatternsNodeValue.forEach(
+                        v -> {
+                            String patternText = v.asText();
+                            StringBuilder sb = new StringBuilder();
+                            if (patternText.startsWith("*")) {
+                                sb.append("*")
+                                        .append(indexPrefix)
+                                        .append("_")
+                                        .append(patternText.substring(1));
+                            } else {
+                                sb.append(indexPrefix).append("_").append(patternText);
+                            }
+                            patternsWithPrefix.add(sb.toString());
+                        });
+                ((ObjectNode) root)
+                        .set(indexPatternsFieldName, objectMapper.valueToTree(patternsWithPrefix));
+                System.out.println(
+                        objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root));
                 return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
             }
         }
         return text;
     }
 
-    BoolQueryBuilder boolQueryBuilder(String expression, String queryString) throws ParserException {
+    BoolQueryBuilder boolQueryBuilder(String expression, String queryString)
+            throws ParserException {
         QueryBuilder queryBuilder = QueryBuilders.matchAllQuery();
         if (StringUtils.isNotEmpty(expression)) {
             Expression exp = Expression.fromString(expression);

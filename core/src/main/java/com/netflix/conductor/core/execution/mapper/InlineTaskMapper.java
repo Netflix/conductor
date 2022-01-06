@@ -12,15 +12,6 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
@@ -28,11 +19,19 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#INLINE} to a List
- * {@link Task} starting with Task of type {@link TaskType#INLINE} which is marked as IN_PROGRESS, followed by
- * the list of {@link Task} based on the case expression evaluation in the Inline task.
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+ * TaskType#INLINE} to a List {@link Task} starting with Task of type {@link TaskType#INLINE} which
+ * is marked as IN_PROGRESS, followed by the list of {@link Task} based on the case expression
+ * evaluation in the Inline task.
  */
 @Component
 public class InlineTaskMapper implements TaskMapper {
@@ -60,18 +59,27 @@ public class InlineTaskMapper implements TaskMapper {
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
-        TaskDef taskDefinition = Optional.ofNullable(taskMapperContext.getTaskDefinition())
-            .orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
-                .orElse(null));
+        TaskDef taskDefinition =
+                Optional.ofNullable(taskMapperContext.getTaskDefinition())
+                        .orElseGet(
+                                () ->
+                                        Optional.ofNullable(
+                                                        metadataDAO.getTaskDef(
+                                                                taskToSchedule.getName()))
+                                                .orElse(null));
 
-        Map<String, Object> taskInput = parametersUtils
-            .getTaskInputV2(taskMapperContext.getTaskToSchedule().getInputParameters(), workflowInstance, taskId,
-                taskDefinition);
+        Map<String, Object> taskInput =
+                parametersUtils.getTaskInputV2(
+                        taskMapperContext.getTaskToSchedule().getInputParameters(),
+                        workflowInstance,
+                        taskId,
+                        taskDefinition);
 
         Task inlineTask = new Task();
         inlineTask.setTaskType(TaskType.TASK_TYPE_INLINE);
         inlineTask.setTaskDefName(taskMapperContext.getTaskToSchedule().getName());
-        inlineTask.setReferenceTaskName(taskMapperContext.getTaskToSchedule().getTaskReferenceName());
+        inlineTask.setReferenceTaskName(
+                taskMapperContext.getTaskToSchedule().getTaskReferenceName());
         inlineTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         inlineTask.setWorkflowType(workflowInstance.getWorkflowName());
         inlineTask.setCorrelationId(workflowInstance.getCorrelationId());

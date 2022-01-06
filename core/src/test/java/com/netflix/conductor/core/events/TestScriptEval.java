@@ -12,13 +12,12 @@
  */
 package com.netflix.conductor.core.events;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 public class TestScriptEval {
 
@@ -34,10 +33,10 @@ public class TestScriptEval {
         payload.put("author", "Netflix");
         payload.put("oss", true);
 
-        String script1 = "$.app.name == 'conductor'";        //true
-        String script2 = "$.version > 3";                    //false
-        String script3 = "$.oss";                            //true
-        String script4 = "$.author == 'me'";                //false
+        String script1 = "$.app.name == 'conductor'"; // true
+        String script2 = "$.version > 3"; // false
+        String script3 = "$.oss"; // true
+        String script4 = "$.author == 'me'"; // false
 
         assertTrue(ScriptEvaluator.evalBool(script1, payload));
         assertFalse(ScriptEvaluator.evalBool(script2, payload));

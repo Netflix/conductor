@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,15 +40,20 @@ public class MapType extends GenericType {
     public void mapToProto(String field, MethodSpec.Builder method) {
         AbstractType valueType = getValueType();
         if (valueType instanceof ScalarType) {
-            method.addStatement("to.$L( from.$L() )",
-                    protoMethodName("putAll", field), javaMethodName("get", field));
+            method.addStatement(
+                    "to.$L( from.$L() )",
+                    protoMethodName("putAll", field),
+                    javaMethodName("get", field));
         } else {
-            TypeName typeName = ParameterizedTypeName.get(Map.Entry.class,
-                    getKeyType().getJavaType(),
-                    getValueType().getJavaType());
-            method.beginControlFlow("for ($T pair : from.$L().entrySet())",
-                    typeName, javaMethodName("get", field));
-            method.addStatement("to.$L( pair.getKey(), toProto( pair.getValue() ) )",
+            TypeName typeName =
+                    ParameterizedTypeName.get(
+                            Map.Entry.class,
+                            getKeyType().getJavaType(),
+                            getValueType().getJavaType());
+            method.beginControlFlow(
+                    "for ($T pair : from.$L().entrySet())", typeName, javaMethodName("get", field));
+            method.addStatement(
+                    "to.$L( pair.getKey(), toProto( pair.getValue() ) )",
                     protoMethodName("put", field));
             method.endControlFlow();
         }
@@ -59,21 +63,29 @@ public class MapType extends GenericType {
     public void mapFromProto(String field, MethodSpec.Builder method) {
         AbstractType valueType = getValueType();
         if (valueType instanceof ScalarType) {
-            method.addStatement("to.$L( from.$L() )",
-                    javaMethodName("set", field), protoMethodName("get", field)+"Map");
+            method.addStatement(
+                    "to.$L( from.$L() )",
+                    javaMethodName("set", field),
+                    protoMethodName("get", field) + "Map");
         } else {
             Type keyType = getKeyType().getJavaType();
             Type valueTypeJava = getValueType().getJavaType();
             TypeName valueTypePb = getValueType().getJavaProtoType();
 
-            ParameterizedTypeName entryType = ParameterizedTypeName.get(ClassName.get(Map.Entry.class), TypeName.get(keyType), valueTypePb);
-            ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, keyType, valueTypeJava);
-            ParameterizedTypeName hashMapType = ParameterizedTypeName.get(HashMap.class, keyType, valueTypeJava);
-            String mapName = field+"Map";
+            ParameterizedTypeName entryType =
+                    ParameterizedTypeName.get(
+                            ClassName.get(Map.Entry.class), TypeName.get(keyType), valueTypePb);
+            ParameterizedTypeName mapType =
+                    ParameterizedTypeName.get(Map.class, keyType, valueTypeJava);
+            ParameterizedTypeName hashMapType =
+                    ParameterizedTypeName.get(HashMap.class, keyType, valueTypeJava);
+            String mapName = field + "Map";
 
             method.addStatement("$T $L = new $T()", mapType, mapName, hashMapType);
-            method.beginControlFlow("for ($T pair : from.$L().entrySet())",
-                    entryType, protoMethodName("get", field)+"Map");
+            method.beginControlFlow(
+                    "for ($T pair : from.$L().entrySet())",
+                    entryType,
+                    protoMethodName("get", field) + "Map");
             method.addStatement("$L.put( pair.getKey(), fromProto( pair.getValue() ) )", mapName);
             method.endControlFlow();
             method.addStatement("to.$L($L)", javaMethodName("set", field), mapName);
@@ -82,7 +94,8 @@ public class MapType extends GenericType {
 
     @Override
     public TypeName resolveJavaProtoType() {
-        return ParameterizedTypeName.get((ClassName)getRawJavaType(),
+        return ParameterizedTypeName.get(
+                (ClassName) getRawJavaType(),
                 getKeyType().getJavaProtoType(),
                 getValueType().getJavaProtoType());
     }
@@ -92,7 +105,8 @@ public class MapType extends GenericType {
         AbstractType keyType = getKeyType();
         AbstractType valueType = getValueType();
         if (!(keyType instanceof ScalarType)) {
-            throw new IllegalArgumentException("cannot map non-scalar map key: "+this.getJavaType());
+            throw new IllegalArgumentException(
+                    "cannot map non-scalar map key: " + this.getJavaType());
         }
         return String.format("map<%s, %s>", keyType.getProtoType(), valueType.getProtoType());
     }

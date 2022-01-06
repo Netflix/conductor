@@ -91,8 +91,9 @@ public class ProtoGenTask {
     }
 
     public static void main(String[] args) {
-        if(args == null || args.length < 8) {
-            throw new RuntimeException("protogen configuration incomplete, please provide all required (8) inputs");
+        if (args == null || args.length < 8) {
+            throw new RuntimeException(
+                    "protogen configuration incomplete, please provide all required (8) inputs");
         }
         ProtoGenTask task = new ProtoGenTask();
         int argsId = 0;
@@ -111,15 +112,28 @@ public class ProtoGenTask {
 
     @Override
     public String toString() {
-        return "ProtoGenTask{" +
-                "protoPackage='" + protoPackage + '\'' +
-                ", javaPackage='" + javaPackage + '\'' +
-                ", goPackage='" + goPackage + '\'' +
-                ", protosDir=" + protosDir +
-                ", mapperDir=" + mapperDir +
-                ", mapperPackage='" + mapperPackage + '\'' +
-                ", sourceJar=" + sourceJar +
-                ", sourcePackage='" + sourcePackage + '\'' +
-                '}';
+        return "ProtoGenTask{"
+                + "protoPackage='"
+                + protoPackage
+                + '\''
+                + ", javaPackage='"
+                + javaPackage
+                + '\''
+                + ", goPackage='"
+                + goPackage
+                + '\''
+                + ", protosDir="
+                + protosDir
+                + ", mapperDir="
+                + mapperDir
+                + ", mapperPackage='"
+                + mapperPackage
+                + '\''
+                + ", sourceJar="
+                + sourceJar
+                + ", sourcePackage='"
+                + sourcePackage
+                + '\''
+                + '}';
     }
 }

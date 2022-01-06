@@ -12,17 +12,16 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
+import org.springframework.stereotype.Component;
 
 @Component(TASK_TYPE_JOIN)
 public class Join extends WorkflowSystemTask {
@@ -40,14 +39,16 @@ public class Join extends WorkflowSystemTask {
         StringBuilder failureReason = new StringBuilder();
         List<String> joinOn = (List<String>) task.getInputData().get("joinOn");
         if (task.isLoopOverTask()) {
-            //If join is part of loop over task, wait for specific iteration to get complete
-            joinOn = joinOn.stream().map(name -> TaskUtils.appendIteration(name, task.getIteration())).collect(
-                Collectors.toList());
+            // If join is part of loop over task, wait for specific iteration to get complete
+            joinOn =
+                    joinOn.stream()
+                            .map(name -> TaskUtils.appendIteration(name, task.getIteration()))
+                            .collect(Collectors.toList());
         }
         for (String joinOnRef : joinOn) {
             Task forkedTask = workflow.getTaskByRefName(joinOnRef);
             if (forkedTask == null) {
-                //Task is not even scheduled yet
+                // Task is not even scheduled yet
                 allDone = false;
                 break;
             }

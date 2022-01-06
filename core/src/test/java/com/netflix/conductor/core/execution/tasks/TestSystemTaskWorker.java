@@ -12,20 +12,6 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.execution.AsyncSystemTaskExecutor;
-import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.service.ExecutionService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -35,6 +21,19 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.core.execution.AsyncSystemTaskExecutor;
+import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.service.ExecutionService;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class TestSystemTaskWorker {
 
@@ -61,7 +60,9 @@ public class TestSystemTaskWorker {
         when(properties.getSystemTaskMaxPollCount()).thenReturn(1);
         when(properties.getSystemTaskWorkerPollInterval()).thenReturn(Duration.ofSeconds(30));
 
-        systemTaskWorker = new SystemTaskWorker(queueDAO, asyncSystemTaskExecutor, properties, executionService);
+        systemTaskWorker =
+                new SystemTaskWorker(
+                        queueDAO, asyncSystemTaskExecutor, properties, executionService);
         systemTaskWorker.start();
     }
 
@@ -74,27 +75,37 @@ public class TestSystemTaskWorker {
     @Test
     public void testGetExecutionConfigForSystemTask() {
         when(properties.getSystemTaskWorkerThreadCount()).thenReturn(5);
-        systemTaskWorker = new SystemTaskWorker(queueDAO, asyncSystemTaskExecutor, properties, executionService);
-        assertEquals(systemTaskWorker.getExecutionConfig("").getSemaphoreUtil().availableSlots(), 5);
+        systemTaskWorker =
+                new SystemTaskWorker(
+                        queueDAO, asyncSystemTaskExecutor, properties, executionService);
+        assertEquals(
+                systemTaskWorker.getExecutionConfig("").getSemaphoreUtil().availableSlots(), 5);
     }
 
     @Test
     public void testGetExecutionConfigForIsolatedSystemTask() {
         when(properties.getIsolatedSystemTaskWorkerThreadCount()).thenReturn(7);
-        systemTaskWorker = new SystemTaskWorker(queueDAO, asyncSystemTaskExecutor, properties, executionService);
-        assertEquals(systemTaskWorker.getExecutionConfig("test-iso").getSemaphoreUtil().availableSlots(), 7);
+        systemTaskWorker =
+                new SystemTaskWorker(
+                        queueDAO, asyncSystemTaskExecutor, properties, executionService);
+        assertEquals(
+                systemTaskWorker.getExecutionConfig("test-iso").getSemaphoreUtil().availableSlots(),
+                7);
     }
 
     @Test
     public void testPollAndExecuteSystemTask() throws Exception {
-        when(queueDAO.pop(anyString(), anyInt(), anyInt())).thenReturn(Collections.singletonList("taskId"));
+        when(queueDAO.pop(anyString(), anyInt(), anyInt()))
+                .thenReturn(Collections.singletonList("taskId"));
 
         CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-                    latch.countDown();
-                    return null;
-                }
-        ).when(asyncSystemTaskExecutor).execute(any(), anyString());
+        doAnswer(
+                        invocation -> {
+                            latch.countDown();
+                            return null;
+                        })
+                .when(asyncSystemTaskExecutor)
+                .execute(any(), anyString());
 
         systemTaskWorker.pollAndExecute(new TestTask(), TEST_TASK);
 
@@ -109,11 +120,13 @@ public class TestSystemTaskWorker {
         when(queueDAO.pop(anyString(), anyInt(), anyInt())).thenReturn(List.of("t1", "t1"));
 
         CountDownLatch latch = new CountDownLatch(2);
-        doAnswer(invocation -> {
-                    latch.countDown();
-                    return null;
-                }
-        ).when(asyncSystemTaskExecutor).execute(any(), eq("t1"));
+        doAnswer(
+                        invocation -> {
+                            latch.countDown();
+                            return null;
+                        })
+                .when(asyncSystemTaskExecutor)
+                .execute(any(), eq("t1"));
 
         systemTaskWorker.pollAndExecute(new TestTask(), TEST_TASK);
 
@@ -127,11 +140,13 @@ public class TestSystemTaskWorker {
         when(queueDAO.pop(anyString(), anyInt(), anyInt())).thenReturn(List.of("isolated_taskId"));
 
         CountDownLatch latch = new CountDownLatch(1);
-        doAnswer(invocation -> {
-                    latch.countDown();
-                    return null;
-                }
-        ).when(asyncSystemTaskExecutor).execute(any(), eq("isolated_taskId"));
+        doAnswer(
+                        invocation -> {
+                            latch.countDown();
+                            return null;
+                        })
+                .when(asyncSystemTaskExecutor)
+                .execute(any(), eq("isolated_taskId"));
 
         systemTaskWorker.pollAndExecute(new IsolatedTask(), ISOLATED_TASK);
 

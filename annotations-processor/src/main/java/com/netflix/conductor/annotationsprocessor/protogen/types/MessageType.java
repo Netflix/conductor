@@ -3,7 +3,6 @@ package com.netflix.conductor.annotationsprocessor.protogen.types;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +17,7 @@ public class MessageType extends AbstractType {
 
     @Override
     public String getProtoType() {
-        List<String> classes = ((ClassName)getJavaProtoType()).simpleNames();
+        List<String> classes = ((ClassName) getJavaProtoType()).simpleNames();
         return String.join(".", classes.subList(1, classes.size()));
     }
 
@@ -46,14 +45,14 @@ public class MessageType extends AbstractType {
 
     @Override
     public void mapFromProto(String field, MethodSpec.Builder method) {
-        if (!isEnum())
-            method.beginControlFlow("if (from.$L())", protoMethodName("has", field));
+        if (!isEnum()) method.beginControlFlow("if (from.$L())", protoMethodName("has", field));
 
-        method.addStatement("to.$L( fromProto( from.$L() ) )",
-                javaMethodName("set", field), protoMethodName("get", field));
+        method.addStatement(
+                "to.$L( fromProto( from.$L() ) )",
+                javaMethodName("set", field),
+                protoMethodName("get", field));
 
-        if (!isEnum())
-            method.endControlFlow();
+        if (!isEnum()) method.endControlFlow();
     }
 
     @Override

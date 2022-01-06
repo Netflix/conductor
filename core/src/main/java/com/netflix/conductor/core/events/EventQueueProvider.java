@@ -24,7 +24,8 @@ public interface EventQueueProvider {
      *
      * @param queueURI The URI of the queue.
      * @return The {@link ObservableQueue} implementation for the <code>queueURI</code>.
-     * @throws IllegalArgumentException thrown when an {@link ObservableQueue} can not be created for the <code>queueURI</code>.
+     * @throws IllegalArgumentException thrown when an {@link ObservableQueue} can not be created
+     *     for the <code>queueURI</code>.
      */
     @NonNull
     ObservableQueue getQueue(String queueURI) throws IllegalArgumentException;

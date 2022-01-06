@@ -13,7 +13,6 @@
 package com.netflix.conductor.rest.controllers;
 
 import static com.netflix.conductor.rest.config.RequestMappingConstants.ADMIN;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_PLAIN_VALUE;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -46,9 +45,10 @@ public class AdminResource {
 
     @GetMapping("/task/{tasktype}")
     @Operation(summary = "Get the list of pending tasks for a given task type")
-    public List<Task> view(@PathVariable("tasktype") String taskType,
-        @RequestParam(value = "start", defaultValue = "0", required = false) int start,
-        @RequestParam(value = "count", defaultValue = "100", required = false) int count) {
+    public List<Task> view(
+            @PathVariable("tasktype") String taskType,
+            @RequestParam(value = "start", defaultValue = "0", required = false) int start,
+            @RequestParam(value = "count", defaultValue = "100", required = false) int count) {
         return adminService.getListOfPendingTask(taskType, start, count);
     }
 
@@ -58,17 +58,18 @@ public class AdminResource {
         return adminService.requeueSweep(workflowId);
     }
 
-
     @PostMapping(value = "/consistency/verifyAndRepair/{workflowId}", produces = TEXT_PLAIN_VALUE)
     @Operation(summary = "Verify and repair workflow consistency")
-    public String verifyAndRepairWorkflowConsistency(@PathVariable("workflowId") String workflowId) {
+    public String verifyAndRepairWorkflowConsistency(
+            @PathVariable("workflowId") String workflowId) {
         return String.valueOf(adminService.verifyAndRepairWorkflowConsistency(workflowId));
     }
 
     @GetMapping("/queues")
     @Operation(summary = "Get registered queues")
     public Map<String, ?> getEventQueues(
-        @RequestParam(value = "verbose", defaultValue = "false", required = false) boolean verbose) {
+            @RequestParam(value = "verbose", defaultValue = "false", required = false)
+                    boolean verbose) {
         return adminService.getEventQueues(verbose);
     }
 }

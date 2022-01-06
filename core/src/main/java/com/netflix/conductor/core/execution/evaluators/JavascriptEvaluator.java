@@ -12,34 +12,32 @@
  */
 package com.netflix.conductor.core.execution.evaluators;
 
+import com.netflix.conductor.core.events.ScriptEvaluator;
+import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import javax.script.ScriptException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import com.netflix.conductor.core.events.ScriptEvaluator;
-import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component(JavascriptEvaluator.NAME)
 public class JavascriptEvaluator implements Evaluator {
 
-   public static final String NAME = "javascript";
-   private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEvaluator.class);
+    public static final String NAME = "javascript";
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEvaluator.class);
 
-   @Override
-   public Object evaluate(String expression, Object input) {
-      LOGGER.debug("Javascript evaluator -- expression: {}", expression);
-      try {
-         // Evaluate the expression by using the Javascript evaluation engine.
-         Object result = ScriptEvaluator.eval(expression, input);
-         LOGGER.debug("Javascript evaluator -- result: {}", result);
-         return result;
-      } catch (ScriptException e) {
-         String errorMsg = String.format("Error while evaluating script: %s", expression);
-         LOGGER.error(errorMsg, e);
-         throw new TerminateWorkflowException(errorMsg);
-      }
-   }
+    @Override
+    public Object evaluate(String expression, Object input) {
+        LOGGER.debug("Javascript evaluator -- expression: {}", expression);
+        try {
+            // Evaluate the expression by using the Javascript evaluation engine.
+            Object result = ScriptEvaluator.eval(expression, input);
+            LOGGER.debug("Javascript evaluator -- result: {}", result);
+            return result;
+        } catch (ScriptException e) {
+            String errorMsg = String.format("Error while evaluating script: %s", expression);
+            LOGGER.error(errorMsg, e);
+            throw new TerminateWorkflowException(errorMsg);
+        }
+    }
 }

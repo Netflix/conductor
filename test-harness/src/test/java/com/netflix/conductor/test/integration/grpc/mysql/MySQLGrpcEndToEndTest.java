@@ -23,15 +23,17 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
-@TestPropertySource(properties = {
-    "conductor.db.type=mysql",
-    "conductor.grpc-server.port=8094",
-    "spring.datasource.url=jdbc:tc:mysql:///conductor", // "tc" prefix starts the MySql container
-    "spring.datasource.username=root",
-    "spring.datasource.password=root",
-    "spring.datasource.hikari.maximum-pool-size=8",
-    "spring.datasource.hikari.minimum-idle=300000"
-})
+@TestPropertySource(
+        properties = {
+            "conductor.db.type=mysql",
+            "conductor.grpc-server.port=8094",
+            "spring.datasource.url=jdbc:tc:mysql:///conductor", // "tc" prefix starts the MySql
+            // container
+            "spring.datasource.username=root",
+            "spring.datasource.password=root",
+            "spring.datasource.hikari.maximum-pool-size=8",
+            "spring.datasource.hikari.minimum-idle=300000"
+        })
 public class MySQLGrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 
     @Before

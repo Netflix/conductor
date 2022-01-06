@@ -27,11 +27,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Periodically polls all running workflows in the system and evaluates them for timeouts and/or maintain consistency.
+ * Periodically polls all running workflows in the system and evaluates them for timeouts and/or
+ * maintain consistency.
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
-@ConditionalOnProperty(name = "conductor.workflow-reconciler.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "conductor.workflow-reconciler.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class WorkflowReconciler extends LifecycleAwareComponent {
 
     private final WorkflowSweeper workflowSweeper;
@@ -40,14 +44,19 @@ public class WorkflowReconciler extends LifecycleAwareComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowReconciler.class);
 
-    public WorkflowReconciler(WorkflowSweeper workflowSweeper, QueueDAO queueDAO, ConductorProperties properties) {
+    public WorkflowReconciler(
+            WorkflowSweeper workflowSweeper, QueueDAO queueDAO, ConductorProperties properties) {
         this.workflowSweeper = workflowSweeper;
         this.queueDAO = queueDAO;
         this.sweeperThreadCount = properties.getSweeperThreadCount();
-        LOGGER.info("WorkflowReconciler initialized with {} sweeper threads", properties.getSweeperThreadCount());
+        LOGGER.info(
+                "WorkflowReconciler initialized with {} sweeper threads",
+                properties.getSweeperThreadCount());
     }
 
-    @Scheduled(fixedDelayString = "${conductor.sweep-frequency.millis:500}", initialDelayString = "${conductor.sweep-frequency.millis:500}")
+    @Scheduled(
+            fixedDelayString = "${conductor.sweep-frequency.millis:500}",
+            initialDelayString = "${conductor.sweep-frequency.millis:500}")
     public void pollAndSweep() {
         try {
             if (!isRunning()) {
@@ -56,14 +65,16 @@ public class WorkflowReconciler extends LifecycleAwareComponent {
                 List<String> workflowIds = queueDAO.pop(DECIDER_QUEUE, sweeperThreadCount, 2000);
                 if (workflowIds != null) {
                     // wait for all workflow ids to be "swept"
-                    CompletableFuture.allOf(workflowIds
-                        .stream()
-                        .map(workflowSweeper::sweepAsync)
-                        .toArray(CompletableFuture[]::new))
-                        .get();
-                    LOGGER.debug("Sweeper processed {} from the decider queue", String.join(",", workflowIds));
+                    CompletableFuture.allOf(
+                                    workflowIds.stream()
+                                            .map(workflowSweeper::sweepAsync)
+                                            .toArray(CompletableFuture[]::new))
+                            .get();
+                    LOGGER.debug(
+                            "Sweeper processed {} from the decider queue",
+                            String.join(",", workflowIds));
                 }
-                //NOTE: Disabling the sweeper implicitly disables this metric.
+                // NOTE: Disabling the sweeper implicitly disables this metric.
                 recordQueueDepth();
             }
         } catch (Exception e) {

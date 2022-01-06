@@ -19,23 +19,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("conductor.zookeeper-lock")
 public class ZookeeperProperties {
 
-    /**
-     * The connection string to be used to connect to the Zookeeper cluster
-     */
+    /** The connection string to be used to connect to the Zookeeper cluster */
     private String connectionString = "localhost:2181";
 
-    /**
-     * The session timeout for the curator
-     */private Duration sessionTimeout = Duration.ofMillis(CuratorFrameworkFactory.builder().getSessionTimeoutMs());
+    /** The session timeout for the curator */
+    private Duration sessionTimeout =
+            Duration.ofMillis(CuratorFrameworkFactory.builder().getSessionTimeoutMs());
 
-    /**
-     * The connection timeout for the curator
-     */
-    private Duration connectionTimeout = Duration.ofMillis(CuratorFrameworkFactory.builder().getConnectionTimeoutMs());
+    /** The connection timeout for the curator */
+    private Duration connectionTimeout =
+            Duration.ofMillis(CuratorFrameworkFactory.builder().getConnectionTimeoutMs());
 
-    /**
-     * The namespace to use within the zookeeper cluster
-     */
+    /** The namespace to use within the zookeeper cluster */
     private String namespace = "";
 
     public String getConnectionString() {

@@ -17,6 +17,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.netflix.conductor.core.sync.Lock;
 import com.netflix.conductor.zookeeper.config.ZookeeperProperties;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -25,8 +26,6 @@ import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("UnstableApiUsage")
 public class ZookeeperLock implements Lock {
@@ -42,27 +41,29 @@ public class ZookeeperLock implements Lock {
     public ZookeeperLock(ZookeeperProperties properties) {
         String lockNamespace = properties.getNamespace();
         RetryPolicy retryPolicy = new ExponentialBackoffRetry(1000, 3);
-        client = CuratorFrameworkFactory.newClient(
-            properties.getConnectionString(),
-            (int) properties.getSessionTimeout().toMillis(),
-            (int) properties.getConnectionTimeout().toMillis(),
-            retryPolicy
-        );
+        client =
+                CuratorFrameworkFactory.newClient(
+                        properties.getConnectionString(),
+                        (int) properties.getSessionTimeout().toMillis(),
+                        (int) properties.getConnectionTimeout().toMillis(),
+                        retryPolicy);
         client.start();
-        zkLocks = CacheBuilder.newBuilder()
-            .maximumSize(CACHE_MAXSIZE)
-            .expireAfterAccess(CACHE_EXPIRY_TIME, TimeUnit.MINUTES)
-            .build(new CacheLoader<String, InterProcessMutex>() {
-                       @Override
-                       public InterProcessMutex load(String key) {
-                           return new InterProcessMutex(client, zkPath.concat(key));
-                       }
-                   }
-            );
+        zkLocks =
+                CacheBuilder.newBuilder()
+                        .maximumSize(CACHE_MAXSIZE)
+                        .expireAfterAccess(CACHE_EXPIRY_TIME, TimeUnit.MINUTES)
+                        .build(
+                                new CacheLoader<String, InterProcessMutex>() {
+                                    @Override
+                                    public InterProcessMutex load(String key) {
+                                        return new InterProcessMutex(client, zkPath.concat(key));
+                                    }
+                                });
 
-        zkPath = StringUtils.isEmpty(lockNamespace)
-            ? ("/conductor/")
-            : ("/conductor/" + lockNamespace + "/");
+        zkPath =
+                StringUtils.isEmpty(lockNamespace)
+                        ? ("/conductor/")
+                        : ("/conductor/" + lockNamespace + "/");
     }
 
     public void acquireLock(String lockId) {

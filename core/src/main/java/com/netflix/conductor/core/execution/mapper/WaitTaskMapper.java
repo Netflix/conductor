@@ -12,25 +12,24 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
-
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#WAIT} to a {@link Task}
- * of type {@link Wait} with {@link Task.Status#IN_PROGRESS}
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+ * TaskType#WAIT} to a {@link Task} of type {@link Wait} with {@link Task.Status#IN_PROGRESS}
  */
 @Component
 public class WaitTaskMapper implements TaskMapper {
@@ -57,9 +56,12 @@ public class WaitTaskMapper implements TaskMapper {
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
-        Map<String, Object> waitTaskInput = parametersUtils
-            .getTaskInputV2(taskMapperContext.getTaskToSchedule().getInputParameters(),
-                workflowInstance, taskId, null);
+        Map<String, Object> waitTaskInput =
+                parametersUtils.getTaskInputV2(
+                        taskMapperContext.getTaskToSchedule().getInputParameters(),
+                        workflowInstance,
+                        taskId,
+                        null);
 
         Task waitTask = new Task();
         waitTask.setTaskType(TASK_TYPE_WAIT);

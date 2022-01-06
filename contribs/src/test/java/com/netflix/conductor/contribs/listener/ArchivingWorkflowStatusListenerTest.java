@@ -12,23 +12,20 @@
  */
 package com.netflix.conductor.contribs.listener;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.contribs.listener.archive.ArchivingWorkflowStatusListener;
-import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.util.UUID;
-
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-/**
- * @author pavel.halabala
- */
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.contribs.listener.archive.ArchivingWorkflowStatusListener;
+import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
+import java.util.UUID;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
+/** @author pavel.halabala */
 public class ArchivingWorkflowStatusListenerTest {
 
     Workflow workflow;
@@ -51,16 +48,14 @@ public class ArchivingWorkflowStatusListenerTest {
     @Test
     public void testArchiveOnWorkflowCompleted() {
         listener.onWorkflowCompleted(workflow);
-        verify(executionDAOFacade, times(1))
-            .removeWorkflow(workflow.getWorkflowId(), true);
+        verify(executionDAOFacade, times(1)).removeWorkflow(workflow.getWorkflowId(), true);
         verifyNoMoreInteractions(executionDAOFacade);
     }
 
     @Test
     public void testArchiveOnWorkflowTerminated() {
         listener.onWorkflowTerminated(workflow);
-        verify(executionDAOFacade, times(1))
-            .removeWorkflow(workflow.getWorkflowId(), true);
+        verify(executionDAOFacade, times(1)).removeWorkflow(workflow.getWorkflowId(), true);
         verifyNoMoreInteractions(executionDAOFacade);
     }
 }

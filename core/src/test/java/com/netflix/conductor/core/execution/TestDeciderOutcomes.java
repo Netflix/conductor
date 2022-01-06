@@ -12,6 +12,31 @@
  */
 package com.netflix.conductor.core.execution;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.DECISION;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.DYNAMIC;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.EVENT;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.FORK_JOIN;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.FORK_JOIN_DYNAMIC;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.HTTP;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.JOIN;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SIMPLE;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SWITCH;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SWITCH;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -45,6 +70,15 @@ import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import java.io.InputStream;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,57 +91,21 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.unit.DataSize;
 
-import java.io.InputStream;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.DECISION;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.DYNAMIC;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.EVENT;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.FORK_JOIN;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.FORK_JOIN_DYNAMIC;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.HTTP;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.JOIN;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.SIMPLE;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.SWITCH;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SWITCH;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.USER_DEFINED;
-import static com.netflix.conductor.common.metadata.tasks.TaskType.WAIT;
-import static java.util.function.Function.identity;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, TestDeciderOutcomes.TestConfiguration.class})
+@ContextConfiguration(
+        classes = {
+            TestObjectMapperConfiguration.class,
+            TestDeciderOutcomes.TestConfiguration.class
+        })
 @RunWith(SpringRunner.class)
 public class TestDeciderOutcomes {
 
     private DeciderService deciderService;
 
-    @Autowired
-    private Map<String, Evaluator> evaluators;
+    @Autowired private Map<String, Evaluator> evaluators;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private SystemTaskRegistry systemTaskRegistry;
+    @Autowired private SystemTaskRegistry systemTaskRegistry;
 
     @Configuration
     @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans.
@@ -138,10 +136,12 @@ public class TestDeciderOutcomes {
     public void init() {
         MetadataDAO metadataDAO = mock(MetadataDAO.class);
 
-        ExternalPayloadStorageUtils externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
+        ExternalPayloadStorageUtils externalPayloadStorageUtils =
+                mock(ExternalPayloadStorageUtils.class);
         ConductorProperties properties = mock(ConductorProperties.class);
         when(properties.getTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10L));
-        when(properties.getMaxTaskInputPayloadSizeThreshold()).thenReturn(DataSize.ofKilobytes(10240L));
+        when(properties.getMaxTaskInputPayloadSizeThreshold())
+                .thenReturn(DataSize.ofKilobytes(10240L));
 
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryCount(1);
@@ -155,7 +155,9 @@ public class TestDeciderOutcomes {
         taskMappers.put(DYNAMIC, new DynamicTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(FORK_JOIN, new ForkJoinTaskMapper());
         taskMappers.put(JOIN, new JoinTaskMapper());
-        taskMappers.put(FORK_JOIN_DYNAMIC, new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO));
+        taskMappers.put(
+                FORK_JOIN_DYNAMIC,
+                new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO));
         taskMappers.put(USER_DEFINED, new UserDefinedTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(SIMPLE, new SimpleTaskMapper(parametersUtils));
         taskMappers.put(SUB_WORKFLOW, new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
@@ -163,8 +165,14 @@ public class TestDeciderOutcomes {
         taskMappers.put(WAIT, new WaitTaskMapper(parametersUtils));
         taskMappers.put(HTTP, new HTTPTaskMapper(parametersUtils, metadataDAO));
 
-        this.deciderService = new DeciderService(parametersUtils, metadataDAO, externalPayloadStorageUtils, systemTaskRegistry, taskMappers,
-            Duration.ofMinutes(60));
+        this.deciderService =
+                new DeciderService(
+                        parametersUtils,
+                        metadataDAO,
+                        externalPayloadStorageUtils,
+                        systemTaskRegistry,
+                        taskMappers,
+                        Duration.ofMinutes(60));
     }
 
     @Test
@@ -196,7 +204,8 @@ public class TestDeciderOutcomes {
 
     @Test
     public void testWorkflowWithNoTasksWithSwitch() throws Exception {
-        InputStream stream = new ClassPathResource("./conditional_flow_with_switch.json").getInputStream();
+        InputStream stream =
+                new ClassPathResource("./conditional_flow_with_switch.json").getInputStream();
         WorkflowDef def = objectMapper.readValue(stream, WorkflowDef.class);
         assertNotNull(def);
 
@@ -220,7 +229,6 @@ public class TestDeciderOutcomes {
         assertEquals(1, outcome.tasksToBeScheduled.size());
         assertEquals("junit_task_3", outcome.tasksToBeScheduled.get(0).getTaskDefName());
     }
-
 
     @Test
     public void testRetries() {
@@ -246,7 +254,9 @@ public class TestDeciderOutcomes {
         assertNotNull(outcome);
 
         assertEquals(1, outcome.tasksToBeScheduled.size());
-        assertEquals(workflowTask.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                workflowTask.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
 
         String task1Id = outcome.tasksToBeScheduled.get(0).getTaskId();
         assertEquals(task1Id, outcome.tasksToBeScheduled.get(0).getInputData().get("taskId"));
@@ -262,8 +272,9 @@ public class TestDeciderOutcomes {
         assertEquals(1, outcome.tasksToBeScheduled.size());
         assertEquals(task1Id, outcome.tasksToBeUpdated.get(0).getTaskId());
         assertNotSame(task1Id, outcome.tasksToBeScheduled.get(0).getTaskId());
-        assertEquals(outcome.tasksToBeScheduled.get(0).getTaskId(),
-            outcome.tasksToBeScheduled.get(0).getInputData().get("taskId"));
+        assertEquals(
+                outcome.tasksToBeScheduled.get(0).getTaskId(),
+                outcome.tasksToBeScheduled.get(0).getInputData().get("taskId"));
         assertEquals(task1Id, outcome.tasksToBeScheduled.get(0).getRetriedTaskId());
         assertEquals(123, outcome.tasksToBeScheduled.get(0).getInputData().get("requestId"));
 
@@ -317,8 +328,9 @@ public class TestDeciderOutcomes {
 
         assertEquals("v", outcome.tasksToBeScheduled.get(1).getInputData().get("k"));
         assertEquals(1, outcome.tasksToBeScheduled.get(1).getInputData().get("k1"));
-        assertEquals(outcome.tasksToBeScheduled.get(1).getTaskId(),
-            outcome.tasksToBeScheduled.get(1).getInputData().get("taskId"));
+        assertEquals(
+                outcome.tasksToBeScheduled.get(1).getTaskId(),
+                outcome.tasksToBeScheduled.get(1).getInputData().get("taskId"));
         task1Id = outcome.tasksToBeScheduled.get(1).getTaskId();
 
         outcome.tasksToBeScheduled.get(1).setStatus(Status.FAILED);
@@ -328,11 +340,14 @@ public class TestDeciderOutcomes {
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
 
         outcome = deciderService.decide(workflow);
-        assertTrue(outcome.tasksToBeScheduled.stream().anyMatch(task1 -> task1.getReferenceTaskName().equals("f0")));
+        assertTrue(
+                outcome.tasksToBeScheduled.stream()
+                        .anyMatch(task1 -> task1.getReferenceTaskName().equals("f0")));
 
-        Optional<Task> optionalTask = outcome.tasksToBeScheduled.stream()
-            .filter(t -> t.getReferenceTaskName().equals("f0"))
-            .findFirst();
+        Optional<Task> optionalTask =
+                outcome.tasksToBeScheduled.stream()
+                        .filter(t -> t.getReferenceTaskName().equals("f0"))
+                        .findFirst();
         assertTrue(optionalTask.isPresent());
         Task task = optionalTask.get();
         assertEquals("v", task.getInputData().get("k"));
@@ -371,7 +386,9 @@ public class TestDeciderOutcomes {
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
         assertEquals(1, outcome.tasksToBeScheduled.size());
-        assertEquals(task1.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                task1.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
 
         for (int i = 0; i < 3; i++) {
             String task1Id = outcome.tasksToBeScheduled.get(0).getTaskId();
@@ -389,7 +406,9 @@ public class TestDeciderOutcomes {
 
             assertEquals(Task.Status.FAILED, workflow.getTasks().get(0).getStatus());
             assertEquals(task1Id, outcome.tasksToBeUpdated.get(0).getTaskId());
-            assertEquals(task1.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+            assertEquals(
+                    task1.getTaskReferenceName(),
+                    outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
             assertEquals(i + 1, outcome.tasksToBeScheduled.get(0).getRetryCount());
         }
 
@@ -407,7 +426,9 @@ public class TestDeciderOutcomes {
 
         assertEquals(Task.Status.COMPLETED_WITH_ERRORS, workflow.getTasks().get(0).getStatus());
         assertEquals(task1Id, outcome.tasksToBeUpdated.get(0).getTaskId());
-        assertEquals(task2.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                task2.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
     }
 
     @Test
@@ -479,7 +500,8 @@ public class TestDeciderOutcomes {
         assertEquals(TASK_TYPE_JOIN, outcome.tasksToBeScheduled.get(0).getTaskType());
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(Task.Status.COMPLETED_WITH_ERRORS, outcome.tasksToBeUpdated.get(i).getStatus());
+            assertEquals(
+                    Task.Status.COMPLETED_WITH_ERRORS, outcome.tasksToBeUpdated.get(i).getStatus());
             assertEquals("f" + (i), outcome.tasksToBeUpdated.get(i).getTaskDefName());
         }
 
@@ -518,7 +540,7 @@ public class TestDeciderOutcomes {
         decide.getInputParameters().put("Id", "${workflow.input.Id}");
         decide.getInputParameters().put("location", "${workflow.input.location}");
         decide.setCaseExpression(
-            "if ($.Id == null) 'bad input'; else if ( ($.Id != null && $.Id % 2 == 0) || $.location == 'usa') 'even'; else 'odd'; ");
+                "if ($.Id == null) 'bad input'; else if ( ($.Id != null && $.Id % 2 == 0) || $.location == 'usa') 'even'; else 'odd'; ");
 
         decide.getDecisionCases().put("even", Collections.singletonList(even));
         decide.getDecisionCases().put("odd", Collections.singletonList(odd));
@@ -533,30 +555,44 @@ public class TestDeciderOutcomes {
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
         assertEquals(2, outcome.tasksToBeScheduled.size());
-        assertEquals(decide.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
-        assertEquals(defaultt.getTaskReferenceName(),
-            outcome.tasksToBeScheduled.get(1).getReferenceTaskName());        //default
-        assertEquals(Collections.singletonList("bad input"),
-            outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
+        assertEquals(
+                decide.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                defaultt.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(1).getReferenceTaskName()); // default
+        assertEquals(
+                Collections.singletonList("bad input"),
+                outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
 
         workflow.getInput().put("Id", 9);
         workflow.getInput().put("location", "usa");
         outcome = deciderService.decide(workflow);
         assertEquals(2, outcome.tasksToBeScheduled.size());
-        assertEquals(decide.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
-        assertEquals(even.getTaskReferenceName(),
-            outcome.tasksToBeScheduled.get(1).getReferenceTaskName());        //even because of location == usa
-        assertEquals(Collections.singletonList("even"),
-            outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
+        assertEquals(
+                decide.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                even.getTaskReferenceName(),
+                outcome.tasksToBeScheduled
+                        .get(1)
+                        .getReferenceTaskName()); // even because of location == usa
+        assertEquals(
+                Collections.singletonList("even"),
+                outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
 
         workflow.getInput().put("Id", 9);
         workflow.getInput().put("location", "canada");
         outcome = deciderService.decide(workflow);
         assertEquals(2, outcome.tasksToBeScheduled.size());
-        assertEquals(decide.getTaskReferenceName(), outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
-        assertEquals(odd.getTaskReferenceName(),
-            outcome.tasksToBeScheduled.get(1).getReferenceTaskName());            //odd
-        assertEquals(Collections.singletonList("odd"),
-            outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
+        assertEquals(
+                decide.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(0).getReferenceTaskName());
+        assertEquals(
+                odd.getTaskReferenceName(),
+                outcome.tasksToBeScheduled.get(1).getReferenceTaskName()); // odd
+        assertEquals(
+                Collections.singletonList("odd"),
+                outcome.tasksToBeScheduled.get(0).getOutputData().get("caseOutput"));
     }
 }

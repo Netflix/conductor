@@ -21,5 +21,6 @@ public interface TaskMapper {
 
     TaskType getTaskType();
 
-    List<Task> getMappedTasks(TaskMapperContext taskMapperContext) throws TerminateWorkflowException;
+    List<Task> getMappedTasks(TaskMapperContext taskMapperContext)
+            throws TerminateWorkflowException;
 }

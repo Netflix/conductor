@@ -14,9 +14,8 @@ package com.netflix.conductor.common.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.context.annotation.Configuration;
-
 import javax.annotation.PostConstruct;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class ObjectMapperConfiguration {
@@ -27,12 +26,11 @@ public class ObjectMapperConfiguration {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Set default property inclusion like {@link ObjectMapperProvider#getObjectMapper()}.
-     */
+    /** Set default property inclusion like {@link ObjectMapperProvider#getObjectMapper()}. */
     @PostConstruct
     public void customizeDefaultObjectMapper() {
         objectMapper.setDefaultPropertyInclusion(
-                JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
+                JsonInclude.Value.construct(
+                        JsonInclude.Include.NON_NULL, JsonInclude.Include.ALWAYS));
     }
 }

@@ -23,17 +23,17 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.metrics.Monitors;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 /**
- * Action Processor subscribes to the Event Actions queue and processes the actions (e.g. start workflow etc)
+ * Action Processor subscribes to the Event Actions queue and processes the actions (e.g. start
+ * workflow etc)
  */
 @Component
 public class SimpleActionProcessor implements ActionProcessor {
@@ -44,17 +44,23 @@ public class SimpleActionProcessor implements ActionProcessor {
     private final ParametersUtils parametersUtils;
     private final JsonUtils jsonUtils;
 
-    public SimpleActionProcessor(WorkflowExecutor workflowExecutor,
-                                 ParametersUtils parametersUtils,
-                                 JsonUtils jsonUtils) {
+    public SimpleActionProcessor(
+            WorkflowExecutor workflowExecutor,
+            ParametersUtils parametersUtils,
+            JsonUtils jsonUtils) {
         this.workflowExecutor = workflowExecutor;
         this.parametersUtils = parametersUtils;
         this.jsonUtils = jsonUtils;
     }
 
-    public Map<String, Object> execute(Action action, Object payloadObject, String event, String messageId) {
+    public Map<String, Object> execute(
+            Action action, Object payloadObject, String event, String messageId) {
 
-        LOGGER.debug("Executing action: {} for event: {} with messageId:{}", action.getAction(), event, messageId);
+        LOGGER.debug(
+                "Executing action: {} for event: {} with messageId:{}",
+                action.getAction(),
+                event,
+                messageId);
 
         Object jsonObject = payloadObject;
         if (action.isExpandInlineJSON()) {
@@ -65,17 +71,30 @@ public class SimpleActionProcessor implements ActionProcessor {
             case start_workflow:
                 return startWorkflow(action, jsonObject, event, messageId);
             case complete_task:
-                return completeTask(action, jsonObject, action.getComplete_task(), Status.COMPLETED, event, messageId);
+                return completeTask(
+                        action,
+                        jsonObject,
+                        action.getComplete_task(),
+                        Status.COMPLETED,
+                        event,
+                        messageId);
             case fail_task:
-                return completeTask(action, jsonObject, action.getFail_task(), Status.FAILED, event, messageId);
+                return completeTask(
+                        action, jsonObject, action.getFail_task(), Status.FAILED, event, messageId);
             default:
                 break;
         }
-        throw new UnsupportedOperationException("Action not supported " + action.getAction() + " for event " + event);
+        throw new UnsupportedOperationException(
+                "Action not supported " + action.getAction() + " for event " + event);
     }
 
-    private Map<String, Object> completeTask(Action action, Object payload, TaskDetails taskDetails, Status status,
-                                             String event, String messageId) {
+    private Map<String, Object> completeTask(
+            Action action,
+            Object payload,
+            TaskDetails taskDetails,
+            Status status,
+            String event,
+            String messageId) {
 
         Map<String, Object> input = new HashMap<>();
         input.put("workflowId", taskDetails.getWorkflowId());
@@ -101,8 +120,13 @@ public class SimpleActionProcessor implements ActionProcessor {
         }
 
         if (task == null) {
-            replaced.put("error",
-                    "No task found with taskId: " + taskId + ", reference name: " + taskRefName + ", workflowId: "
+            replaced.put(
+                    "error",
+                    "No task found with taskId: "
+                            + taskId
+                            + ", reference name: "
+                            + taskRefName
+                            + ", workflowId: "
                             + workflowId);
             return replaced;
         }
@@ -115,19 +139,31 @@ public class SimpleActionProcessor implements ActionProcessor {
 
         try {
             workflowExecutor.updateTask(new TaskResult(task));
-            LOGGER.debug("Updated task: {} in workflow:{} with status: {} for event: {} for message:{}", taskId,
-                    workflowId, status, event, messageId);
+            LOGGER.debug(
+                    "Updated task: {} in workflow:{} with status: {} for event: {} for message:{}",
+                    taskId,
+                    workflowId,
+                    status,
+                    event,
+                    messageId);
         } catch (RuntimeException e) {
             Monitors.recordEventActionError(action.getAction().name(), task.getTaskType(), event);
-            LOGGER.error("Error updating task: {} in workflow: {} in action: {} for event: {} for message: {}",
-                    taskDetails.getTaskRefName(), taskDetails.getWorkflowId(), action.getAction(), event, messageId, e);
+            LOGGER.error(
+                    "Error updating task: {} in workflow: {} in action: {} for event: {} for message: {}",
+                    taskDetails.getTaskRefName(),
+                    taskDetails.getWorkflowId(),
+                    action.getAction(),
+                    event,
+                    messageId,
+                    e);
             replaced.put("error", e.getMessage());
             throw e;
         }
         return replaced;
     }
 
-    private Map<String, Object> startWorkflow(Action action, Object payload, String event, String messageId) {
+    private Map<String, Object> startWorkflow(
+            Action action, Object payload, String event, String messageId) {
         StartWorkflow params = action.getStart_workflow();
         Map<String, Object> output = new HashMap<>();
         try {
@@ -142,19 +178,35 @@ public class SimpleActionProcessor implements ActionProcessor {
             workflowInput.put("conductor.event.messageId", messageId);
             workflowInput.put("conductor.event.name", event);
 
-            String workflowId = workflowExecutor.startWorkflow(params.getName(), params.getVersion(),
-                    Optional.ofNullable(replaced.get("correlationId")).map(Object::toString)
-                            .orElse(params.getCorrelationId()),
-                    workflowInput, null, event, params.getTaskToDomain());
+            String workflowId =
+                    workflowExecutor.startWorkflow(
+                            params.getName(),
+                            params.getVersion(),
+                            Optional.ofNullable(replaced.get("correlationId"))
+                                    .map(Object::toString)
+                                    .orElse(params.getCorrelationId()),
+                            workflowInput,
+                            null,
+                            event,
+                            params.getTaskToDomain());
             output.put("workflowId", workflowId);
-            LOGGER
-                    .debug("Started workflow: {}/{}/{} for event: {} for message:{}", params.getName(), params.getVersion(),
-                            workflowId, event, messageId);
+            LOGGER.debug(
+                    "Started workflow: {}/{}/{} for event: {} for message:{}",
+                    params.getName(),
+                    params.getVersion(),
+                    workflowId,
+                    event,
+                    messageId);
 
         } catch (RuntimeException e) {
             Monitors.recordEventActionError(action.getAction().name(), params.getName(), event);
-            LOGGER.error("Error starting workflow: {}, version: {}, for event: {} for message: {}", params.getName(),
-                    params.getVersion(), event, messageId, e);
+            LOGGER.error(
+                    "Error starting workflow: {}, version: {}, for event: {} for message: {}",
+                    params.getName(),
+                    params.getVersion(),
+                    event,
+                    messageId,
+                    e);
             output.put("error", e.getMessage());
             throw e;
         }

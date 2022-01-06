@@ -42,25 +42,31 @@ public class SQSEventQueueConfiguration {
     }
 
     @Bean
-    public EventQueueProvider sqsEventQueueProvider(AmazonSQSClient sqsClient, SQSEventQueueProperties properties,
-        Scheduler scheduler) {
+    public EventQueueProvider sqsEventQueueProvider(
+            AmazonSQSClient sqsClient, SQSEventQueueProperties properties, Scheduler scheduler) {
         return new SQSEventQueueProvider(sqsClient, properties, scheduler);
     }
 
-    @ConditionalOnProperty(name = "conductor.default-event-queue.type", havingValue = "sqs", matchIfMissing = true)
+    @ConditionalOnProperty(
+            name = "conductor.default-event-queue.type",
+            havingValue = "sqs",
+            matchIfMissing = true)
     @Bean
-    public Map<Status, ObservableQueue> getQueues(ConductorProperties conductorProperties,
-        SQSEventQueueProperties properties, AmazonSQSClient sqsClient) {
+    public Map<Status, ObservableQueue> getQueues(
+            ConductorProperties conductorProperties,
+            SQSEventQueueProperties properties,
+            AmazonSQSClient sqsClient) {
         String stack = "";
         if (conductorProperties.getStack() != null && conductorProperties.getStack().length() > 0) {
             stack = conductorProperties.getStack() + "_";
         }
-        Status[] statuses = new Status[]{Status.COMPLETED, Status.FAILED};
+        Status[] statuses = new Status[] {Status.COMPLETED, Status.FAILED};
         Map<Status, ObservableQueue> queues = new HashMap<>();
         for (Status status : statuses) {
-            String queuePrefix = StringUtils.isBlank(properties.getListenerQueuePrefix())
-                ? conductorProperties.getAppId() + "_sqs_notify_" + stack
-                : properties.getListenerQueuePrefix();
+            String queuePrefix =
+                    StringUtils.isBlank(properties.getListenerQueuePrefix())
+                            ? conductorProperties.getAppId() + "_sqs_notify_" + stack
+                            : properties.getListenerQueuePrefix();
 
             String queueName = queuePrefix + status.name();
 

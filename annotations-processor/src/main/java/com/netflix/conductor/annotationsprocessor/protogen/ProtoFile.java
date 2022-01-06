@@ -2,7 +2,6 @@ package com.netflix.conductor.annotationsprocessor.protogen;
 
 import com.netflix.conductor.annotationsprocessor.protogen.types.TypeMapper;
 import com.squareup.javapoet.ClassName;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +16,11 @@ public class ProtoFile {
     private String javaPackageName;
     private String goPackageName;
 
-    public ProtoFile(Class<?> object, String protoPackageName, String javaPackageName, String goPackageName) {
+    public ProtoFile(
+            Class<?> object,
+            String protoPackageName,
+            String javaPackageName,
+            String goPackageName) {
         this.protoPackageName = protoPackageName;
         this.javaPackageName = javaPackageName;
         this.goPackageName = goPackageName;
@@ -25,7 +28,7 @@ public class ProtoFile {
         String className = object.getSimpleName() + PROTO_SUFFIX;
         this.filePath = "model/" + object.getSimpleName().toLowerCase() + ".proto";
         this.baseClass = ClassName.get(this.javaPackageName, className);
-        this.message = new Message(object,  TypeMapper.INSTANCE.baseClass(baseClass, filePath));
+        this.message = new Message(object, TypeMapper.INSTANCE.baseClass(baseClass, filePath));
     }
 
     public String getJavaClassName() {

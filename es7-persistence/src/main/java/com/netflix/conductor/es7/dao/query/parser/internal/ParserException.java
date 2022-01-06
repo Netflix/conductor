@@ -15,19 +15,15 @@
  */
 package com.netflix.conductor.es7.dao.query.parser.internal;
 
-/**
- * @author Viren
- *
- */
+/** @author Viren */
 @SuppressWarnings("serial")
 public class ParserException extends Exception {
 
-	public ParserException(String message) {
-		super(message);
-	}
+    public ParserException(String message) {
+        super(message);
+    }
 
-	public ParserException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
+    public ParserException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -11,9 +11,6 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-
-import javax.annotation.Generated;
-import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -21,9 +18,12 @@ import java.io.Writer;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
+import javax.annotation.Generated;
+import javax.lang.model.element.Modifier;
 
 public class ProtoGen {
-    private final static String GENERATOR_NAME = "com.netflix.conductor.annotationsprocessor.protogen";
+    private static final String GENERATOR_NAME =
+            "com.netflix.conductor.annotationsprocessor.protogen";
 
     private String protoPackageName;
     private String javaPackageName;
@@ -37,10 +37,13 @@ public class ProtoGen {
     }
 
     public void writeMapper(File root, String mapperPackageName) throws IOException {
-        TypeSpec.Builder protoMapper = TypeSpec.classBuilder("AbstractProtoMapper")
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .addAnnotation(AnnotationSpec.builder(Generated.class)
-                        .addMember("value", "$S", GENERATOR_NAME).build());
+        TypeSpec.Builder protoMapper =
+                TypeSpec.classBuilder("AbstractProtoMapper")
+                        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                        .addAnnotation(
+                                AnnotationSpec.builder(Generated.class)
+                                        .addMember("value", "$S", GENERATOR_NAME)
+                                        .build());
 
         Set<MethodSpec> abstractMethods = new HashSet<>();
 
@@ -51,8 +54,7 @@ public class ProtoGen {
                         String n2 = p2.getMessage().getName();
                         return n1.compareTo(n2);
                     }
-                }
-        );
+                });
 
         for (ProtoFile protoFile : protoFiles) {
             AbstractMessage elem = protoFile.getMessage();
@@ -62,8 +64,8 @@ public class ProtoGen {
 
         protoMapper.addMethods(abstractMethods);
 
-        JavaFile javaFile = JavaFile.builder(mapperPackageName, protoMapper.build())
-                .indent("    ").build();
+        JavaFile javaFile =
+                JavaFile.builder(mapperPackageName, protoMapper.build()).indent("    ").build();
         File filename = new File(root, "AbstractProtoMapper.java");
         try (Writer writer = new FileWriter(filename.toString())) {
             System.out.printf("protogen: writing '%s'...\n", filename);
@@ -73,10 +75,11 @@ public class ProtoGen {
 
     public void writeProtos(File root) throws IOException {
         TemplateLoader loader = new ClassPathTemplateLoader("/templates", ".proto");
-        Handlebars handlebars = new Handlebars(loader)
-                .infiniteLoops(true)
-                .prettyPrint(true)
-                .with(EscapingStrategy.NOOP);
+        Handlebars handlebars =
+                new Handlebars(loader)
+                        .infiniteLoops(true)
+                        .prettyPrint(true)
+                        .with(EscapingStrategy.NOOP);
 
         Template protoFile = handlebars.compile("file");
 
@@ -90,11 +93,11 @@ public class ProtoGen {
     }
 
     public void processPackage(File jarFile, String packageName) throws IOException {
-        if (!jarFile.isFile())
-            throw new IOException("missing Jar file "+jarFile);
+        if (!jarFile.isFile()) throw new IOException("missing Jar file " + jarFile);
 
-        URL[] urls = new URL[]{jarFile.toURI().toURL()};
-        ClassLoader loader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
+        URL[] urls = new URL[] {jarFile.toURI().toURL()};
+        ClassLoader loader =
+                new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
         ClassPath cp = ClassPath.from(loader);
 
         System.out.printf("protogen: processing Jar '%s'\n", jarFile);

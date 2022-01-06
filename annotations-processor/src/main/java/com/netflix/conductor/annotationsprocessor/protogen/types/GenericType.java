@@ -3,7 +3,6 @@ package com.netflix.conductor.annotationsprocessor.protogen.types;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Set;
@@ -14,12 +13,12 @@ abstract class GenericType extends AbstractType {
     }
 
     protected Class getRawType() {
-        ParameterizedType tt = (ParameterizedType)this.getJavaType();
-        return (Class)tt.getRawType();
+        ParameterizedType tt = (ParameterizedType) this.getJavaType();
+        return (Class) tt.getRawType();
     }
 
     protected AbstractType resolveGenericParam(int idx) {
-        ParameterizedType tt = (ParameterizedType)this.getJavaType();
+        ParameterizedType tt = (ParameterizedType) this.getJavaType();
         Type[] types = tt.getActualTypeArguments();
 
         AbstractType abstractType = TypeMapper.INSTANCE.get(types[idx]);
@@ -30,7 +29,9 @@ abstract class GenericType extends AbstractType {
     }
 
     public abstract String getWrapperSuffix();
+
     public abstract AbstractType getValueType();
+
     public abstract TypeName resolveJavaProtoType();
 
     @Override

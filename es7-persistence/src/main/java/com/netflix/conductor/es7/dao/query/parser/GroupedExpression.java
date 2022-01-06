@@ -14,15 +14,10 @@ package com.netflix.conductor.es7.dao.query.parser;
 
 import com.netflix.conductor.es7.dao.query.parser.internal.AbstractNode;
 import com.netflix.conductor.es7.dao.query.parser.internal.ParserException;
-
+import java.io.InputStream;
 import org.elasticsearch.index.query.QueryBuilder;
 
-import java.io.InputStream;
-
-/**
- * @author Viren
- *
- */
+/** @author Viren */
 public class GroupedExpression extends AbstractNode implements FilterProvider {
 
     private Expression expression;
@@ -40,7 +35,6 @@ public class GroupedExpression extends AbstractNode implements FilterProvider {
 
         peeked = read(1);
         assertExpected(peeked, ")");
-
     }
 
     @Override
@@ -48,9 +42,7 @@ public class GroupedExpression extends AbstractNode implements FilterProvider {
         return "(" + expression + ")";
     }
 
-    /**
-     * @return the expression
-     */
+    /** @return the expression */
     public Expression getExpression() {
         return expression;
     }
@@ -59,6 +51,4 @@ public class GroupedExpression extends AbstractNode implements FilterProvider {
     public QueryBuilder getFilterBuilder() {
         return expression.getFilterBuilder();
     }
-
-
 }

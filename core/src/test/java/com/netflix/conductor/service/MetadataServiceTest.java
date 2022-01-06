@@ -64,17 +64,16 @@ public class MetadataServiceTest {
         }
 
         @Bean
-        public MetadataService metadataService(MetadataDAO metadataDAO, ConductorProperties properties) {
+        public MetadataService metadataService(
+                MetadataDAO metadataDAO, ConductorProperties properties) {
             EventHandlerDAO eventHandlerDAO = mock(EventHandlerDAO.class);
             return new MetadataServiceImpl(metadataDAO, eventHandlerDAO, properties);
         }
     }
 
-    @Autowired
-    private MetadataDAO metadataDAO;
+    @Autowired private MetadataDAO metadataDAO;
 
-    @Autowired
-    private MetadataService metadataService;
+    @Autowired private MetadataService metadataService;
 
     @Test(expected = ConstraintViolationException.class)
     public void testRegisterTaskDefNoName() {
@@ -115,7 +114,9 @@ public class MetadataServiceTest {
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
-            assertTrue(messages.contains("TaskDef responseTimeoutSeconds: 0 should be minimum 1 second"));
+            assertTrue(
+                    messages.contains(
+                            "TaskDef responseTimeoutSeconds: 0 should be minimum 1 second"));
             throw ex;
         }
         fail("metadataService.registerTaskDef did not throw ConstraintViolationException !");
@@ -283,7 +284,9 @@ public class MetadataServiceTest {
             assertEquals(3, ex.getConstraintViolations().size());
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
             assertTrue(messages.contains("WorkflowTask list cannot be empty"));
-            assertTrue(messages.contains("Workflow name cannot contain the following set of characters: ':'"));
+            assertTrue(
+                    messages.contains(
+                            "Workflow name cannot contain the following set of characters: ':'"));
             assertTrue(messages.contains("ownerEmail should be valid email address"));
             throw ex;
         }
@@ -351,7 +354,8 @@ public class MetadataServiceTest {
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
             assertTrue(messages.contains("Missing event handler name"));
             assertTrue(messages.contains("Missing event location"));
-            assertTrue(messages.contains("No actions specified. Please specify at-least one action"));
+            assertTrue(
+                    messages.contains("No actions specified. Please specify at-least one action"));
             throw ex;
         }
         fail("metadataService.addEventHandler did not throw ConstraintViolationException !");

@@ -12,12 +12,26 @@
  */
 package com.netflix.conductor.mysql.dao;
 
+import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
+import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.mysql.config.MySQLConfiguration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.flywaydb.core.Flyway;
 import org.junit.Before;
@@ -29,31 +43,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.netflix.conductor.core.exception.ApplicationException.Code.CONFLICT;
-import static com.netflix.conductor.core.exception.ApplicationException.Code.NOT_FOUND;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, MySQLConfiguration.class, FlywayAutoConfiguration.class})
+@ContextConfiguration(
+        classes = {
+            TestObjectMapperConfiguration.class,
+            MySQLConfiguration.class,
+            FlywayAutoConfiguration.class
+        })
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MySQLMetadataDAOTest {
 
-    @Autowired
-    private MySQLMetadataDAO metadataDAO;
+    @Autowired private MySQLMetadataDAO metadataDAO;
 
-    @Autowired
-    Flyway flyway;
+    @Autowired Flyway flyway;
 
     // clean the database between tests.
     @Before
@@ -71,18 +73,20 @@ public class MySQLMetadataDAOTest {
 
         metadataDAO.createWorkflowDef(def);
 
-        ApplicationException applicationException = assertThrows(ApplicationException.class,
-                () -> metadataDAO.createWorkflowDef(def));
-        assertEquals("Workflow with testDuplicate.1 already exists!", applicationException.getMessage());
+        ApplicationException applicationException =
+                assertThrows(ApplicationException.class, () -> metadataDAO.createWorkflowDef(def));
+        assertEquals(
+                "Workflow with testDuplicate.1 already exists!", applicationException.getMessage());
         assertEquals(CONFLICT, applicationException.getCode());
-
     }
 
     @Test
     public void testRemoveNotExistingWorkflowDef() {
-        ApplicationException applicationException = assertThrows(ApplicationException.class,
-                () -> metadataDAO.removeWorkflowDef("test", 1));
-        assertEquals("No such workflow definition: test version: 1", applicationException.getMessage());
+        ApplicationException applicationException =
+                assertThrows(
+                        ApplicationException.class, () -> metadataDAO.removeWorkflowDef("test", 1));
+        assertEquals(
+                "No such workflow definition: test version: 1", applicationException.getMessage());
         assertEquals(NOT_FOUND, applicationException.getCode());
     }
 
@@ -226,8 +230,10 @@ public class MySQLMetadataDAOTest {
 
     @Test
     public void testRemoveNotExistingTaskDef() {
-        ApplicationException applicationException = assertThrows(ApplicationException.class,
-                () -> metadataDAO.removeTaskDef("test" + UUID.randomUUID().toString()));
+        ApplicationException applicationException =
+                assertThrows(
+                        ApplicationException.class,
+                        () -> metadataDAO.removeTaskDef("test" + UUID.randomUUID().toString()));
         assertEquals("No such task definition", applicationException.getMessage());
         assertEquals(NOT_FOUND, applicationException.getCode());
     }
@@ -256,7 +262,7 @@ public class MySQLMetadataDAOTest {
 
         List<EventHandler> byEvents = metadataDAO.getEventHandlersForEvent(event1, true);
         assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());        //event is marked as in-active
+        assertEquals(0, byEvents.size()); // event is marked as in-active
 
         eventHandler.setActive(true);
         eventHandler.setEvent(event2);

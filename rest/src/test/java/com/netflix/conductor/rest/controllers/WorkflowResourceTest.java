@@ -12,19 +12,6 @@
  */
 package com.netflix.conductor.rest.controllers;
 
-import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
-import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.service.WorkflowService;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -39,10 +26,21 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
+import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.service.WorkflowService;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+
 public class WorkflowResourceTest {
 
-    @Mock
-    private WorkflowService mockWorkflowService;
+    @Mock private WorkflowService mockWorkflowService;
 
     private WorkflowResource workflowResource;
 
@@ -60,7 +58,8 @@ public class WorkflowResourceTest {
         input.put("1", "abc");
         startWorkflowRequest.setInput(input);
         String workflowID = "w112";
-        when(mockWorkflowService.startWorkflow(any(StartWorkflowRequest.class))).thenReturn(workflowID);
+        when(mockWorkflowService.startWorkflow(any(StartWorkflowRequest.class)))
+                .thenReturn(workflowID);
         assertEquals("w112", workflowResource.startWorkflow(startWorkflowRequest));
     }
 
@@ -69,8 +68,9 @@ public class WorkflowResourceTest {
         Map<String, Object> input = new HashMap<>();
         input.put("1", "abc");
         String workflowID = "w112";
-        when(mockWorkflowService.startWorkflow(anyString(), anyInt(), anyString(), anyInt(), anyMap()))
-            .thenReturn(workflowID);
+        when(mockWorkflowService.startWorkflow(
+                        anyString(), anyInt(), anyString(), anyInt(), anyMap()))
+                .thenReturn(workflowID);
         assertEquals("w112", workflowResource.startWorkflow("test1", 1, "c123", 0, input));
     }
 
@@ -78,11 +78,14 @@ public class WorkflowResourceTest {
     public void getWorkflows() {
         Workflow workflow = new Workflow();
         workflow.setCorrelationId("123");
-        ArrayList<Workflow> listOfWorkflows = new ArrayList<>() {{
-            add(workflow);
-        }};
+        ArrayList<Workflow> listOfWorkflows =
+                new ArrayList<>() {
+                    {
+                        add(workflow);
+                    }
+                };
         when(mockWorkflowService.getWorkflows(anyString(), anyString(), anyBoolean(), anyBoolean()))
-            .thenReturn(listOfWorkflows);
+                .thenReturn(listOfWorkflows);
         assertEquals(listOfWorkflows, workflowResource.getWorkflows("test1", "123", true, true));
     }
 
@@ -91,21 +94,27 @@ public class WorkflowResourceTest {
         Workflow workflow = new Workflow();
         workflow.setCorrelationId("c123");
 
-        List<Workflow> workflowArrayList = new ArrayList<>() {{
-            add(workflow);
-        }};
+        List<Workflow> workflowArrayList =
+                new ArrayList<>() {
+                    {
+                        add(workflow);
+                    }
+                };
 
-        List<String> correlationIdList = new ArrayList<>() {{
-            add("c123");
-        }};
+        List<String> correlationIdList =
+                new ArrayList<>() {
+                    {
+                        add("c123");
+                    }
+                };
 
         Map<String, List<Workflow>> workflowMap = new HashMap<>();
         workflowMap.put("c123", workflowArrayList);
 
         when(mockWorkflowService.getWorkflows(anyString(), anyBoolean(), anyBoolean(), anyList()))
-            .thenReturn(workflowMap);
-        assertEquals(workflowMap, workflowResource.getWorkflows("test", true,
-            true, correlationIdList));
+                .thenReturn(workflowMap);
+        assertEquals(
+                workflowMap, workflowResource.getWorkflows("test", true, true, correlationIdList));
     }
 
     @Test
@@ -113,7 +122,8 @@ public class WorkflowResourceTest {
         Workflow workflow = new Workflow();
         workflow.setCorrelationId("c123");
 
-        when(mockWorkflowService.getExecutionStatus(anyString(), anyBoolean())).thenReturn(workflow);
+        when(mockWorkflowService.getExecutionStatus(anyString(), anyBoolean()))
+                .thenReturn(workflow);
         assertEquals(workflow, workflowResource.getExecutionStatus("w123", true));
     }
 
@@ -125,11 +135,14 @@ public class WorkflowResourceTest {
 
     @Test
     public void testGetRunningWorkflow() {
-        List<String> listOfWorklfows = new ArrayList<>() {{
-            add("w123");
-        }};
+        List<String> listOfWorklfows =
+                new ArrayList<>() {
+                    {
+                        add("w123");
+                    }
+                };
         when(mockWorkflowService.getRunningWorkflows(anyString(), anyInt(), anyLong(), anyLong()))
-            .thenReturn(listOfWorklfows);
+                .thenReturn(listOfWorklfows);
         assertEquals(listOfWorklfows, workflowResource.getRunningWorkflow("w123", 1, 12L, 13L));
     }
 
@@ -154,14 +167,16 @@ public class WorkflowResourceTest {
     @Test
     public void testSkipTaskFromWorkflow() {
         workflowResource.skipTaskFromWorkflow("test", "testTask", null);
-        verify(mockWorkflowService, times(1)).skipTaskFromWorkflow(anyString(), anyString(), isNull());
+        verify(mockWorkflowService, times(1))
+                .skipTaskFromWorkflow(anyString(), anyString(), isNull());
     }
 
     @Test
     public void testRerun() {
         RerunWorkflowRequest request = new RerunWorkflowRequest();
         workflowResource.rerun("test", request);
-        verify(mockWorkflowService, times(1)).rerunWorkflow(anyString(), any(RerunWorkflowRequest.class));
+        verify(mockWorkflowService, times(1))
+                .rerunWorkflow(anyString(), any(RerunWorkflowRequest.class));
     }
 
     @Test
@@ -174,7 +189,6 @@ public class WorkflowResourceTest {
     public void testRetry() {
         workflowResource.retry("w123", false);
         verify(mockWorkflowService, times(1)).retryWorkflow(anyString(), anyBoolean());
-
     }
 
     @Test
@@ -192,9 +206,10 @@ public class WorkflowResourceTest {
     @Test
     public void testSearch() {
         workflowResource.search(0, 100, "asc", "*", "*");
-        verify(mockWorkflowService, times(1)).searchWorkflows(anyInt(), anyInt(),
-            anyString(), anyString(), anyString());
+        verify(mockWorkflowService, times(1))
+                .searchWorkflows(anyInt(), anyInt(), anyString(), anyString(), anyString());
     }
+
     @Test
     public void testSearchV2() {
         workflowResource.searchV2(0, 100, "asc", "*", "*");
@@ -204,8 +219,8 @@ public class WorkflowResourceTest {
     @Test
     public void testSearchWorkflowsByTasks() {
         workflowResource.searchWorkflowsByTasks(0, 100, "asc", "*", "*");
-        verify(mockWorkflowService, times(1)).searchWorkflowsByTasks(anyInt(), anyInt(),
-            anyString(), anyString(), anyString());
+        verify(mockWorkflowService, times(1))
+                .searchWorkflowsByTasks(anyInt(), anyInt(), anyString(), anyString(), anyString());
     }
 
     @Test

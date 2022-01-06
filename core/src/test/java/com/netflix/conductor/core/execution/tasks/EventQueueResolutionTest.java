@@ -12,6 +12,9 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -24,6 +27,8 @@ import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.MockQueueProvider;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,14 +36,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 /**
- * Tests the {@link Event#getQueue(Workflow, Task)} method with a real {@link ParametersUtils} object.
+ * Tests the {@link Event#getQueue(Workflow, Task)} method with a real {@link ParametersUtils}
+ * object.
  */
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -48,8 +48,7 @@ public class EventQueueResolutionTest {
     private EventQueues eventQueues;
     private ParametersUtils parametersUtils;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -115,7 +114,8 @@ public class EventQueueResolutionTest {
         task.getInputData().put("sink", sink);
         queue = event.getQueue(workflow, task);
         assertNotNull(queue);
-        assertEquals(workflow.getWorkflowName() + ":" + task.getReferenceTaskName(), queue.getName());
+        assertEquals(
+                workflow.getWorkflowName() + ":" + task.getReferenceTaskName(), queue.getName());
         assertEquals("conductor", queue.getType());
 
         sink = "sqs:static_value";
@@ -145,17 +145,25 @@ public class EventQueueResolutionTest {
         assertEquals("testWorkflow:some_arbitary_queue", queue.getName());
         assertEquals("testWorkflow:some_arbitary_queue", queue.getURI());
         assertEquals("conductor", queue.getType());
-        assertEquals("conductor:testWorkflow:some_arbitary_queue", task.getOutputData().get("event_produced"));
+        assertEquals(
+                "conductor:testWorkflow:some_arbitary_queue",
+                task.getOutputData().get("event_produced"));
 
         task.getInputData().put("sink", "conductor");
         queue = event.getQueue(workflow, task);
-        assertEquals("not in progress: " + task.getReasonForIncompletion(), Task.Status.IN_PROGRESS, task.getStatus());
+        assertEquals(
+                "not in progress: " + task.getReasonForIncompletion(),
+                Task.Status.IN_PROGRESS,
+                task.getStatus());
         assertNotNull(queue);
         assertEquals("testWorkflow:task0", queue.getName());
 
         task.getInputData().put("sink", "sqs:my_sqs_queue_name");
         queue = event.getQueue(workflow, task);
-        assertEquals("not in progress: " + task.getReasonForIncompletion(), Task.Status.IN_PROGRESS, task.getStatus());
+        assertEquals(
+                "not in progress: " + task.getReasonForIncompletion(),
+                Task.Status.IN_PROGRESS,
+                task.getStatus());
         assertNotNull(queue);
         assertEquals("my_sqs_queue_name", queue.getName());
         assertEquals("sqs", queue.getType());

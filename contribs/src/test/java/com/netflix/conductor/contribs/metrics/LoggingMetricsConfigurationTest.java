@@ -34,14 +34,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 @TestPropertySource(properties = {"conductor.metrics-logger.enabled=true"})
 public class LoggingMetricsConfigurationTest {
 
-    @Autowired
-    MetricRegistry metricRegistry;
+    @Autowired MetricRegistry metricRegistry;
 
     @Test
     public void testCollector() {
         Logger logger = spy(Logger.class);
         doReturn(true).when(logger).isInfoEnabled(any());
-        Slf4jReporterProvider reporterProvider = new Slf4jReporterProvider(metricRegistry, logger, 1);
+        Slf4jReporterProvider reporterProvider =
+                new Slf4jReporterProvider(metricRegistry, logger, 1);
         metricRegistry.counter("test").inc();
 
         reporterProvider.getReporter();

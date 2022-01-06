@@ -62,7 +62,8 @@ public class JsonJqTransformTest {
         jsonJqTransform.start(workflow, task, null);
 
         assertTrue(
-            ((String) task.getOutputData().get("error")).startsWith("Encountered \"<EOF>\" at line 1, column 1."));
+                ((String) task.getOutputData().get("error"))
+                        .startsWith("Encountered \"<EOF>\" at line 1, column 1."));
     }
 
     @Test
@@ -71,8 +72,9 @@ public class JsonJqTransformTest {
         final Workflow workflow = new Workflow();
         final Task task = new Task();
         final Map<String, Object> inputData = new HashMap<>();
-        inputData.put("queryExpression",
-            "{officeID: (.inputJson.OIDs | unique)[], requestedIndicatorList: .inputJson.requestedindicatorList}");
+        inputData.put(
+                "queryExpression",
+                "{officeID: (.inputJson.OIDs | unique)[], requestedIndicatorList: .inputJson.requestedindicatorList}");
         final Map<String, Object> inputJson = new HashMap<>();
         inputJson.put("OIDs", Collections.singletonList("VALUE"));
         final Map<String, Object> indicatorList = new HashMap<>();
@@ -86,6 +88,7 @@ public class JsonJqTransformTest {
         jsonJqTransform.start(workflow, task, null);
 
         assertTrue(
-            ((String) task.getOutputData().get("error")).startsWith("Encountered \" \"[\" \"[ \"\" at line 1"));
+                ((String) task.getOutputData().get("error"))
+                        .startsWith("Encountered \" \"[\" \"[ \"\" at line 1"));
     }
 }

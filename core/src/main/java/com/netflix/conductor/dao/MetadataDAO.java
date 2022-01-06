@@ -14,18 +14,13 @@ package com.netflix.conductor.dao;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Data access layer for the workflow metadata - task definitions and workflow definitions
- */
+/** Data access layer for the workflow metadata - task definitions and workflow definitions */
 public interface MetadataDAO {
 
-    /**
-     * @param taskDef task definition to be created
-     */
+    /** @param taskDef task definition to be created */
     void createTaskDef(TaskDef taskDef);
 
     /**
@@ -40,24 +35,16 @@ public interface MetadataDAO {
      */
     TaskDef getTaskDef(String name);
 
-    /**
-     * @return All the task definitions
-     */
+    /** @return All the task definitions */
     List<TaskDef> getAllTaskDefs();
 
-    /**
-     * @param name Name of the task
-     */
+    /** @param name Name of the task */
     void removeTaskDef(String name);
 
-    /**
-     * @param def workflow definition
-     */
+    /** @param def workflow definition */
     void createWorkflowDef(WorkflowDef def);
 
-    /**
-     * @param def workflow definition
-     */
+    /** @param def workflow definition */
     void updateWorkflowDef(WorkflowDef def);
 
     /**
@@ -67,20 +54,18 @@ public interface MetadataDAO {
     Optional<WorkflowDef> getLatestWorkflowDef(String name);
 
     /**
-     * @param name    Name of the workflow
+     * @param name Name of the workflow
      * @param version version
      * @return workflow definition
      */
     Optional<WorkflowDef> getWorkflowDef(String name, int version);
 
     /**
-     * @param name    Name of the workflow definition to be removed
+     * @param name Name of the workflow definition to be removed
      * @param version Version of the workflow definition to be removed
      */
     void removeWorkflowDef(String name, Integer version);
 
-    /**
-     * @return List of all the workflow definitions
-     */
+    /** @return List of all the workflow definitions */
     List<WorkflowDef> getAllWorkflowDefs();
 }

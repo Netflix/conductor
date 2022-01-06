@@ -17,7 +17,6 @@ import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.dyno.connectionpool.Host;
 import com.netflix.dyno.connectionpool.HostBuilder;
 import com.netflix.dyno.connectionpool.HostSupplier;
-
 import java.util.List;
 
 public class LocalhostHostSupplier implements HostSupplier {
@@ -30,12 +29,13 @@ public class LocalhostHostSupplier implements HostSupplier {
 
     @Override
     public List<Host> getHosts() {
-        Host dynoHost = new HostBuilder()
-                .setHostname("localhost")
-                .setIpAddress("0")
-                .setRack(properties.getAvailabilityZone())
-                .setStatus(Host.Status.Up)
-                .createHost();
+        Host dynoHost =
+                new HostBuilder()
+                        .setHostname("localhost")
+                        .setIpAddress("0")
+                        .setRack(properties.getAvailabilityZone())
+                        .setStatus(Host.Status.Up)
+                        .createHost();
         return Lists.newArrayList(dynoHost);
     }
 }

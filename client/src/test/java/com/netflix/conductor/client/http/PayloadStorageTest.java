@@ -37,20 +37,15 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({PayloadStorage.class})
 public class PayloadStorageTest {
 
-    @InjectMocks
-    PayloadStorage payloadStorage;
+    @InjectMocks PayloadStorage payloadStorage;
 
-    @Mock
-    ClientBase clientBase;
+    @Mock ClientBase clientBase;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void testUploadSuccessfully2xx() throws Exception {
@@ -110,7 +105,6 @@ public class PayloadStorageTest {
 
         payloadStorage.upload("http://invalidUrl/^", null, 0);
     }
-
 
     @Test
     public void testUploadIOException() throws Exception {

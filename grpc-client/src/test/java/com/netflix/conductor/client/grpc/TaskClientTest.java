@@ -12,6 +12,10 @@
  */
 package com.netflix.conductor.client.grpc;
 
+import static junit.framework.TestCase.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
@@ -28,18 +32,12 @@ import org.mockito.Mock;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 @RunWith(SpringRunner.class)
 public class TaskClientTest {
 
-    @Mock
-    ProtoMapper mockedProtoMapper;
+    @Mock ProtoMapper mockedProtoMapper;
 
-    @Mock
-    TaskServiceGrpc.TaskServiceBlockingStub mockedStub;
+    @Mock TaskServiceGrpc.TaskServiceBlockingStub mockedStub;
 
     TaskClient taskClient;
 
@@ -55,14 +53,13 @@ public class TaskClientTest {
         TaskSummary taskSummary = mock(TaskSummary.class);
         TaskSummaryPb.TaskSummary taskSummaryPB = mock(TaskSummaryPb.TaskSummary.class);
         when(mockedProtoMapper.fromProto(taskSummaryPB)).thenReturn(taskSummary);
-        TaskServicePb.TaskSummarySearchResult result = TaskServicePb.TaskSummarySearchResult
-                .newBuilder()
-                .addResults(taskSummaryPB)
-                .setTotalHits(1)
-                .build();
-        SearchPb.Request searchRequest = SearchPb.Request.newBuilder()
-                .setQuery("test query")
-                .build();
+        TaskServicePb.TaskSummarySearchResult result =
+                TaskServicePb.TaskSummarySearchResult.newBuilder()
+                        .addResults(taskSummaryPB)
+                        .setTotalHits(1)
+                        .build();
+        SearchPb.Request searchRequest =
+                SearchPb.Request.newBuilder().setQuery("test query").build();
         when(mockedStub.search(searchRequest)).thenReturn(result);
         SearchResult<TaskSummary> searchResult = taskClient.search("test query");
         assertEquals(1, searchResult.getTotalHits());
@@ -74,14 +71,13 @@ public class TaskClientTest {
         Task task = mock(Task.class);
         TaskPb.Task taskPB = mock(TaskPb.Task.class);
         when(mockedProtoMapper.fromProto(taskPB)).thenReturn(task);
-        TaskServicePb.TaskSearchResult result = TaskServicePb.TaskSearchResult
-                .newBuilder()
-                .addResults(taskPB)
-                .setTotalHits(1)
-                .build();
-        SearchPb.Request searchRequest = SearchPb.Request.newBuilder()
-                .setQuery("test query")
-                .build();
+        TaskServicePb.TaskSearchResult result =
+                TaskServicePb.TaskSearchResult.newBuilder()
+                        .addResults(taskPB)
+                        .setTotalHits(1)
+                        .build();
+        SearchPb.Request searchRequest =
+                SearchPb.Request.newBuilder().setQuery("test query").build();
         when(mockedStub.searchV2(searchRequest)).thenReturn(result);
         SearchResult<Task> searchResult = taskClient.searchV2("test query");
         assertEquals(1, searchResult.getTotalHits());
@@ -93,21 +89,21 @@ public class TaskClientTest {
         TaskSummary taskSummary = mock(TaskSummary.class);
         TaskSummaryPb.TaskSummary taskSummaryPB = mock(TaskSummaryPb.TaskSummary.class);
         when(mockedProtoMapper.fromProto(taskSummaryPB)).thenReturn(taskSummary);
-        TaskServicePb.TaskSummarySearchResult result = TaskServicePb.TaskSummarySearchResult
-                .newBuilder()
-                .addResults(taskSummaryPB)
-                .setTotalHits(1)
-                .build();
-        SearchPb.Request searchRequest = SearchPb.Request.newBuilder()
-                .setStart(1)
-                .setSize(5)
-                .setSort("*")
-                .setFreeText("*")
-                .setQuery("test query")
-                .build();
+        TaskServicePb.TaskSummarySearchResult result =
+                TaskServicePb.TaskSummarySearchResult.newBuilder()
+                        .addResults(taskSummaryPB)
+                        .setTotalHits(1)
+                        .build();
+        SearchPb.Request searchRequest =
+                SearchPb.Request.newBuilder()
+                        .setStart(1)
+                        .setSize(5)
+                        .setSort("*")
+                        .setFreeText("*")
+                        .setQuery("test query")
+                        .build();
         when(mockedStub.search(searchRequest)).thenReturn(result);
-        SearchResult<TaskSummary> searchResult =
-                taskClient.search(1,5,"*","*","test query");
+        SearchResult<TaskSummary> searchResult = taskClient.search(1, 5, "*", "*", "test query");
         assertEquals(1, searchResult.getTotalHits());
         assertEquals(taskSummary, searchResult.getResults().get(0));
     }
@@ -117,23 +113,22 @@ public class TaskClientTest {
         Task task = mock(Task.class);
         TaskPb.Task taskPB = mock(TaskPb.Task.class);
         when(mockedProtoMapper.fromProto(taskPB)).thenReturn(task);
-        TaskServicePb.TaskSearchResult result = TaskServicePb.TaskSearchResult
-                .newBuilder()
-                .addResults(taskPB)
-                .setTotalHits(1)
-                .build();
-        SearchPb.Request searchRequest = SearchPb.Request.newBuilder()
-                .setStart(1)
-                .setSize(5)
-                .setSort("*")
-                .setFreeText("*")
-                .setQuery("test query")
-                .build();
+        TaskServicePb.TaskSearchResult result =
+                TaskServicePb.TaskSearchResult.newBuilder()
+                        .addResults(taskPB)
+                        .setTotalHits(1)
+                        .build();
+        SearchPb.Request searchRequest =
+                SearchPb.Request.newBuilder()
+                        .setStart(1)
+                        .setSize(5)
+                        .setSort("*")
+                        .setFreeText("*")
+                        .setQuery("test query")
+                        .build();
         when(mockedStub.searchV2(searchRequest)).thenReturn(result);
-        SearchResult<Task> searchResult =
-                taskClient.searchV2(1,5,"*","*","test query");
+        SearchResult<Task> searchResult = taskClient.searchV2(1, 5, "*", "*", "test query");
         assertEquals(1, searchResult.getTotalHits());
         assertEquals(task, searchResult.getResults().get(0));
     }
-
 }

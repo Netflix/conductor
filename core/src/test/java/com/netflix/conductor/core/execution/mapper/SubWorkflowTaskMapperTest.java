@@ -12,6 +12,14 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -22,22 +30,13 @@ import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SubWorkflowTaskMapperTest {
 
@@ -45,8 +44,7 @@ public class SubWorkflowTaskMapperTest {
     private ParametersUtils parametersUtils;
     private DeciderService deciderService;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -58,7 +56,7 @@ public class SubWorkflowTaskMapperTest {
 
     @Test
     public void getMappedTasks() {
-        //Given
+        // Given
         WorkflowDef workflowDef = new WorkflowDef();
         Workflow workflowInstance = new Workflow();
         workflowInstance.setWorkflowDefinition(workflowDef);
@@ -69,31 +67,35 @@ public class SubWorkflowTaskMapperTest {
         taskToSchedule.setSubWorkflowParam(subWorkflowParams);
         taskToSchedule.setStartDelay(30);
         Map<String, Object> taskInput = new HashMap<>();
-        Map<String, String> taskToDomain = new HashMap<String, String>() {{
-            put("*", "unittest");
-        }};
+        Map<String, String> taskToDomain =
+                new HashMap<String, String>() {
+                    {
+                        put("*", "unittest");
+                    }
+                };
 
         Map<String, Object> subWorkflowParamMap = new HashMap<>();
         subWorkflowParamMap.put("name", "FooWorkFlow");
         subWorkflowParamMap.put("version", 2);
         subWorkflowParamMap.put("taskToDomain", taskToDomain);
         when(parametersUtils.getTaskInputV2(anyMap(), any(Workflow.class), any(), any()))
-            .thenReturn(subWorkflowParamMap);
+                .thenReturn(subWorkflowParamMap);
 
-        //When
-        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
-            .withWorkflowDefinition(workflowDef)
-            .withWorkflowInstance(workflowInstance)
-            .withTaskToSchedule(taskToSchedule)
-            .withTaskInput(taskInput)
-            .withRetryCount(0)
-            .withTaskId(IDGenerator.generate())
-            .withDeciderService(deciderService)
-            .build();
+        // When
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowInstance(workflowInstance)
+                        .withTaskToSchedule(taskToSchedule)
+                        .withTaskInput(taskInput)
+                        .withRetryCount(0)
+                        .withTaskId(IDGenerator.generate())
+                        .withDeciderService(deciderService)
+                        .build();
 
         List<Task> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
 
-        //Then
+        // Then
         assertFalse(mappedTasks.isEmpty());
         assertEquals(1, mappedTasks.size());
 
@@ -106,14 +108,17 @@ public class SubWorkflowTaskMapperTest {
 
     @Test
     public void testTaskToDomain() {
-        //Given
+        // Given
         WorkflowDef workflowDef = new WorkflowDef();
         Workflow workflowInstance = new Workflow();
         workflowInstance.setWorkflowDefinition(workflowDef);
         WorkflowTask taskToSchedule = new WorkflowTask();
-        Map<String, String> taskToDomain = new HashMap<String, String>() {{
-            put("*", "unittest");
-        }};
+        Map<String, String> taskToDomain =
+                new HashMap<String, String>() {
+                    {
+                        put("*", "unittest");
+                    }
+                };
         SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
         subWorkflowParams.setName("Foo");
         subWorkflowParams.setVersion(2);
@@ -126,22 +131,23 @@ public class SubWorkflowTaskMapperTest {
         subWorkflowParamMap.put("version", 2);
 
         when(parametersUtils.getTaskInputV2(anyMap(), any(Workflow.class), any(), any()))
-            .thenReturn(subWorkflowParamMap);
+                .thenReturn(subWorkflowParamMap);
 
-        //When
-        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
-            .withWorkflowDefinition(workflowDef)
-            .withWorkflowInstance(workflowInstance)
-            .withTaskToSchedule(taskToSchedule)
-            .withTaskInput(taskInput)
-            .withRetryCount(0)
-            .withTaskId(IDGenerator.generate())
-            .withDeciderService(deciderService)
-            .build();
+        // When
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowInstance(workflowInstance)
+                        .withTaskToSchedule(taskToSchedule)
+                        .withTaskInput(taskInput)
+                        .withRetryCount(0)
+                        .withTaskId(IDGenerator.generate())
+                        .withDeciderService(deciderService)
+                        .build();
 
         List<Task> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
 
-        //Then
+        // Then
         assertFalse(mappedTasks.isEmpty());
         assertEquals(1, mappedTasks.size());
 
@@ -149,7 +155,6 @@ public class SubWorkflowTaskMapperTest {
         assertEquals(Task.Status.SCHEDULED, subWorkFlowTask.getStatus());
         assertEquals(TASK_TYPE_SUB_WORKFLOW, subWorkFlowTask.getTaskType());
     }
-
 
     @Test
     public void getSubWorkflowParams() {
@@ -168,9 +173,11 @@ public class SubWorkflowTaskMapperTest {
         workflowTask.setName("FooWorkFLow");
 
         expectedException.expect(TerminateWorkflowException.class);
-        expectedException
-            .expectMessage(String.format("Task %s is defined as sub-workflow and is missing subWorkflowParams. " +
-                "Please check the blueprint", workflowTask.getName()));
+        expectedException.expectMessage(
+                String.format(
+                        "Task %s is defined as sub-workflow and is missing subWorkflowParams. "
+                                + "Please check the blueprint",
+                        workflowTask.getName()));
 
         subWorkflowTaskMapper.getSubWorkflowParams(workflowTask);
     }

@@ -27,9 +27,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, ElasticSearchTest.TestConfiguration.class})
+@ContextConfiguration(
+        classes = {TestObjectMapperConfiguration.class, ElasticSearchTest.TestConfiguration.class})
 @RunWith(SpringRunner.class)
-@TestPropertySource(properties = {"conductor.indexing.enabled=true","conductor.elasticsearch.version=6"})
+@TestPropertySource(
+        properties = {"conductor.indexing.enabled=true", "conductor.elasticsearch.version=6"})
 abstract class ElasticSearchTest {
 
     @Configuration
@@ -41,15 +43,14 @@ abstract class ElasticSearchTest {
         }
     }
 
-    protected static final ElasticsearchContainer container = new ElasticsearchContainer(DockerImageName
-            .parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
-            .withTag("6.8.12")); // this should match the client version
+    protected static final ElasticsearchContainer container =
+            new ElasticsearchContainer(
+                    DockerImageName.parse("docker.elastic.co/elasticsearch/elasticsearch-oss")
+                            .withTag("6.8.12")); // this should match the client version
 
-    @Autowired
-    protected ObjectMapper objectMapper;
+    @Autowired protected ObjectMapper objectMapper;
 
-    @Autowired
-    protected ElasticSearchProperties properties;
+    @Autowired protected ElasticSearchProperties properties;
 
     @BeforeClass
     public static void startServer() {

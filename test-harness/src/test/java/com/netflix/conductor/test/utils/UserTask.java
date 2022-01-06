@@ -20,16 +20,15 @@ import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component(UserTask.NAME)
 public class UserTask extends WorkflowSystemTask {
@@ -40,9 +39,8 @@ public class UserTask extends WorkflowSystemTask {
 
     private final ObjectMapper objectMapper;
 
-    private static final TypeReference<Map<String, Map<String, List<Object>>>> mapStringListObjects =
-        new TypeReference<Map<String, Map<String, List<Object>>>>() {
-        };
+    private static final TypeReference<Map<String, Map<String, List<Object>>>>
+            mapStringListObjects = new TypeReference<Map<String, Map<String, List<Object>>>>() {};
 
     @Autowired
     public UserTask(ObjectMapper objectMapper) {
@@ -58,12 +56,14 @@ public class UserTask extends WorkflowSystemTask {
         if (task.getWorkflowTask().isAsyncComplete()) {
             task.setStatus(Status.IN_PROGRESS);
         } else {
-            Map<String, Map<String, List<Object>>> map = objectMapper
-                .convertValue(task.getInputData(), mapStringListObjects);
+            Map<String, Map<String, List<Object>>> map =
+                    objectMapper.convertValue(task.getInputData(), mapStringListObjects);
             Map<String, Object> output = new HashMap<>();
             Map<String, List<Object>> defaultLargeInput = new HashMap<>();
             defaultLargeInput.put("TEST_SAMPLE", Collections.singletonList("testDefault"));
-            output.put("size", map.getOrDefault("largeInput", defaultLargeInput).get("TEST_SAMPLE").size());
+            output.put(
+                    "size",
+                    map.getOrDefault("largeInput", defaultLargeInput).get("TEST_SAMPLE").size());
             task.setOutputData(output);
             task.setStatus(Status.COMPLETED);
         }

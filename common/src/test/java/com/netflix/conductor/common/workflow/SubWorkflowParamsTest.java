@@ -12,6 +12,9 @@
  */
 package com.netflix.conductor.common.workflow;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -19,35 +22,30 @@ import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class SubWorkflowParamsTest {
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Test
     public void testWorkflowTaskName() {
-        SubWorkflowParams subWorkflowParams = new SubWorkflowParams();//name is null
+        SubWorkflowParams subWorkflowParams = new SubWorkflowParams(); // name is null
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
 
@@ -110,8 +108,10 @@ public class SubWorkflowParamsTest {
         objectMapper.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
         objectMapper.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
 
-        String serializedParams = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(subWorkflowParams);
-        SubWorkflowParams deserializedParams = objectMapper.readValue(serializedParams, SubWorkflowParams.class);
+        String serializedParams =
+                objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(subWorkflowParams);
+        SubWorkflowParams deserializedParams =
+                objectMapper.readValue(serializedParams, SubWorkflowParams.class);
         assertEquals(def, deserializedParams.getWorkflowDefinition());
         assertEquals(def, deserializedParams.getWorkflowDef());
     }

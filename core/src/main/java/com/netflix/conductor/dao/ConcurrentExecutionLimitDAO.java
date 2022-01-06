@@ -24,19 +24,22 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 public interface ConcurrentExecutionLimitDAO {
 
     default void addTaskToLimit(Task task) {
-        throw new UnsupportedOperationException(getClass() + " does not support addTaskToLimit method.");
+        throw new UnsupportedOperationException(
+                getClass() + " does not support addTaskToLimit method.");
     }
 
     default void removeTaskFromLimit(Task task) {
-        throw new UnsupportedOperationException(getClass() + " does not support removeTaskFromLimit method.");
+        throw new UnsupportedOperationException(
+                getClass() + " does not support removeTaskFromLimit method.");
     }
 
     /**
-     * Checks if the number of tasks in progress for the given taskDef will exceed the limit if the task is scheduled to
-     * be in progress (given to the worker or for system tasks start() method called)
+     * Checks if the number of tasks in progress for the given taskDef will exceed the limit if the
+     * task is scheduled to be in progress (given to the worker or for system tasks start() method
+     * called)
      *
-     * @param task The task to be executed.  Limit is set in the Task's definition
-     * @return true if by executing this task, the limit is breached.  false otherwise.
+     * @param task The task to be executed. Limit is set in the Task's definition
+     * @return true if by executing this task, the limit is breached. false otherwise.
      * @see TaskDef#concurrencyLimit()
      */
     boolean exceedsLimit(Task task);

@@ -19,7 +19,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RedisConcurrentExecutionLimitProperties {
 
     public enum RedisType {
-        STANDALONE, CLUSTER
+        STANDALONE,
+        CLUSTER
     }
 
     private RedisType type;

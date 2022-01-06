@@ -12,17 +12,14 @@
  */
 package com.netflix.conductor.core.utils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -33,10 +30,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -46,8 +45,7 @@ public class ParametersUtilsTest {
     private ParametersUtils parametersUtils;
     private JsonUtils jsonUtils;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -141,29 +139,38 @@ public class ParametersUtilsTest {
         inputParams.put("k1", "${payload.someId}");
         inputParams.put("k2", "${name}");
 
-        CompletableFuture.runAsync(() -> {
-            for (int i = 0; i < 10000; i++) {
-                generatedId.set("test-" + i);
-                payload.put("someId", generatedId.get());
-                Object jsonObj = null;
-                try {
-                    jsonObj = objectMapper.readValue(objectMapper.writeValueAsString(input), Object.class);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                Map<String, Object> replaced = parametersUtils.replace(inputParams, jsonObj);
-                assertNotNull(replaced);
-                assertEquals(generatedId.get(), replaced.get("k1"));
-                assertEquals("conductor", replaced.get("k2"));
-                assertNull(replaced.get("k3"));
-            }
-        }, executorService).get();
+        CompletableFuture.runAsync(
+                        () -> {
+                            for (int i = 0; i < 10000; i++) {
+                                generatedId.set("test-" + i);
+                                payload.put("someId", generatedId.get());
+                                Object jsonObj = null;
+                                try {
+                                    jsonObj =
+                                            objectMapper.readValue(
+                                                    objectMapper.writeValueAsString(input),
+                                                    Object.class);
+                                } catch (JsonProcessingException e) {
+                                    e.printStackTrace();
+                                    return;
+                                }
+                                Map<String, Object> replaced =
+                                        parametersUtils.replace(inputParams, jsonObj);
+                                assertNotNull(replaced);
+                                assertEquals(generatedId.get(), replaced.get("k1"));
+                                assertEquals("conductor", replaced.get("k2"));
+                                assertNull(replaced.get("k3"));
+                            }
+                        },
+                        executorService)
+                .get();
 
         executorService.shutdown();
     }
 
-    // Tests ParametersUtils with Map and List input values, and verifies input map is not mutated by ParametersUtils.
+    // Tests ParametersUtils with Map and List input values, and verifies input map is not mutated
+    // by
+    // ParametersUtils.
     @Test
     public void testReplaceInputWithMapAndList() throws Exception {
         Map<String, Object> map = new HashMap<>();
@@ -231,7 +238,9 @@ public class ParametersUtilsTest {
         map.put("someNumber", 2);
 
         Map<String, Object> input = new HashMap<>();
-        input.put("k1", "${$.someString} $${$.someNumber}${$.someNumber} ${$.someNumber}$${$.someString}");
+        input.put(
+                "k1",
+                "${$.someString} $${$.someNumber}${$.someNumber} ${$.someNumber}$${$.someString}");
         input.put("k2", "$${$.someString}afterText");
         input.put("k3", "beforeText$${$.someString}");
         input.put("k4", "$${$.someString} afterText");
@@ -287,31 +296,33 @@ public class ParametersUtilsTest {
     }
 
     @Test
-    public void getWorkflowInputHandlesNullInputTemplate () {
+    public void getWorkflowInputHandlesNullInputTemplate() {
         WorkflowDef workflowDef = new WorkflowDef();
         Map<String, Object> inputParams = Map.of("key", "value");
-        Map<String, Object> workflowInput = parametersUtils.getWorkflowInput(workflowDef, inputParams);
+        Map<String, Object> workflowInput =
+                parametersUtils.getWorkflowInput(workflowDef, inputParams);
         assertEquals("value", workflowInput.get("key"));
     }
 
     @Test
-    public void getWorkflowInputFillsInTemplatedFields () {
+    public void getWorkflowInputFillsInTemplatedFields() {
         WorkflowDef workflowDef = new WorkflowDef();
         workflowDef.setInputTemplate(Map.of("other_key", "other_value"));
         Map<String, Object> inputParams = new HashMap<>(Map.of("key", "value"));
-        Map<String, Object> workflowInput = parametersUtils.getWorkflowInput(workflowDef, inputParams);
+        Map<String, Object> workflowInput =
+                parametersUtils.getWorkflowInput(workflowDef, inputParams);
         assertEquals("value", workflowInput.get("key"));
         assertEquals("other_value", workflowInput.get("other_key"));
-
     }
 
     @Test
-    public void getWorkflowInputPreservesExistingFieldsIfPopulated () {
+    public void getWorkflowInputPreservesExistingFieldsIfPopulated() {
         WorkflowDef workflowDef = new WorkflowDef();
         String keyName = "key";
         workflowDef.setInputTemplate(Map.of(keyName, "templated_value"));
         Map<String, Object> inputParams = new HashMap<>(Map.of(keyName, "supplied_value"));
-        Map<String, Object> workflowInput = parametersUtils.getWorkflowInput(workflowDef, inputParams);
+        Map<String, Object> workflowInput =
+                parametersUtils.getWorkflowInput(workflowDef, inputParams);
         assertEquals("supplied_value", workflowInput.get(keyName));
     }
 }

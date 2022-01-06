@@ -15,7 +15,6 @@ package com.netflix.conductor.common.metadata.workflow;
 import com.netflix.conductor.annotations.protogen.ProtoField;
 import com.netflix.conductor.annotations.protogen.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,11 +36,10 @@ public class DynamicForkJoinTask {
     @ProtoField(id = 5)
     private String type = TaskType.SIMPLE.name();
 
-    public DynamicForkJoinTask() {
-    }
+    public DynamicForkJoinTask() {}
 
-    public DynamicForkJoinTask(String taskName, String workflowName,
-                               String referenceName, Map<String, Object> input) {
+    public DynamicForkJoinTask(
+            String taskName, String workflowName, String referenceName, Map<String, Object> input) {
         super();
         this.taskName = taskName;
         this.workflowName = workflowName;
@@ -49,8 +47,12 @@ public class DynamicForkJoinTask {
         this.input = input;
     }
 
-    public DynamicForkJoinTask(String taskName, String workflowName,
-                               String referenceName, String type, Map<String, Object> input) {
+    public DynamicForkJoinTask(
+            String taskName,
+            String workflowName,
+            String referenceName,
+            String type,
+            Map<String, Object> input) {
         super();
         this.taskName = taskName;
         this.workflowName = workflowName;

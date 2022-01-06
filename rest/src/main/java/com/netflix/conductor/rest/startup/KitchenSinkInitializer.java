@@ -12,7 +12,16 @@
  */
 package com.netflix.conductor.rest.startup;
 
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,16 +35,6 @@ import org.springframework.util.FileCopyUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
 public class KitchenSinkInitializer {
@@ -104,7 +103,10 @@ public class KitchenSinkInitializer {
         request = new HttpEntity<>(readToString(subFlow), headers);
         restTemplate.postForEntity(url("/api/metadata/workflow/"), request, Map.class);
 
-        restTemplate.postForEntity(url("/api/workflow/kitchensink"), Collections.singletonMap("task2Name", "task_5"), String.class);
+        restTemplate.postForEntity(
+                url("/api/workflow/kitchensink"),
+                Collections.singletonMap("task2Name", "task_5"),
+                String.class);
         LOGGER.info("Kitchen sink workflow is created!");
 
         /*

@@ -17,18 +17,17 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#JOIN} to a {@link Task}
- * of type {@link TaskType#JOIN}
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+ * TaskType#JOIN} to a {@link Task} of type {@link TaskType#JOIN}
  */
 @Component
 public class JoinTaskMapper implements TaskMapper {
@@ -41,11 +40,12 @@ public class JoinTaskMapper implements TaskMapper {
     }
 
     /**
-     * This method maps {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#JOIN} to a {@link Task}
-     * of type {@link TaskType#JOIN} with a status of {@link Task.Status#IN_PROGRESS}
+     * This method maps {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+     * TaskType#JOIN} to a {@link Task} of type {@link TaskType#JOIN} with a status of {@link
+     * Task.Status#IN_PROGRESS}
      *
-     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link
-     *                           Workflow} and a string representation of the TaskId
+     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
+     *     WorkflowDef}, {@link Workflow} and a string representation of the TaskId
      * @return A {@link Task} of type {@link TaskType#JOIN} in a List
      */
     @Override

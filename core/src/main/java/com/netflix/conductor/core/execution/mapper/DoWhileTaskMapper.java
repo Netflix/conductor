@@ -20,19 +20,18 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 /**
- * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#DO_WHILE} to a {@link
- * Task} of type {@link TaskType#DO_WHILE}
+ * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+ * TaskType#DO_WHILE} to a {@link Task} of type {@link TaskType#DO_WHILE}
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
@@ -53,11 +52,12 @@ public class DoWhileTaskMapper implements TaskMapper {
     }
 
     /**
-     * This method maps {@link TaskMapper} to map a {@link WorkflowTask} of type {@link TaskType#DO_WHILE} to a {@link
-     * Task} of type {@link TaskType#DO_WHILE} with a status of {@link Task.Status#IN_PROGRESS}
+     * This method maps {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
+     * TaskType#DO_WHILE} to a {@link Task} of type {@link TaskType#DO_WHILE} with a status of
+     * {@link Task.Status#IN_PROGRESS}
      *
-     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link WorkflowDef}, {@link
-     *                           Workflow} and a string representation of the TaskId
+     * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
+     *     WorkflowDef}, {@link Workflow} and a string representation of the TaskId
      * @return: A {@link Task} of type {@link TaskType#DO_WHILE} in a List
      */
     @Override
@@ -70,16 +70,21 @@ public class DoWhileTaskMapper implements TaskMapper {
 
         Task task = workflowInstance.getTaskByRefName(taskToSchedule.getTaskReferenceName());
         if (task != null && task.getStatus().isTerminal()) {
-            //Since loopTask is already completed no need to schedule task again.
+            // Since loopTask is already completed no need to schedule task again.
             return Collections.emptyList();
         }
 
         String taskId = taskMapperContext.getTaskId();
         List<Task> tasksToBeScheduled = new ArrayList<>();
         int retryCount = taskMapperContext.getRetryCount();
-        TaskDef taskDefinition = Optional.ofNullable(taskMapperContext.getTaskDefinition())
-            .orElseGet(() -> Optional.ofNullable(metadataDAO.getTaskDef(taskToSchedule.getName()))
-                .orElseGet(TaskDef::new));
+        TaskDef taskDefinition =
+                Optional.ofNullable(taskMapperContext.getTaskDefinition())
+                        .orElseGet(
+                                () ->
+                                        Optional.ofNullable(
+                                                        metadataDAO.getTaskDef(
+                                                                taskToSchedule.getName()))
+                                                .orElseGet(TaskDef::new));
 
         Task loopTask = new Task();
         loopTask.setTaskType(TaskType.TASK_TYPE_DO_WHILE);
@@ -98,12 +103,17 @@ public class DoWhileTaskMapper implements TaskMapper {
 
         tasksToBeScheduled.add(loopTask);
         List<WorkflowTask> loopOverTasks = taskToSchedule.getLoopOver();
-        List<Task> tasks2 = taskMapperContext.getDeciderService()
-            .getTasksToBeScheduled(workflowInstance, loopOverTasks.get(0), retryCount);
-        tasks2.forEach(t -> {
-            t.setReferenceTaskName(TaskUtils.appendIteration(t.getReferenceTaskName(), loopTask.getIteration()));
-            t.setIteration(loopTask.getIteration());
-        });
+        List<Task> tasks2 =
+                taskMapperContext
+                        .getDeciderService()
+                        .getTasksToBeScheduled(workflowInstance, loopOverTasks.get(0), retryCount);
+        tasks2.forEach(
+                t -> {
+                    t.setReferenceTaskName(
+                            TaskUtils.appendIteration(
+                                    t.getReferenceTaskName(), loopTask.getIteration()));
+                    t.setIteration(loopTask.getIteration());
+                });
         tasksToBeScheduled.addAll(tasks2);
 
         return tasksToBeScheduled;

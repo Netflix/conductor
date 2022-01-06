@@ -12,25 +12,24 @@
  */
 package com.netflix.conductor.common.events;
 
-import com.netflix.conductor.common.metadata.events.EventHandler;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.netflix.conductor.common.metadata.events.EventHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 public class EventHandlerTest {
 
     @Test
     public void testWorkflowTaskName() {
-        EventHandler taskDef = new EventHandler();//name is null
+        EventHandler taskDef = new EventHandler(); // name is null
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         Validator validator = factory.getValidator();
@@ -42,6 +41,8 @@ public class EventHandlerTest {
 
         assertTrue(validationErrors.contains("Missing event handler name"));
         assertTrue(validationErrors.contains("Missing event location"));
-        assertTrue(validationErrors.contains("No actions specified. Please specify at-least one action"));
+        assertTrue(
+                validationErrors.contains(
+                        "No actions specified. Please specify at-least one action"));
     }
 }

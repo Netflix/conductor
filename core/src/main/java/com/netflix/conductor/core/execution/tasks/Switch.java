@@ -14,16 +14,13 @@ package com.netflix.conductor.core.execution.tasks;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SWITCH;
 
-import org.springframework.stereotype.Component;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import org.springframework.stereotype.Component;
 
-/**
- * {@link Switch} task is a replacement for now deprecated {@link Decision} task.
- */
+/** {@link Switch} task is a replacement for now deprecated {@link Decision} task. */
 @Component(TASK_TYPE_SWITCH)
 public class Switch extends WorkflowSystemTask {
 

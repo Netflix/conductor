@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static org.mockito.Mockito.mock;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
@@ -20,13 +22,10 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
-
-import static org.mockito.Mockito.mock;
 
 public class TerminateTaskMapperTest {
     private ParametersUtils parametersUtils;
@@ -48,16 +47,18 @@ public class TerminateTaskMapperTest {
         Workflow workflow = new Workflow();
         workflow.setWorkflowDefinition(workflowDef);
 
-        TaskMapperContext taskMapperContext = TaskMapperContext.newBuilder()
-            .withWorkflowDefinition(workflowDef)
-            .withWorkflowInstance(workflow)
-            .withTaskDefinition(new TaskDef())
-            .withTaskToSchedule(taskToSchedule)
-            .withRetryCount(0)
-            .withTaskId(taskId)
-            .build();
+        TaskMapperContext taskMapperContext =
+                TaskMapperContext.newBuilder()
+                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowInstance(workflow)
+                        .withTaskDefinition(new TaskDef())
+                        .withTaskToSchedule(taskToSchedule)
+                        .withRetryCount(0)
+                        .withTaskId(taskId)
+                        .build();
 
-        List<Task> mappedTasks = new TerminateTaskMapper(parametersUtils).getMappedTasks(taskMapperContext);
+        List<Task> mappedTasks =
+                new TerminateTaskMapper(parametersUtils).getMappedTasks(taskMapperContext);
 
         Assert.assertNotNull(mappedTasks);
         Assert.assertEquals(1, mappedTasks.size());

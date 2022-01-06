@@ -2,11 +2,11 @@ package com.netflix.conductor.cassandra.dao;
 
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.dao.PollDataDAO;
-
 import java.util.List;
 
 /**
- * This is a dummy implementation and this feature is not implemented for Cassandra backed Conductor.
+ * This is a dummy implementation and this feature is not implemented for Cassandra backed
+ * Conductor.
  */
 public class CassandraPollDataDAO implements PollDataDAO {
 

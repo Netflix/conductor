@@ -12,12 +12,17 @@
  */
 package com.netflix.conductor.metrics;
 
+import static com.netflix.conductor.core.execution.tasks.SystemTaskRegistry.ASYNC_SYSTEM_TASKS_QUALIFIER;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.orchestration.ExecutionDAOFacade;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.service.MetadataService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,14 +31,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import static com.netflix.conductor.core.execution.tasks.SystemTaskRegistry.ASYNC_SYSTEM_TASKS_QUALIFIER;
-
 @Component
-@ConditionalOnProperty(name = "conductor.workflow-monitor.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "conductor.workflow-monitor.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class WorkflowMonitor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WorkflowMonitor.class);
@@ -48,9 +50,13 @@ public class WorkflowMonitor {
     private List<WorkflowDef> workflowDefs;
     private int refreshCounter = 0;
 
-    public WorkflowMonitor(MetadataService metadataService, QueueDAO queueDAO, ExecutionDAOFacade executionDAOFacade,
-                           @Value("${conductor.workflow-monitor.metadata-refresh-interval:10}") int metadataRefreshInterval,
-                           @Qualifier(ASYNC_SYSTEM_TASKS_QUALIFIER) Set<WorkflowSystemTask> asyncSystemTasks) {
+    public WorkflowMonitor(
+            MetadataService metadataService,
+            QueueDAO queueDAO,
+            ExecutionDAOFacade executionDAOFacade,
+            @Value("${conductor.workflow-monitor.metadata-refresh-interval:10}")
+                    int metadataRefreshInterval,
+            @Qualifier(ASYNC_SYSTEM_TASKS_QUALIFIER) Set<WorkflowSystemTask> asyncSystemTasks) {
         this.metadataService = metadataService;
         this.queueDAO = queueDAO;
         this.executionDAOFacade = executionDAOFacade;
@@ -59,7 +65,8 @@ public class WorkflowMonitor {
         LOGGER.info("{} initialized.", WorkflowMonitor.class.getSimpleName());
     }
 
-    @Scheduled(initialDelayString = "${conductor.workflow-monitor.stats.initial-delay:120000}",
+    @Scheduled(
+            initialDelayString = "${conductor.workflow-monitor.stats.initial-delay:120000}",
             fixedDelayString = "${conductor.workflow-monitor.stats.delay:60000}")
     public void reportMetrics() {
         try {
@@ -69,29 +76,36 @@ public class WorkflowMonitor {
                 refreshCounter = metadataRefreshInterval;
             }
 
-            workflowDefs.forEach(workflowDef -> {
-                String name = workflowDef.getName();
-                String version = String.valueOf(workflowDef.getVersion());
-                String ownerApp = workflowDef.getOwnerApp();
-                long count = executionDAOFacade.getPendingWorkflowCount(name);
-                Monitors.recordRunningWorkflows(count, name, version, ownerApp);
-            });
+            workflowDefs.forEach(
+                    workflowDef -> {
+                        String name = workflowDef.getName();
+                        String version = String.valueOf(workflowDef.getVersion());
+                        String ownerApp = workflowDef.getOwnerApp();
+                        long count = executionDAOFacade.getPendingWorkflowCount(name);
+                        Monitors.recordRunningWorkflows(count, name, version, ownerApp);
+                    });
 
-            taskDefs.forEach(taskDef -> {
-                long size = queueDAO.getSize(taskDef.getName());
-                long inProgressCount = executionDAOFacade.getInProgressTaskCount(taskDef.getName());
-                Monitors.recordQueueDepth(taskDef.getName(), size, taskDef.getOwnerApp());
-                if (taskDef.concurrencyLimit() > 0) {
-                    Monitors.recordTaskInProgress(taskDef.getName(), inProgressCount, taskDef.getOwnerApp());
-                }
-            });
+            taskDefs.forEach(
+                    taskDef -> {
+                        long size = queueDAO.getSize(taskDef.getName());
+                        long inProgressCount =
+                                executionDAOFacade.getInProgressTaskCount(taskDef.getName());
+                        Monitors.recordQueueDepth(taskDef.getName(), size, taskDef.getOwnerApp());
+                        if (taskDef.concurrencyLimit() > 0) {
+                            Monitors.recordTaskInProgress(
+                                    taskDef.getName(), inProgressCount, taskDef.getOwnerApp());
+                        }
+                    });
 
-            asyncSystemTasks
-                    .forEach(workflowSystemTask -> {
+            asyncSystemTasks.forEach(
+                    workflowSystemTask -> {
                         long size = queueDAO.getSize(workflowSystemTask.getTaskType());
-                        long inProgressCount = executionDAOFacade.getInProgressTaskCount(workflowSystemTask.getTaskType());
+                        long inProgressCount =
+                                executionDAOFacade.getInProgressTaskCount(
+                                        workflowSystemTask.getTaskType());
                         Monitors.recordQueueDepth(workflowSystemTask.getTaskType(), size, "system");
-                        Monitors.recordTaskInProgress(workflowSystemTask.getTaskType(), inProgressCount, "system");
+                        Monitors.recordTaskInProgress(
+                                workflowSystemTask.getTaskType(), inProgressCount, "system");
                     });
 
             refreshCounter--;

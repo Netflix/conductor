@@ -12,6 +12,10 @@
  */
 package com.netflix.conductor.redis.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.events.EventHandler;
@@ -22,6 +26,8 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
+import java.util.List;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,21 +36,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import redis.clients.jedis.commands.JedisCommands;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.mock;
-
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class RedisEventHandlerDAOTest {
 
     private RedisEventHandlerDAO redisEventHandlerDAO;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void init() {
@@ -53,7 +51,8 @@ public class RedisEventHandlerDAOTest {
         JedisCommands jedisMock = new JedisMock();
         JedisProxy jedisProxy = new JedisProxy(jedisMock);
 
-        redisEventHandlerDAO = new RedisEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
+        redisEventHandlerDAO =
+                new RedisEventHandlerDAO(jedisProxy, objectMapper, conductorProperties, properties);
     }
 
     @Test
@@ -80,7 +79,7 @@ public class RedisEventHandlerDAOTest {
 
         List<EventHandler> byEvents = redisEventHandlerDAO.getEventHandlersForEvent(event1, true);
         assertNotNull(byEvents);
-        assertEquals(0, byEvents.size());        //event is marked as in-active
+        assertEquals(0, byEvents.size()); // event is marked as in-active
 
         eventHandler.setActive(true);
         eventHandler.setEvent(event2);

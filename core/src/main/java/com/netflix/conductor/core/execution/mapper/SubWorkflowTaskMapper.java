@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
@@ -22,17 +24,14 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Component
 public class SubWorkflowTaskMapper implements TaskMapper {
@@ -59,10 +58,12 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
-        //Check if the are sub workflow parameters, if not throw an exception, cannot initiate a sub-workflow without workflow params
+        // Check if the are sub workflow parameters, if not throw an exception, cannot initiate a
+        // sub-workflow without workflow params
         SubWorkflowParams subWorkflowParams = getSubWorkflowParams(taskToSchedule);
 
-        Map<String, Object> resolvedParams = getSubWorkflowInputParameters(workflowInstance, subWorkflowParams);
+        Map<String, Object> resolvedParams =
+                getSubWorkflowInputParameters(workflowInstance, subWorkflowParams);
 
         String subWorkflowName = resolvedParams.get("name").toString();
         Integer subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
@@ -100,16 +101,20 @@ public class SubWorkflowTaskMapper implements TaskMapper {
     @VisibleForTesting
     SubWorkflowParams getSubWorkflowParams(WorkflowTask taskToSchedule) {
         return Optional.ofNullable(taskToSchedule.getSubWorkflowParam())
-            .orElseThrow(() -> {
-                String reason = String.format("Task %s is defined as sub-workflow and is missing subWorkflowParams. " +
-                    "Please check the blueprint", taskToSchedule.getName());
-                LOGGER.error(reason);
-                return new TerminateWorkflowException(reason);
-            });
+                .orElseThrow(
+                        () -> {
+                            String reason =
+                                    String.format(
+                                            "Task %s is defined as sub-workflow and is missing subWorkflowParams. "
+                                                    + "Please check the blueprint",
+                                            taskToSchedule.getName());
+                            LOGGER.error(reason);
+                            return new TerminateWorkflowException(reason);
+                        });
     }
 
-    private Map<String, Object> getSubWorkflowInputParameters(Workflow workflowInstance,
-        SubWorkflowParams subWorkflowParams) {
+    private Map<String, Object> getSubWorkflowInputParameters(
+            Workflow workflowInstance, SubWorkflowParams subWorkflowParams) {
         Map<String, Object> params = new HashMap<>();
         params.put("name", subWorkflowParams.getName());
 
@@ -133,19 +138,24 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         return params;
     }
 
-    private Integer getSubWorkflowVersion(Map<String, Object> resolvedParams, String subWorkflowName) {
+    private Integer getSubWorkflowVersion(
+            Map<String, Object> resolvedParams, String subWorkflowName) {
         return Optional.ofNullable(resolvedParams.get("version"))
-            .map(Object::toString)
-            .map(Integer::parseInt)
-            .orElseGet(
-                () -> metadataDAO.getLatestWorkflowDef(subWorkflowName)
-                    .map(WorkflowDef::getVersion)
-                    .orElseThrow(() -> {
-                        String reason = String
-                            .format("The Task %s defined as a sub-workflow has no workflow definition available ",
-                                subWorkflowName);
-                        LOGGER.error(reason);
-                        return new TerminateWorkflowException(reason);
-                    }));
+                .map(Object::toString)
+                .map(Integer::parseInt)
+                .orElseGet(
+                        () ->
+                                metadataDAO
+                                        .getLatestWorkflowDef(subWorkflowName)
+                                        .map(WorkflowDef::getVersion)
+                                        .orElseThrow(
+                                                () -> {
+                                                    String reason =
+                                                            String.format(
+                                                                    "The Task %s defined as a sub-workflow has no workflow definition available ",
+                                                                    subWorkflowName);
+                                                    LOGGER.error(reason);
+                                                    return new TerminateWorkflowException(reason);
+                                                }));
     }
 }

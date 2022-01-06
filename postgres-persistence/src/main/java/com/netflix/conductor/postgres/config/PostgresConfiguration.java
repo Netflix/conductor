@@ -43,14 +43,15 @@ public class PostgresConfiguration {
 
     @Bean
     @DependsOn({"flyway", "flywayInitializer"})
-    public PostgresMetadataDAO postgresMetadataDAO(ObjectMapper objectMapper, DataSource dataSource,
-        PostgresProperties properties) {
+    public PostgresMetadataDAO postgresMetadataDAO(
+            ObjectMapper objectMapper, DataSource dataSource, PostgresProperties properties) {
         return new PostgresMetadataDAO(objectMapper, dataSource, properties);
     }
 
     @Bean
     @DependsOn({"flyway", "flywayInitializer"})
-    public PostgresExecutionDAO postgresExecutionDAO(ObjectMapper objectMapper, DataSource dataSource) {
+    public PostgresExecutionDAO postgresExecutionDAO(
+            ObjectMapper objectMapper, DataSource dataSource) {
         return new PostgresExecutionDAO(objectMapper, dataSource);
     }
 

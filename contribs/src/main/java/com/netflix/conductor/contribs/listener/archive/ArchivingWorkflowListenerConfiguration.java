@@ -25,8 +25,8 @@ import org.springframework.context.annotation.Configuration;
 public class ArchivingWorkflowListenerConfiguration {
 
     @Bean
-    public WorkflowStatusListener getWorkflowStatusListener(ExecutionDAOFacade executionDAOFacade,
-        ArchivingWorkflowListenerProperties properties) {
+    public WorkflowStatusListener getWorkflowStatusListener(
+            ExecutionDAOFacade executionDAOFacade, ArchivingWorkflowListenerProperties properties) {
         if (properties.getTtlDuration().getSeconds() > 0) {
             return new ArchivingWithTTLWorkflowStatusListener(executionDAOFacade, properties);
         } else {

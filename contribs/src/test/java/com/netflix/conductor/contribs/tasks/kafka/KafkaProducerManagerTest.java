@@ -29,8 +29,12 @@ public class KafkaProducerManagerTest {
 
     @Test
     public void testRequestTimeoutSetFromDefault() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(100), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(100),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         Properties props = manager.getProducerProperties(input);
         assertEquals(props.getProperty(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG), "100");
@@ -38,8 +42,12 @@ public class KafkaProducerManagerTest {
 
     @Test
     public void testRequestTimeoutSetFromInput() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(100), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(100),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         input.setRequestTimeoutMs(200);
         Properties props = manager.getProducerProperties(input);
@@ -48,8 +56,12 @@ public class KafkaProducerManagerTest {
 
     @Test
     public void testRequestTimeoutSetFromConfig() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(150), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(150),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         Properties props = manager.getProducerProperties(input);
         assertEquals(props.getProperty(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG), "150");
@@ -58,8 +70,12 @@ public class KafkaProducerManagerTest {
     @SuppressWarnings("rawtypes")
     @Test(expected = RuntimeException.class)
     public void testExecutionException() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(150), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(150),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         Producer producer = manager.getProducer(input);
         assertNotNull(producer);
@@ -68,8 +84,9 @@ public class KafkaProducerManagerTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testCacheInvalidation() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(150), Duration.ofMillis(500), 0, Duration.ofMillis(0));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(150), Duration.ofMillis(500), 0, Duration.ofMillis(0));
         KafkaPublishTask.Input input = getInput();
         input.setBootStrapServers("");
         Properties props = manager.getProducerProperties(input);
@@ -81,8 +98,12 @@ public class KafkaProducerManagerTest {
 
     @Test
     public void testMaxBlockMsFromConfig() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(150), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(150),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         Properties props = manager.getProducerProperties(input);
         assertEquals(props.getProperty(ProducerConfig.MAX_BLOCK_MS_CONFIG), "500");
@@ -90,8 +111,12 @@ public class KafkaProducerManagerTest {
 
     @Test
     public void testMaxBlockMsFromInput() {
-        KafkaProducerManager manager = new KafkaProducerManager(
-            Duration.ofMillis(150), Duration.ofMillis(500), 10, Duration.ofMillis(120000));
+        KafkaProducerManager manager =
+                new KafkaProducerManager(
+                        Duration.ofMillis(150),
+                        Duration.ofMillis(500),
+                        10,
+                        Duration.ofMillis(120000));
         KafkaPublishTask.Input input = getInput();
         input.setMaxBlockMs(600);
         Properties props = manager.getProducerProperties(input);

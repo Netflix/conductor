@@ -44,9 +44,12 @@ public class ZookeeperLockTest {
         properties = mock(ZookeeperProperties.class);
         when(properties.getConnectionString()).thenReturn("localhost:2181");
         when(properties.getSessionTimeout())
-            .thenReturn(Duration.ofMillis(CuratorFrameworkFactory.builder().getSessionTimeoutMs()));
+                .thenReturn(
+                        Duration.ofMillis(CuratorFrameworkFactory.builder().getSessionTimeoutMs()));
         when(properties.getConnectionTimeout())
-            .thenReturn(Duration.ofMillis(CuratorFrameworkFactory.builder().getConnectionTimeoutMs()));
+                .thenReturn(
+                        Duration.ofMillis(
+                                CuratorFrameworkFactory.builder().getConnectionTimeoutMs()));
         when(properties.getNamespace()).thenReturn("");
     }
 

@@ -25,25 +25,28 @@ import redis.clients.jedis.commands.JedisCommands;
 @ConditionalOnProperty(name = "conductor.db.type", havingValue = "dynomite")
 public class DynomiteClusterConfiguration extends JedisCommandsConfigurer {
 
-    protected JedisCommands createJedisCommands(RedisProperties properties, ConductorProperties conductorProperties,
-        HostSupplier hostSupplier, TokenMapSupplier tokenMapSupplier) {
+    protected JedisCommands createJedisCommands(
+            RedisProperties properties,
+            ConductorProperties conductorProperties,
+            HostSupplier hostSupplier,
+            TokenMapSupplier tokenMapSupplier) {
         ConnectionPoolConfigurationImpl connectionPoolConfiguration =
-            new ConnectionPoolConfigurationImpl(properties.getClusterName())
-                .withTokenSupplier(tokenMapSupplier)
-                .setLocalRack(properties.getAvailabilityZone())
-                .setLocalDataCenter(properties.getDataCenterRegion())
-                .setSocketTimeout(0)
-                .setConnectTimeout(0)
-                .setMaxConnsPerHost(
-                    properties.getMaxConnectionsPerHost())
-                .setMaxTimeoutWhenExhausted((int)properties.getMaxTimeoutWhenExhausted().toMillis())
-                .setRetryPolicyFactory(properties.getConnectionRetryPolicy());
+                new ConnectionPoolConfigurationImpl(properties.getClusterName())
+                        .withTokenSupplier(tokenMapSupplier)
+                        .setLocalRack(properties.getAvailabilityZone())
+                        .setLocalDataCenter(properties.getDataCenterRegion())
+                        .setSocketTimeout(0)
+                        .setConnectTimeout(0)
+                        .setMaxConnsPerHost(properties.getMaxConnectionsPerHost())
+                        .setMaxTimeoutWhenExhausted(
+                                (int) properties.getMaxTimeoutWhenExhausted().toMillis())
+                        .setRetryPolicyFactory(properties.getConnectionRetryPolicy());
 
         return new DynoJedisClient.Builder()
-            .withHostSupplier(hostSupplier)
-            .withApplicationName(conductorProperties.getAppId())
-            .withDynomiteClusterName(properties.getClusterName())
-            .withCPConfig(connectionPoolConfiguration)
-            .build();
+                .withHostSupplier(hostSupplier)
+                .withApplicationName(conductorProperties.getAppId())
+                .withDynomiteClusterName(properties.getClusterName())
+                .withCPConfig(connectionPoolConfiguration)
+                .build();
     }
 }

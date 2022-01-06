@@ -51,11 +51,9 @@ public class WorkflowBulkServiceTest {
         }
     }
 
-    @Autowired
-    private WorkflowExecutor workflowExecutor;
+    @Autowired private WorkflowExecutor workflowExecutor;
 
-    @Autowired
-    private WorkflowBulkService workflowBulkService;
+    @Autowired private WorkflowBulkService workflowBulkService;
 
     @Test(expected = ConstraintViolationException.class)
     public void testPauseWorkflowNull() {
@@ -80,7 +78,9 @@ public class WorkflowBulkServiceTest {
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
-            assertTrue(messages.contains("Cannot process more than 1000 workflows. Please use multiple requests."));
+            assertTrue(
+                    messages.contains(
+                            "Cannot process more than 1000 workflows. Please use multiple requests."));
             throw ex;
         }
     }
@@ -123,9 +123,9 @@ public class WorkflowBulkServiceTest {
 
     @Test
     public void testRetryWorkflowSuccessful() {
-        //When
+        // When
         workflowBulkService.retry(Collections.singletonList("anyId"));
-        //Then
+        // Then
         verify(workflowExecutor).retry("anyId", false);
     }
 

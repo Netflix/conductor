@@ -12,20 +12,19 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
+import static java.util.Collections.singletonList;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Map;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
-import static java.util.Collections.singletonList;
 
 @Component
 public class TerminateTaskMapper implements TaskMapper {
@@ -51,8 +50,12 @@ public class TerminateTaskMapper implements TaskMapper {
         Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
-        Map<String, Object> taskInput = parametersUtils
-            .getTaskInputV2(taskMapperContext.getTaskToSchedule().getInputParameters(), workflowInstance, taskId, null);
+        Map<String, Object> taskInput =
+                parametersUtils.getTaskInputV2(
+                        taskMapperContext.getTaskToSchedule().getInputParameters(),
+                        workflowInstance,
+                        taskId,
+                        null);
 
         Task task = new Task();
         task.setTaskType(TASK_TYPE_TERMINATE);

@@ -43,8 +43,11 @@ public class WorkflowSweeper {
     private static final String CLASS_NAME = WorkflowSweeper.class.getSimpleName();
 
     @Autowired
-    public WorkflowSweeper(WorkflowExecutor workflowExecutor, Optional<WorkflowRepairService> workflowRepairService,
-        ConductorProperties properties, QueueDAO queueDAO) {
+    public WorkflowSweeper(
+            WorkflowExecutor workflowExecutor,
+            Optional<WorkflowRepairService> workflowRepairService,
+            ConductorProperties properties,
+            QueueDAO queueDAO) {
         this.properties = properties;
         this.queueDAO = queueDAO;
         this.workflowExecutor = workflowExecutor;
@@ -73,15 +76,22 @@ public class WorkflowSweeper {
             if (done) {
                 queueDAO.remove(DECIDER_QUEUE, workflowId);
             } else {
-                queueDAO.setUnackTimeout(DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
+                queueDAO.setUnackTimeout(
+                        DECIDER_QUEUE,
+                        workflowId,
+                        properties.getWorkflowOffsetTimeout().toMillis());
             }
         } catch (ApplicationException e) {
             if (e.getCode() == ApplicationException.Code.NOT_FOUND) {
                 queueDAO.remove(DECIDER_QUEUE, workflowId);
-                LOGGER.info("Workflow NOT found for id:{}. Removed it from decider queue", workflowId, e);
+                LOGGER.info(
+                        "Workflow NOT found for id:{}. Removed it from decider queue",
+                        workflowId,
+                        e);
             }
         } catch (Exception e) {
-            queueDAO.setUnackTimeout(DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
+            queueDAO.setUnackTimeout(
+                    DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
             Monitors.error(CLASS_NAME, "sweep");
             LOGGER.error("Error running sweep for " + workflowId, e);
         }

@@ -34,10 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * An implementation of {@link ExternalPayloadStorage} using AWS S3 for storing large JSON payload data. The S3 client
- * assumes that access to S3 is configured on the instance.
+ * An implementation of {@link ExternalPayloadStorage} using AWS S3 for storing large JSON payload
+ * data. The S3 client assumes that access to S3 is configured on the instance.
  *
- * @see <a href="https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">DefaultAWSCredentialsProviderChain</a>
+ * @see <a
+ *     href="https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html">DefaultAWSCredentialsProviderChain</a>
  */
 public class S3PayloadStorage implements ExternalPayloadStorage {
 
@@ -56,13 +57,14 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
     }
 
     /**
-     * @param operation   the type of {@link Operation} to be performed
+     * @param operation the type of {@link Operation} to be performed
      * @param payloadType the {@link PayloadType} that is being accessed
-     * @return a {@link ExternalStorageLocation} object which contains the pre-signed URL and the s3 object key for the
-     * json payload
+     * @return a {@link ExternalStorageLocation} object which contains the pre-signed URL and the s3
+     *     object key for the json payload
      */
     @Override
-    public ExternalStorageLocation getLocation(Operation operation, PayloadType payloadType, String path) {
+    public ExternalStorageLocation getLocation(
+            Operation operation, PayloadType payloadType, String path) {
         try {
             ExternalStorageLocation externalStorageLocation = new ExternalStorageLocation();
 
@@ -83,13 +85,15 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
             }
             externalStorageLocation.setPath(objectKey);
 
-            GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName,
-                objectKey)
-                .withMethod(httpMethod)
-                .withExpiration(expiration);
+            GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                    new GeneratePresignedUrlRequest(bucketName, objectKey)
+                            .withMethod(httpMethod)
+                            .withExpiration(expiration);
 
-            externalStorageLocation
-                .setUri(s3Client.generatePresignedUrl(generatePresignedUrlRequest).toURI().toASCIIString());
+            externalStorageLocation.setUri(
+                    s3Client.generatePresignedUrl(generatePresignedUrlRequest)
+                            .toURI()
+                            .toASCIIString());
             return externalStorageLocation;
         } catch (SdkClientException e) {
             String msg = "Error communicating with S3";
@@ -103,11 +107,12 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
     }
 
     /**
-     * Uploads the payload to the given s3 object key. It is expected that the caller retrieves the object key using
-     * {@link #getLocation(Operation, PayloadType, String)} before making this call.
+     * Uploads the payload to the given s3 object key. It is expected that the caller retrieves the
+     * object key using {@link #getLocation(Operation, PayloadType, String)} before making this
+     * call.
      *
-     * @param path        the s3 key of the object to be uploaded
-     * @param payload     an {@link InputStream} containing the json payload which is to be uploaded
+     * @param path the s3 key of the object to be uploaded
+     * @param payload an {@link InputStream} containing the json payload which is to be uploaded
      * @param payloadSize the size of the json payload in bytes
      */
     @Override
@@ -116,7 +121,8 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentType(CONTENT_TYPE);
             objectMetadata.setContentLength(payloadSize);
-            PutObjectRequest request = new PutObjectRequest(bucketName, path, payload, objectMetadata);
+            PutObjectRequest request =
+                    new PutObjectRequest(bucketName, path, payload, objectMetadata);
             s3Client.putObject(request);
         } catch (SdkClientException e) {
             String msg = "Error communicating with S3";
@@ -129,7 +135,8 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
      * Downloads the payload stored in the s3 object.
      *
      * @param path the S3 key of the object
-     * @return an input stream containing the contents of the object Caller is expected to close the input stream.
+     * @return an input stream containing the contents of the object Caller is expected to close the
+     *     input stream.
      */
     @Override
     public InputStream download(String path) {

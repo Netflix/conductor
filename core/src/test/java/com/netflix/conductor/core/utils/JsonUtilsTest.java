@@ -12,8 +12,18 @@
  */
 package com.netflix.conductor.core.utils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,25 +31,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
 public class JsonUtilsTest {
 
     private JsonUtils jsonUtils;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private ObjectMapper objectMapper;
 
     @Before
     public void setup() {
@@ -103,11 +101,13 @@ public class JsonUtilsTest {
         assertNotNull(jsonObject);
     }
 
-    // This test verifies that the types of the elements in the input are maintained upon expanding the JSON object
+    // This test verifies that the types of the elements in the input are maintained upon expanding
+    // the JSON object
     @Test
     public void testTypes() throws Exception {
-        String map = "{\"requestId\":\"1375128656908832001\",\"workflowId\":\"fc147e1d-5408-4d41-b066-53cb2e551d0e\","
-            + "\"inner\":{\"num\":42,\"status\":\"READY\"}}";
+        String map =
+                "{\"requestId\":\"1375128656908832001\",\"workflowId\":\"fc147e1d-5408-4d41-b066-53cb2e551d0e\","
+                        + "\"inner\":{\"num\":42,\"status\":\"READY\"}}";
         jsonUtils.expand(map);
 
         Object jsonObject = jsonUtils.expand(map);
@@ -116,7 +116,12 @@ public class JsonUtilsTest {
         assertTrue(((LinkedHashMap<?, ?>) jsonObject).get("requestId") instanceof String);
         assertTrue(((LinkedHashMap<?, ?>) jsonObject).get("workflowId") instanceof String);
         assertTrue(((LinkedHashMap<?, ?>) jsonObject).get("inner") instanceof LinkedHashMap);
-        assertTrue(((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) jsonObject).get("inner")).get("num") instanceof Integer);
-        assertTrue(((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) jsonObject).get("inner")).get("status") instanceof String);
+        assertTrue(
+                ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) jsonObject).get("inner")).get("num")
+                        instanceof Integer);
+        assertTrue(
+                ((LinkedHashMap<?, ?>) ((LinkedHashMap<?, ?>) jsonObject).get("inner"))
+                                .get("status")
+                        instanceof String);
     }
 }

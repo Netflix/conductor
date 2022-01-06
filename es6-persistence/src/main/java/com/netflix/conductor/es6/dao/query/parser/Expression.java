@@ -15,12 +15,11 @@ package com.netflix.conductor.es6.dao.query.parser;
 import com.netflix.conductor.es6.dao.query.parser.internal.AbstractNode;
 import com.netflix.conductor.es6.dao.query.parser.internal.BooleanOp;
 import com.netflix.conductor.es6.dao.query.parser.internal.ParserException;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 public class Expression extends AbstractNode implements FilterProvider {
 
@@ -45,7 +44,7 @@ public class Expression extends AbstractNode implements FilterProvider {
 
         peeked = peek(3);
         if (isBoolOpr(peeked)) {
-            //we have an expression next
+            // we have an expression next
             this.op = new BooleanOp(is);
             this.rhs = new Expression(is);
         }

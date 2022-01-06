@@ -12,12 +12,16 @@
  */
 package com.netflix.conductor.mysql.dao;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
 import com.netflix.conductor.mysql.config.MySQLConfiguration;
+import java.util.List;
 import org.flywaydb.core.Flyway;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,21 +32,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, MySQLConfiguration.class, FlywayAutoConfiguration.class})
+@ContextConfiguration(
+        classes = {
+            TestObjectMapperConfiguration.class,
+            MySQLConfiguration.class,
+            FlywayAutoConfiguration.class
+        })
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MySQLExecutionDAOTest extends ExecutionDAOTest {
 
-    @Autowired
-    private MySQLExecutionDAO executionDAO;
+    @Autowired private MySQLExecutionDAO executionDAO;
 
-    @Autowired
-    Flyway flyway;
+    @Autowired Flyway flyway;
 
     // clean the database between tests.
     @Before
@@ -62,8 +64,10 @@ public class MySQLExecutionDAOTest extends ExecutionDAOTest {
 
         generateWorkflows(workflow, 10);
 
-        List<Workflow> bycorrelationId = getExecutionDAO()
-            .getWorkflowsByCorrelationId("pending_count_correlation_jtest", "corr001", true);
+        List<Workflow> bycorrelationId =
+                getExecutionDAO()
+                        .getWorkflowsByCorrelationId(
+                                "pending_count_correlation_jtest", "corr001", true);
         assertNotNull(bycorrelationId);
         assertEquals(10, bycorrelationId.size());
     }

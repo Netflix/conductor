@@ -13,6 +13,7 @@
 
 package com.netflix.conductor.redis.limit.config;
 
+import java.util.List;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,16 +25,19 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
-import java.util.List;
-
 @Configuration
-@ConditionalOnProperty(value = "conductor.redis-concurrent-execution-limit.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        value = "conductor.redis-concurrent-execution-limit.enabled",
+        havingValue = "true")
 @EnableConfigurationProperties(RedisConcurrentExecutionLimitProperties.class)
 public class RedisConcurrentExecutionLimitConfiguration {
 
     @Bean
-    @ConditionalOnProperty(value = "conductor.redis-concurrent-execution-limit.type", havingValue = "cluster")
-    public RedisConnectionFactory redisClusterConnectionFactory(RedisConcurrentExecutionLimitProperties properties) {
+    @ConditionalOnProperty(
+            value = "conductor.redis-concurrent-execution-limit.type",
+            havingValue = "cluster")
+    public RedisConnectionFactory redisClusterConnectionFactory(
+            RedisConcurrentExecutionLimitProperties properties) {
         GenericObjectPoolConfig<?> poolConfig = new GenericObjectPoolConfig<>();
         poolConfig.setMaxTotal(properties.getMaxConnectionsPerHost());
         poolConfig.setTestWhileIdle(true);
@@ -46,15 +50,21 @@ public class RedisConcurrentExecutionLimitConfiguration {
                         .build();
 
         RedisClusterConfiguration redisClusterConfiguration =
-                new RedisClusterConfiguration(List.of(properties.getHost() + ":" + properties.getPort()));
+                new RedisClusterConfiguration(
+                        List.of(properties.getHost() + ":" + properties.getPort()));
 
         return new JedisConnectionFactory(redisClusterConfiguration, clientConfig);
     }
 
     @Bean
-    @ConditionalOnProperty(value = "conductor.redis-concurrent-execution-limit.type", havingValue = "standalone", matchIfMissing = true)
-    public RedisConnectionFactory redisStandaloneConnectionFactory(RedisConcurrentExecutionLimitProperties properties) {
-        RedisStandaloneConfiguration config = new RedisStandaloneConfiguration(properties.getHost(), properties.getPort());
+    @ConditionalOnProperty(
+            value = "conductor.redis-concurrent-execution-limit.type",
+            havingValue = "standalone",
+            matchIfMissing = true)
+    public RedisConnectionFactory redisStandaloneConnectionFactory(
+            RedisConcurrentExecutionLimitProperties properties) {
+        RedisStandaloneConfiguration config =
+                new RedisStandaloneConfiguration(properties.getHost(), properties.getPort());
         return new JedisConnectionFactory(config);
     }
 }

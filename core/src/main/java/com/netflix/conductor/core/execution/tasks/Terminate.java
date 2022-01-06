@@ -12,23 +12,23 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
-import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.COMPLETED;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.FAILED;
 
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.stereotype.Component;
+
 /**
- * Task that can terminate a workflow with a given status and modify the workflow's output with a given parameter, it
- * can act as a "return" statement for conditions where you simply want to terminate your workflow. For example, if you
- * have a decision where the first condition is met, you want to execute some tasks, otherwise you want to finish your
- * workflow.
+ * Task that can terminate a workflow with a given status and modify the workflow's output with a
+ * given parameter, it can act as a "return" statement for conditions where you simply want to
+ * terminate your workflow. For example, if you have a decision where the first condition is met,
+ * you want to execute some tasks, otherwise you want to finish your workflow.
+ *
  * <pre>
  * ...
  * {
@@ -48,8 +48,10 @@ import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.FAILED;
  * }
  * ...
  * </pre>
- * This task has some validations on creation and execution, they are: - the "terminationStatus" parameter is mandatory
- * and it can only receive the values "COMPLETED" or "FAILED" - the terminate task cannot be optional
+ *
+ * This task has some validations on creation and execution, they are: - the "terminationStatus"
+ * parameter is mandatory and it can only receive the values "COMPLETED" or "FAILED" - the terminate
+ * task cannot be optional
  */
 @Component(TASK_TYPE_TERMINATE)
 public class Terminate extends WorkflowSystemTask {

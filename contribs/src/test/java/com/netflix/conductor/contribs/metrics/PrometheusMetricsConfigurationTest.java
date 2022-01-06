@@ -41,27 +41,28 @@ public class PrometheusMetricsConfigurationTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testCollector() throws IllegalAccessException {
-        final Optional<Field> registries = Arrays
-            .stream(Spectator.globalRegistry().getClass().getDeclaredFields())
-            .filter(f -> f.getName().equals("registries")).findFirst();
+        final Optional<Field> registries =
+                Arrays.stream(Spectator.globalRegistry().getClass().getDeclaredFields())
+                        .filter(f -> f.getName().equals("registries"))
+                        .findFirst();
         assertTrue(registries.isPresent());
         registries.get().setAccessible(true);
 
         List<Registry> meters = (List<Registry>) registries.get().get(Spectator.globalRegistry());
         assertTrue(meters.size() > 0);
-        Optional<Registry> microMeterReg = meters.stream()
-            .filter(r -> r.getClass().equals(MicrometerRegistry.class))
-            .findFirst();
+        Optional<Registry> microMeterReg =
+                meters.stream()
+                        .filter(r -> r.getClass().equals(MicrometerRegistry.class))
+                        .findFirst();
         assertTrue(microMeterReg.isPresent());
     }
-
 
     @TestConfiguration
     public static class TestConfig {
 
         /**
-         * This bean will be injected in PrometheusMetricsConfiguration, which wraps it with a MicrometerRegistry, and
-         * appends it to the global registry.
+         * This bean will be injected in PrometheusMetricsConfiguration, which wraps it with a
+         * MicrometerRegistry, and appends it to the global registry.
          *
          * @return a Prometheus registry instance
          */

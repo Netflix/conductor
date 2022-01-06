@@ -12,21 +12,20 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_EVENT;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_EVENT;
 
 @Component
 public class EventTaskMapper implements TaskMapper {
@@ -56,8 +55,9 @@ public class EventTaskMapper implements TaskMapper {
 
         taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
         taskToSchedule.getInputParameters().put("asyncComplete", taskToSchedule.isAsyncComplete());
-        Map<String, Object> eventTaskInput = parametersUtils.getTaskInputV2(taskToSchedule.getInputParameters(),
-            workflowInstance, taskId, null);
+        Map<String, Object> eventTaskInput =
+                parametersUtils.getTaskInputV2(
+                        taskToSchedule.getInputParameters(), workflowInstance, taskId, null);
         String sink = (String) eventTaskInput.get("sink");
         Boolean asynComplete = (Boolean) eventTaskInput.get("asyncComplete");
 

@@ -13,13 +13,11 @@
 package com.netflix.conductor.common.metadata.tasks;
 
 import com.netflix.conductor.annotations.protogen.ProtoEnum;
-
 import java.util.HashSet;
 import java.util.Set;
 
 @ProtoEnum
 public enum TaskType {
-
     SIMPLE,
     DYNAMIC,
     FORK_JOIN,
@@ -42,10 +40,11 @@ public enum TaskType {
     SET_VARIABLE;
 
     /**
-     * TaskType constants representing each of the possible enumeration values. Motivation: to not have any
-     * hardcoded/inline strings used in the code.
+     * TaskType constants representing each of the possible enumeration values. Motivation: to not
+     * have any hardcoded/inline strings used in the code.
      */
     public static final String TASK_TYPE_DECISION = "DECISION";
+
     public static final String TASK_TYPE_SWITCH = "SWITCH";
     public static final String TASK_TYPE_DYNAMIC = "DYNAMIC";
     public static final String TASK_TYPE_JOIN = "JOIN";
@@ -78,10 +77,11 @@ public enum TaskType {
     }
 
     /**
-     * Converts a task type string to {@link TaskType}. For an unknown string, the value is defaulted
-     * to {@link TaskType#USER_DEFINED}.
-     * <p>
-     * NOTE: Use {@link Enum#valueOf(Class, String)} if the default of USER_DEFINED is not necessary.
+     * Converts a task type string to {@link TaskType}. For an unknown string, the value is
+     * defaulted to {@link TaskType#USER_DEFINED}.
+     *
+     * <p>NOTE: Use {@link Enum#valueOf(Class, String)} if the default of USER_DEFINED is not
+     * necessary.
      *
      * @param taskType The task type string.
      * @return The {@link TaskType} enum.
