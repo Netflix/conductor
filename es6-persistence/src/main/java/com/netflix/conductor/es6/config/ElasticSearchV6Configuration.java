@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -52,12 +53,12 @@ public class ElasticSearchV6Configuration {
 
         TransportClient transportClient = new PreBuiltTransportClient(settings);
 
-        List<URL> clusterAddresses = properties.toURLs();
+        List<URI> clusterAddresses = properties.getURIs();
 
         if (clusterAddresses.isEmpty()) {
             log.warn("workflow.elasticsearch.url is not set.  Indexing will remain DISABLED.");
         }
-        for (URL hostAddress : clusterAddresses) {
+        for (URI hostAddress : clusterAddresses) {
             int port = Optional.ofNullable(hostAddress.getPort()).orElse(9200);
             try {
                 transportClient
@@ -69,7 +70,9 @@ public class ElasticSearchV6Configuration {
         return transportClient;
     }
 
+
     @Bean
+    @Conditional(IsHttpProtocol.class)
     public RestClient restClient(ElasticSearchProperties properties) {
         RestClientBuilder restClientBuilder = RestClient.builder(convertToHttpHosts(properties.toURLs()));
         if (properties.getRestClientConnectionRequestTimeout() > 0) {
@@ -80,6 +83,7 @@ public class ElasticSearchV6Configuration {
     }
 
     @Bean
+    @Conditional(IsHttpProtocol.class)
     public RestClientBuilder restClientBuilder(ElasticSearchProperties properties) {
         return RestClient.builder(convertToHttpHosts(properties.toURLs()));
     }
