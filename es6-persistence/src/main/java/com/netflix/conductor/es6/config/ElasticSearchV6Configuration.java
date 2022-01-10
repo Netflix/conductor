@@ -45,6 +45,7 @@ public class ElasticSearchV6Configuration {
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchV6Configuration.class);
 
     @Bean
+    @Conditional(IsTcpProtocol.class)
     public Client client(ElasticSearchProperties properties) {
         Settings settings = Settings.builder()
                 .put("client.transport.ignore_cluster_name", true)
@@ -89,14 +90,17 @@ public class ElasticSearchV6Configuration {
     }
 
     @Bean
-    public IndexDAO es6IndexDAO(RestClientBuilder restClientBuilder, Client client, ElasticSearchProperties properties,
+    @Conditional(IsHttpProtocol.class)
+    public IndexDAO es6IndexDAO(RestClientBuilder restClientBuilder, ElasticSearchProperties properties,
         ObjectMapper objectMapper) {
-        String url = properties.getUrl();
-        if (url.startsWith("http") || url.startsWith("https")) {
-            return new ElasticSearchRestDAOV6(restClientBuilder, properties, objectMapper);
-        } else {
-            return new ElasticSearchDAOV6(client, properties, objectMapper);
-        }
+        return new ElasticSearchRestDAOV6(restClientBuilder, properties, objectMapper);
+    }
+
+    @Bean
+    @Conditional(IsTcpProtocol.class)
+    public IndexDAO es6IndexDAO1( Client client, ElasticSearchProperties properties,
+                                ObjectMapper objectMapper) {
+        return new ElasticSearchDAOV6(client, properties, objectMapper);
     }
 
     private HttpHost[] convertToHttpHosts(List<URL> hosts) {
