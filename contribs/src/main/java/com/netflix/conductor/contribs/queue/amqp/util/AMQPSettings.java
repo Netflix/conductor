@@ -47,12 +47,10 @@ public class AMQPSettings {
     private String routingKey;
     private final String contentEncoding;
     private final String contentType;
-
     private boolean durable;
     private boolean exclusive;
     private boolean autoDelete;
     private boolean sequentialProcessing;
-
     private int deliveryMode;
 
     private final Map<String, Object> arguments = new HashMap<>();

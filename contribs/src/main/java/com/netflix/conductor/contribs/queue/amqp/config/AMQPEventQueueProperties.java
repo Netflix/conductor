@@ -12,10 +12,13 @@
  */
 package com.netflix.conductor.contribs.queue.amqp.config;
 
-import com.rabbitmq.client.AMQP.PROTOCOL;
-import com.rabbitmq.client.ConnectionFactory;
 import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.rabbitmq.client.AMQP.PROTOCOL;
+import com.netflix.conductor.contribs.queue.amqp.util.RetryType;
+import com.rabbitmq.client.ConnectionFactory;
 
 @ConfigurationProperties("conductor.event-queues.amqp")
 public class AMQPEventQueueProperties {
@@ -34,15 +37,54 @@ public class AMQPEventQueueProperties {
 
 	private int port = PROTOCOL.PORT;
 
-	private Duration connectionTimeout = Duration.ofMillis(ConnectionFactory.DEFAULT_CONNECTION_TIMEOUT);
-
-	private int networkRecoveryIntervalInMilliSecs = 60000;
-	
+	private int connectionTimeoutInMilliSecs = 180000;
+	private int networkRecoveryIntervalInMilliSecs = 5000;
 	private int requestHeartbeatTimeoutInSecs = 30;
-	
-	private int handshakeTimeoutInSecs = 60;
-	
-	private int maxChannelCount = 65535;
+	private int handshakeTimeoutInMilliSecs = 180000;
+	private int maxChannelCount = 5000;
+	private int limit = 50;
+    private int duration = 1000;
+    private RetryType type = RetryType.REGULARINTERVALS;
+
+    public int getLimit() {
+		return limit;
+	}
+
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
+
+	public int getDuration() {
+		return duration;
+	}
+
+	public void setDuration(int duration) {
+		this.duration = duration;
+	}
+
+	public RetryType getType() {
+		return type;
+	}
+
+	public void setType(RetryType type) {
+		this.type = type;
+	}
+
+	public int getConnectionTimeoutInMilliSecs() {
+		return connectionTimeoutInMilliSecs;
+	}
+
+	public void setConnectionTimeoutInMilliSecs(int connectionTimeoutInMilliSecs) {
+		this.connectionTimeoutInMilliSecs = connectionTimeoutInMilliSecs;
+	}
+
+	public int getHandshakeTimeoutInMilliSecs() {
+		return handshakeTimeoutInMilliSecs;
+	}
+
+	public void setHandshakeTimeoutInMilliSecs(int handshakeTimeoutInMilliSecs) {
+		this.handshakeTimeoutInMilliSecs = handshakeTimeoutInMilliSecs;
+	}
 
 	public int getMaxChannelCount() {
 		return maxChannelCount;
@@ -130,14 +172,6 @@ public class AMQPEventQueueProperties {
 
 	public void setPort(int port) {
 		this.port = port;
-	}
-
-	public Duration getConnectionTimeout() {
-		return connectionTimeout;
-	}
-
-	public void setConnectionTimeout(Duration connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
 	}
 
 	public boolean isUseNio() {
@@ -268,13 +302,5 @@ public class AMQPEventQueueProperties {
 
 	public void setRequestHeartbeatTimeoutInSecs(int requestHeartbeatTimeoutInSecs) {
 		this.requestHeartbeatTimeoutInSecs = requestHeartbeatTimeoutInSecs;
-	}
-
-	public int getHandshakeTimeoutInSecs() {
-		return handshakeTimeoutInSecs;
-	}
-
-	public void setHandshakeTimeoutInSecs(int handshakeTimeoutInSecs) {
-		this.handshakeTimeoutInSecs = handshakeTimeoutInSecs;
 	}
 }

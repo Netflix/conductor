@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 import com.netflix.conductor.contribs.queue.amqp.config.AMQPEventQueueProperties;
+import com.netflix.conductor.contribs.queue.amqp.config.AMQPRetryPattern;
 import com.netflix.conductor.contribs.queue.amqp.util.AMQPConstants;
 import com.netflix.conductor.contribs.queue.amqp.util.AMQPSettings;
 import com.netflix.conductor.contribs.queue.amqp.util.ConnectionType;
@@ -55,6 +56,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AMQPObservableQueue.class);
 
 	private final AMQPSettings settings;
+	private final AMQPRetryPattern retrySettings;
 	private final String QUEUE_TYPE = "x-queue-type";
 	private final int batchSize;
 	private final boolean useExchange;
@@ -65,7 +67,7 @@ public class AMQPObservableQueue implements ObservableQueue {
 	private volatile boolean running;
 
 	public AMQPObservableQueue(ConnectionFactory factory, Address[] addresses, boolean useExchange,
-			AMQPSettings settings, int batchSize, int pollTimeInMS) {
+			AMQPSettings settings, AMQPRetryPattern retrySettings, int batchSize, int pollTimeInMS) {
 		if (factory == null) {
 			throw new IllegalArgumentException("Connection factory is undefined");
 		}
@@ -84,7 +86,8 @@ public class AMQPObservableQueue implements ObservableQueue {
 		this.useExchange = useExchange;
 		this.settings = settings;
 		this.batchSize = batchSize;
-		this.amqpConnection = AMQPConnection.getInstance(factory, addresses);
+		this.amqpConnection = AMQPConnection.getInstance(factory, addresses, retrySettings);
+		this.retrySettings = retrySettings;
 		this.setPollTimeInMS(pollTimeInMS);
 
 	}
@@ -343,20 +346,14 @@ public class AMQPObservableQueue implements ObservableQueue {
 			} else {
 				factory.setPort(port);
 			}
-			// Get connection timeout from config
-			final int connectionTimeout = (int) properties.getConnectionTimeout().toMillis();
-			if (connectionTimeout <= 0) {
-				throw new IllegalArgumentException("Connection timeout must be greater than 0");
-			} else {
-				factory.setConnectionTimeout(connectionTimeout);
-			}
 			final boolean useNio = properties.isUseNio();
 			if (useNio) {
 				factory.useNio();
 			}
+			factory.setConnectionTimeout(properties.getConnectionTimeoutInMilliSecs());
 			factory.setRequestedHeartbeat(properties.getRequestHeartbeatTimeoutInSecs());
 			factory.setNetworkRecoveryInterval(properties.getNetworkRecoveryIntervalInMilliSecs());
-			factory.setHandshakeTimeout(properties.getHandshakeTimeoutInSecs());
+			factory.setHandshakeTimeout(properties.getHandshakeTimeoutInMilliSecs());
 			factory.setAutomaticRecoveryEnabled(true);
 			factory.setTopologyRecoveryEnabled(true);
 			factory.setRequestedChannelMax(properties.getMaxChannelCount());
@@ -365,7 +362,10 @@ public class AMQPObservableQueue implements ObservableQueue {
 
 		public AMQPObservableQueue build(final boolean useExchange, final String queueURI) {
 			final AMQPSettings settings = new AMQPSettings(properties).fromURI(queueURI);
-			return new AMQPObservableQueue(factory, addresses, useExchange, settings, batchSize, pollTimeInMS);
+			final AMQPRetryPattern retrySettings = new AMQPRetryPattern(properties.getLimit(), properties.getDuration(),
+					properties.getType());
+			return new AMQPObservableQueue(factory, addresses, useExchange, settings, retrySettings, batchSize,
+					pollTimeInMS);
 		}
 	}
 
