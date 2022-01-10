@@ -12,10 +12,11 @@
  */
 package com.netflix.conductor.es6.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.es6.dao.index.ElasticSearchDAOV6;
-import com.netflix.conductor.es6.dao.index.ElasticSearchRestDAOV6;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
+import java.util.List;
+import java.util.Optional;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
@@ -30,18 +31,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-import java.util.List;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.es6.dao.index.ElasticSearchDAOV6;
+import com.netflix.conductor.es6.dao.index.ElasticSearchRestDAOV6;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ElasticSearchProperties.class)
 @Conditional(ElasticSearchConditions.ElasticSearchV6Enabled.class)
 public class ElasticSearchV6Configuration {
-
     private static final Logger log = LoggerFactory.getLogger(ElasticSearchV6Configuration.class);
 
     @Bean
@@ -71,7 +69,6 @@ public class ElasticSearchV6Configuration {
         return transportClient;
     }
 
-
     @Bean
     @Conditional(IsHttpProtocol.class)
     public RestClient restClient(ElasticSearchProperties properties) {
@@ -92,14 +89,14 @@ public class ElasticSearchV6Configuration {
     @Bean
     @Conditional(IsHttpProtocol.class)
     public IndexDAO es6IndexDAO(RestClientBuilder restClientBuilder, ElasticSearchProperties properties,
-        ObjectMapper objectMapper) {
+                                ObjectMapper objectMapper) {
         return new ElasticSearchRestDAOV6(restClientBuilder, properties, objectMapper);
     }
 
     @Bean
     @Conditional(IsTcpProtocol.class)
-    public IndexDAO es6IndexDAO1( Client client, ElasticSearchProperties properties,
-                                ObjectMapper objectMapper) {
+    public IndexDAO es6IndexDAO1(Client client, ElasticSearchProperties properties,
+                                 ObjectMapper objectMapper) {
         return new ElasticSearchDAOV6(client, properties, objectMapper);
     }
 
