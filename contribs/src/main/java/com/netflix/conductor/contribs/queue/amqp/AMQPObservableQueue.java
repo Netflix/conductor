@@ -382,14 +382,22 @@ public class AMQPObservableQueue implements ObservableQueue {
 		if (StringUtils.isEmpty(type)) {
 			throw new RuntimeException("Exchange type is undefined");
 		}
-
+		Channel chn = null;
 		try {
 			LOGGER.debug("Creating exchange {} of type {}", name, type);
-			return amqpConnection.getOrCreateChannel(connectionType, getSettings().getQueueOrExchangeName())
-					.exchangeDeclare(name, type, isDurable, autoDelete, arguments);
+			chn = amqpConnection.getOrCreateChannel(connectionType, getSettings().getQueueOrExchangeName());
+			return chn.exchangeDeclare(name, type, isDurable, autoDelete, arguments);
 		} catch (final Exception e) {
 			LOGGER.warn("Failed to create exchange {} of type {}", name, type, e);
 			throw e;
+		} finally {
+			if (chn != null) {
+				try {
+					amqpConnection.returnChannel(connectionType, chn);
+				} catch (Exception e) {
+					LOGGER.error("Failed to return the channel of {}. {}", connectionType, e);
+				}
+			}
 		}
 	}
 
@@ -405,13 +413,22 @@ public class AMQPObservableQueue implements ObservableQueue {
 			throw new RuntimeException("Queue name is undefined");
 		}
 		arguments.put(QUEUE_TYPE, settings.getQueueType());
+		Channel chn = null;
 		try {
 			LOGGER.debug("Creating queue {}", name);
-			return amqpConnection.getOrCreateChannel(connectionType, getSettings().getQueueOrExchangeName())
-					.queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
+			chn = amqpConnection.getOrCreateChannel(connectionType, getSettings().getQueueOrExchangeName());
+			return chn.queueDeclare(name, isDurable, isExclusive, autoDelete, arguments);
 		} catch (final Exception e) {
 			LOGGER.warn("Failed to create queue {}", name, e);
 			throw e;
+		} finally {
+			if (chn != null) {
+				try {
+					amqpConnection.returnChannel(connectionType, chn);
+				} catch (Exception e) {
+					LOGGER.error("Failed to return the channel of {}. {}", connectionType, e);
+				}
+			}
 		}
 	}
 
