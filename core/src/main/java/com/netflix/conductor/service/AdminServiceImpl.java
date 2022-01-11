@@ -31,7 +31,6 @@ import com.netflix.conductor.dao.QueueDAO;
 
 @Audit
 @Trace
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 public class AdminServiceImpl implements AdminService {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.core.orchestration;
+package com.netflix.conductor.core.dal;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -43,6 +43,7 @@ import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.PollDataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -69,6 +70,7 @@ public class ExecutionDAOFacade {
     private final RateLimitingDAO rateLimitingDao;
     private final ConcurrentExecutionLimitDAO concurrentExecutionLimitDAO;
     private final PollDataDAO pollDataDAO;
+    private final DomainMapper domainMapper;
     private final ObjectMapper objectMapper;
     private final ConductorProperties properties;
 
@@ -81,6 +83,7 @@ public class ExecutionDAOFacade {
             RateLimitingDAO rateLimitingDao,
             ConcurrentExecutionLimitDAO concurrentExecutionLimitDAO,
             PollDataDAO pollDataDAO,
+            DomainMapper domainMapper,
             ObjectMapper objectMapper,
             ConductorProperties properties) {
         this.executionDAO = executionDAO;
@@ -89,6 +92,7 @@ public class ExecutionDAOFacade {
         this.rateLimitingDao = rateLimitingDao;
         this.concurrentExecutionLimitDAO = concurrentExecutionLimitDAO;
         this.pollDataDAO = pollDataDAO;
+        this.domainMapper = domainMapper;
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.scheduledThreadPoolExecutor =
@@ -139,8 +143,46 @@ public class ExecutionDAOFacade {
      *       <li>parsing the {@link Workflow} object fails
      *     </ul>
      */
-    public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
-        Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
+    //    public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
+    //        Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
+    //        if (workflow == null) {
+    //            LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO",
+    // workflowId);
+    //            String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
+    //            if (json == null) {
+    //                String errorMsg = String.format("No such workflow found by id: %s",
+    // workflowId);
+    //                LOGGER.error(errorMsg);
+    //                throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
+    //            }
+    //
+    //            try {
+    //                workflow = objectMapper.readValue(json, Workflow.class);
+    //                if (!includeTasks) {
+    //                    workflow.getTasks().clear();
+    //                }
+    //            } catch (IOException e) {
+    //                String errorMsg = String.format("Error reading workflow: %s", workflowId);
+    //                LOGGER.error(errorMsg);
+    //                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
+    // errorMsg, e);
+    //            }
+    //        }
+    //        return workflow;
+    //    }
+
+    public WorkflowDO getWorkflowDO(String workflowId, boolean includeTasks) {
+        // fetch the workflow object from execution dao or index dao
+        return new WorkflowDO();
+    }
+
+    public Workflow getWorkflowDTO(String workflowId, boolean includeTasks) {
+        WorkflowDO workflowDO = getWorkflowFromDB(workflowId, includeTasks);
+        return domainMapper.mapToWorkflowDTO(workflowDO);
+    }
+
+    private WorkflowDO getWorkflowFromDB(String workflowId, boolean includeTasks) {
+        WorkflowDO workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
             LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
             String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
@@ -151,7 +193,7 @@ public class ExecutionDAOFacade {
             }
 
             try {
-                workflow = objectMapper.readValue(json, Workflow.class);
+                workflow = objectMapper.readValue(json, WorkflowDO.class);
                 if (!includeTasks) {
                     workflow.getTasks().clear();
                 }

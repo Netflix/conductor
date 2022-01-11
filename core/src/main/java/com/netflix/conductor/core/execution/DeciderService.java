@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -38,7 +38,6 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.Operation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.netflix.conductor.common.utils.TaskUtils;
@@ -50,6 +49,7 @@ import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -66,7 +66,6 @@ import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
  * blueprint. The result of the evaluation is either to schedule further tasks, complete/fail the
  * workflow or do nothing.
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 public class DeciderService {
 
@@ -149,7 +148,7 @@ public class DeciderService {
 
         checkWorkflowTimeout(workflow);
 
-        if (workflow.getStatus().equals(WorkflowStatus.PAUSED)) {
+        if (workflow.getStatus().equals(WorkflowStatusDO.PAUSED)) {
             LOGGER.debug("Workflow " + workflow.getWorkflowId() + " is paused");
             return outcome;
         }
@@ -310,7 +309,7 @@ public class DeciderService {
 
             if (workflowDef.getTasks().isEmpty()) {
                 throw new TerminateWorkflowException(
-                        "No tasks found to be executed", WorkflowStatus.COMPLETED);
+                        "No tasks found to be executed", WorkflowStatusDO.COMPLETED);
             }
 
             WorkflowTask taskToSchedule =
@@ -527,16 +526,16 @@ public class DeciderService {
             if (workflowTask != null && workflowTask.isOptional()) {
                 return Optional.empty();
             }
-            WorkflowStatus status;
+            WorkflowStatusDO status;
             switch (task.getStatus()) {
                 case CANCELED:
-                    status = WorkflowStatus.TERMINATED;
+                    status = WorkflowStatusDO.TERMINATED;
                     break;
                 case TIMED_OUT:
-                    status = WorkflowStatus.TIMED_OUT;
+                    status = WorkflowStatusDO.TIMED_OUT;
                     break;
                 default:
-                    status = WorkflowStatus.FAILED;
+                    status = WorkflowStatusDO.FAILED;
                     break;
             }
             updateWorkflowOutput(workflow, task);
@@ -710,11 +709,11 @@ public class DeciderService {
                 LOGGER.info(reason);
                 Monitors.recordWorkflowTermination(
                         workflow.getWorkflowName(),
-                        WorkflowStatus.TIMED_OUT,
+                        WorkflowStatusDO.TIMED_OUT,
                         workflow.getOwnerApp());
                 return;
             case TIME_OUT_WF:
-                throw new TerminateWorkflowException(reason, WorkflowStatus.TIMED_OUT);
+                throw new TerminateWorkflowException(reason, WorkflowStatusDO.TIMED_OUT);
         }
     }
 
@@ -803,7 +802,7 @@ public class DeciderService {
             case TIME_OUT_WF:
                 task.setStatus(TIMED_OUT);
                 task.setReasonForIncompletion(reason);
-                throw new TerminateWorkflowException(reason, WorkflowStatus.TIMED_OUT, task);
+                throw new TerminateWorkflowException(reason, WorkflowStatusDO.TIMED_OUT, task);
         }
     }
 

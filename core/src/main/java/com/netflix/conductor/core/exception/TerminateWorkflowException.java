@@ -13,28 +13,30 @@
 package com.netflix.conductor.core.exception;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.domain.WorkflowStatusDO;
+
+import static com.netflix.conductor.domain.WorkflowStatusDO.FAILED;
 
 public class TerminateWorkflowException extends RuntimeException {
 
-    private final WorkflowStatus workflowStatus;
+    private final WorkflowStatusDO workflowStatus;
     private final Task task;
 
     public TerminateWorkflowException(String reason) {
-        this(reason, WorkflowStatus.FAILED);
+        this(reason, FAILED);
     }
 
-    public TerminateWorkflowException(String reason, WorkflowStatus workflowStatus) {
+    public TerminateWorkflowException(String reason, WorkflowStatusDO workflowStatus) {
         this(reason, workflowStatus, null);
     }
 
-    public TerminateWorkflowException(String reason, WorkflowStatus workflowStatus, Task task) {
+    public TerminateWorkflowException(String reason, WorkflowStatusDO workflowStatus, Task task) {
         super(reason);
         this.workflowStatus = workflowStatus;
         this.task = task;
     }
 
-    public WorkflowStatus getWorkflowStatus() {
+    public WorkflowStatusDO getWorkflowStatus() {
         return workflowStatus;
     }
 

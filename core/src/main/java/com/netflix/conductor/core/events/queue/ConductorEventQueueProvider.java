@@ -35,7 +35,6 @@ import rx.Scheduler;
  *
  * @see ConductorObservableQueue
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
 @ConditionalOnProperty(
         name = "conductor.event-queues.default.enabled",

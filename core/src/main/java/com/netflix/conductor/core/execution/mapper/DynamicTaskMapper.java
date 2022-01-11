@@ -39,7 +39,6 @@ import com.google.common.annotations.VisibleForTesting;
  * TaskType#DYNAMIC} to a {@link Task} based on definition derived from the dynamic task name
  * defined in {@link WorkflowTask#getInputParameters()}
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
 public class DynamicTaskMapper implements TaskMapper {
 

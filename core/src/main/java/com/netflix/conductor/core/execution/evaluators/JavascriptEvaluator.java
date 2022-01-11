@@ -21,7 +21,6 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component(JavascriptEvaluator.NAME)
 public class JavascriptEvaluator implements Evaluator {
 

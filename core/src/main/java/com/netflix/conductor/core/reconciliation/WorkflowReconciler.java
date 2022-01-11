@@ -32,7 +32,6 @@ import static com.netflix.conductor.core.execution.WorkflowExecutor.DECIDER_QUEU
  * Periodically polls all running workflows in the system and evaluates them for timeouts and/or
  * maintain consistency.
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component
 @ConditionalOnProperty(
         name = "conductor.workflow-reconciler.enabled",

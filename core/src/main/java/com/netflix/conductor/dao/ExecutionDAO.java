@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,7 +17,7 @@ import java.util.List;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.domain.WorkflowDO;
 
 /** Data access layer for storing workflow executions */
 public interface ExecutionDAO {
@@ -100,13 +100,13 @@ public interface ExecutionDAO {
      * @param workflow Workflow to be created
      * @return Id of the newly created workflow
      */
-    String createWorkflow(Workflow workflow);
+    String createWorkflow(WorkflowDO workflow);
 
     /**
      * @param workflow Workflow to be updated
      * @return Id of the updated workflow
      */
-    String updateWorkflow(Workflow workflow);
+    String updateWorkflow(WorkflowDO workflow);
 
     /**
      * @param workflowId workflow instance id
@@ -133,7 +133,7 @@ public interface ExecutionDAO {
      * @param workflowId workflow instance id
      * @return Workflow
      */
-    Workflow getWorkflow(String workflowId);
+    WorkflowDO getWorkflow(String workflowId);
 
     /**
      * @param workflowId workflow instance id
@@ -141,7 +141,7 @@ public interface ExecutionDAO {
      *     Sequence number in Workflow.
      * @return Workflow instance details
      */
-    Workflow getWorkflow(String workflowId, boolean includeTasks);
+    WorkflowDO getWorkflow(String workflowId, boolean includeTasks);
 
     /**
      * @param workflowName name of the workflow
@@ -155,7 +155,7 @@ public interface ExecutionDAO {
      * @param version the workflow version
      * @return List of workflows that are running
      */
-    List<Workflow> getPendingWorkflowsByType(String workflowName, int version);
+    List<WorkflowDO> getPendingWorkflowsByType(String workflowName, int version);
 
     /**
      * @param workflowName Name of the workflow
@@ -175,7 +175,7 @@ public interface ExecutionDAO {
      * @param endTime epoch time
      * @return List of workflows between start and end time
      */
-    List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
+    List<WorkflowDO> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
 
     /**
      * @param workflowName workflow name
@@ -183,7 +183,7 @@ public interface ExecutionDAO {
      * @param includeTasks Option to includeTasks in results
      * @return List of workflows by correlation id
      */
-    List<Workflow> getWorkflowsByCorrelationId(
+    List<WorkflowDO> getWorkflowsByCorrelationId(
             String workflowName, String correlationId, boolean includeTasks);
 
     /**
