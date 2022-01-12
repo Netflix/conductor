@@ -101,7 +101,7 @@ const ErrorDashboard = React.createClass({
     return (
       <div className="ui-content">
         <h1>Workflow Error Dashboard</h1>
-         <Panel header="Filter Workflows Errors (Press Enter to search)">
+         <Panel header="Filter Workflows Errors">
           <Grid fluid={true}>
                      <Row className="show-grid">
                        <Col md={2}>

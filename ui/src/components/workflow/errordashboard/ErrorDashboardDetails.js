@@ -66,7 +66,7 @@ constructor(props) {
     return (
       <div className="ui-content">
        {this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>)}
-         <BootstrapTable data={errorData.result} striped={true} hover={true} exportCSV={false} pagination={true}>
+         <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={false} pagination={true}>
                 <TableHeaderColumn dataField="workflowId" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="orderId" dataSort={true} >Order ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="jobId" dataSort={true} >Job ID</TableHeaderColumn>
