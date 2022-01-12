@@ -359,6 +359,7 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
                    jobId : req.params.searchString,
                    rankingId : req.params.searchString,
                    orderId : req.params.searchString,
+                   completeError : req.params.searchString,
                    startTime :  from,
                    endTime : end
                   };
@@ -434,6 +435,7 @@ router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) =>
                    jobId : req.query.searchString,
                    rankingId : req.query.searchString,
                    orderId : req.query.searchString,
+                   completeError : req.query.searchString,
                    startTime :  from,
                    endTime : end
                   };
@@ -442,7 +444,6 @@ router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) =>
         }
        else
        {
-
          const inputData={
           errorLookUpId : req.query.errorLookupId,
           startTime :  from,

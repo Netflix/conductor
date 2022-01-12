@@ -822,6 +822,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("OR workflow_error_registry.ranking_id = ? ");
 			params.add(workflowErrorRegistryEntry.getRankingId());
 		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("OR workflow_error_registry.complete_error ilike ? ");
+			params.add("%"+workflowErrorRegistryEntry.getCompleteError()+"%");
+		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
 			SQL.append("OR workflow_error_registry.order_id = ? ) ");
 			params.add(workflowErrorRegistryEntry.getOrderId());
@@ -830,10 +834,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("AND workflow_error_registry.workflow_status = ? ");
 			params.add(workflowErrorRegistryEntry.getStatus());
 		}
-		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
-			SQL.append("AND workflow_error_registry.complete_error = ? ");
-			params.add(workflowErrorRegistryEntry.getCompleteError());
-		}
+
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
 			SQL.append("AND workflow_error_registry.start_time >= ? and workflow_error_registry.end_time <= ?");
 			params.add(workflowErrorRegistryEntry.getStartTime());
@@ -888,6 +889,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("OR ranking_id = ? ");
 			params.add(workflowErrorRegistryEntry.getRankingId());
 		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("OR complete_error ilike ? ");
+			params.add("%"+workflowErrorRegistryEntry.getCompleteError()+"%");
+		}
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
 			SQL.append("OR order_id = ? ) ");
 			params.add(workflowErrorRegistryEntry.getOrderId());
@@ -896,10 +901,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("AND workflow_status = ? ");
 			params.add(workflowErrorRegistryEntry.getStatus());
 		}
-		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
-			SQL.append("AND complete_error = ? ");
-			params.add(workflowErrorRegistryEntry.getCompleteError());
-		}
+
 		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
 			SQL.append("AND start_time >= ? and end_time <= ?");
 			params.add(workflowErrorRegistryEntry.getStartTime());
