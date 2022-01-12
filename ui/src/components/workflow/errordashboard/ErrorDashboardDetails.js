@@ -60,14 +60,16 @@ constructor(props) {
           }
           return new Date(dt).toLocaleString('en-US');
         };
-
+   function linkMaker(cell, row) {
+      return <Link to={`/workflow/id/${cell}`}>{cell}</Link>;
+    };
 
     var errorData = this.props.errorData;
     return (
       <div className="ui-content">
        {this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>)}
          <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={false} pagination={true}>
-                <TableHeaderColumn dataField="workflowId" isKey={true} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
+                <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left" dataSort={true}>Workflow ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="orderId" dataSort={true} >Order ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="jobId" dataSort={true} >Job ID</TableHeaderColumn>
                 <TableHeaderColumn dataField="rankingId" dataSort={true} >Ranking ID</TableHeaderColumn>
