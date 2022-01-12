@@ -3,27 +3,22 @@ buildscript {
         classpath "org.akhikhl.gretty:gretty:1.2.4"
     }
 }
-
 plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.3'
 }
-
 configurations.all {
     resolutionStrategy {
         force 'com.fasterxml.jackson.core:jackson-core:2.7.5'
         force 'com.fasterxml.jackson.core:jackson-databind:2.7.5'
     }
 }
-
 apply plugin: 'war'
 apply plugin: "org.akhikhl.gretty"
-
 dependencies {
     // Log4j
     compile 'org.apache.logging.log4j:log4j-core:2.9.0'
     compile 'org.apache.logging.log4j:log4j-jul:2.9.0'
     compile 'org.slf4j:jul-to-slf4j:1.7.25'
-
     //Conductor
     compile project(':conductor-core')
     compile project(':conductor-jersey')
@@ -31,26 +26,20 @@ dependencies {
     compile project(':conductor-contribs')
     compile project(':conductor-es6rest-persistence')
     compile project(':conductor-postgresql-persistence')
-
     //Jetty
-    compile 'org.eclipse.jetty:jetty-server:9.3.9.v20160517'
-    compile 'org.eclipse.jetty:jetty-servlet:9.3.9.v20160517'
-
+    compile 'org.eclipse.jetty:jetty-server:9.3.9.+'
+    compile 'org.eclipse.jetty:jetty-servlet:9.3.9.+'
     //Guice
-    compile 'com.sun.jersey.contribs:jersey-guice:1.19.4'
-    compile 'com.google.inject:guice:4.1.0'
-    compile 'com.google.inject.extensions:guice-servlet:4.1.0'
-
+    compile 'com.sun.jersey.contribs:jersey-guice:1.19.+'
+    compile 'com.google.inject:guice:4.+'
+    compile 'com.google.inject.extensions:guice-servlet:4.1.+'
     //Swagger
     compile 'io.swagger:swagger-jersey-jaxrs:1.5.0'
-
     //In memory
     compile 'org.rarefiedredis.redis:redis-java:0.0.17'
-
     // JNA library for EmbeddedElasticSearch
     compile 'net.java.dev.jna:jna:4.1.0'
 }
-
 shadowJar {
     mergeServiceFiles()
     configurations = [project.configurations.compile]
@@ -66,7 +55,6 @@ publishing {
         }
     }
 }
-
 gretty {
     contextPath = '/'
     servletContainer = 'tomcat8'
@@ -79,13 +67,47 @@ gretty {
 configurations.grettyRunnerTomcat8 {
     exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 }
-
-
 build.dependsOn('shadowJar')
-
 task server(type: JavaExec) {
-    systemProperty 'loadSample', 'true'
-    systemProperty 'workflow.elasticsearch.url', 'localhost:9300'
+    environment 'APP_VERSION', '1.7.6-deluxe-server'
+    environment 'loadSample', 'false'
+    environment 'TLD', 'owf-dev'
+    environment 'STACK', 'test'
+    environment 'event_bus', 'nats_stream'
+    environment 'workflow_auth_validate', 'true'
+    environment 'workflow_authcontext_enabled', 'true'
+    environment 'workflow_failure_expandInline', 'false'
+    environment 'decider_sweep_frequency_seconds', '5'
+    environment 'workflow_sweeper_frequency', '2000'
+    environment 'workflow_sweeper_thread_count', '100'
+    environment 'workflow_event_processor_initial_delay', '5'
+    environment 'workflow_event_processor_refresh_seconds', '5'
+    environment 'workflow_system_task_worker_poll_frequency', '2000'
+    environment 'workflow_system_task_worker_queue_size', '1'
+    environment 'workflow_elasticsearch_mode', 'none'
+    environment 'workflow_elasticsearch_cluster_name', 'conductor.search'
+    environment 'workflow_elasticsearch_initial_sleep_seconds', '10'
+    environment 'workflow_elasticsearch_url', 'http://127.0.0.1:9200'
+    environment 'conductor_additional_modules', 'com.netflix.conductor.contribs.NatsStreamModule,com.netflix.conductor.contribs.ShotgunModule,com.netflix.conductor.contribs.AssetModule'
+    environment 'io_nats_streaming_clusterId', 'test-cluster'
+    environment 'io_nats_streaming_durableName', 'conductor-server-owf-dev'
+    environment 'io_nats_streaming_publishRetryIn', '5,10,15'
+    environment 'io_nats_streaming_url', 'nats://localhost:4222'
+    environment 'io_shotgun_dns', 'shotgun.service.owf-dev'
+    environment 'io_shotgun_service', 'conductor-server-owf-dev'
+    environment 'io_shotgun_publishRetryIn', '5,10,15'
+    environment 'conductor_auth_url', 'https://auth.dmlib.de/v1/tenant/deluxe/auth/token'
+    environment 'conductor_auth_clientId', 'deluxe.conductor'
+    environment 'conductor_auth_clientSecret', '...'
+    environment 'db', 'aurora'
+    environment 'aurora_db', 'local_conductor'
+    environment 'aurora_host', 'localhost'
+    environment 'aurora_port', '5432'
+    environment 'aurora_user', 'postgres'
+    environment 'aurora_password', 'deluxe123'
+    environment 'aurora_core_pool_size', '75'
+    environment 'aurora_core_connect_timeout', '30'
     main = 'com.netflix.conductor.server.Main'
     classpath = sourceSets.test.runtimeClasspath
+    setDebug(true)
 }

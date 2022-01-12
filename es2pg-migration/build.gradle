@@ -12,8 +12,16 @@ repositories {
 }
 
 dependencies {
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.apache.logging.log4j' && details.target.version < '2.17.0') {
+                details.useVersion '2.17.0'
+                details.because 'CVE-2021-44228'
+            }
+        }
+    }
+
 //    // Log4j
-    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
     compile 'org.slf4j:slf4j-simple:1.7.26'
 
     compile project(':conductor-postgresql-persistence')

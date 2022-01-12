@@ -1,12 +1,12 @@
 version: "3.7"
 services:
-  ui:
-    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-ui
-    build:
-      context: .
-      dockerfile: docker/ui/Dockerfile
-      args:
-        APP_VERSION: ${APP_VERSION:-latest}
+#  ui:
+#    image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-ui
+#    build:
+#      context: .
+#      dockerfile: docker/ui/Dockerfile
+#      args:
+#        APP_VERSION: ${APP_VERSION:-latest}
   archiver:
     image: 583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${APP_VERSION:-latest}-archiver
     build:

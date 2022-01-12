@@ -330,7 +330,11 @@ public class DeciderService {
 
 			String reason = StringUtils.defaultIfEmpty(task.getReasonForIncompletion(), workflow.getReasonForIncompletion());
 			if (WorkflowStatus.FAILED.equals(status) && taskDef != null && retryCount >= taskDef.getRetryCount() && taskDef.getRetryCount() > 0) {
-				reason ="Max retry count reached,"+reason;
+				if (taskDef.getRetryFailureMessage() != null) {
+					reason = taskDef.getRetryFailureMessage();
+				} else {
+					reason = "Max retry count reached," + reason;
+				}
 				message += "," + reason;
 			}
 			if (WorkflowStatus.FAILED.equals(status)) {
