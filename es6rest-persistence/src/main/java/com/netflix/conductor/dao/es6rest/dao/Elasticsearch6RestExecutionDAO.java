@@ -25,6 +25,7 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowError;
 import com.netflix.conductor.core.config.Configuration;
@@ -1048,10 +1049,16 @@ public class Elasticsearch6RestExecutionDAO extends Elasticsearch6RestAbstractDA
 	public void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 
 	}
-	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistry){
+
+	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
 		return null;
 	}
-	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry  workflowErrorRegistry){
+
+	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) {
+		return null;
+	}
+
+	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) {
 		return null;
 	}
 }

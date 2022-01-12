@@ -24,6 +24,7 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Error;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -902,6 +903,14 @@ public class WorkflowResource {
 		}
 	}
 
+
+	@Path("/getTaskDetails")
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Search for a particular task details")
+	public List<TaskDetails> searchTaskDetails(@QueryParam("jobId") String jobId, @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") String workflowType, @QueryParam("taskName") String taskName, @DefaultValue("false") @QueryParam("includeOutput") Boolean includeOutput) throws Exception {
+		return executor.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
+	}
 
 	private List<String> convert(String sortStr) {
 		List<String> list = new ArrayList<String>();
