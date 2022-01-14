@@ -71,7 +71,18 @@ const menuPaths = {
     label: 'Poll Data',
     href: '/workflow/queue/data',
     icon: 'fa-exchange'
-  }]
+  },
+   {
+      header: true,
+      label: 'Error Dashboard',
+      href: '/events',
+      icon: 'fa-star'
+    }, {
+      label: 'Dashboard',
+      href: '/workflow/errorDashboard',
+      icon: 'fa-exchange'
+    }
+  ]
 };
 
 const LeftMenu = React.createClass({

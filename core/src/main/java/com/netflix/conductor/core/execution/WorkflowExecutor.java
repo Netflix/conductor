@@ -36,6 +36,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
+import com.netflix.conductor.common.run.WorkflowError;
+import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
@@ -51,6 +53,8 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.common.run.ErrorLookup;
+import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -65,6 +69,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.text.MessageFormat;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -82,6 +87,8 @@ public class WorkflowExecutor {
 	private ExecutionDAO edao;
 
 	private QueueDAO queue;
+
+	private ErrorLookupDAO errorLookupDAO;
 
 	private DeciderService decider;
 
@@ -105,13 +112,14 @@ public class WorkflowExecutor {
 	private ParametersUtils pu = new ParametersUtils();
 
 	@Inject
-	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ObjectMapper om,
+	public WorkflowExecutor(MetadataDAO metadata, ExecutionDAO edao, QueueDAO queue, ErrorLookupDAO errorLookupDAO,ObjectMapper om,
 							AuthManager auth, Configuration config,
 							TaskStatusListener taskStatusListener,
 							WorkflowStatusListener workflowStatusListener) {
 		this.metadata = metadata;
 		this.edao = edao;
 		this.queue = queue;
+		this.errorLookupDAO = errorLookupDAO;
 		this.om = om;
 		this.config = config;
 		this.auth = auth;
@@ -1029,11 +1037,62 @@ public class WorkflowExecutor {
 		// send wf end message
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
+		int errorId = 0;
+		try {
+			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflow.getWorkflowType(), reason).stream().findFirst();
+			if (errorLookupOpt.isPresent()) {
+				ErrorLookup errorLookup = errorLookupOpt.get();
+				errorId = errorLookup.getId();
+			}
+		} catch (Exception ex) {
+
+		}
+
+		Map<String, Object> map = new HashMap<String, Object>();
+		ObjectMapper mapper = new ObjectMapper();
+		String orderId = "";
+		String jobId = "";
+		String rankingId = "";
+		try {
+			//convert JSON string to Map
+			if (workflow.getCorrelationId() != null) {
+				map = mapper.readValue(workflow.getCorrelationId(), new TypeReference<HashMap<String, Object>>() {
+				});
+				List<String> urns = (List<String>) map.get("urns");
+				for (String urn : urns) {
+					if (urn.contains("orderid:")) {
+						orderId = urn.substring(urn.lastIndexOf(':') + 1);
+					} else if (urn.contains("jobid:")) {
+						jobId = urn.substring(urn.lastIndexOf(':') + 1);
+					} else if (urn.contains("rankingid:")) {
+						rankingId = urn.substring(urn.lastIndexOf(':') + 1);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
+		workflowErrorRegistry.setStatus(workflow.getStatus().name());
+		workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
+		workflowErrorRegistry.setWorkflowType(workflow.getWorkflowType());
+		workflowErrorRegistry.setCompleteError(reason);
+		workflowErrorRegistry.setErrorLookUpId(errorId);
+		workflowErrorRegistry.setStartTime(workflow.getStartTime());
+		workflowErrorRegistry.setEndTime(workflow.getEndTime());
+		workflowErrorRegistry.setParentWorkflowId(workflow.getParentWorkflowId());
+		workflowErrorRegistry.setJobId(jobId);
+		workflowErrorRegistry.setRankingId(rankingId);
+		workflowErrorRegistry.setOrderId(orderId);
+		edao.addErrorRegistry(workflowErrorRegistry);
+
 		// Send to data dog
 		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(),
 			workflow.getStatus().name(),
 			workflow.getStartTime());
 	}
+
 
 	public QueueDAO getQueueDao() {
 		return queue;
@@ -2066,6 +2125,16 @@ public class WorkflowExecutor {
 			logger.debug("workflowId" + workflowId + ", failed in resumeSubWorkflow with " + e.getMessage(), e);
 			e.printStackTrace();
 		}
+	}
+
+	public List<WorkflowError> searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+		List<WorkflowError> workflowErrorRegistries = edao.searchWorkflowErrorRegistry(workflowErrorRegistry);
+		return workflowErrorRegistries;
+	}
+
+	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
+		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistryList(workflowErrorRegistry);
+		return workflowErrorRegistries;
 	}
 
 	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) throws Exception {

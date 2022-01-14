@@ -357,3 +357,47 @@ export function getTaskLogs(taskId) {
     });
   }
 }
+
+export function getErrorData(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERROR_DATA'
+    });
+    const token = authHelper.getLocalAuthToken();
+    if(inputData.searchString=="")
+    {
+    inputData.searchString=undefined;
+    }
+    return http.post('/api/wfe/errorRegistrySearch/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERROR_DATA',
+        errorData: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function getErrorDataList(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERRORLIST_DATA'
+    });
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/errorRegistrySearchList/getlist/'+inputData.range+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&searchString=' + inputData.searchString+ '&errorLookupId=' + inputData.errorLookupId, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERRORLIST_DATA',
+        errorData: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}

@@ -868,6 +868,42 @@ public class WorkflowResource {
 	}
 
 	@POST
+	@Path("/errorRegistrySearch")
+	@ApiOperation("Search error registry")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowError>  searchErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistry(workflowErrorRegistry);
+		}
+	}
+
+	@POST
+	@Path("/errorRegistryList")
+	@ApiOperation("Get error registry list")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "Authorization", dataType = "string", paramType = "header")})
+	public List<WorkflowErrorRegistry>  searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry,@Context HttpHeaders headers) throws Exception{
+		if (!bypassAuth(headers)) {
+			String primarRole = executor.checkUserRoles(headers);
+			if (!primarRole.endsWith("admin")) {
+				throw new ApplicationException(Code.UNAUTHORIZED, "User does not have access privileges");
+			}
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		} else {
+			return executor.searchErrorRegistryList(workflowErrorRegistry);
+		}
+	}
+
+
 	@Path("/getTaskDetails")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -893,4 +929,6 @@ public class WorkflowResource {
 			return false;
 		return strings.get(0).contains("/docs");
 	}
+
+
 }

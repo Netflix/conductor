@@ -10,6 +10,8 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowError;
+import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
@@ -774,6 +776,184 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 		return queryWithTransaction(SQL, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
 	}
 
+	public void addErrorRegistry(WorkflowErrorRegistry workflowErrorRegistry) {
+		withTransaction(tx -> {
+			addErrorRegistry(tx, workflowErrorRegistry);
+		});
+	}
+
+	private void addErrorRegistry(Connection tx, WorkflowErrorRegistry workflowErrorRegistry) {
+		String SQL = "INSERT INTO workflow_error_registry (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
+				"start_time,end_time,complete_error,job_id,ranking_id,order_id,error_lookup_id) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+
+		execute(tx, SQL, q -> q.addParameter(workflowErrorRegistry.getWorkflowId())
+				.addParameter(workflowErrorRegistry.getParentWorkflowId())
+				.addParameter(workflowErrorRegistry.getWorkflowType())
+				.addParameter(workflowErrorRegistry.getStatus())
+				.addTimestampParameter(workflowErrorRegistry.getStartTime())
+				.addTimestampParameter(workflowErrorRegistry.getEndTime())
+				.addParameter(workflowErrorRegistry.getCompleteError())
+				.addParameter(workflowErrorRegistry.getJobId())
+				.addParameter(workflowErrorRegistry.getRankingId())
+				.addParameter(workflowErrorRegistry.getOrderId())
+				.addParameter(workflowErrorRegistry.getErrorLookUpId())
+				.executeUpdate());
+	}
+
+	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
+		StringBuilder SQL =  new StringBuilder("SELECT meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
+				"LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
+				" WHERE 1=1 ");
+		LinkedList<Object> params = new LinkedList<>();
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
+			SQL.append("AND (workflow_error_registry.workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getParentWorkflowId() != null) {
+			SQL.append("OR workflow_error_registry.parent_workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
+			SQL.append("OR workflow_error_registry.job_id = ? ");
+			params.add(workflowErrorRegistryEntry.getJobId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getRankingId() != null) {
+			SQL.append("OR workflow_error_registry.ranking_id = ? ");
+			params.add(workflowErrorRegistryEntry.getRankingId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("OR workflow_error_registry.complete_error ilike ? ");
+			params.add("%"+workflowErrorRegistryEntry.getCompleteError()+"%");
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
+			SQL.append("OR workflow_error_registry.order_id = ? ) ");
+			params.add(workflowErrorRegistryEntry.getOrderId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
+			SQL.append("AND workflow_error_registry.workflow_status = ? ");
+			params.add(workflowErrorRegistryEntry.getStatus());
+		}
+
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
+			SQL.append("AND workflow_error_registry.start_time >= ? and workflow_error_registry.end_time <= ?");
+			params.add(workflowErrorRegistryEntry.getStartTime());
+			params.add(workflowErrorRegistryEntry.getEndTime());
+		}
+		SQL.append(" GROUP BY meta_error_registry.id");
+		return queryWithTransaction(SQL.toString(), q -> {
+			params.forEach(p -> {
+				if (p instanceof Timestamp) {
+					q.addParameter((Timestamp) p);
+				} else if (p instanceof List) {
+					q.addParameter((Collection<String>) p);
+				} else if (p instanceof String) {
+					q.addParameter((String) p);
+				} else if (p instanceof Long) {
+					q.addTimestampParameter((Long)p);
+				}
+			});
+
+
+			return q.executeAndFetch(rs -> {
+				List<WorkflowError> workflowErrors = new LinkedList<>();
+				while (rs.next()) {
+					WorkflowError workflowError = new WorkflowError();
+					workflowError.setId(rs.getInt("id"));
+					workflowError.setLookup(rs.getString("lookup"));
+					workflowError.setTotalCount(rs.getString("numberoferrors"));
+					workflowErrors.add(workflowError);
+				}
+				return workflowErrors;
+			});
+		});
+
+	}
+
+	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistryEntry) {
+		StringBuilder SQL = new StringBuilder("SELECT * FROM workflow_error_registry WHERE 1=1 ");
+		LinkedList<Object> params = new LinkedList<>();
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getWorkflowId() != null) {
+			SQL.append("AND (workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getParentWorkflowId() != null) {
+			SQL.append("OR parent_workflow_id = ? ");
+			params.add(workflowErrorRegistryEntry.getParentWorkflowId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getJobId() != null) {
+			SQL.append("OR job_id = ? ");
+			params.add(workflowErrorRegistryEntry.getJobId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getRankingId() != null) {
+			SQL.append("OR ranking_id = ? ");
+			params.add(workflowErrorRegistryEntry.getRankingId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getCompleteError() != null) {
+			SQL.append("OR complete_error ilike ? ");
+			params.add("%"+workflowErrorRegistryEntry.getCompleteError()+"%");
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getOrderId() != null) {
+			SQL.append("OR order_id = ? ) ");
+			params.add(workflowErrorRegistryEntry.getOrderId());
+		}
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStatus() != null) {
+			SQL.append("AND workflow_status = ? ");
+			params.add(workflowErrorRegistryEntry.getStatus());
+		}
+
+		if (workflowErrorRegistryEntry != null && workflowErrorRegistryEntry.getStartTime() != 0 && workflowErrorRegistryEntry.getEndTime() != 0) {
+			SQL.append("AND start_time >= ? and end_time <= ?");
+			params.add(workflowErrorRegistryEntry.getStartTime());
+			params.add(workflowErrorRegistryEntry.getEndTime());
+		}
+		if (workflowErrorRegistryEntry != null) {
+			SQL.append("AND error_lookup_id = ? ");
+			params.add(workflowErrorRegistryEntry.getErrorLookUpId());
+		}
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			params.forEach(p -> {
+				if (p instanceof Timestamp) {
+					q.addParameter((Timestamp) p);
+				} else if (p instanceof List) {
+					q.addParameter((Collection<String>) p);
+				} else if (p instanceof String) {
+					q.addParameter((String) p);
+				} else if (p instanceof Long) {
+					q.addTimestampParameter((Long) p);
+				} else if (p instanceof Integer) {
+					q.addParameter((Integer) p);
+				}
+			});
+
+
+			return q.executeAndFetch(rs -> {
+				List<WorkflowErrorRegistry> workflowErrorRegistries = new LinkedList<>();
+				while (rs.next()) {
+					WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
+
+					workflowErrorRegistry.setStatus(rs.getString("workflow_status"));
+					workflowErrorRegistry.setWorkflowId(rs.getString("workflow_id"));
+					workflowErrorRegistry.setWorkflowType(rs.getString("workflow_type"));
+					workflowErrorRegistry.setErrorLookUpId(rs.getInt("error_lookup_id"));
+					workflowErrorRegistry.setStartTime(rs.getTimestamp("start_time").getTime());
+					workflowErrorRegistry.setEndTime(rs.getTimestamp("end_time").getTime());
+					workflowErrorRegistry.setParentWorkflowId(rs.getString("parent_workflow_id"));
+					workflowErrorRegistry.setJobId(rs.getString("job_id"));
+					workflowErrorRegistry.setRankingId(rs.getString("ranking_id"));
+					workflowErrorRegistry.setOrderId(rs.getString("order_id"));
+					workflowErrorRegistry.setCompleteError(rs.getString("complete_error"));
+
+					workflowErrorRegistries.add(workflowErrorRegistry);
+				}
+
+				return workflowErrorRegistries;
+			});
+		});
+
+	}
+
 	public List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput) {
 		StringBuilder SQL = new StringBuilder("select t.task_refname as task_refname, t.task_status as task_status, t.input as input, t.output as output, t.task_id as task_id, w.workflow_id as workflow_id, w.correlation_id as correlation_id, w.workflow_status as workflow_status from task t, workflow w where w.workflow_id = t.workflow_id ");
 		LinkedList<Object> params = new LinkedList<>();
@@ -781,10 +961,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			SQL.append("AND (w.workflow_id = ? OR w.json_data::jsonb->'workflowIds' ?? ?) ");
 			params.add(workflowId);
 			params.add(workflowId);
-		}else if (jobId != null) {
+		} else if (jobId != null) {
 			SQL.append("AND w.correlation_id ilike ? ");
 			params.add("%jobId:" + jobId + "%");
-		}else{
+		} else {
 			return new ArrayList<TaskDetails>();
 		}
 
@@ -832,7 +1012,6 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			});
 		});
 	}
-
 
 
 }
