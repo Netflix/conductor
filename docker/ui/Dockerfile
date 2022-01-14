@@ -1,7 +1,7 @@
 #
 # conductor:ui - Netflix conductor UI
 #
-FROM node:9-alpine
+FROM node:10.20.1-alpine
 MAINTAINER Netflix OSS <conductor@netflix.com>
 
 # Install the required packages for the node build
