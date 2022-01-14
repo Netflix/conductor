@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.test.integration
 
+import com.netflix.conductor.core.utils.Utils
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.netflix.conductor.common.metadata.tasks.Task
@@ -22,7 +23,6 @@ import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask
 import com.netflix.conductor.common.run.Workflow
-import com.netflix.conductor.core.execution.WorkflowExecutor
 import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.test.base.AbstractSpecification
 
@@ -190,7 +190,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         }
 
         and: "The decider queue has one task that is ready to be polled"
-        queueDAO.getSize(WorkflowExecutor.DECIDER_QUEUE) == 1
+        queueDAO.getSize(Utils.DECIDER_QUEUE) == 1
 
         when: "The the first task 'integration_task_1' is polled and acknowledged"
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
@@ -202,7 +202,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         task1Try1Acknowledgment
 
         and: "Ensure that the decider size queue is 1 to to enable the evaluation"
-        queueDAO.getSize(WorkflowExecutor.DECIDER_QUEUE) == 1
+        queueDAO.getSize(Utils.DECIDER_QUEUE) == 1
 
         when: "There is a delay of 3 seconds introduced and the workflow is sweeped to run the evaluation"
         Thread.sleep(3000)
@@ -798,7 +798,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
         task1Try1.status = Task.Status.IN_PROGRESS
         task1Try1.callbackAfterSeconds = 2L
-        workflowExecutionService.updateTask(task1Try1)
+        workflowExecutionService.updateTask(task1Try1) // TODO
 
         then: "verify that the workflow is in running state and the task is in SCHEDULED"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -845,7 +845,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         def task2Try1 = workflowExecutionService.poll('integration_task_2', 'task2.worker')
         task2Try1.status = Task.Status.IN_PROGRESS
         task2Try1.callbackAfterSeconds = 5L
-        workflowExecutionService.updateTask(task2Try1)
+        workflowExecutionService.updateTask(task2Try1) // TODO
 
         then: "Verify that the workflow is in running state and the task is in scheduled state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {

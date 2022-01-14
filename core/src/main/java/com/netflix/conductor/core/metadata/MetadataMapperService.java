@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,29 +12,27 @@
  */
 package com.netflix.conductor.core.metadata;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.tasks.TaskType;
+import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.core.WorkflowContext;
+import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.TerminateWorkflowException;
+import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.metrics.Monitors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskType;
-import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.core.WorkflowContext;
-import com.netflix.conductor.core.exception.ApplicationException;
-import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.metrics.Monitors;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Populates metadata definitions within workflow objects. Benefits of loading and populating
@@ -93,7 +91,7 @@ public class MetadataMapperService {
         return metadataDAO.getLatestWorkflowDef(workflowName);
     }
 
-    public Workflow populateWorkflowWithDefinitions(Workflow workflow) {
+    public WorkflowDO populateWorkflowWithDefinitions(WorkflowDO workflow) {
         Preconditions.checkNotNull(workflow, "workflow cannot be null");
         WorkflowDef workflowDefinition =
                 Optional.ofNullable(workflow.getWorkflowDefinition())
@@ -178,7 +176,7 @@ public class MetadataMapperService {
         }
     }
 
-    public Task populateTaskWithDefinition(Task task) {
+    public TaskDO populateTaskWithDefinition(TaskDO task) {
         Preconditions.checkNotNull(task, "Task cannot be null");
         populateWorkflowTaskWithDefinition(task.getWorkflowTask());
         return task;

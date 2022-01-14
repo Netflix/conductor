@@ -12,20 +12,8 @@
  */
 package com.netflix.conductor.core.dal;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import javax.annotation.PreDestroy;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -37,19 +25,24 @@ import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
-import com.netflix.conductor.dao.ConcurrentExecutionLimitDAO;
-import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.dao.PollDataDAO;
-import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.dao.*;
+import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.annotation.PreDestroy;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import static com.netflix.conductor.core.execution.WorkflowExecutor.DECIDER_QUEUE;
+import static com.netflix.conductor.core.utils.Utils.DECIDER_QUEUE;
 
 /**
  * Service that acts as a facade for accessing execution data from the {@link ExecutionDAO}, {@link
@@ -172,16 +165,14 @@ public class ExecutionDAOFacade {
     //    }
 
     public WorkflowDO getWorkflowDO(String workflowId, boolean includeTasks) {
-        // fetch the workflow object from execution dao or index dao
-        return new WorkflowDO();
+        return domainMapper.getWorkflowDO(getWorkflowFromDatastore(workflowId, includeTasks));
     }
 
     public Workflow getWorkflowDTO(String workflowId, boolean includeTasks) {
-        WorkflowDO workflowDO = getWorkflowFromDB(workflowId, includeTasks);
-        return domainMapper.mapToWorkflowDTO(workflowDO);
+        return domainMapper.getWorkflowDTO(getWorkflowFromDatastore(workflowId, includeTasks));
     }
 
-    private WorkflowDO getWorkflowFromDB(String workflowId, boolean includeTasks) {
+    private WorkflowDO getWorkflowFromDatastore(String workflowId, boolean includeTasks) {
         WorkflowDO workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
             LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
@@ -228,7 +219,7 @@ public class ExecutionDAOFacade {
                     .map(
                             workflowId -> {
                                 try {
-                                    return getWorkflowById(workflowId, includeTasks);
+                                    return getWorkflowDTO(workflowId, includeTasks);
                                 } catch (ApplicationException e) {
                                     // This might happen when the workflow archival failed and the
                                     // workflow was removed from primary datastore
@@ -243,14 +234,20 @@ public class ExecutionDAOFacade {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
-        return executionDAO.getWorkflowsByCorrelationId(workflowName, correlationId, includeTasks);
+        return executionDAO
+                .getWorkflowsByCorrelationId(workflowName, correlationId, includeTasks)
+                .stream()
+                .map(domainMapper::getWorkflowDTO)
+                .collect(Collectors.toList());
     }
 
-    public List<Workflow> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
+    // TODO: dto?
+    public List<WorkflowDO> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
         return executionDAO.getWorkflowsByType(workflowName, startTime, endTime);
     }
 
-    public List<Workflow> getPendingWorkflowsByName(String workflowName, int version) {
+    // TODO: dto?
+    public List<WorkflowDO> getPendingWorkflowsByName(String workflowName, int version) {
         return executionDAO.getPendingWorkflowsByType(workflowName, version);
     }
 
@@ -268,9 +265,8 @@ public class ExecutionDAOFacade {
      * @param workflow the workflow to be created
      * @return the id of the created workflow
      */
-    public String createWorkflow(Workflow workflow) {
-        workflow.setCreateTime(System.currentTimeMillis());
-        executionDAO.createWorkflow(workflow);
+    public String createWorkflow(WorkflowDO workflow) {
+        executionDAO.createWorkflow(domainMapper.getLeanWorkflowDO(workflow));
         // Add to decider queue
         queueDAO.push(
                 DECIDER_QUEUE,
@@ -291,15 +287,15 @@ public class ExecutionDAOFacade {
      * @param workflow the workflow tp be updated
      * @return the id of the updated workflow
      */
-    public String updateWorkflow(Workflow workflow) {
-        workflow.setUpdateTime(System.currentTimeMillis());
+    public String updateWorkflow(WorkflowDO workflow) {
+        workflow.setUpdatedTime(System.currentTimeMillis());
         if (workflow.getStatus().isTerminal()) {
             workflow.setEndTime(System.currentTimeMillis());
         }
-        executionDAO.updateWorkflow(workflow);
+        executionDAO.updateWorkflow(domainMapper.getLeanWorkflowDO(workflow));
         if (properties.isAsyncIndexingEnabled()) {
             if (workflow.getStatus().isTerminal()
-                    && workflow.getEndTime() - workflow.getStartTime()
+                    && workflow.getEndTime() - workflow.getCreatedTime()
                             < properties.getAsyncUpdateShortRunningWorkflowDuration().toMillis()) {
                 final String workflowId = workflow.getWorkflowId();
                 DelayWorkflowUpdate delayWorkflowUpdate = new DelayWorkflowUpdate(workflowId);
@@ -434,24 +430,42 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public List<Task> createTasks(List<Task> tasks) {
+    public List<TaskDO> createTasks(List<TaskDO> tasks) {
         return executionDAO.createTasks(tasks);
     }
 
     public List<Task> getTasksForWorkflow(String workflowId) {
-        return executionDAO.getTasksForWorkflow(workflowId);
+        return executionDAO.getTasksForWorkflow(workflowId).stream()
+                .map(domainMapper::getTaskDTO)
+                .collect(Collectors.toList());
     }
 
-    public Task getTaskById(String taskId) {
+    //    public Task getTaskById(String taskId) {
+    //        return executionDAO.getTask(taskId);
+    //    }
+
+    public TaskDO getTaskDO(String taskId) {
+        return domainMapper.getTaskDO(getTaskFromDatastore(taskId));
+    }
+
+    public Task getTaskDTO(String taskId) {
+        return domainMapper.getTaskDTO(getTaskFromDatastore(taskId));
+    }
+
+    private TaskDO getTaskFromDatastore(String taskId) {
         return executionDAO.getTask(taskId);
     }
 
     public List<Task> getTasksByName(String taskName, String startKey, int count) {
-        return executionDAO.getTasks(taskName, startKey, count);
+        return executionDAO.getTasks(taskName, startKey, count).stream()
+                .map(domainMapper::getTaskDTO)
+                .collect(Collectors.toList());
     }
 
     public List<Task> getPendingTasksForTaskType(String taskType) {
-        return executionDAO.getPendingTasksForTaskType(taskType);
+        return executionDAO.getPendingTasksForTaskType(taskType).stream()
+                .map(domainMapper::getTaskDTO)
+                .collect(Collectors.toList());
     }
 
     public long getInProgressTaskCount(String taskDefName) {
@@ -466,7 +480,7 @@ public class ExecutionDAOFacade {
      * @param task the task to be updated in the data store
      * @throws ApplicationException if the dao operations fail
      */
-    public void updateTask(Task task) {
+    public void updateTask(TaskDO task) {
         try {
             if (task.getStatus() != null) {
                 if (!task.getStatus().isTerminal()
@@ -497,7 +511,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public void updateTasks(List<Task> tasks) {
+    public void updateTasks(List<TaskDO> tasks) {
         tasks.forEach(this::updateTask);
     }
 
@@ -573,11 +587,11 @@ public class ExecutionDAOFacade {
         executionDAO.removeEventExecution(eventExecution);
     }
 
-    public boolean exceedsInProgressLimit(Task task) {
+    public boolean exceedsInProgressLimit(TaskDO task) {
         return concurrentExecutionLimitDAO.exceedsLimit(task);
     }
 
-    public boolean exceedsRateLimitPerFrequency(Task task, TaskDef taskDef) {
+    public boolean exceedsRateLimitPerFrequency(TaskDO task, TaskDef taskDef) {
         return rateLimitingDao.exceedsRateLimitPerFrequency(task, taskDef);
     }
 
@@ -626,7 +640,7 @@ public class ExecutionDAOFacade {
         @Override
         public void run() {
             try {
-                Workflow workflow = executionDAO.getWorkflow(workflowId, false);
+                WorkflowDO workflow = executionDAO.getWorkflow(workflowId, false);
                 indexDAO.asyncIndexWorkflow(workflow);
             } catch (Exception e) {
                 LOGGER.error("Unable to update workflow: {}", workflowId, e);

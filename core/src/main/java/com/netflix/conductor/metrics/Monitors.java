@@ -12,15 +12,7 @@
  */
 package com.netflix.conductor.metrics;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
+import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.spectator.api.Counter;
 import com.netflix.spectator.api.DistributionSummary;
@@ -30,6 +22,12 @@ import com.netflix.spectator.api.Registry;
 import com.netflix.spectator.api.Spectator;
 import com.netflix.spectator.api.Timer;
 import com.netflix.spectator.api.histogram.PercentileTimer;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class Monitors {
 
@@ -175,7 +173,7 @@ public class Monitors {
     }
 
     public static void recordTaskExecutionTime(
-            String taskType, long duration, boolean includesRetries, Task.Status status) {
+            String taskType, long duration, boolean includesRetries, TaskStatusDO status) {
         getTimer(
                         classQualifier,
                         "task_execution",
@@ -332,7 +330,8 @@ public class Monitors {
                 status.name());
     }
 
-    public static void recordUpdateConflict(String taskType, String workflowType, Status status) {
+    public static void recordUpdateConflict(
+            String taskType, String workflowType, TaskStatusDO status) {
         counter(
                 classQualifier,
                 "task_update_conflict",

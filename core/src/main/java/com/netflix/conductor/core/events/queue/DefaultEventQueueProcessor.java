@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,7 +150,7 @@ public class DefaultEventQueueProcessor {
                                 task.setStatus(status);
                                 task.getOutputData()
                                         .putAll(objectMapper.convertValue(payloadJSON, _mapType));
-                                executionService.updateTask(task);
+                                executionService.updateTask(new TaskResult(task));
 
                                 List<String> failures = queue.ack(Collections.singletonList(msg));
                                 if (!failures.isEmpty()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,9 +17,8 @@ import java.util.Map;
 
 import javax.validation.constraints.NotEmpty;
 
-import org.springframework.validation.annotation.Validated;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
+import org.springframework.validation.annotation.Validated;
 
 @Validated
 public interface AdminService {
@@ -56,8 +55,8 @@ public interface AdminService {
     /**
      * Verify that the Workflow is consistent, and run repairs as needed.
      *
-     * @param workflowId
-     * @return
+     * @param workflowId id of the workflow to be returned
+     * @return true, if repair was successful
      */
     boolean verifyAndRepairWorkflowConsistency(
             @NotEmpty(message = "WorkflowId cannot be null or empty.") String workflowId);

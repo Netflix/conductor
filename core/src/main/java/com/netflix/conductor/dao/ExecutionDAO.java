@@ -15,8 +15,8 @@ package com.netflix.conductor.dao;
 import java.util.List;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.WorkflowDO;
 
 /** Data access layer for storing workflow executions */
@@ -27,7 +27,7 @@ public interface ExecutionDAO {
      * @param workflowId Workflow instance id
      * @return List of pending tasks (in_progress)
      */
-    List<Task> getPendingTasksByWorkflow(String taskName, String workflowId);
+    List<TaskDO> getPendingTasksByWorkflow(String taskName, String workflowId);
 
     /**
      * @param taskType Type of task
@@ -35,7 +35,7 @@ public interface ExecutionDAO {
      * @param count number of tasks to return
      * @return List of tasks starting from startKey
      */
-    List<Task> getTasks(String taskType, String startKey, int count);
+    List<TaskDO> getTasks(String taskType, String startKey, int count);
 
     /**
      * @param tasks tasks to be created
@@ -45,10 +45,10 @@ public interface ExecutionDAO {
      *     key. Given two tasks with the same reference name and retryCount only one should be added
      *     to the database.
      */
-    List<Task> createTasks(List<Task> tasks);
+    List<TaskDO> createTasks(List<TaskDO> tasks);
 
     /** @param task Task to be updated */
-    void updateTask(Task task);
+    void updateTask(TaskDO task);
 
     /**
      * Checks if the number of tasks in progress for the given taskDef will exceed the limit if the
@@ -58,10 +58,10 @@ public interface ExecutionDAO {
      * @param task The task to be executed. Limit is set in the Task's definition
      * @return true if by executing this task, the limit is breached. false otherwise.
      * @see TaskDef#concurrencyLimit()
-     * @deprecated Since v3.3.5. Use {@link ConcurrentExecutionLimitDAO#exceedsLimit(Task)}.
+     * @deprecated Since v3.3.5. Use {@link ConcurrentExecutionLimitDAO#exceedsLimit(TaskDO)}.
      */
     @Deprecated
-    default boolean exceedsInProgressLimit(Task task) {
+    default boolean exceedsInProgressLimit(TaskDO task) {
         throw new UnsupportedOperationException(
                 getClass() + "does not support exceedsInProgressLimit");
     }
@@ -76,25 +76,25 @@ public interface ExecutionDAO {
      * @param taskId Task instance id
      * @return Task
      */
-    Task getTask(String taskId);
+    TaskDO getTask(String taskId);
 
     /**
      * @param taskIds Task instance ids
      * @return List of tasks
      */
-    List<Task> getTasks(List<String> taskIds);
+    List<TaskDO> getTasks(List<String> taskIds);
 
     /**
      * @param taskType Type of the task for which to retrieve the list of pending tasks
      * @return List of pending tasks
      */
-    List<Task> getPendingTasksForTaskType(String taskType);
+    List<TaskDO> getPendingTasksForTaskType(String taskType);
 
     /**
      * @param workflowId Workflow instance id
      * @return List of tasks for the given workflow instance id
      */
-    List<Task> getTasksForWorkflow(String workflowId);
+    List<TaskDO> getTasksForWorkflow(String workflowId);
 
     /**
      * @param workflow Workflow to be created

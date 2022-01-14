@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -133,7 +134,7 @@ public class DefaultEventQueueProcessorTest {
                                     return null;
                                 })
                 .when(executionService)
-                .updateTask(any(Task.class));
+                .updateTask(any(TaskResult.class));
     }
 
     @Test

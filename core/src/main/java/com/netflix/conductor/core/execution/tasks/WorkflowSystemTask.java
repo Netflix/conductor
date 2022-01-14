@@ -14,10 +14,10 @@ package com.netflix.conductor.core.execution.tasks;
 
 import java.util.Optional;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 public abstract class WorkflowSystemTask {
 
@@ -36,14 +36,14 @@ public abstract class WorkflowSystemTask {
      * @param task Instance of the Task
      * @param workflowExecutor Workflow Executor
      */
-    public void start(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
         // Do nothing unless overridden by the task implementation
     }
 
     /**
      * "Execute" the task.
      *
-     * <p>Called after {@link #start(Workflow, Task, WorkflowExecutor)}, if the task status is not
+     * <p>Called after {@link #start(WorkflowDO, TaskDO, WorkflowExecutor)}, if the task status is not
      * terminal. Can be called more than once.
      *
      * @param workflow Workflow for which the task is being started
@@ -51,7 +51,7 @@ public abstract class WorkflowSystemTask {
      * @param workflowExecutor Workflow Executor
      * @return true, if the execution has changed the task status. return false otherwise.
      */
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
         return false;
     }
 
@@ -62,7 +62,7 @@ public abstract class WorkflowSystemTask {
      * @param task Instance of the Task
      * @param workflowExecutor Workflow Executor
      */
-    public void cancel(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {}
+    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {}
 
     /** @return True if the task is supposed to be started asynchronously using internal queues. */
     public boolean isAsync() {
@@ -73,7 +73,7 @@ public abstract class WorkflowSystemTask {
      * @return True to keep task in 'IN_PROGRESS' state, and 'COMPLETE' later by an external
      *     message.
      */
-    public boolean isAsyncComplete(Task task) {
+    public boolean isAsyncComplete(TaskDO task) {
         if (task.getInputData().containsKey("asyncComplete")) {
             return Optional.ofNullable(task.getInputData().get("asyncComplete"))
                     .map(result -> (Boolean) result)

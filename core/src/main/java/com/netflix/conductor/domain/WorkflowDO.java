@@ -12,17 +12,11 @@
  */
 package com.netflix.conductor.domain;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-
 import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.*;
 
 import static com.netflix.conductor.domain.WorkflowStatusDO.RUNNING;
 
@@ -48,7 +42,7 @@ public class WorkflowDO {
 
     private String parentWorkflowTaskId;
 
-    private List<Task> tasks = new LinkedList<>();
+    private List<TaskDO> tasks = new LinkedList<>();
 
     private Map<String, Object> input = new HashMap<>();
 
@@ -162,11 +156,11 @@ public class WorkflowDO {
         this.parentWorkflowTaskId = parentWorkflowTaskId;
     }
 
-    public List<Task> getTasks() {
+    public List<TaskDO> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<Task> tasks) {
+    public void setTasks(List<TaskDO> tasks) {
         this.tasks = tasks;
     }
 
@@ -300,5 +294,44 @@ public class WorkflowDO {
     public int getWorkflowVersion() {
         Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
         return workflowDefinition.getVersion();
+    }
+
+    public boolean hasParent() {
+        return StringUtils.isNotEmpty(parentWorkflowId);
+    }
+
+    /**
+     * A string representation of all relevant fields that identify this workflow. Intended for use
+     * in log and other system generated messages.
+     */
+    public String toShortString() {
+        String name = workflowDefinition != null ? workflowDefinition.getName() : null;
+        Integer version = workflowDefinition != null ? workflowDefinition.getVersion() : null;
+        return String.format("%s.%s/%s", name, version, workflowId);
+    }
+
+    public TaskDO getTaskByRefName(String refName) {
+        if (refName == null) {
+            throw new RuntimeException(
+                    "refName passed is null.  Check the workflow execution.  For dynamic tasks, make sure referenceTaskName is set to a not null value");
+        }
+        LinkedList<TaskDO> found = new LinkedList<>();
+        for (TaskDO task : tasks) {
+            if (task.getReferenceTaskName() == null) {
+                throw new RuntimeException(
+                        "Task "
+                                + task.getTaskDefName()
+                                + ", seq="
+                                + task.getSeq()
+                                + " does not have reference name specified.");
+            }
+            if (task.getReferenceTaskName().equals(refName)) {
+                found.add(task);
+            }
+        }
+        if (found.isEmpty()) {
+            return null;
+        }
+        return found.getLast();
     }
 }

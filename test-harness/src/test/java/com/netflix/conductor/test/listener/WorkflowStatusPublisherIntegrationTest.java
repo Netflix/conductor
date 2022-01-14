@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -162,7 +163,7 @@ public class WorkflowStatusPublisherIntegrationTest {
 
         List<Task> tasks = workflowExecutionService.getTasks("junit_task_1", null, 1);
         tasks.get(0).setStatus(COMPLETED);
-        workflowExecutionService.updateTask(tasks.get(0));
+        workflowExecutionService.updateTask(new TaskResult(tasks.get(0)));
 
         checkIfWorkflowIsCompleted(id);
 

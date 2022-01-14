@@ -202,7 +202,7 @@ class TaskLimitsWorkflowSpec extends AbstractSpecification {
 
         when: "The task that was polled and acknowledged is completed"
         polledTask1.status = Task.Status.COMPLETED
-        workflowExecutionService.updateTask(polledTask1)
+        workflowExecutionService.updateTask(polledTask1) // TODO
 
         and: "The task offset time is reset to ensure that a task is returned on the next poll"
         queueDAO.resetOffsetTime('test_task_with_concurrency_limit',

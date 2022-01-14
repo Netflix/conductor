@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,32 +12,32 @@
  */
 package com.netflix.conductor.core.listener;
 
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.domain.WorkflowDO;
 
 /** Listener for the completed and terminated workflows */
 public interface WorkflowStatusListener {
 
-    default void onWorkflowCompletedIfEnabled(Workflow workflow) {
+    default void onWorkflowCompletedIfEnabled(WorkflowDO workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowCompleted(workflow);
         }
     }
 
-    default void onWorkflowTerminatedIfEnabled(Workflow workflow) {
+    default void onWorkflowTerminatedIfEnabled(WorkflowDO workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowTerminated(workflow);
         }
     }
 
-    default void onWorkflowFinalizedIfEnabled(Workflow workflow) {
+    default void onWorkflowFinalizedIfEnabled(WorkflowDO workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowFinalized(workflow);
         }
     }
 
-    void onWorkflowCompleted(Workflow workflow);
+    void onWorkflowCompleted(WorkflowDO workflow);
 
-    void onWorkflowTerminated(Workflow workflow);
+    void onWorkflowTerminated(WorkflowDO workflow);
 
-    default void onWorkflowFinalized(Workflow workflow) {}
+    default void onWorkflowFinalized(WorkflowDO workflow) {}
 }

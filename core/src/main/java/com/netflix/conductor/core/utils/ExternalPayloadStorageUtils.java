@@ -20,12 +20,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
@@ -81,7 +82,7 @@ public class ExternalPayloadStorageUtils {
      *
      * @param entity the task or workflow for which the payload is to be verified and uploaded
      * @param payloadType the {@link PayloadType} of the payload
-     * @param <T> {@link Task} or {@link WorkflowDO}
+     * @param <T> {@link TaskDO} or {@link WorkflowDO}
      * @throws ApplicationException in case of JSON parsing errors or upload errors
      * @throws TerminateWorkflowException if the payload size is bigger than permissible limit as
      *     per {@link ConductorProperties}
@@ -95,14 +96,14 @@ public class ExternalPayloadStorageUtils {
             case TASK_INPUT:
                 threshold = properties.getTaskInputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxTaskInputPayloadSizeThreshold().toKilobytes();
-                payload = ((Task) entity).getInputData();
-                workflowId = ((Task) entity).getWorkflowInstanceId();
+                payload = ((TaskDO) entity).getInputData();
+                workflowId = ((TaskDO) entity).getWorkflowInstanceId();
                 break;
             case TASK_OUTPUT:
                 threshold = properties.getTaskOutputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxTaskOutputPayloadSizeThreshold().toKilobytes();
-                payload = ((Task) entity).getOutputData();
-                workflowId = ((Task) entity).getWorkflowInstanceId();
+                payload = ((TaskDO) entity).getOutputData();
+                workflowId = ((TaskDO) entity).getWorkflowInstanceId();
                 break;
             case WORKFLOW_INPUT:
                 threshold = properties.getWorkflowInputPayloadSizeThreshold().toKilobytes();
@@ -124,15 +125,15 @@ public class ExternalPayloadStorageUtils {
             long payloadSize = payloadBytes.length;
 
             if (payloadSize > maxThreshold * 1024) {
-                if (entity instanceof Task) {
+                if (entity instanceof TaskDO) {
                     String errorMsg =
                             String.format(
                                     "The payload size: %dB of task: %s in workflow: %s  is greater than the permissible limit: %dKB",
                                     payloadSize,
-                                    ((Task) entity).getTaskId(),
-                                    ((Task) entity).getWorkflowInstanceId(),
+                                    ((TaskDO) entity).getTaskId(),
+                                    ((TaskDO) entity).getWorkflowInstanceId(),
                                     maxThreshold);
-                    failTask(((Task) entity), payloadType, errorMsg);
+                    failTask(((TaskDO) entity), payloadType, errorMsg);
                 } else {
                     String errorMsg =
                             String.format(
@@ -145,26 +146,26 @@ public class ExternalPayloadStorageUtils {
             } else if (payloadSize > threshold * 1024) {
                 switch (payloadType) {
                     case TASK_INPUT:
-                        ((Task) entity).setInputData(new HashMap<>());
-                        ((Task) entity)
+                        ((TaskDO) entity).setInputData(new HashMap<>());
+                        ((TaskDO) entity)
                                 .setExternalInputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes, payloadSize, PayloadType.TASK_INPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((Task) entity).getTaskDefName(),
+                                ((TaskDO) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_INPUT.toString());
                         break;
                     case TASK_OUTPUT:
-                        ((Task) entity).setOutputData(new HashMap<>());
-                        ((Task) entity)
+                        ((TaskDO) entity).setOutputData(new HashMap<>());
+                        ((TaskDO) entity)
                                 .setExternalOutputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes,
                                                 payloadSize,
                                                 PayloadType.TASK_OUTPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((Task) entity).getTaskDefName(),
+                                ((TaskDO) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_OUTPUT.toString());
                         break;
@@ -215,10 +216,10 @@ public class ExternalPayloadStorageUtils {
     }
 
     @VisibleForTesting
-    void failTask(Task task, PayloadType payloadType, String errorMsg) {
+    void failTask(TaskDO task, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
         task.setReasonForIncompletion(errorMsg);
-        task.setStatus(Task.Status.FAILED_WITH_TERMINAL_ERROR);
+        task.setStatus(TaskStatusDO.FAILED_WITH_TERMINAL_ERROR);
         if (payloadType == PayloadType.TASK_INPUT) {
             task.setInputData(new HashMap<>());
         } else {

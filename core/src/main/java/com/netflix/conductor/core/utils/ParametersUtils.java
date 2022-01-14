@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,26 +12,6 @@
  */
 package com.netflix.conductor.core.utils;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.utils.EnvUtils;
-import com.netflix.conductor.common.utils.TaskUtils;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -39,6 +19,24 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.utils.EnvUtils;
+import com.netflix.conductor.common.utils.TaskUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /** Used to parse and resolve the JSONPath bindings in the workflow and task definitions. */
 @Component
@@ -48,7 +46,8 @@ public class ParametersUtils {
 
     private final ObjectMapper objectMapper;
     private final TypeReference<Map<String, Object>> map =
-            new TypeReference<Map<String, Object>>() {};
+            new TypeReference<>() {
+            };
 
     public ParametersUtils(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -56,7 +55,7 @@ public class ParametersUtils {
 
     public Map<String, Object> getTaskInput(
             Map<String, Object> inputParams,
-            Workflow workflow,
+            WorkflowDO workflow,
             TaskDef taskDefinition,
             String taskId) {
         if (workflow.getWorkflowDefinition().getSchemaVersion() > 1) {
@@ -66,7 +65,7 @@ public class ParametersUtils {
     }
 
     public Map<String, Object> getTaskInputV2(
-            Map<String, Object> input, Workflow workflow, String taskId, TaskDef taskDefinition) {
+            Map<String, Object> input, WorkflowDO workflow, String taskId, TaskDef taskDefinition) {
         Map<String, Object> inputParams;
 
         if (input != null) {
@@ -98,7 +97,7 @@ public class ParametersUtils {
 
         // For new workflow being started the list of tasks will be empty
         workflow.getTasks().stream()
-                .map(Task::getReferenceTaskName)
+                .map(TaskDO::getReferenceTaskName)
                 .map(workflow::getTaskByRefName)
                 .forEach(
                         task -> {
@@ -273,45 +272,42 @@ public class ParametersUtils {
 
     @Deprecated
     // Workflow schema version 1 is deprecated and new workflows should be using version 2
-    private Map<String, Object> getTaskInputV1(Workflow workflow, Map<String, Object> inputParams) {
+    private Map<String, Object> getTaskInputV1(
+            WorkflowDO workflow, Map<String, Object> inputParams) {
         Map<String, Object> input = new HashMap<>();
         if (inputParams == null) {
             return input;
         }
         Map<String, Object> workflowInput = workflow.getInput();
-        inputParams
-                .entrySet()
-                .forEach(
-                        e -> {
-                            String paramName = e.getKey();
-                            String paramPath = "" + e.getValue();
-                            String[] paramPathComponents = paramPath.split("\\.");
-                            Preconditions.checkArgument(
-                                    paramPathComponents.length == 3,
-                                    "Invalid input expression for "
-                                            + paramName
-                                            + ", paramPathComponents.size="
-                                            + paramPathComponents.length
-                                            + ", expression="
-                                            + paramPath);
+        inputParams.forEach(
+                (paramName, value) -> {
+                    String paramPath = "" + value;
+                    String[] paramPathComponents = paramPath.split("\\.");
+                    Preconditions.checkArgument(
+                            paramPathComponents.length == 3,
+                            "Invalid input expression for "
+                                    + paramName
+                                    + ", paramPathComponents.size="
+                                    + paramPathComponents.length
+                                    + ", expression="
+                                    + paramPath);
 
-                            String source =
-                                    paramPathComponents[0]; // workflow, or task reference name
-                            String type = paramPathComponents[1]; // input/output
-                            String name = paramPathComponents[2]; // name of the parameter
-                            if ("workflow".equals(source)) {
-                                input.put(paramName, workflowInput.get(name));
+                    String source = paramPathComponents[0]; // workflow, or task reference name
+                    String type = paramPathComponents[1]; // input/output
+                    String name = paramPathComponents[2]; // name of the parameter
+                    if ("workflow".equals(source)) {
+                        input.put(paramName, workflowInput.get(name));
+                    } else {
+                        TaskDO task = workflow.getTaskByRefName(source);
+                        if (task != null) {
+                            if ("input".equals(type)) {
+                                input.put(paramName, task.getInputData().get(name));
                             } else {
-                                Task task = workflow.getTaskByRefName(source);
-                                if (task != null) {
-                                    if ("input".equals(type)) {
-                                        input.put(paramName, task.getInputData().get(name));
-                                    } else {
-                                        input.put(paramName, task.getOutputData().get(name));
-                                    }
-                                }
+                                input.put(paramName, task.getOutputData().get(name));
                             }
-                        });
+                        }
+                    }
+                });
         return input;
     }
 

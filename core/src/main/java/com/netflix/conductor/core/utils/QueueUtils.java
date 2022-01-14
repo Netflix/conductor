@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,15 +12,23 @@
  */
 package com.netflix.conductor.core.utils;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.domain.TaskDO;
+import org.apache.commons.lang3.StringUtils;
 
 public class QueueUtils {
 
     public static final String DOMAIN_SEPARATOR = ":";
     private static final String ISOLATION_SEPARATOR = "-";
     private static final String EXECUTION_NAME_SPACE_SEPARATOR = "@";
+
+    public static String getQueueName(TaskDO taskDO) {
+        return getQueueName(
+                taskDO.getTaskType(),
+                taskDO.getDomain(),
+                taskDO.getIsolationGroupId(),
+                taskDO.getExecutionNameSpace());
+    }
 
     public static String getQueueName(Task task) {
         return getQueueName(
