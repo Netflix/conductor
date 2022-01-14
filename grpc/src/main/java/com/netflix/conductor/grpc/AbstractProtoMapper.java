@@ -711,6 +711,9 @@ public abstract class AbstractProtoMapper {
         if (from.getPollTimeoutSeconds() != null) {
             to.setPollTimeoutSeconds( from.getPollTimeoutSeconds() );
         }
+        if (from.getBackoffRate() != null) {
+            to.setBackoffRate( from.getBackoffRate() );
+        }
         return to.build();
     }
 
@@ -738,6 +741,7 @@ public abstract class AbstractProtoMapper {
         to.setExecutionNameSpace( from.getExecutionNameSpace() );
         to.setOwnerEmail( from.getOwnerEmail() );
         to.setPollTimeoutSeconds( from.getPollTimeoutSeconds() );
+        to.setBackoffRate( from.getBackoffRate() );
         return to;
     }
 
@@ -745,6 +749,7 @@ public abstract class AbstractProtoMapper {
         TaskDefPb.TaskDef.RetryLogic to;
         switch (from) {
             case FIXED: to = TaskDefPb.TaskDef.RetryLogic.FIXED; break;
+            case LINEAR_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             case EXPONENTIAL_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
@@ -755,6 +760,7 @@ public abstract class AbstractProtoMapper {
         TaskDef.RetryLogic to;
         switch (from) {
             case FIXED: to = TaskDef.RetryLogic.FIXED; break;
+            case LINEAR_BACKOFF: to = TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             case EXPONENTIAL_BACKOFF: to = TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }

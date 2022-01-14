@@ -46,6 +46,7 @@ public class TaskDef extends Auditable {
     @ProtoEnum
     public enum RetryLogic {
         FIXED,
+        LINEAR_BACKOFF,
         EXPONENTIAL_BACKOFF
     }
 
@@ -119,6 +120,10 @@ public class TaskDef extends Auditable {
     @ProtoField(id = 19)
     @Min(value = 0, message = "TaskDef pollTimeoutSeconds: {value} must be >= 0")
     private Integer pollTimeoutSeconds;
+
+    @ProtoField(id = 20)
+    @Min(value = 1, message = "Backoff rate. Applicable for LINEAR_BACKOFF")
+    private Integer backoffRate = 2;
 
     public TaskDef() {}
 
@@ -353,6 +358,16 @@ public class TaskDef extends Auditable {
     /** @return the poll timeout of this task definition */
     public Integer getPollTimeoutSeconds() {
         return pollTimeoutSeconds;
+    }
+
+    /** @param backoffRate the backoff rate to set */
+    public void setBackoffRate(Integer backoffRate) {
+        this.backoffRate = backoffRate;
+    }
+
+    /** @return the backoff rate of this task definition */
+    public Integer getBackoffRate() {
+        return backoffRate;
     }
 
     @Override
