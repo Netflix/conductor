@@ -45,7 +45,7 @@ job "conductor" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:2.20.3-rc0-ui"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-ui"
 
         port_map {
           http = 5000
