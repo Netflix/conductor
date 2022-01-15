@@ -12,7 +12,15 @@
  */
 package com.netflix.conductor.core.reconciliation;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -24,14 +32,8 @@ import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * A helper service that tries to keep ExecutionDAO and QueueDAO in sync, based on the task or

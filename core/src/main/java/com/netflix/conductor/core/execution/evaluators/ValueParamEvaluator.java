@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Component(ValueParamEvaluator.NAME)
 public class ValueParamEvaluator implements Evaluator {
 

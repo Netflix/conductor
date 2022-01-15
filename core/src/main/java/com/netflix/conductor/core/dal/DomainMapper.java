@@ -12,6 +12,14 @@
  */
 package com.netflix.conductor.core.dal;
 
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.Operation;
@@ -22,12 +30,6 @@ import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 @Component
 public class DomainMapper {
@@ -87,7 +89,8 @@ public class DomainMapper {
         workflow.setCreatedBy(workflowDO.getCreatedBy());
         workflow.setUpdatedBy(workflowDO.getUpdatedBy());
 
-        workflow.setTasks(workflowDO.getTasks().stream().map(this::getTaskDTO).collect(Collectors.toList()));
+        workflow.setTasks(
+                workflowDO.getTasks().stream().map(this::getTaskDTO).collect(Collectors.toList()));
 
         return workflow;
     }

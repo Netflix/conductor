@@ -12,24 +12,6 @@
  */
 package com.netflix.conductor.core.utils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.DocumentContext;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.utils.EnvUtils;
-import com.netflix.conductor.common.utils.TaskUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +20,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.utils.EnvUtils;
+import com.netflix.conductor.common.utils.TaskUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+
 /** Used to parse and resolve the JSONPath bindings in the workflow and task definitions. */
 @Component
 public class ParametersUtils {
@@ -45,9 +47,7 @@ public class ParametersUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(ParametersUtils.class);
 
     private final ObjectMapper objectMapper;
-    private final TypeReference<Map<String, Object>> map =
-            new TypeReference<>() {
-            };
+    private final TypeReference<Map<String, Object>> map = new TypeReference<>() {};
 
     public ParametersUtils(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;

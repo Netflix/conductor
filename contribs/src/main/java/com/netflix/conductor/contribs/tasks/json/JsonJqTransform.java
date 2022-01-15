@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -22,10 +22,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +59,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
+    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
         final Map<String, Object> taskInput = task.getInputData();
         final Map<String, Object> taskOutput = task.getOutputData();
 
@@ -67,7 +68,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
         if (queryExpression == null) {
             task.setReasonForIncompletion(
                     "Missing '" + QUERY_EXPRESSION_PARAMETER + "' in input parameters");
-            task.setStatus(Task.Status.FAILED);
+            task.setStatus(TaskStatusDO.FAILED);
             return;
         }
 
@@ -79,7 +80,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
 
             final List<JsonNode> result = query.apply(childScope, input);
 
-            task.setStatus(Task.Status.COMPLETED);
+            task.setStatus(TaskStatusDO.COMPLETED);
             if (result == null) {
                 taskOutput.put(OUTPUT_RESULT, null);
                 taskOutput.put(OUTPUT_RESULT_LIST, null);
@@ -96,7 +97,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
                     task.getTaskId(),
                     workflow.getWorkflowId(),
                     e);
-            task.setStatus(Task.Status.FAILED);
+            task.setStatus(TaskStatusDO.FAILED);
             final String message = extractFirstValidMessage(e);
             task.setReasonForIncompletion(message);
             taskOutput.put(OUTPUT_ERROR, message);

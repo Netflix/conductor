@@ -12,11 +12,13 @@
  */
 package com.netflix.conductor.domain;
 
-import com.google.common.base.Preconditions;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import java.util.*;
+
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+
+import com.google.common.base.Preconditions;
 
 import static com.netflix.conductor.domain.WorkflowStatusDO.RUNNING;
 

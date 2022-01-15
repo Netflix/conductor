@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,11 +17,11 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.dao.QueueDAO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,24 +53,24 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
     }
 
     @Override
-    public void onWorkflowCompleted(Workflow workflow) {
+    public void onWorkflowCompleted(WorkflowDO workflow) {
         LOGGER.info("Publishing callback of workflow {} on completion ", workflow.getWorkflowId());
         queueDAO.push(successStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
     @Override
-    public void onWorkflowTerminated(Workflow workflow) {
+    public void onWorkflowTerminated(WorkflowDO workflow) {
         LOGGER.info("Publishing callback of workflow {} on termination", workflow.getWorkflowId());
         queueDAO.push(failureStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
     @Override
-    public void onWorkflowFinalized(Workflow workflow) {
+    public void onWorkflowFinalized(WorkflowDO workflow) {
         LOGGER.info("Publishing callback of workflow {} on finalization", workflow.getWorkflowId());
         queueDAO.push(finalizeStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
-    private Message workflowToMessage(Workflow workflow) {
+    private Message workflowToMessage(WorkflowDO workflow) {
         String jsonWfSummary;
         WorkflowSummary summary = new WorkflowSummary(workflow);
         try {

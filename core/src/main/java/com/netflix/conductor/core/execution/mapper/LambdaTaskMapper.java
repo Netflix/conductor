@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,13 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 /**
  * @author x-ultra
@@ -54,22 +55,17 @@ public class LambdaTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in LambdaTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         TaskDef taskDefinition =
                 Optional.ofNullable(taskMapperContext.getTaskDefinition())
-                        .orElseGet(
-                                () ->
-                                        Optional.ofNullable(
-                                                        metadataDAO.getTaskDef(
-                                                                taskToSchedule.getName()))
-                                                .orElse(null));
+                        .orElseGet(() -> metadataDAO.getTaskDef(taskToSchedule.getName()));
 
         Map<String, Object> taskInput =
                 parametersUtils.getTaskInputV2(
@@ -78,7 +74,7 @@ public class LambdaTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        Task lambdaTask = new Task();
+        TaskDO lambdaTask = new TaskDO();
         lambdaTask.setTaskType(TaskType.TASK_TYPE_LAMBDA);
         lambdaTask.setTaskDefName(taskMapperContext.getTaskToSchedule().getName());
         lambdaTask.setReferenceTaskName(
@@ -90,7 +86,7 @@ public class LambdaTaskMapper implements TaskMapper {
         lambdaTask.setScheduledTime(System.currentTimeMillis());
         lambdaTask.setInputData(taskInput);
         lambdaTask.setTaskId(taskId);
-        lambdaTask.setStatus(Task.Status.IN_PROGRESS);
+        lambdaTask.setStatus(TaskStatusDO.IN_PROGRESS);
         lambdaTask.setWorkflowTask(taskToSchedule);
         lambdaTask.setWorkflowPriority(workflowInstance.getPriority());
 

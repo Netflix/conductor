@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -19,10 +19,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_LAMBDA;
 
@@ -63,7 +64,7 @@ public class Lambda extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> taskInput = task.getInputData();
         Map<String, Object> taskOutput = task.getOutputData();
         String scriptExpression;
@@ -79,14 +80,14 @@ public class Lambda extends WorkflowSystemTask {
                         task.getTaskId());
                 Object returnValue = ScriptEvaluator.eval(scriptExpressionBuilder, taskInput);
                 taskOutput.put("result", returnValue);
-                task.setStatus(Task.Status.COMPLETED);
+                task.setStatus(TaskStatusDO.COMPLETED);
             } else {
                 LOGGER.error("Empty {} in Lambda task. ", QUERY_EXPRESSION_PARAMETER);
                 task.setReasonForIncompletion(
                         "Empty '"
                                 + QUERY_EXPRESSION_PARAMETER
                                 + "' in Lambda task's input parameters. A non-empty String value must be provided.");
-                task.setStatus(Task.Status.FAILED);
+                task.setStatus(TaskStatusDO.FAILED);
             }
         } catch (Exception e) {
             LOGGER.error(
@@ -94,7 +95,7 @@ public class Lambda extends WorkflowSystemTask {
                     task.getTaskId(),
                     workflow.getWorkflowId(),
                     e);
-            task.setStatus(Task.Status.FAILED);
+            task.setStatus(TaskStatusDO.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             taskOutput.put(
                     "error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());

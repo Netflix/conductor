@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -22,11 +22,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -47,7 +48,7 @@ public class SetVariable extends WorkflowSystemTask {
     }
 
     private boolean validateVariablesSize(
-            Workflow workflow, Task task, Map<String, Object> variables) {
+            WorkflowDO workflow, TaskDO task, Map<String, Object> variables) {
         String workflowId = workflow.getWorkflowId();
         long maxThreshold = properties.getMaxWorkflowVariablesPayloadSizeThreshold().toKilobytes();
 
@@ -74,7 +75,7 @@ public class SetVariable extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor provider) {
+    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor provider) {
         Map<String, Object> variables = workflow.getVariables();
         Map<String, Object> input = task.getInputData();
         String taskId = task.getTaskId();
@@ -105,12 +106,12 @@ public class SetVariable extends WorkflowSystemTask {
                                     variables.put(key, previousValues.get(key));
                                 });
                 newKeys.forEach(variables::remove);
-                task.setStatus(Task.Status.FAILED_WITH_TERMINAL_ERROR);
+                task.setStatus(TaskStatusDO.FAILED_WITH_TERMINAL_ERROR);
                 return true;
             }
         }
 
-        task.setStatus(Task.Status.COMPLETED);
+        task.setStatus(TaskStatusDO.COMPLETED);
         return true;
     }
 }

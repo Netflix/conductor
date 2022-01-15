@@ -12,9 +12,10 @@
  */
 package com.netflix.conductor.core.utils;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.domain.TaskDO;
-import org.apache.commons.lang3.StringUtils;
 
 public class QueueUtils {
 

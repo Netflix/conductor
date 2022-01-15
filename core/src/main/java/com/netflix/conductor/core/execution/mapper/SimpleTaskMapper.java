@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,19 +21,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#SIMPLE} to a {@link Task} with status {@link Task.Status#SCHEDULED}. <b>NOTE:</b> There
- * is not type defined for simples task.
+ * TaskType#SIMPLE} to a {@link TaskDO} with status {@link TaskStatusDO#SCHEDULED}. <b>NOTE:</b>
+ * There is not type defined for simples task.
  */
 @Component
 public class SimpleTaskMapper implements TaskMapper {
@@ -54,18 +55,18 @@ public class SimpleTaskMapper implements TaskMapper {
      * This method maps a {@link WorkflowTask} of type {@link TaskType#SIMPLE} to a {@link Task}
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link Workflow} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
      * @throws TerminateWorkflowException In case if the task definition does not exist
      * @return a List with just one simple task
      */
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in SimpleTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
         int retryCount = taskMapperContext.getRetryCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
 
@@ -86,14 +87,14 @@ public class SimpleTaskMapper implements TaskMapper {
                         workflowInstance,
                         taskDefinition,
                         taskMapperContext.getTaskId());
-        Task simpleTask = new Task();
+        TaskDO simpleTask = new TaskDO();
         simpleTask.setStartDelayInSeconds(taskToSchedule.getStartDelay());
         simpleTask.setTaskId(taskMapperContext.getTaskId());
         simpleTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         simpleTask.setInputData(input);
         simpleTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         simpleTask.setWorkflowType(workflowInstance.getWorkflowName());
-        simpleTask.setStatus(Task.Status.SCHEDULED);
+        simpleTask.setStatus(TaskStatusDO.SCHEDULED);
         simpleTask.setTaskType(taskToSchedule.getName());
         simpleTask.setTaskDefName(taskToSchedule.getName());
         simpleTask.setCorrelationId(workflowInstance.getCorrelationId());

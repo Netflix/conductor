@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,10 +21,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 @Component
 public class ExclusiveJoinTaskMapper implements TaskMapper {
@@ -37,12 +38,12 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in ExclusiveJoinTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         Map<String, Object> joinInput = new HashMap<>();
@@ -52,7 +53,7 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
             joinInput.put("defaultExclusiveJoinTask", taskToSchedule.getDefaultExclusiveJoinTask());
         }
 
-        Task joinTask = new Task();
+        TaskDO joinTask = new TaskDO();
         joinTask.setTaskType(TaskType.TASK_TYPE_EXCLUSIVE_JOIN);
         joinTask.setTaskDefName(TaskType.TASK_TYPE_EXCLUSIVE_JOIN);
         joinTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -63,7 +64,7 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
         joinTask.setStartTime(System.currentTimeMillis());
         joinTask.setInputData(joinInput);
         joinTask.setTaskId(taskId);
-        joinTask.setStatus(Task.Status.IN_PROGRESS);
+        joinTask.setStatus(TaskStatusDO.IN_PROGRESS);
         joinTask.setWorkflowPriority(workflowInstance.getPriority());
         joinTask.setWorkflowTask(taskToSchedule);
 

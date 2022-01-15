@@ -12,14 +12,22 @@
  */
 package com.netflix.conductor.core.execution;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.*;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.WorkflowContext;
@@ -45,14 +53,9 @@ import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
 import static com.netflix.conductor.domain.TaskStatusDO.*;
@@ -818,7 +821,8 @@ public class WorkflowExecutor {
         LOGGER.debug("Completing workflow execution for {}", workflow.getWorkflowId());
 
         if (workflow.getStatus().equals(WorkflowStatusDO.COMPLETED)) {
-            queueDAO.remove(Utils.DECIDER_QUEUE, workflow.getWorkflowId()); // remove from the sweep queue
+            queueDAO.remove(
+                    Utils.DECIDER_QUEUE, workflow.getWorkflowId()); // remove from the sweep queue
             executionDAOFacade.removeFromPendingWorkflow(
                     workflow.getWorkflowName(), workflow.getWorkflowId());
             LOGGER.debug("Workflow: {} has already been completed.", workflow.getWorkflowId());
@@ -1239,18 +1243,14 @@ public class WorkflowExecutor {
                 .orElse(null);
     }
 
-    public List<WorkflowDO> getRunningWorkflows(String workflowName, int version) {
-        return executionDAOFacade.getPendingWorkflowsByName(
-                workflowName, version); // TODO: lean workflow or DTO?
+    public List<Workflow> getRunningWorkflows(String workflowName, int version) {
+        return executionDAOFacade.getPendingWorkflowsByName(workflowName, version);
     }
 
     public List<String> getWorkflows(String name, Integer version, Long startTime, Long endTime) {
-        List<WorkflowDO> workflowsByType =
-                executionDAOFacade.getWorkflowsByName(
-                        name, startTime, endTime); // TODO: lean workflow or DTO?
-        return workflowsByType.stream()
+        return executionDAOFacade.getWorkflowsByName(name, startTime, endTime).stream()
                 .filter(workflow -> workflow.getWorkflowVersion() == version)
-                .map(WorkflowDO::getWorkflowId)
+                .map(Workflow::getWorkflowId)
                 .collect(Collectors.toList());
     }
 
@@ -1351,7 +1351,8 @@ public class WorkflowExecutor {
 
             // find all terminal and unsuccessful JOIN tasks and set them to IN_PROGRESS
             if (workflow.getWorkflowDefinition().containsType(TaskType.TASK_TYPE_JOIN)
-                    || workflow.getWorkflowDefinition().containsType(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
+                    || workflow.getWorkflowDefinition()
+                            .containsType(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
                 // if we are here, then the SUB_WORKFLOW task could be part of a FORK_JOIN or
                 // FORK_JOIN_DYNAMIC
                 // and the JOIN task(s) needs to be evaluated again, set them to IN_PROGRESS
@@ -1378,7 +1379,8 @@ public class WorkflowExecutor {
                                                                         BACKEND_ERROR,
                                                                         "Workflow Definition is not found")));
         if (workflowDef.containsType(TaskType.TASK_TYPE_SUB_WORKFLOW)
-                || workflow.getWorkflowDefinition().containsType(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
+                || workflow.getWorkflowDefinition()
+                        .containsType(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
             return workflow.getTasks().stream()
                     .filter(
                             t ->
@@ -1579,7 +1581,8 @@ public class WorkflowExecutor {
     }
 
     public WorkflowDO getWorkflow(String workflowId, boolean includeTasks) {
-        return executionDAOFacade.getWorkflowDO(workflowId, includeTasks); // TODO: lean workflow or DTO?
+        return executionDAOFacade.getWorkflowDO(
+                workflowId, includeTasks); // TODO: lean workflow or DTO?
     }
 
     public void addTaskToQueue(TaskDO task) {
@@ -1752,7 +1755,8 @@ public class WorkflowExecutor {
                 }
             }
         } catch (Exception e) {
-            List<String> taskIds = tasks.stream().map(TaskDO::getTaskId).collect(Collectors.toList());
+            List<String> taskIds =
+                    tasks.stream().map(TaskDO::getTaskId).collect(Collectors.toList());
             String errorMsg =
                     String.format(
                             "Error scheduling tasks: %s, for workflow: %s",
@@ -1814,7 +1818,8 @@ public class WorkflowExecutor {
             String correlationId) {
 
         // Get the workflow
-        WorkflowDO workflow = executionDAOFacade.getWorkflowDO(workflowId, true); // TODO lean workflow?
+        WorkflowDO workflow =
+                executionDAOFacade.getWorkflowDO(workflowId, true); // TODO lean workflow?
         updateAndPushParents(workflow, "reran");
 
         // If the task Id is null it implies that the entire workflow has to be rerun
@@ -1980,7 +1985,8 @@ public class WorkflowExecutor {
     }
 
     private void executeSubworkflowTaskAndSyncData(WorkflowDO subWorkflow, TaskDO subWorkflowTask) {
-        WorkflowSystemTask subWorkflowSystemTask = systemTaskRegistry.get(TaskType.TASK_TYPE_SUB_WORKFLOW);
+        WorkflowSystemTask subWorkflowSystemTask =
+                systemTaskRegistry.get(TaskType.TASK_TYPE_SUB_WORKFLOW);
         subWorkflowSystemTask.execute(subWorkflow, subWorkflowTask, this);
         // Keep Subworkflow task's data consistent with Subworkflow's.
         if (subWorkflowTask.getStatus().isTerminal()

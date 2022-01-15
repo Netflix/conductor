@@ -12,13 +12,13 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
+import java.util.Map;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.domain.WorkflowDO;
-
-import java.util.Map;
 
 /** Business Object class used for interaction between the DeciderService and Different Mappers */
 public class TaskMapperContext {

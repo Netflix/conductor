@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,15 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +55,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> payload = new HashMap<>(task.getInputData());
         payload.put("workflowInstanceId", workflow.getWorkflowId());
         payload.put("workflowType", workflow.getWorkflowName());
@@ -69,14 +69,15 @@ public class Event extends WorkflowSystemTask {
             queue.publish(List.of(message));
             LOGGER.debug("Published message:{} to queue:{}", message.getId(), queue.getName());
             task.getOutputData().putAll(payload);
-            task.setStatus(isAsyncComplete(task) ? Status.IN_PROGRESS : Status.COMPLETED);
+            task.setStatus(
+                    isAsyncComplete(task) ? TaskStatusDO.IN_PROGRESS : TaskStatusDO.COMPLETED);
         } catch (ApplicationException ae) {
             if (ae.isRetryable()) {
                 LOGGER.info(
                         "A transient backend error happened when task {} tried to publish an event.",
                         task.getTaskId());
             } else {
-                task.setStatus(Status.FAILED);
+                task.setStatus(TaskStatusDO.FAILED);
                 task.setReasonForIncompletion(ae.getMessage());
                 LOGGER.error(
                         "Error executing task: {}, workflow: {}",
@@ -85,14 +86,14 @@ public class Event extends WorkflowSystemTask {
                         ae);
             }
         } catch (JsonProcessingException jpe) {
-            task.setStatus(Status.FAILED);
+            task.setStatus(TaskStatusDO.FAILED);
             task.setReasonForIncompletion("Error serializing JSON payload: " + jpe.getMessage());
             LOGGER.error(
                     "Error serializing JSON payload for task: {}, workflow: {}",
                     task.getTaskId(),
                     workflow.getWorkflowId());
         } catch (Exception e) {
-            task.setStatus(Status.FAILED);
+            task.setStatus(TaskStatusDO.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             LOGGER.error(
                     "Error executing task: {}, workflow: {}",
@@ -103,7 +104,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @Override
-    public void cancel(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
         Message message = new Message(task.getTaskId(), null, task.getTaskId());
         ObservableQueue queue = getQueue(workflow, task);
         queue.ack(List.of(message));
@@ -115,7 +116,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    ObservableQueue getQueue(Workflow workflow, Task task) {
+    ObservableQueue getQueue(WorkflowDO workflow, TaskDO task) {
         String sinkValueRaw = (String) task.getInputData().get("sink");
         Map<String, Object> input = new HashMap<>();
         input.put("sink", sinkValueRaw);

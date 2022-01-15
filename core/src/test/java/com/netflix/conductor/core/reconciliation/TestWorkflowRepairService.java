@@ -12,7 +12,11 @@
  */
 package com.netflix.conductor.core.reconciliation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.SubWorkflow;
@@ -24,12 +28,11 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
-import org.junit.Before;
-import org.junit.Test;
 
-import java.time.Duration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.*;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;

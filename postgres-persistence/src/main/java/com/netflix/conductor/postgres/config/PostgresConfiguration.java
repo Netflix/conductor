@@ -30,7 +30,6 @@ import com.netflix.conductor.postgres.dao.PostgresQueueDAO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PostgresProperties.class)
 @ConditionalOnProperty(name = "conductor.db.type", havingValue = "postgres")

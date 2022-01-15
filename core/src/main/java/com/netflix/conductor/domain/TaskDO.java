@@ -12,13 +12,14 @@
  */
 package com.netflix.conductor.domain;
 
-import com.google.protobuf.Any;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+
+import com.google.protobuf.Any;
 
 public class TaskDO {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
 
@@ -34,7 +34,7 @@ public class Join extends WorkflowSystemTask {
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
 
         boolean allDone = true;
         boolean hasFailures = false;
@@ -48,13 +48,13 @@ public class Join extends WorkflowSystemTask {
                             .collect(Collectors.toList());
         }
         for (String joinOnRef : joinOn) {
-            Task forkedTask = workflow.getTaskByRefName(joinOnRef);
+            TaskDO forkedTask = workflow.getTaskByRefName(joinOnRef);
             if (forkedTask == null) {
                 // Task is not even scheduled yet
                 allDone = false;
                 break;
             }
-            Status taskStatus = forkedTask.getStatus();
+            TaskStatusDO taskStatus = forkedTask.getStatus();
             hasFailures = !taskStatus.isSuccessful() && !forkedTask.getWorkflowTask().isOptional();
             if (hasFailures) {
                 failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
@@ -70,9 +70,9 @@ public class Join extends WorkflowSystemTask {
         if (allDone || hasFailures) {
             if (hasFailures) {
                 task.setReasonForIncompletion(failureReason.toString());
-                task.setStatus(Status.FAILED);
+                task.setStatus(TaskStatusDO.FAILED);
             } else {
-                task.setStatus(Status.COMPLETED);
+                task.setStatus(TaskStatusDO.COMPLETED);
             }
             return true;
         }

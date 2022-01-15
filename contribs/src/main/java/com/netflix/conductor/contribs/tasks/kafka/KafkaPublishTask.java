@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -34,11 +34,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.Utils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -76,7 +77,7 @@ public class KafkaPublishTask extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
+    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
 
         long taskStartMillis = Instant.now().toEpochMilli();
         task.setWorkerId(Utils.getServerId());
@@ -109,9 +110,9 @@ public class KafkaPublishTask extends WorkflowSystemTask {
             try {
                 recordMetaDataFuture.get();
                 if (isAsyncComplete(task)) {
-                    task.setStatus(Task.Status.IN_PROGRESS);
+                    task.setStatus(TaskStatusDO.IN_PROGRESS);
                 } else {
-                    task.setStatus(Task.Status.COMPLETED);
+                    task.setStatus(TaskStatusDO.COMPLETED);
                 }
                 long timeTakenToCompleteTask = Instant.now().toEpochMilli() - taskStartMillis;
                 LOGGER.debug("Published message {}, Time taken {}", input, timeTakenToCompleteTask);
@@ -133,9 +134,9 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         }
     }
 
-    private void markTaskAsFailed(Task task, String reasonForIncompletion) {
+    private void markTaskAsFailed(TaskDO task, String reasonForIncompletion) {
         task.setReasonForIncompletion(reasonForIncompletion);
-        task.setStatus(Task.Status.FAILED);
+        task.setStatus(TaskStatusDO.FAILED);
     }
 
     /**
@@ -195,13 +196,13 @@ public class KafkaPublishTask extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor executor) {
+    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
         return false;
     }
 
     @Override
-    public void cancel(Workflow workflow, Task task, WorkflowExecutor executor) {
-        task.setStatus(Task.Status.CANCELED);
+    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+        task.setStatus(TaskStatusDO.CANCELED);
     }
 
     @Override

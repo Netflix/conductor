@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,13 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 @Component
 public class JsonJQTransformTaskMapper implements TaskMapper {
@@ -47,22 +48,17 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in JsonJQTransformTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         TaskDef taskDefinition =
                 Optional.ofNullable(taskMapperContext.getTaskDefinition())
-                        .orElseGet(
-                                () ->
-                                        Optional.ofNullable(
-                                                        metadataDAO.getTaskDef(
-                                                                taskToSchedule.getName()))
-                                                .orElse(null));
+                        .orElseGet(() -> metadataDAO.getTaskDef(taskToSchedule.getName()));
 
         Map<String, Object> taskInput =
                 parametersUtils.getTaskInputV2(
@@ -71,7 +67,7 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        Task jsonJQTransformTask = new Task();
+        TaskDO jsonJQTransformTask = new TaskDO();
         jsonJQTransformTask.setTaskType(taskToSchedule.getType());
         jsonJQTransformTask.setTaskDefName(taskToSchedule.getName());
         jsonJQTransformTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -82,7 +78,7 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
         jsonJQTransformTask.setScheduledTime(System.currentTimeMillis());
         jsonJQTransformTask.setInputData(taskInput);
         jsonJQTransformTask.setTaskId(taskId);
-        jsonJQTransformTask.setStatus(Task.Status.IN_PROGRESS);
+        jsonJQTransformTask.setStatus(TaskStatusDO.IN_PROGRESS);
         jsonJQTransformTask.setWorkflowTask(taskToSchedule);
         jsonJQTransformTask.setWorkflowPriority(workflowInstance.getPriority());
 

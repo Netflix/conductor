@@ -24,13 +24,14 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.dal.DomainMapper;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
 
 /**
@@ -43,14 +44,17 @@ public class SimpleActionProcessor implements ActionProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleActionProcessor.class);
 
     private final WorkflowExecutor workflowExecutor;
+    private final DomainMapper domainMapper;
     private final ParametersUtils parametersUtils;
     private final JsonUtils jsonUtils;
 
     public SimpleActionProcessor(
             WorkflowExecutor workflowExecutor,
+            DomainMapper domainMapper,
             ParametersUtils parametersUtils,
             JsonUtils jsonUtils) {
         this.workflowExecutor = workflowExecutor;
+        this.domainMapper = domainMapper;
         this.parametersUtils = parametersUtils;
         this.jsonUtils = jsonUtils;
     }
@@ -77,12 +81,17 @@ public class SimpleActionProcessor implements ActionProcessor {
                         action,
                         jsonObject,
                         action.getComplete_task(),
-                        Status.COMPLETED,
+                        TaskStatusDO.COMPLETED,
                         event,
                         messageId);
             case fail_task:
                 return completeTask(
-                        action, jsonObject, action.getFail_task(), Status.FAILED, event, messageId);
+                        action,
+                        jsonObject,
+                        action.getFail_task(),
+                        TaskStatusDO.FAILED,
+                        event,
+                        messageId);
             default:
                 break;
         }
@@ -94,7 +103,7 @@ public class SimpleActionProcessor implements ActionProcessor {
             Action action,
             Object payload,
             TaskDetails taskDetails,
-            Status status,
+            TaskStatusDO status,
             String event,
             String messageId) {
 
@@ -109,11 +118,11 @@ public class SimpleActionProcessor implements ActionProcessor {
         String taskId = (String) replaced.get("taskId");
         String taskRefName = (String) replaced.get("taskRefName");
 
-        Task task = null;
+        TaskDO task = null;
         if (StringUtils.isNotEmpty(taskId)) {
             task = workflowExecutor.getTask(taskId);
         } else if (StringUtils.isNotEmpty(workflowId) && StringUtils.isNotEmpty(taskRefName)) {
-            Workflow workflow = workflowExecutor.getWorkflow(workflowId, true);
+            WorkflowDO workflow = workflowExecutor.getWorkflow(workflowId, true);
             if (workflow == null) {
                 replaced.put("error", "No workflow found with ID: " + workflowId);
                 return replaced;
@@ -140,7 +149,7 @@ public class SimpleActionProcessor implements ActionProcessor {
         task.getOutputData().put("conductor.event.name", event);
 
         try {
-            workflowExecutor.updateTask(new TaskResult(task));
+            workflowExecutor.updateTask(new TaskResult(domainMapper.getTaskDTO(task)));
             LOGGER.debug(
                     "Updated task: {} in workflow:{} with status: {} for event: {} for message:{}",
                     taskId,

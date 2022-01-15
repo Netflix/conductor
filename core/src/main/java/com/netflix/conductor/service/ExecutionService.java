@@ -12,10 +12,33 @@
  */
 package com.netflix.conductor.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.*;
-import com.netflix.conductor.common.run.*;
+import com.netflix.conductor.common.metadata.tasks.PollData;
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.run.ExternalStorageLocation;
+import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.Operation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
@@ -32,12 +55,6 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.metrics.Monitors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Trace
 @Service
@@ -121,7 +138,7 @@ public class ExecutionService {
 
         for (String taskId : taskIds) {
             try {
-                TaskDO task = getTaskDO(taskId);
+                TaskDO task = executionDAOFacade.getTaskDO(taskId);
                 if (task == null || task.getStatus().isTerminal()) {
                     // Remove taskId(s) without a valid Task/terminal state task from the queue
                     queueDAO.remove(queueName, taskId);
@@ -250,7 +267,7 @@ public class ExecutionService {
     }
 
     public Task getTask(String taskId) {
-        return domainMapper.getTaskDTO(getTaskDO(taskId));
+        return executionDAOFacade.getTaskDTO(taskId);
     }
 
     public Task getPendingTaskForWorkflow(String taskReferenceName, String workflowId) {
@@ -607,9 +624,5 @@ public class ExecutionService {
     public ExternalStorageLocation getExternalStorageLocation(
             Operation operation, PayloadType payloadType, String path) {
         return externalPayloadStorage.getLocation(operation, payloadType, path);
-    }
-
-    private TaskDO getTaskDO(String taskId) {
-        return workflowExecutor.getTask(taskId);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -21,11 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.utils.ParametersUtils;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_EVENT;
 
@@ -47,12 +48,12 @@ public class EventTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<Task> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in EventTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        Workflow workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
@@ -63,7 +64,7 @@ public class EventTaskMapper implements TaskMapper {
         String sink = (String) eventTaskInput.get("sink");
         Boolean asynComplete = (Boolean) eventTaskInput.get("asyncComplete");
 
-        Task eventTask = new Task();
+        TaskDO eventTask = new TaskDO();
         eventTask.setTaskType(TASK_TYPE_EVENT);
         eventTask.setTaskDefName(taskToSchedule.getName());
         eventTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -75,7 +76,7 @@ public class EventTaskMapper implements TaskMapper {
         eventTask.getInputData().put("sink", sink);
         eventTask.getInputData().put("asyncComplete", asynComplete);
         eventTask.setTaskId(taskId);
-        eventTask.setStatus(Task.Status.SCHEDULED);
+        eventTask.setStatus(TaskStatusDO.SCHEDULED);
         eventTask.setWorkflowPriority(workflowInstance.getPriority());
         eventTask.setWorkflowTask(taskToSchedule);
 

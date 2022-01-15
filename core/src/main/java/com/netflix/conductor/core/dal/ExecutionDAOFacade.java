@@ -12,8 +12,20 @@
  */
 package com.netflix.conductor.core.dal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -29,18 +41,9 @@ import com.netflix.conductor.dao.*;
 import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.netflix.conductor.core.utils.Utils.DECIDER_QUEUE;
 
@@ -241,14 +244,16 @@ public class ExecutionDAOFacade {
                 .collect(Collectors.toList());
     }
 
-    // TODO: dto?
-    public List<WorkflowDO> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
-        return executionDAO.getWorkflowsByType(workflowName, startTime, endTime);
+    public List<Workflow> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
+        return executionDAO.getWorkflowsByType(workflowName, startTime, endTime).stream()
+                .map(domainMapper::getWorkflowDTO)
+                .collect(Collectors.toList());
     }
 
-    // TODO: dto?
-    public List<WorkflowDO> getPendingWorkflowsByName(String workflowName, int version) {
-        return executionDAO.getPendingWorkflowsByType(workflowName, version);
+    public List<Workflow> getPendingWorkflowsByName(String workflowName, int version) {
+        return executionDAO.getPendingWorkflowsByType(workflowName, version).stream()
+                .map(domainMapper::getWorkflowDTO)
+                .collect(Collectors.toList());
     }
 
     public List<String> getRunningWorkflowIds(String workflowName, int version) {
@@ -334,7 +339,7 @@ public class ExecutionDAOFacade {
      */
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         try {
-            Workflow workflow = getWorkflowById(workflowId, true);
+            WorkflowDO workflow = getWorkflowFromDatastore(workflowId, true);
 
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO
@@ -359,7 +364,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    private void removeWorkflowIndex(Workflow workflow, boolean archiveWorkflow)
+    private void removeWorkflowIndex(WorkflowDO workflow, boolean archiveWorkflow)
             throws JsonProcessingException {
         if (archiveWorkflow) {
             if (workflow.getStatus().isTerminal()) {
@@ -385,7 +390,7 @@ public class ExecutionDAOFacade {
     public void removeWorkflowWithExpiry(
             String workflowId, boolean archiveWorkflow, int ttlSeconds) {
         try {
-            Workflow workflow = getWorkflowById(workflowId, true);
+            WorkflowDO workflow = getWorkflowFromDatastore(workflowId, true);
 
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO with TTL
@@ -413,7 +418,7 @@ public class ExecutionDAOFacade {
      */
     public void resetWorkflow(String workflowId) {
         try {
-            getWorkflowById(workflowId, true);
+            getWorkflowFromDatastore(workflowId, true);
             executionDAO.removeWorkflow(workflowId);
             if (properties.isAsyncIndexingEnabled()) {
                 indexDAO.asyncRemoveWorkflow(workflowId);
