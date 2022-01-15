@@ -798,7 +798,7 @@ public class TestDeciderService {
         TaskDef taskDef = new TaskDef();
         taskDef.setRetryDelaySeconds(60);
         taskDef.setRetryLogic(TaskDef.RetryLogic.LINEAR_BACKOFF);
-        taskDef.setBackoffRate(2);
+        taskDef.setBackoffScaleFactor(2);
         WorkflowTask workflowTask = new WorkflowTask();
 
         Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);

@@ -552,7 +552,7 @@ public class DeciderService {
             case LINEAR_BACKOFF:
                 int linearRetryDelaySeconds =
                         taskDefinition.getRetryDelaySeconds()
-                                * taskDefinition.getBackoffRate()
+                                * taskDefinition.getBackoffScaleFactor()
                                 * (task.getRetryCount() + 1);
                 // Reset integer overflow to max value
                 startDelay =

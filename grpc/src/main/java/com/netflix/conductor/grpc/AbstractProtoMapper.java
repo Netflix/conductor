@@ -711,8 +711,8 @@ public abstract class AbstractProtoMapper {
         if (from.getPollTimeoutSeconds() != null) {
             to.setPollTimeoutSeconds( from.getPollTimeoutSeconds() );
         }
-        if (from.getBackoffRate() != null) {
-            to.setBackoffRate( from.getBackoffRate() );
+        if (from.getBackoffScaleFactor() != null) {
+            to.setBackoffScaleFactor( from.getBackoffScaleFactor() );
         }
         return to.build();
     }
@@ -741,7 +741,7 @@ public abstract class AbstractProtoMapper {
         to.setExecutionNameSpace( from.getExecutionNameSpace() );
         to.setOwnerEmail( from.getOwnerEmail() );
         to.setPollTimeoutSeconds( from.getPollTimeoutSeconds() );
-        to.setBackoffRate( from.getBackoffRate() );
+        to.setBackoffScaleFactor( from.getBackoffScaleFactor() );
         return to;
     }
 

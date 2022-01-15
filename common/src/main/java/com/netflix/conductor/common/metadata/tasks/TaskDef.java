@@ -122,8 +122,8 @@ public class TaskDef extends Auditable {
     private Integer pollTimeoutSeconds;
 
     @ProtoField(id = 20)
-    @Min(value = 1, message = "Backoff rate. Applicable for LINEAR_BACKOFF")
-    private Integer backoffRate = 2;
+    @Min(value = 1, message = "Backoff scale factor. Applicable for LINEAR_BACKOFF")
+    private Integer backoffScaleFactor = 1;
 
     public TaskDef() {}
 
@@ -360,14 +360,14 @@ public class TaskDef extends Auditable {
         return pollTimeoutSeconds;
     }
 
-    /** @param backoffRate the backoff rate to set */
-    public void setBackoffRate(Integer backoffRate) {
-        this.backoffRate = backoffRate;
+    /** @param backoffScaleFactor the backoff rate to set */
+    public void setBackoffScaleFactor(Integer backoffScaleFactor) {
+        this.backoffScaleFactor = backoffScaleFactor;
     }
 
     /** @return the backoff rate of this task definition */
-    public Integer getBackoffRate() {
-        return backoffRate;
+    public Integer getBackoffScaleFactor() {
+        return backoffScaleFactor;
     }
 
     @Override
@@ -387,6 +387,7 @@ public class TaskDef extends Auditable {
         return getRetryCount() == taskDef.getRetryCount()
                 && getTimeoutSeconds() == taskDef.getTimeoutSeconds()
                 && getRetryDelaySeconds() == taskDef.getRetryDelaySeconds()
+                && getBackoffScaleFactor() == taskDef.getBackoffScaleFactor()
                 && getResponseTimeoutSeconds() == taskDef.getResponseTimeoutSeconds()
                 && Objects.equals(getName(), taskDef.getName())
                 && Objects.equals(getDescription(), taskDef.getDescription())
@@ -415,6 +416,7 @@ public class TaskDef extends Auditable {
                 getTimeoutPolicy(),
                 getRetryLogic(),
                 getRetryDelaySeconds(),
+                getBackoffScaleFactor(),
                 getResponseTimeoutSeconds(),
                 getConcurrentExecLimit(),
                 getRateLimitPerFrequency(),
