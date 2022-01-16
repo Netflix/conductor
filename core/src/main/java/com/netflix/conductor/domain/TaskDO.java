@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 
@@ -418,11 +420,24 @@ public class TaskDO {
     }
 
     public String getSubWorkflowId() {
-        return subWorkflowId;
+        // For backwards compatibility
+        if (StringUtils.isNotBlank(subWorkflowId)) {
+            return subWorkflowId;
+        } else {
+            return this.getOutputData() != null && this.getOutputData().get("subWorkflowId") != null
+                    ? (String) this.getOutputData().get("subWorkflowId")
+                    : this.getInputData() != null
+                            ? (String) this.getInputData().get("subWorkflowId")
+                            : null;
+        }
     }
 
     public void setSubWorkflowId(String subWorkflowId) {
         this.subWorkflowId = subWorkflowId;
+        // For backwards compatibility
+        if (this.getOutputData() != null && this.getOutputData().containsKey("subWorkflowId")) {
+            this.getOutputData().put("subWorkflowId", subWorkflowId);
+        }
     }
 
     public boolean isSubworkflowChanged() {
@@ -495,5 +510,28 @@ public class TaskDO {
         copy.setSubworkflowChanged(subworkflowChanged);
 
         return copy;
+    }
+
+    /**
+     * @return a deep copy of the task instance tTo be used inside copy Workflow method to provide a
+     *     valid deep copied object.
+     *     <p><b>Note:</b> This does not copy the following fields:
+     *     <ul>
+     *       <li>retried
+     *       <li>executed
+     *       <li>updateTime
+     *       <li>retriedTaskId
+     *     </ul>
+     */
+    public TaskDO deepCopy() {
+        TaskDO deepCopy = copy();
+        deepCopy.setStartTime(startTime);
+        deepCopy.setScheduledTime(scheduledTime);
+        deepCopy.setEndTime(endTime);
+        deepCopy.setWorkerId(workerId);
+        deepCopy.setReasonForIncompletion(reasonForIncompletion);
+        deepCopy.setSeq(seq);
+
+        return deepCopy;
     }
 }

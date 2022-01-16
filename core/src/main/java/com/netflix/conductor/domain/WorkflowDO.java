@@ -13,6 +13,7 @@
 package com.netflix.conductor.domain;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -335,5 +336,31 @@ public class WorkflowDO {
             return null;
         }
         return found.getLast();
+    }
+
+    /** @return a deep copy of the workflow instance */
+    public WorkflowDO copy() {
+        WorkflowDO copy = new WorkflowDO();
+        copy.setInput(input);
+        copy.setOutput(output);
+        copy.setStatus(status);
+        copy.setWorkflowId(workflowId);
+        copy.setParentWorkflowId(parentWorkflowId);
+        copy.setParentWorkflowTaskId(parentWorkflowTaskId);
+        copy.setReRunFromWorkflowId(reRunFromWorkflowId);
+        copy.setCorrelationId(correlationId);
+        copy.setEvent(event);
+        copy.setReasonForIncompletion(reasonForIncompletion);
+        copy.setWorkflowDefinition(workflowDefinition);
+        copy.setPriority(priority);
+        copy.setTasks(tasks.stream().map(TaskDO::deepCopy).collect(Collectors.toList()));
+        copy.setVariables(variables);
+        copy.setEndTime(endTime);
+        copy.setLastRetriedTime(lastRetriedTime);
+        copy.setTaskToDomain(taskToDomain);
+        copy.setFailedReferenceTaskNames(failedReferenceTaskNames);
+        copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
+        copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
+        return copy;
     }
 }

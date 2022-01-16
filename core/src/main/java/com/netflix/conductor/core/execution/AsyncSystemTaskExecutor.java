@@ -12,6 +12,10 @@
  */
 package com.netflix.conductor.core.execution;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -22,9 +26,6 @@ import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 @Component
 public class AsyncSystemTaskExecutor {

@@ -17,6 +17,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.netflix.conductor.core.dal.DomainMapper;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.dao.QueueDAO;
 
@@ -32,8 +33,9 @@ public class ConductorQueueStatusPublisherConfiguration {
     @Bean
     public WorkflowStatusListener getWorkflowStatusListener(
             QueueDAO queueDAO,
+            DomainMapper domainMapper,
             ConductorQueueStatusPublisherProperties properties,
             ObjectMapper objectMapper) {
-        return new ConductorQueueStatusPublisher(queueDAO, objectMapper, properties);
+        return new ConductorQueueStatusPublisher(queueDAO, domainMapper, objectMapper, properties);
     }
 }

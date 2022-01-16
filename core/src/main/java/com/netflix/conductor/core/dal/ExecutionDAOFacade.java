@@ -12,8 +12,20 @@
  */
 package com.netflix.conductor.core.dal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
@@ -29,18 +41,9 @@ import com.netflix.conductor.dao.*;
 import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.netflix.conductor.core.utils.Utils.DECIDER_QUEUE;
 
@@ -268,19 +271,20 @@ public class ExecutionDAOFacade {
      * @return the id of the created workflow
      */
     public String createWorkflow(WorkflowDO workflow) {
-        executionDAO.createWorkflow(domainMapper.getLeanWorkflowDO(workflow));
+        WorkflowDO leanWorkflow = domainMapper.getLeanCopy(workflow);
+        executionDAO.createWorkflow(leanWorkflow);
         // Add to decider queue
         queueDAO.push(
                 DECIDER_QUEUE,
-                workflow.getWorkflowId(),
-                workflow.getPriority(),
+                leanWorkflow.getWorkflowId(),
+                leanWorkflow.getPriority(),
                 properties.getWorkflowOffsetTimeout().getSeconds());
         if (properties.isAsyncIndexingEnabled()) {
-            indexDAO.asyncIndexWorkflow(workflow);
+            indexDAO.asyncIndexWorkflow(leanWorkflow);
         } else {
-            indexDAO.indexWorkflow(workflow);
+            indexDAO.indexWorkflow(leanWorkflow);
         }
-        return workflow.getWorkflowId();
+        return leanWorkflow.getWorkflowId();
     }
 
     /**
@@ -294,7 +298,8 @@ public class ExecutionDAOFacade {
         if (workflow.getStatus().isTerminal()) {
             workflow.setEndTime(System.currentTimeMillis());
         }
-        executionDAO.updateWorkflow(domainMapper.getLeanWorkflowDO(workflow));
+        WorkflowDO leanWorkflow = domainMapper.getLeanCopy(workflow);
+        executionDAO.updateWorkflow(leanWorkflow);
         if (properties.isAsyncIndexingEnabled()) {
             if (workflow.getStatus().isTerminal()
                     && workflow.getEndTime() - workflow.getCreatedTime()
@@ -312,13 +317,13 @@ public class ExecutionDAOFacade {
                 Monitors.recordWorkerQueueSize(
                         "delayQueue", scheduledThreadPoolExecutor.getQueue().size());
             } else {
-                indexDAO.asyncIndexWorkflow(workflow);
+                indexDAO.asyncIndexWorkflow(leanWorkflow);
             }
             if (workflow.getStatus().isTerminal()) {
                 workflow.getTasks().forEach(indexDAO::asyncIndexTask);
             }
         } else {
-            indexDAO.indexWorkflow(workflow);
+            indexDAO.indexWorkflow(leanWorkflow);
         }
         return workflow.getWorkflowId();
     }
@@ -433,7 +438,7 @@ public class ExecutionDAOFacade {
     }
 
     public List<TaskDO> createTasks(List<TaskDO> tasks) {
-        tasks = tasks.stream().map(domainMapper::getLeanTaskDO).collect(Collectors.toList());
+        tasks = tasks.stream().map(domainMapper::getLeanCopy).collect(Collectors.toList());
         return executionDAO.createTasks(tasks);
     }
 
@@ -494,7 +499,8 @@ public class ExecutionDAOFacade {
                     task.setEndTime(System.currentTimeMillis());
                 }
             }
-            executionDAO.updateTask(domainMapper.getLeanTaskDO(task));
+            TaskDO leanTask = domainMapper.getLeanCopy(task);
+            executionDAO.updateTask(leanTask);
             /*
              * Indexing a task for every update adds a lot of volume. That is ok but if async indexing
              * is enabled and tasks are stored in memory until a block has completed, we would lose a lot
@@ -502,7 +508,7 @@ public class ExecutionDAOFacade {
              * If it *is* enabled, tasks will be indexed only when a workflow is in terminal state.
              */
             if (!properties.isAsyncIndexingEnabled()) {
-                indexDAO.indexTask(task);
+                indexDAO.indexTask(leanTask);
             }
         } catch (Exception e) {
             String errorMsg =

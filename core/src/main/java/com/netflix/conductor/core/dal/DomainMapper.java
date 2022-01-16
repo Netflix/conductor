@@ -53,10 +53,10 @@ public class DomainMapper {
         return workflowDO;
     }
 
-    public WorkflowDO getLeanWorkflowDO(WorkflowDO workflowDO) {
-        //TODO: copy? - subworkflow case
-        externalizeWorkflowData(workflowDO);
-        return workflowDO;
+    public WorkflowDO getLeanCopy(WorkflowDO workflowDO) {
+        WorkflowDO leanWorkflowDO = workflowDO.copy();
+        externalizeWorkflowData(leanWorkflowDO);
+        return leanWorkflowDO;
     }
 
     public Workflow getWorkflowDTO(WorkflowDO workflowDO) {
@@ -101,10 +101,10 @@ public class DomainMapper {
         return taskDO;
     }
 
-    public TaskDO getLeanTaskDO(TaskDO taskDO) {
-        //TODO: copy?
-        externalizeTaskData(taskDO);
-        return taskDO;
+    public TaskDO getLeanCopy(TaskDO taskDO) {
+        TaskDO leanTaskDO = taskDO.copy();
+        externalizeTaskData(leanTaskDO);
+        return leanTaskDO;
     }
 
     public Task getTaskDTO(TaskDO taskDO) {

@@ -12,8 +12,15 @@
  */
 package com.netflix.conductor.core.execution;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.*;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
@@ -46,14 +53,9 @@ import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
 import static com.netflix.conductor.domain.TaskStatusDO.*;

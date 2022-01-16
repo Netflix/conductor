@@ -12,18 +12,20 @@
  */
 package com.netflix.conductor.contribs.listener.conductorqueue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.dal.DomainMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.domain.WorkflowDO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Publishes a {@link Message} containing a {@link WorkflowSummary} to the undlerying {@link
