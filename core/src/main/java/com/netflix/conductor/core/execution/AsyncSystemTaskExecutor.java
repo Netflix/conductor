@@ -12,10 +12,6 @@
  */
 package com.netflix.conductor.core.execution;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
@@ -26,6 +22,9 @@ import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Component
 public class AsyncSystemTaskExecutor {
@@ -36,7 +35,6 @@ public class AsyncSystemTaskExecutor {
     private final long queueTaskMessagePostponeSecs;
     private final long systemTaskCallbackTime;
     private final WorkflowExecutor workflowExecutor;
-    private final DeciderService deciderService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AsyncSystemTaskExecutor.class);
 
@@ -45,13 +43,11 @@ public class AsyncSystemTaskExecutor {
             QueueDAO queueDAO,
             MetadataDAO metadataDAO,
             ConductorProperties conductorProperties,
-            WorkflowExecutor workflowExecutor,
-            DeciderService deciderService) {
+            WorkflowExecutor workflowExecutor) {
         this.executionDAOFacade = executionDAOFacade;
         this.queueDAO = queueDAO;
         this.metadataDAO = metadataDAO;
         this.workflowExecutor = workflowExecutor;
-        this.deciderService = deciderService;
         this.systemTaskCallbackTime =
                 conductorProperties.getSystemTaskWorkerCallbackDuration().getSeconds();
         this.queueTaskMessagePostponeSecs =
@@ -132,9 +128,6 @@ public class AsyncSystemTaskExecutor {
                     task.getTaskId(),
                     task.getStatus());
 
-            // load task data (input/output) from external storage, if necessary
-            deciderService.populateTaskData(task);
-
             boolean isTaskAsyncComplete = systemTask.isAsyncComplete(task);
             if (task.getStatus() == TaskStatusDO.SCHEDULED || !isTaskAsyncComplete) {
                 task.incrementPollCount();
@@ -146,10 +139,6 @@ public class AsyncSystemTaskExecutor {
                 systemTask.start(workflow, task, workflowExecutor);
             } else if (task.getStatus() == TaskStatusDO.IN_PROGRESS) {
                 systemTask.execute(workflow, task, workflowExecutor);
-            }
-
-            if (task.getOutputData() != null && !task.getOutputData().isEmpty()) {
-                deciderService.externalizeTaskData(task);
             }
 
             // Update message in Task queue based on Task status

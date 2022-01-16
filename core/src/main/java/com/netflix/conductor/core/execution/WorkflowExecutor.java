@@ -12,15 +12,8 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.*;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
@@ -53,9 +46,14 @@ import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.service.ExecutionLockService;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
 import static com.netflix.conductor.domain.TaskStatusDO.*;
@@ -386,7 +384,6 @@ public class WorkflowExecutor {
             Map<String, Object> parsedInput =
                     parametersUtils.getWorkflowInput(workflowDefinition, workflowInput);
             workflow.setInput(parsedInput);
-            deciderService.externalizeWorkflowData(workflow);
         } else {
             workflow.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         }
@@ -1107,9 +1104,7 @@ public class WorkflowExecutor {
         task.setOutputData(taskResult.getOutputData());
         task.setSubWorkflowId(taskResult.getSubWorkflowId());
 
-        if (task.getOutputData() != null && !task.getOutputData().isEmpty()) {
-            deciderService.externalizeTaskData(task);
-        } else {
+        if (StringUtils.isNotBlank(taskResult.getExternalOutputPayloadStoragePath())) {
             task.setExternalOutputPayloadStoragePath(
                     taskResult.getExternalOutputPayloadStoragePath());
         }
@@ -1301,19 +1296,16 @@ public class WorkflowExecutor {
 
             tasksToBeScheduled = dedupAndAddTasks(workflow, tasksToBeScheduled);
 
-            WorkflowDO workflowInstance = deciderService.populateWorkflowAndTaskData(workflow);
             for (TaskDO task : outcome.tasksToBeScheduled) {
                 if (systemTaskRegistry.isSystemTask(task.getTaskType())
                         && NON_TERMINAL_TASK.test(task)) {
                     WorkflowSystemTask workflowSystemTask =
                             systemTaskRegistry.get(task.getTaskType());
-                    deciderService.populateTaskData(task);
                     if (!workflowSystemTask.isAsync()
-                            && workflowSystemTask.execute(workflowInstance, task, this)) {
+                            && workflowSystemTask.execute(workflow, task, this)) {
                         tasksToBeUpdated.add(task);
                         stateChanged = true;
                     }
-                    deciderService.externalizeTaskData(task);
                 }
             }
 
@@ -1735,7 +1727,6 @@ public class WorkflowExecutor {
                 }
                 if (!workflowSystemTask.isAsync()) {
                     try {
-                        deciderService.populateTaskData(task);
                         workflowSystemTask.start(workflow, task, this);
                     } catch (Exception e) {
                         String errorMsg =
@@ -1748,7 +1739,6 @@ public class WorkflowExecutor {
                                 ApplicationException.Code.INTERNAL_ERROR, errorMsg, e);
                     }
                     startedSystemTasks = true;
-                    deciderService.externalizeTaskData(task);
                     executionDAOFacade.updateTask(task);
                 } else {
                     tasksToBeQueued.add(task);
@@ -1918,8 +1908,7 @@ public class WorkflowExecutor {
                 }
                 if (systemTaskRegistry.isSystemTask(rerunFromTask.getTaskType())
                         && !systemTaskRegistry.get(rerunFromTask.getTaskType()).isAsync()) {
-                    // Start the synchronized system task directly
-                    deciderService.populateTaskData(rerunFromTask);
+                    // Start the synchronous system task directly
                     systemTaskRegistry
                             .get(rerunFromTask.getTaskType())
                             .start(workflow, rerunFromTask, this);
@@ -1978,8 +1967,7 @@ public class WorkflowExecutor {
     @VisibleForTesting
     void updateParentWorkflowTask(WorkflowDO subWorkflow) {
         TaskDO subWorkflowTask =
-                executionDAOFacade.getTaskDO(
-                        subWorkflow.getParentWorkflowTaskId()); // TODO: lean task?
+                executionDAOFacade.getTaskDO(subWorkflow.getParentWorkflowTaskId());
         executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
         executionDAOFacade.updateTask(subWorkflowTask);
     }
@@ -1993,9 +1981,7 @@ public class WorkflowExecutor {
                 && subWorkflowTask.getExternalOutputPayloadStoragePath() != null
                 && !subWorkflowTask.getOutputData().isEmpty()) {
             Map<String, Object> parentWorkflowTaskOutputData = subWorkflowTask.getOutputData();
-            deciderService.populateTaskData(subWorkflowTask);
             subWorkflowTask.getOutputData().putAll(parentWorkflowTaskOutputData);
-            deciderService.externalizeTaskData(subWorkflowTask);
         }
     }
 

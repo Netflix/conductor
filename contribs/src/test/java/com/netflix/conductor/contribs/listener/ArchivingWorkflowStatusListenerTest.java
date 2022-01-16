@@ -12,31 +12,28 @@
  */
 package com.netflix.conductor.contribs.listener;
 
-import java.util.UUID;
-
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.contribs.listener.archive.ArchivingWorkflowStatusListener;
+import com.netflix.conductor.core.dal.ExecutionDAOFacade;
+import com.netflix.conductor.domain.WorkflowDO;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.contribs.listener.archive.ArchivingWorkflowStatusListener;
-import com.netflix.conductor.core.dal.ExecutionDAOFacade;
+import java.util.UUID;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 /** @author pavel.halabala */
 public class ArchivingWorkflowStatusListenerTest {
 
-    Workflow workflow;
+    WorkflowDO workflow;
     ExecutionDAOFacade executionDAOFacade;
     ArchivingWorkflowStatusListener listener;
 
     @Before
     public void before() {
-        workflow = new Workflow();
+        workflow = new WorkflowDO();
         WorkflowDef def = new WorkflowDef();
         def.setName("name1");
         def.setVersion(1);

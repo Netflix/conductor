@@ -54,6 +54,7 @@ public class DomainMapper {
     }
 
     public WorkflowDO getLeanWorkflowDO(WorkflowDO workflowDO) {
+        //TODO: copy? - subworkflow case
         externalizeWorkflowData(workflowDO);
         return workflowDO;
     }
@@ -101,6 +102,7 @@ public class DomainMapper {
     }
 
     public TaskDO getLeanTaskDO(TaskDO taskDO) {
+        //TODO: copy?
         externalizeTaskData(taskDO);
         return taskDO;
     }

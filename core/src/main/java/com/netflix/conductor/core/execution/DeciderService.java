@@ -12,18 +12,7 @@
  */
 package com.netflix.conductor.core.execution;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
+import com.google.common.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -44,8 +33,17 @@ import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-import com.google.common.annotations.VisibleForTesting;
+import java.time.Duration;
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
 import static com.netflix.conductor.domain.TaskStatusDO.*;
@@ -381,10 +379,9 @@ public class DeciderService {
             WorkflowDef workflowDef = workflow.getWorkflowDefinition();
             if (workflowDef.getOutputParameters() != null
                     && !workflowDef.getOutputParameters().isEmpty()) {
-                WorkflowDO workflowInstance = populateWorkflowAndTaskData(workflow);
                 output =
                         parametersUtils.getTaskInput(
-                                workflowDef.getOutputParameters(), workflowInstance, null, null);
+                                workflowDef.getOutputParameters(), workflow, null, null);
             } else if (StringUtils.isNotBlank(last.getExternalOutputPayloadStoragePath())) {
                 output =
                         externalPayloadStorageUtils.downloadPayload(
@@ -398,7 +395,6 @@ public class DeciderService {
             }
         }
         workflow.setOutput(output);
-        externalizeWorkflowData(workflow);
     }
 
     @VisibleForTesting
@@ -583,16 +579,14 @@ public class DeciderService {
             rescheduled.getInputData().putAll(task.getInputData());
         }
         if (workflowTask != null && workflow.getWorkflowDefinition().getSchemaVersion() > 1) {
-            WorkflowDO workflowInstance = populateWorkflowAndTaskData(workflow);
             Map<String, Object> taskInput =
                     parametersUtils.getTaskInputV2(
                             workflowTask.getInputParameters(),
-                            workflowInstance,
+                            workflow,
                             rescheduled.getTaskId(),
                             taskDefinition);
             rescheduled.getInputData().putAll(taskInput);
         }
-        externalizeTaskData(rescheduled);
         // for the schema version 1, we do not have to recompute the inputs
         return Optional.of(rescheduled);
     }
@@ -811,7 +805,6 @@ public class DeciderService {
             WorkflowTask taskToSchedule,
             int retryCount,
             String retriedTaskId) {
-        workflow = populateWorkflowAndTaskData(workflow);
         Map<String, Object> input =
                 parametersUtils.getTaskInput(
                         taskToSchedule.getInputParameters(), workflow, null, null);
@@ -843,17 +836,14 @@ public class DeciderService {
                         .withDeciderService(this)
                         .build();
 
-        // for static forks, each branch of the fork creates a join task upon completion
-        // for dynamic forks, a join task is created with the fork and also with each branch of the
-        // fork
-        // a new task must only be scheduled if a task with the same reference name is not already
+        // For static forks, each branch of the fork creates a join task upon completion for
+        // dynamic forks, a join task is created with the fork and also with each branch of the
+        // fork.
+        // A new task must only be scheduled if a task, with the same reference name is not already
         // in this workflow instance
-        List<TaskDO> tasks =
-                taskMappers.get(taskType).getMappedTasks(taskMapperContext).stream()
-                        .filter(task -> !tasksInWorkflow.contains(task.getReferenceTaskName()))
-                        .collect(Collectors.toList());
-        tasks.forEach(this::externalizeTaskData);
-        return tasks;
+        return taskMappers.get(taskType).getMappedTasks(taskMapperContext).stream()
+                .filter(task -> !tasksInWorkflow.contains(task.getReferenceTaskName()))
+                .collect(Collectors.toList());
     }
 
     private boolean isTaskSkipped(WorkflowTask taskToSchedule, WorkflowDO workflow) {

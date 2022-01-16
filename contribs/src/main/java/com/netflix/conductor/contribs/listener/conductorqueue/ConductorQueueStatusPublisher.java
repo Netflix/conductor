@@ -12,19 +12,18 @@
  */
 package com.netflix.conductor.contribs.listener.conductorqueue;
 
-import java.util.Collections;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.core.dal.DomainMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.domain.WorkflowDO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Collections;
 
 /**
  * Publishes a {@link Message} containing a {@link WorkflowSummary} to the undlerying {@link
@@ -35,6 +34,7 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ConductorQueueStatusPublisher.class);
     private final QueueDAO queueDAO;
+    private final DomainMapper domainMapper;
     private final ObjectMapper objectMapper;
 
     private final String successStatusQueue;
@@ -43,9 +43,11 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
 
     public ConductorQueueStatusPublisher(
             QueueDAO queueDAO,
+            DomainMapper domainMapper,
             ObjectMapper objectMapper,
             ConductorQueueStatusPublisherProperties properties) {
         this.queueDAO = queueDAO;
+        this.domainMapper = domainMapper;
         this.objectMapper = objectMapper;
         this.successStatusQueue = properties.getSuccessQueue();
         this.failureStatusQueue = properties.getFailureQueue();
@@ -72,7 +74,7 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
 
     private Message workflowToMessage(WorkflowDO workflow) {
         String jsonWfSummary;
-        WorkflowSummary summary = new WorkflowSummary(workflow);
+        WorkflowSummary summary = new WorkflowSummary(domainMapper.getWorkflowDTO(workflow));
         try {
             jsonWfSummary = objectMapper.writeValueAsString(summary);
         } catch (JsonProcessingException e) {
