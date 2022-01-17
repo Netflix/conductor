@@ -12,7 +12,17 @@
  */
 package com.netflix.conductor.redis.dao;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.ConductorProperties;
@@ -23,17 +33,9 @@ import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-import redis.clients.jedis.commands.JedisCommands;
 
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import redis.clients.jedis.commands.JedisCommands;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

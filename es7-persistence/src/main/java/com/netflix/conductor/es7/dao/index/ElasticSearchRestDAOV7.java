@@ -38,8 +38,6 @@ import java.util.stream.IntStream;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -91,6 +89,8 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.es7.config.ElasticSearchProperties;
 import com.netflix.conductor.es7.dao.query.parser.internal.ParserException;
 import com.netflix.conductor.metrics.Monitors;

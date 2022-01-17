@@ -14,7 +14,6 @@ package com.netflix.conductor.mysql.dao;
 
 import java.util.List;
 
-import com.netflix.conductor.domain.WorkflowDO;
 import org.flywaydb.core.Flyway;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +28,7 @@ import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.mysql.config.MySQLConfiguration;
 
 import static org.junit.Assert.assertEquals;

@@ -12,19 +12,6 @@
  */
 package com.netflix.conductor.dao;
 
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.core.exception.ApplicationException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,6 +21,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.domain.WorkflowStatusDO;
 
 import static org.junit.Assert.*;
 

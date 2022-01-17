@@ -36,8 +36,6 @@ import java.util.stream.IntStream;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.DocWriteResponse;
@@ -81,6 +79,8 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.es6.config.ElasticSearchProperties;
 import com.netflix.conductor.es6.dao.query.parser.internal.ParserException;
 import com.netflix.conductor.metrics.Monitors;

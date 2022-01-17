@@ -14,7 +14,6 @@ package com.netflix.conductor.redis.dao;
 
 import java.util.UUID;
 
-import com.netflix.conductor.domain.TaskDO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.domain.TaskDO;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;

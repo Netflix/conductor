@@ -12,7 +12,14 @@
  */
 package com.netflix.conductor.redis.dao;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.stereotype.Component;
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.RateLimitingDAO;
@@ -21,13 +28,8 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.redis.config.AnyRedisCondition;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.stereotype.Component;
 
-import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @Conditional(AnyRedisCondition.class)
