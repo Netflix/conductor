@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -36,6 +36,8 @@ import java.util.stream.IntStream;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.ResourceAlreadyExistsException;
 import org.elasticsearch.action.DocWriteResponse;
@@ -71,11 +73,9 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.events.EventExecution;
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.TaskSummary;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
@@ -365,7 +365,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
     }
 
     @Override
-    public void indexWorkflow(Workflow workflow) {
+    public void indexWorkflow(WorkflowDO workflow) {
         try {
             long startTime = Instant.now().toEpochMilli();
             String id = workflow.getWorkflowId();
@@ -399,12 +399,12 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
     }
 
     @Override
-    public CompletableFuture<Void> asyncIndexWorkflow(Workflow workflow) {
+    public CompletableFuture<Void> asyncIndexWorkflow(WorkflowDO workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
     }
 
     @Override
-    public void indexTask(Task task) {
+    public void indexTask(TaskDO task) {
         try {
             long startTime = Instant.now().toEpochMilli();
             String id = task.getTaskId();

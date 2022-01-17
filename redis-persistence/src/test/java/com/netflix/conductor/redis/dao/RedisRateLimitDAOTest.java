@@ -14,6 +14,7 @@ package com.netflix.conductor.redis.dao;
 
 import java.util.UUID;
 
+import com.netflix.conductor.domain.TaskDO;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,7 +23,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.redis.config.RedisProperties;
@@ -58,7 +58,7 @@ public class RedisRateLimitDAOTest {
     @Test
     public void testExceedsRateLimitWhenNoRateLimitSet() {
         TaskDef taskDef = new TaskDef("TestTaskDefinition");
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         task.setTaskId(UUID.randomUUID().toString());
         task.setTaskDefName(taskDef.getName());
         assertFalse(rateLimitingDao.exceedsRateLimitPerFrequency(task, taskDef));
@@ -69,7 +69,7 @@ public class RedisRateLimitDAOTest {
         TaskDef taskDef = new TaskDef("TestTaskDefinition");
         taskDef.setRateLimitFrequencyInSeconds(60);
         taskDef.setRateLimitPerFrequency(20);
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         task.setTaskId(UUID.randomUUID().toString());
         task.setTaskDefName(taskDef.getName());
         assertFalse(rateLimitingDao.exceedsRateLimitPerFrequency(task, taskDef));
@@ -80,7 +80,7 @@ public class RedisRateLimitDAOTest {
         TaskDef taskDef = new TaskDef("TestTaskDefinition");
         taskDef.setRateLimitFrequencyInSeconds(60);
         taskDef.setRateLimitPerFrequency(1);
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         task.setTaskId(UUID.randomUUID().toString());
         task.setTaskDefName(taskDef.getName());
         assertFalse(rateLimitingDao.exceedsRateLimitPerFrequency(task, taskDef));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,30 +12,28 @@
  */
 package com.netflix.conductor.redis.dao;
 
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.dao.ExecutionDAO;
+import com.netflix.conductor.dao.ExecutionDAOTest;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.redis.config.RedisProperties;
+import com.netflix.conductor.redis.jedis.JedisMock;
+import com.netflix.conductor.redis.jedis.JedisProxy;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.dao.ExecutionDAOTest;
-import com.netflix.conductor.redis.config.RedisProperties;
-import com.netflix.conductor.redis.jedis.JedisMock;
-import com.netflix.conductor.redis.jedis.JedisProxy;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import redis.clients.jedis.commands.JedisCommands;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -72,14 +70,14 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         def.setName("task1");
         def.setConcurrentExecLimit(1);
 
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         task.setTaskId(taskId);
         task.setWorkflowInstanceId(workflowId);
         task.setReferenceTaskName("ref_name");
         task.setTaskDefName(taskDefName);
         task.setTaskType(taskDefName);
-        task.setStatus(Status.IN_PROGRESS);
-        List<Task> tasks = executionDAO.createTasks(Collections.singletonList(task));
+        task.setStatus(TaskStatusDO.IN_PROGRESS);
+        List<TaskDO> tasks = executionDAO.createTasks(Collections.singletonList(task));
         assertNotNull(tasks);
         assertEquals(1, tasks.size());
 

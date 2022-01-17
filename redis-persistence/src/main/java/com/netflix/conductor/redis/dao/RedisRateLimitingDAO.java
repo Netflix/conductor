@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,24 +12,22 @@
  */
 package com.netflix.conductor.redis.dao;
 
-import java.util.Optional;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.redis.config.AnyRedisCondition;
+import com.netflix.conductor.redis.config.RedisProperties;
+import com.netflix.conductor.redis.jedis.JedisProxy;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.dao.RateLimitingDAO;
-import com.netflix.conductor.metrics.Monitors;
-import com.netflix.conductor.redis.config.AnyRedisCondition;
-import com.netflix.conductor.redis.config.RedisProperties;
-import com.netflix.conductor.redis.jedis.JedisProxy;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Optional;
 
 @Component
 @Conditional(AnyRedisCondition.class)
@@ -49,9 +47,9 @@ public class RedisRateLimitingDAO extends BaseDynoDAO implements RateLimitingDAO
 
     /**
      * This method evaluates if the {@link TaskDef} is rate limited or not based on {@link
-     * Task#getRateLimitPerFrequency()} and {@link Task#getRateLimitFrequencyInSeconds()} if not
-     * checks the {@link Task} is rate limited or not based on {@link
-     * Task#getRateLimitPerFrequency()} and {@link Task#getRateLimitFrequencyInSeconds()}
+     * TaskDO#getRateLimitPerFrequency()} and {@link TaskDO#getRateLimitFrequencyInSeconds()} if not
+     * checks the {@link TaskDO} is rate limited or not based on {@link
+     * TaskDO#getRateLimitPerFrequency()} and {@link TaskDO#getRateLimitFrequencyInSeconds()}
      *
      * <p>The rate limiting is implemented using the Redis constructs of sorted set and TTL of each
      * element in the rate limited bucket.
@@ -62,19 +60,19 @@ public class RedisRateLimitingDAO extends BaseDynoDAO implements RateLimitingDAO
      *       make the next step of evaluation efficient
      *   <li>A current count(tasks executed within the frequency) is calculated based on the current
      *       time and the beginning of the rate limit frequency time(which is current time - {@link
-     *       Task#getRateLimitFrequencyInSeconds()} in millis), this is achieved by using {@link
+     *       TaskDO#getRateLimitFrequencyInSeconds()} in millis), this is achieved by using {@link
      *       JedisProxy#zcount(String, double, double)}
      *   <li>Once the count is calculated then a evaluation is made to determine if it is within the
-     *       bounds of {@link Task#getRateLimitPerFrequency()}, if so the count is increased and an
-     *       expiry TTL is added to the entry
+     *       bounds of {@link TaskDO#getRateLimitPerFrequency()}, if so the count is increased and
+     *       an expiry TTL is added to the entry
      * </ul>
      *
      * @param task: which needs to be evaluated whether it is rateLimited or not
-     * @return true: If the {@link Task} is rateLimited false: If the {@link Task} is not
+     * @return true: If the {@link TaskDO} is rateLimited false: If the {@link TaskDO} is not
      *     rateLimited
      */
     @Override
-    public boolean exceedsRateLimitPerFrequency(Task task, TaskDef taskDef) {
+    public boolean exceedsRateLimitPerFrequency(TaskDO task, TaskDef taskDef) {
         // Check if the TaskDefinition is not null then pick the definition values or else pick from
         // the Task
         ImmutablePair<Integer, Integer> rateLimitPair =
@@ -107,7 +105,7 @@ public class RedisRateLimitingDAO extends BaseDynoDAO implements RateLimitingDAO
                     rateLimitFrequencyInSeconds);
             long currentTimeEpochMillis = System.currentTimeMillis();
             long currentTimeEpochMinusRateLimitBucket =
-                    currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000);
+                    currentTimeEpochMillis - (rateLimitFrequencyInSeconds * 1000L);
             String key = nsKey(TASK_RATE_LIMIT_BUCKET, task.getTaskDefName());
             jedisProxy.zremrangeByScore(
                     key, "-inf", String.valueOf(currentTimeEpochMinusRateLimitBucket));
