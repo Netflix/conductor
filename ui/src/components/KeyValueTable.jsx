@@ -30,10 +30,9 @@ export default function KeyValueTable({ data }) {
       {data.map((item, index) => {
         let displayValue;
         const renderer = item.type ? customTypeRenderers[item.type] : null;
-        if(renderer){
-          displayValue = renderer(item.value, env)
-        }
-        else {
+        if (renderer) {
+          displayValue = renderer(item.value, data, env);
+        } else {
           switch (item.type) {
             case "date":
               displayValue =
@@ -59,7 +58,7 @@ export default function KeyValueTable({ data }) {
               classes={{ primary: classes.labelText }}
               primary={item.label}
             />
-            <ListItemText className={classes.value} primary={value} />
+            <ListItemText className={classes.value} primary={displayValue} />
           </ListItem>
         );
       })}

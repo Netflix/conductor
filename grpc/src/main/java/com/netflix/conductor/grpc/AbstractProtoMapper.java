@@ -49,7 +49,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Generated;
 
-@Generated("com.github.vmg.protogen.ProtoGen")
+@Generated("com.netflix.conductor.annotationsprocessor.protogen")
 public abstract class AbstractProtoMapper {
     public DynamicForkJoinTaskPb.DynamicForkJoinTask toProto(DynamicForkJoinTask from) {
         DynamicForkJoinTaskPb.DynamicForkJoinTask.Builder to = DynamicForkJoinTaskPb.DynamicForkJoinTask.newBuilder();

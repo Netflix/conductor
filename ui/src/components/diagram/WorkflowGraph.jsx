@@ -55,6 +55,7 @@ class WorkflowGraph extends React.PureComponent {
       if (resolvedRef) {
         inner.select(`g[id='${resolvedRef}']`).classed("selected", true);
       }
+      this.zoomHome();
     } else if (prevProps.width !== this.props.width) {
       if (prevProps.width > 0 && this.props.width > 0) {
         console.log(
@@ -391,6 +392,7 @@ class WorkflowGraph extends React.PureComponent {
         this.barNodes.push(v.ref);
         break;
       case "DECISION":
+      case "SWITCH":
         retval.label = v.ref;
         retval.shape = "diamond";
         retval.height = 40;

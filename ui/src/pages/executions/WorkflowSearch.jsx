@@ -20,11 +20,11 @@ import { useWorkflowSearch, useWorkflowNames } from "../../utils/query";
 import { makeStyles } from "@material-ui/styles";
 import clsx from "clsx";
 import executionsStyles from "./executionsStyles";
-import commonStyles from "../styles";
+import sharedStyles from "../styles";
 
 const useStyles = makeStyles({
   ...executionsStyles,
-  ...commonStyles,
+  ...sharedStyles,
 });
 
 const DEFAULT_SORT = "startTime:DESC";
@@ -76,7 +76,7 @@ export default function WorkflowPanel() {
     if (!_.isEmpty(status)) {
       clauses.push(`status IN (${status.join(",")})`);
     }
-    if(!_.isEmpty(lookback)){
+    if (!_.isEmpty(lookback)) {
       clauses.push(`startTime>${new Date().getTime() - lookback * MS_IN_DAY}`);
     }
     if (!_.isEmpty(startFrom)) {
@@ -123,18 +123,17 @@ export default function WorkflowPanel() {
     setStartFrom("");
     setStartTo("");
     setLookback(val);
-  }
+  };
 
   const handleStartFrom = (val) => {
     setLookback("");
     setStartFrom(val);
-  }
+  };
 
   const handleStartTo = (val) => {
     setLookback("");
     setStartTo(val);
-  }
-
+  };
 
   return (
     <div className={clsx([classes.wrapper, classes.padded])}>
@@ -185,7 +184,7 @@ export default function WorkflowPanel() {
             />
           </Grid>
           <Grid item xs={1}>
-          <Input
+            <Input
               fullWidth
               label="Lookback (days)"
               defaultValue={lookback}
@@ -199,7 +198,7 @@ export default function WorkflowPanel() {
           <Grid item xs={6}>
             <Input
               fullWidth
-              label="Free Text Query"
+              label="Lucene-syntax Query (Double-quote strings for Free Text Search)"
               defaultValue={freeText}
               onBlur={setFreeText}
               clearable

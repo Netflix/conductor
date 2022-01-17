@@ -3,17 +3,22 @@ import { Link } from "@material-ui/core";
 import { DataTable } from "../../components";
 import _ from "lodash";
 
-
 export default function TaskList({ selectedTask, tasks, dag, onClick }) {
   const taskDetailFields = [
     { name: "seq", grow: 0.2 },
-    { name: "taskId", renderer: (taskId, row, idx) => {
-      console.log(row)
-      return <Link href="#" onClick={() => handleClick(row)}>{taskId}</Link>
-    }},
+    {
+      name: "taskId",
+      renderer: (taskId, row, idx) => {
+        return (
+          <Link href="#" onClick={() => handleClick(row)}>
+            {taskId}
+          </Link>
+        );
+      },
+    },
     { name: "workflowTask.name", id: "taskName", label: "Task Name" },
     { name: "referenceTaskName", label: "Ref" },
-    { name: "workflowTask.type", id: "taskType" ,label: "Type", grow: 0.5 },
+    { name: "workflowTask.type", id: "taskType", label: "Type", grow: 0.5 },
     { name: "scheduledTime", type: "date" },
     { name: "startTime", type: "date" },
     { name: "endTime", type: "date" },
@@ -38,7 +43,7 @@ export default function TaskList({ selectedTask, tasks, dag, onClick }) {
 
   if (selectedTaskIdx === -1) selectedTaskIdx = null;
 
-  function handleClick (row) {
+  function handleClick(row) {
     if (!_.isEmpty(row)) {
       if (onClick) {
         const task = row;
@@ -59,7 +64,7 @@ export default function TaskList({ selectedTask, tasks, dag, onClick }) {
     } else {
       if (onClick) onClick(null);
     }
-  };
+  }
 
   return (
     <DataTable
@@ -76,7 +81,7 @@ export default function TaskList({ selectedTask, tasks, dag, onClick }) {
         "endTime",
         "status",
       ]}
-      localStorageKey="taskListTable"   
+      localStorageKey="taskListTable"
     />
   );
 }

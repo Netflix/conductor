@@ -11,11 +11,11 @@ import { Alert, AlertTitle } from "@material-ui/lab";
 import { makeStyles } from "@material-ui/styles";
 import BulkActionModule from "./BulkActionModule";
 import executionsStyles from "./executionsStyles";
-import commonStyles from "../styles";
+import sharedStyles from "../styles";
 
 const useStyles = makeStyles({
   ...executionsStyles,
-  ...commonStyles,
+  ...sharedStyles,
 });
 
 const executionFields = [
@@ -72,11 +72,16 @@ export default function ResultsTable({
   showMore,
 }) {
   const classes = useStyles();
-  const totalHits = resultObj
-    ? resultObj.totalHits === undefined
-      ? resultObj.results.length
-      : resultObj.totalHits
-    : 0;
+  let totalHits = 0;
+  if (resultObj) {
+    if (resultObj.totalHits) {
+      totalHits = resultObj.totalHits;
+    } else {
+      if (resultObj.results) {
+        totalHits = resultObj.results.length;
+      }
+    }
+  }
   const [selectedRows, setSelectedRows] = useState([]);
   const [toggleCleared, setToggleCleared] = useState(false);
   const tableRef = useRef(null);
@@ -102,7 +107,7 @@ export default function ResultsTable({
       )}
       {resultObj && (
         <DataTable
-          title={totalHits > 0 && ` Page ${page} of ${totalHits} results.`}
+          title={totalHits > 0 && ` Page ${page} of ${totalHits}`}
           data={resultObj.results}
           columns={executionFields}
           defaultShowColumns={[
