@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,36 +12,31 @@
  */
 package com.netflix.conductor.postgres.dao;
 
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.sql.DataSource;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.PollData;
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.dao.ConcurrentExecutionLimitDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.PollDataDAO;
 import com.netflix.conductor.dao.RateLimitingDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.postgres.util.Query;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.BACKEND_ERROR;
 
@@ -66,7 +61,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public List<Task> getPendingTasksByWorkflow(String taskDefName, String workflowId) {
+    public List<TaskDO> getPendingTasksByWorkflow(String taskDefName, String workflowId) {
         // @formatter:off
         String GET_IN_PROGRESS_TASKS_FOR_WORKFLOW =
                 "SELECT json_data FROM task_in_progress tip "
@@ -79,17 +74,17 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 q ->
                         q.addParameter(taskDefName)
                                 .addParameter(workflowId)
-                                .executeAndFetch(Task.class));
+                                .executeAndFetch(TaskDO.class));
     }
 
     @Override
-    public List<Task> getTasks(String taskDefName, String startKey, int count) {
-        List<Task> tasks = new ArrayList<>(count);
+    public List<TaskDO> getTasks(String taskDefName, String startKey, int count) {
+        List<TaskDO> tasks = new ArrayList<>(count);
 
-        List<Task> pendingTasks = getPendingTasksForTaskType(taskDefName);
+        List<TaskDO> pendingTasks = getPendingTasksForTaskType(taskDefName);
         boolean startKeyFound = startKey == null;
         int found = 0;
-        for (Task pendingTask : pendingTasks) {
+        for (TaskDO pendingTask : pendingTasks) {
             if (!startKeyFound) {
                 if (pendingTask.getTaskId().equals(startKey)) {
                     startKeyFound = true;
@@ -108,15 +103,15 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         return tasks;
     }
 
-    private static String taskKey(Task task) {
+    private static String taskKey(TaskDO task) {
         return task.getReferenceTaskName() + "_" + task.getRetryCount();
     }
 
     @Override
-    public List<Task> createTasks(List<Task> tasks) {
-        List<Task> created = Lists.newArrayListWithCapacity(tasks.size());
+    public List<TaskDO> createTasks(List<TaskDO> tasks) {
+        List<TaskDO> created = Lists.newArrayListWithCapacity(tasks.size());
 
-        for (Task task : tasks) {
+        for (TaskDO task : tasks) {
             withTransaction(
                     connection -> {
                         validate(task);
@@ -151,7 +146,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public void updateTask(Task task) {
+    public void updateTask(TaskDO task) {
         withTransaction(connection -> updateTask(connection, task));
     }
 
@@ -161,15 +156,15 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
      * @param task: which needs to be evaluated whether it is rateLimited or not
      */
     @Override
-    public boolean exceedsRateLimitPerFrequency(Task task, TaskDef taskDef) {
+    public boolean exceedsRateLimitPerFrequency(TaskDO task, TaskDef taskDef) {
         return false;
     }
 
     @Override
-    public boolean exceedsLimit(Task task) {
+    public boolean exceedsLimit(TaskDO task) {
 
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
-        if (!taskDefinition.isPresent()) {
+        if (taskDefinition.isEmpty()) {
             return false;
         }
 
@@ -214,7 +209,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
 
     @Override
     public boolean removeTask(String taskId) {
-        Task task = getTask(taskId);
+        TaskDO task = getTask(taskId);
 
         if (task == null) {
             logger.warn("No such task found by id {}", taskId);
@@ -234,14 +229,14 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public Task getTask(String taskId) {
+    public TaskDO getTask(String taskId) {
         String GET_TASK = "SELECT json_data FROM task WHERE task_id = ?";
         return queryWithTransaction(
-                GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(Task.class));
+                GET_TASK, q -> q.addParameter(taskId).executeAndFetchFirst(TaskDO.class));
     }
 
     @Override
-    public List<Task> getTasks(List<String> taskIds) {
+    public List<TaskDO> getTasks(List<String> taskIds) {
         if (taskIds.isEmpty()) {
             return Lists.newArrayList();
         }
@@ -249,7 +244,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public List<Task> getPendingTasksForTaskType(String taskName) {
+    public List<TaskDO> getPendingTasksForTaskType(String taskName) {
         Preconditions.checkNotNull(taskName, "task name cannot be null");
         // @formatter:off
         String GET_IN_PROGRESS_TASKS_FOR_TYPE =
@@ -260,11 +255,11 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
 
         return queryWithTransaction(
                 GET_IN_PROGRESS_TASKS_FOR_TYPE,
-                q -> q.addParameter(taskName).executeAndFetch(Task.class));
+                q -> q.addParameter(taskName).executeAndFetch(TaskDO.class));
     }
 
     @Override
-    public List<Task> getTasksForWorkflow(String workflowId) {
+    public List<TaskDO> getTasksForWorkflow(String workflowId) {
         String GET_TASKS_FOR_WORKFLOW =
                 "SELECT task_id FROM workflow_to_task WHERE workflow_id = ? FOR SHARE";
         return getWithRetriedTransactions(
@@ -281,19 +276,19 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public String createWorkflow(Workflow workflow) {
+    public String createWorkflow(WorkflowDO workflow) {
         return insertOrUpdateWorkflow(workflow, false);
     }
 
     @Override
-    public String updateWorkflow(Workflow workflow) {
+    public String updateWorkflow(WorkflowDO workflow) {
         return insertOrUpdateWorkflow(workflow, true);
     }
 
     @Override
     public boolean removeWorkflow(String workflowId) {
         boolean removed = false;
-        Workflow workflow = getWorkflow(workflowId, true);
+        WorkflowDO workflow = getWorkflow(workflowId, true);
         if (workflow != null) {
             withTransaction(
                     connection -> {
@@ -303,7 +298,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                     });
             removed = true;
 
-            for (Task task : workflow.getTasks()) {
+            for (TaskDO task : workflow.getTasks()) {
                 if (!removeTask(task.getTaskId())) {
                     removed = false;
                 }
@@ -328,20 +323,20 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public Workflow getWorkflow(String workflowId) {
+    public WorkflowDO getWorkflow(String workflowId) {
         return getWorkflow(workflowId, true);
     }
 
     @Override
-    public Workflow getWorkflow(String workflowId, boolean includeTasks) {
-        Workflow workflow = getWithRetriedTransactions(tx -> readWorkflow(tx, workflowId));
+    public WorkflowDO getWorkflow(String workflowId, boolean includeTasks) {
+        WorkflowDO workflow = getWithRetriedTransactions(tx -> readWorkflow(tx, workflowId));
 
         if (workflow != null) {
             if (includeTasks) {
-                List<Task> tasks = getTasksForWorkflow(workflowId);
+                List<TaskDO> tasks = getTasksForWorkflow(workflowId);
                 tasks.sort(
-                        Comparator.comparingLong(Task::getScheduledTime)
-                                .thenComparingInt(Task::getSeq));
+                        Comparator.comparingLong(TaskDO::getScheduledTime)
+                                .thenComparingInt(TaskDO::getSeq));
                 workflow.setTasks(tasks);
             }
         }
@@ -371,7 +366,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
      * @return list of workflows that are in RUNNING state
      */
     @Override
-    public List<Workflow> getPendingWorkflowsByType(String workflowName, int version) {
+    public List<WorkflowDO> getPendingWorkflowsByType(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         return getRunningWorkflowIds(workflowName, version).stream()
                 .map(this::getWorkflow)
@@ -399,12 +394,12 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
+    public List<WorkflowDO> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         Preconditions.checkNotNull(startTime, "startTime cannot be null");
         Preconditions.checkNotNull(endTime, "endTime cannot be null");
 
-        List<Workflow> workflows = new LinkedList<>();
+        List<WorkflowDO> workflows = new LinkedList<>();
 
         withTransaction(
                 tx -> {
@@ -426,9 +421,9 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                     workflowIds.forEach(
                             workflowId -> {
                                 try {
-                                    Workflow wf = getWorkflow(workflowId);
-                                    if (wf.getCreateTime() >= startTime
-                                            && wf.getCreateTime() <= endTime) {
+                                    WorkflowDO wf = getWorkflow(workflowId);
+                                    if (wf.getCreatedTime() >= startTime
+                                            && wf.getCreatedTime() <= endTime) {
                                         workflows.add(wf);
                                     }
                                 } catch (Exception e) {
@@ -445,7 +440,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
     }
 
     @Override
-    public List<Workflow> getWorkflowsByCorrelationId(
+    public List<WorkflowDO> getWorkflowsByCorrelationId(
             String workflowName, String correlationId, boolean includeTasks) {
         Preconditions.checkNotNull(correlationId, "correlationId cannot be null");
         String GET_WORKFLOWS_BY_CORRELATION_ID =
@@ -456,7 +451,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 q ->
                         q.addParameter(correlationId)
                                 .addParameter(workflowName)
-                                .executeAndFetch(Workflow.class));
+                                .executeAndFetch(WorkflowDO.class));
     }
 
     @Override
@@ -574,7 +569,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         }
     }
 
-    private List<Task> getTasks(Connection connection, List<String> taskIds) {
+    private List<TaskDO> getTasks(Connection connection, List<String> taskIds) {
         if (taskIds.isEmpty()) {
             return Lists.newArrayList();
         }
@@ -589,15 +584,15 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         return query(
                 connection,
                 GET_TASKS_FOR_IDS,
-                q -> q.addParameters(taskIds).executeAndFetch(Task.class));
+                q -> q.addParameters(taskIds).executeAndFetch(TaskDO.class));
     }
 
-    private String insertOrUpdateWorkflow(Workflow workflow, boolean update) {
+    private String insertOrUpdateWorkflow(WorkflowDO workflow, boolean update) {
         Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
         boolean terminal = workflow.getStatus().isTerminal();
 
-        List<Task> tasks = workflow.getTasks();
+        List<TaskDO> tasks = workflow.getTasks();
         workflow.setTasks(Lists.newLinkedList());
 
         withTransaction(
@@ -622,12 +617,12 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         return workflow.getWorkflowId();
     }
 
-    private void updateTask(Connection connection, Task task) {
+    private void updateTask(Connection connection, TaskDO task) {
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
 
         if (taskDefinition.isPresent() && taskDefinition.get().concurrencyLimit() > 0) {
             boolean inProgress =
-                    task.getStatus() != null && task.getStatus().equals(Task.Status.IN_PROGRESS);
+                    task.getStatus() != null && task.getStatus().equals(TaskStatusDO.IN_PROGRESS);
             updateInProgressStatus(connection, task, inProgress);
         }
 
@@ -640,16 +635,16 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         addWorkflowToTaskMapping(connection, task);
     }
 
-    private Workflow readWorkflow(Connection connection, String workflowId) {
+    private WorkflowDO readWorkflow(Connection connection, String workflowId) {
         String GET_WORKFLOW = "SELECT json_data FROM workflow WHERE workflow_id = ?";
 
         return query(
                 connection,
                 GET_WORKFLOW,
-                q -> q.addParameter(workflowId).executeAndFetchFirst(Workflow.class));
+                q -> q.addParameter(workflowId).executeAndFetchFirst(WorkflowDO.class));
     }
 
-    private void addWorkflow(Connection connection, Workflow workflow) {
+    private void addWorkflow(Connection connection, WorkflowDO workflow) {
         String INSERT_WORKFLOW =
                 "INSERT INTO workflow (workflow_id, correlation_id, json_data) VALUES (?, ?, ?)";
 
@@ -663,7 +658,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                                 .executeUpdate());
     }
 
-    private void updateWorkflow(Connection connection, Workflow workflow) {
+    private void updateWorkflow(Connection connection, WorkflowDO workflow) {
         String UPDATE_WORKFLOW =
                 "UPDATE workflow SET json_data = ?, modified_on = CURRENT_TIMESTAMP WHERE workflow_id = ?";
 
@@ -714,7 +709,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 q -> q.addParameter(workflowType).addParameter(workflowId).executeDelete());
     }
 
-    private void insertOrUpdateTaskData(Connection connection, Task task) {
+    private void insertOrUpdateTaskData(Connection connection, TaskDO task) {
         /*
          * Most times the row will be updated so let's try the update first. This used to be an 'INSERT/ON CONFLICT do update' sql statement. The problem with that
          * is that if we try the INSERT first, the sequence will be increased even if the ON CONFLICT happens.
@@ -740,12 +735,12 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         }
     }
 
-    private void removeTaskData(Connection connection, Task task) {
+    private void removeTaskData(Connection connection, TaskDO task) {
         String REMOVE_TASK = "DELETE FROM task WHERE task_id = ?";
         execute(connection, REMOVE_TASK, q -> q.addParameter(task.getTaskId()).executeDelete());
     }
 
-    private void addWorkflowToTaskMapping(Connection connection, Task task) {
+    private void addWorkflowToTaskMapping(Connection connection, TaskDO task) {
 
         String EXISTS_WORKFLOW_TO_TASK =
                 "SELECT EXISTS(SELECT 1 FROM workflow_to_task WHERE workflow_id = ? AND task_id = ?)";
@@ -773,7 +768,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         }
     }
 
-    private void removeWorkflowToTaskMapping(Connection connection, Task task) {
+    private void removeWorkflowToTaskMapping(Connection connection, TaskDO task) {
         String REMOVE_WORKFLOW_TO_TASK =
                 "DELETE FROM workflow_to_task WHERE workflow_id = ? AND task_id = ?";
 
@@ -786,7 +781,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                                 .executeDelete());
     }
 
-    private void addWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
+    private void addWorkflowDefToWorkflowMapping(Connection connection, WorkflowDO workflow) {
         String INSERT_WORKFLOW_DEF_TO_WORKFLOW =
                 "INSERT INTO workflow_def_to_workflow (workflow_def, date_str, workflow_id) VALUES (?, ?, ?)";
 
@@ -795,12 +790,12 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 INSERT_WORKFLOW_DEF_TO_WORKFLOW,
                 q ->
                         q.addParameter(workflow.getWorkflowName())
-                                .addParameter(dateStr(workflow.getCreateTime()))
+                                .addParameter(dateStr(workflow.getCreatedTime()))
                                 .addParameter(workflow.getWorkflowId())
                                 .executeUpdate());
     }
 
-    private void removeWorkflowDefToWorkflowMapping(Connection connection, Workflow workflow) {
+    private void removeWorkflowDefToWorkflowMapping(Connection connection, WorkflowDO workflow) {
         String REMOVE_WORKFLOW_DEF_TO_WORKFLOW =
                 "DELETE FROM workflow_def_to_workflow WHERE workflow_def = ? AND date_str = ? AND workflow_id = ?";
 
@@ -809,13 +804,13 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 REMOVE_WORKFLOW_DEF_TO_WORKFLOW,
                 q ->
                         q.addParameter(workflow.getWorkflowName())
-                                .addParameter(dateStr(workflow.getCreateTime()))
+                                .addParameter(dateStr(workflow.getCreatedTime()))
                                 .addParameter(workflow.getWorkflowId())
                                 .executeUpdate());
     }
 
     @VisibleForTesting
-    boolean addScheduledTask(Connection connection, Task task, String taskKey) {
+    boolean addScheduledTask(Connection connection, TaskDO task, String taskKey) {
 
         final String EXISTS_SCHEDULED_TASK =
                 "SELECT EXISTS(SELECT 1 FROM task_scheduled where workflow_id = ? AND task_key = ?)";
@@ -848,7 +843,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         }
     }
 
-    private void removeScheduledTask(Connection connection, Task task, String taskKey) {
+    private void removeScheduledTask(Connection connection, TaskDO task, String taskKey) {
         String REMOVE_SCHEDULED_TASK =
                 "DELETE FROM task_scheduled WHERE workflow_id = ? AND task_key = ?";
         execute(
@@ -860,7 +855,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                                 .executeDelete());
     }
 
-    private void addTaskInProgress(Connection connection, Task task) {
+    private void addTaskInProgress(Connection connection, TaskDO task) {
         String EXISTS_IN_PROGRESS_TASK =
                 "SELECT EXISTS(SELECT 1 FROM task_in_progress WHERE task_def_name = ? AND task_id = ?)";
 
@@ -888,7 +883,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
         }
     }
 
-    private void removeTaskInProgress(Connection connection, Task task) {
+    private void removeTaskInProgress(Connection connection, TaskDO task) {
         String REMOVE_IN_PROGRESS_TASK =
                 "DELETE FROM task_in_progress WHERE task_def_name = ? AND task_id = ?";
 
@@ -901,7 +896,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                                 .executeUpdate());
     }
 
-    private void updateInProgressStatus(Connection connection, Task task, boolean inProgress) {
+    private void updateInProgressStatus(Connection connection, TaskDO task, boolean inProgress) {
         String UPDATE_IN_PROGRESS_TASK_STATUS =
                 "UPDATE task_in_progress SET in_progress_status = ?, modified_on = CURRENT_TIMESTAMP "
                         + "WHERE task_def_name = ? AND task_id = ?";
@@ -1053,7 +1048,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                 GET_ALL_POLL_DATA, q -> q.addParameter(queueName).executeAndFetch(PollData.class));
     }
 
-    private List<String> findAllTasksInProgressInOrderOfArrival(Task task, int limit) {
+    private List<String> findAllTasksInProgressInOrderOfArrival(TaskDO task, int limit) {
         String GET_IN_PROGRESS_TASKS_WITH_LIMIT =
                 "SELECT task_id FROM task_in_progress WHERE task_def_name = ? ORDER BY created_on LIMIT ?";
 
@@ -1065,7 +1060,7 @@ public class PostgresExecutionDAO extends PostgresBaseDAO
                                 .executeScalarList(String.class));
     }
 
-    private void validate(Task task) {
+    private void validate(TaskDO task) {
         Preconditions.checkNotNull(task, "task object cannot be null");
         Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");
         Preconditions.checkNotNull(

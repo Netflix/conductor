@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @EnableConfigurationProperties(PostgresProperties.class)
 @ConditionalOnProperty(name = "conductor.db.type", havingValue = "postgres")
 // Import the DataSourceAutoConfiguration when postgres database is selected.
-// By default the datasource configuration is excluded in the main module.
+// By default, the datasource configuration is excluded in the main module.
 @Import(DataSourceAutoConfiguration.class)
 public class PostgresConfiguration {
 
