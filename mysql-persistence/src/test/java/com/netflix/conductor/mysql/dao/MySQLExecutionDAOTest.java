@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,6 +14,7 @@ package com.netflix.conductor.mysql.dao;
 
 import java.util.List;
 
+import com.netflix.conductor.domain.WorkflowDO;
 import org.flywaydb.core.Flyway;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +27,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
 import com.netflix.conductor.mysql.config.MySQLConfiguration;
@@ -61,12 +61,12 @@ public class MySQLExecutionDAOTest extends ExecutionDAOTest {
         WorkflowDef def = new WorkflowDef();
         def.setName("pending_count_correlation_jtest");
 
-        Workflow workflow = createTestWorkflow();
+        WorkflowDO workflow = createTestWorkflow();
         workflow.setWorkflowDefinition(def);
 
         generateWorkflows(workflow, 10);
 
-        List<Workflow> bycorrelationId =
+        List<WorkflowDO> bycorrelationId =
                 getExecutionDAO()
                         .getWorkflowsByCorrelationId(
                                 "pending_count_correlation_jtest", "corr001", true);
