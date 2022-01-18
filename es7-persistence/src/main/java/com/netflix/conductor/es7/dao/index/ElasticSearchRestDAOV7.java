@@ -17,21 +17,8 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -58,13 +45,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.ResponseException;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.*;
 import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -89,8 +70,6 @@ import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.es7.config.ElasticSearchProperties;
 import com.netflix.conductor.es7.dao.query.parser.internal.ParserException;
 import com.netflix.conductor.metrics.Monitors;
@@ -504,12 +483,11 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public void indexWorkflow(WorkflowDO workflow) {
+    public void indexWorkflow(WorkflowSummary workflow) {
         try {
             long startTime = Instant.now().toEpochMilli();
             String workflowId = workflow.getWorkflowId();
-            WorkflowSummary summary = new WorkflowSummary(workflow);
-            byte[] docBytes = objectMapper.writeValueAsBytes(summary);
+            byte[] docBytes = objectMapper.writeValueAsBytes(workflow);
 
             IndexRequest request =
                     new IndexRequest(workflowIndexName)
@@ -544,24 +522,23 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public CompletableFuture<Void> asyncIndexWorkflow(WorkflowDO workflow) {
+    public CompletableFuture<Void> asyncIndexWorkflow(WorkflowSummary workflow) {
         return CompletableFuture.runAsync(() -> indexWorkflow(workflow), executorService);
     }
 
     @Override
-    public void indexTask(TaskDO task) {
+    public void indexTask(TaskSummary task) {
         try {
             long startTime = Instant.now().toEpochMilli();
             String taskId = task.getTaskId();
-            TaskSummary summary = new TaskSummary(task);
 
-            indexObject(taskIndexName, TASK_DOC_TYPE, taskId, summary);
+            indexObject(taskIndexName, TASK_DOC_TYPE, taskId, task);
             long endTime = Instant.now().toEpochMilli();
             logger.debug(
                     "Time taken {} for  indexing task:{} in workflow: {}",
                     endTime - startTime,
                     taskId,
-                    task.getWorkflowInstanceId());
+                    task.getWorkflowId());
             Monitors.recordESIndexTime("index_task", TASK_DOC_TYPE, endTime - startTime);
             Monitors.recordWorkerQueueSize(
                     "indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
@@ -571,7 +548,7 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public CompletableFuture<Void> asyncIndexTask(TaskDO task) {
+    public CompletableFuture<Void> asyncIndexTask(TaskSummary task) {
         return CompletableFuture.runAsync(() -> indexTask(task), executorService);
     }
 

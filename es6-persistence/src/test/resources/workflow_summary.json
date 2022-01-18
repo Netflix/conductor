@@ -1,0 +1,25 @@
+{
+  "ownerApp": "junit_app",
+  "createTime": 1534983505050,
+  "updateTime": 1534983505131,
+  "status": "RUNNING",
+  "endTime": 0,
+  "workflowId": "WORKFLOW_INSTANCE_ID",
+  "tasks": [],
+  "input": {
+    "path1": "file://path1",
+    "path2": "file://path2",
+    "requestDetails": {
+      "key1": "value1",
+      "key2": 42
+    },
+    "outputPath": "s3://bucket/outputPath"
+  },
+  "workflowDefinition": {
+    "name": "template_workflow",
+    "version": 1
+  },
+  "correlationId": "testTaskDefTemplate",
+  "schemaVersion": 2,
+  "startTime": 1534983505050
+}
