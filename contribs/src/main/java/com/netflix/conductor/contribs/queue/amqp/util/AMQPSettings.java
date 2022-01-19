@@ -12,17 +12,18 @@
  */
 package com.netflix.conductor.contribs.queue.amqp.util;
 
-import com.netflix.conductor.contribs.queue.amqp.config.AMQPEventQueueProperties;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.netflix.conductor.contribs.queue.amqp.config.AMQPEventQueueProperties;
 
 import static com.netflix.conductor.contribs.queue.amqp.util.AMQPConfigurations.PARAM_AUTO_DELETE;
 import static com.netflix.conductor.contribs.queue.amqp.util.AMQPConfigurations.PARAM_DELIVERY_MODE;
@@ -32,13 +33,13 @@ import static com.netflix.conductor.contribs.queue.amqp.util.AMQPConfigurations.
 import static com.netflix.conductor.contribs.queue.amqp.util.AMQPConfigurations.PARAM_MAX_PRIORITY;
 import static com.netflix.conductor.contribs.queue.amqp.util.AMQPConfigurations.PARAM_ROUTING_KEY;
 
-/**
- * @author Ritu Parathody
- */
+/** @author Ritu Parathody */
 public class AMQPSettings {
 
-    private static final Pattern URI_PATTERN = Pattern
-        .compile("^(?:amqp\\_(queue|exchange))?\\:?(?<name>[^\\?]+)\\??(?<params>.*)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URI_PATTERN =
+            Pattern.compile(
+                    "^(?:amqp\\_(queue|exchange))?\\:?(?<name>[^\\?]+)\\??(?<params>.*)$",
+                    Pattern.CASE_INSENSITIVE);
 
     private String queueOrExchangeName;
     private String eventName;
@@ -134,7 +135,7 @@ public class AMQPSettings {
     /**
      * Complete settings from the queue URI.
      *
-     * <u>Example for queue:</u>
+     * <p><u>Example for queue:</u>
      *
      * <pre>
      * amqp-queue:myQueue?deliveryMode=1&autoDelete=true&exclusive=true
@@ -163,92 +164,136 @@ public class AMQPSettings {
             final String queryParams = matcher.group("params");
             if (StringUtils.isNotEmpty(queryParams)) {
                 // Handle parameters
-                Arrays.stream(queryParams.split("\\s*\\&\\s*")).forEach(param -> {
-                    final String[] kv = param.split("\\s*=\\s*");
-                    if (kv.length == 2) {
-                        if (kv[0].equalsIgnoreCase(String.valueOf(PARAM_EXCHANGE_TYPE))) {
-                            String value = kv[1];
-                            if (StringUtils.isEmpty(value)) {
-                                throw new IllegalArgumentException("The provided exchange type is empty");
-                            }
-                            exchangeType = value;
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_ROUTING_KEY)))) {
-                            String value = kv[1];
-                            if (StringUtils.isEmpty(value)) {
-                                throw new IllegalArgumentException("The provided routing key is empty");
-                            }
-                            routingKey = value;
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_DURABLE)))) {
-                            durable = Boolean.parseBoolean(kv[1]);
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_EXCLUSIVE)))) {
-                            exclusive = Boolean.parseBoolean(kv[1]);
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_AUTO_DELETE)))) {
-                            autoDelete = Boolean.parseBoolean(kv[1]);
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_DELIVERY_MODE)))) {
-                            setDeliveryMode(Integer.parseInt(kv[1]));
-                        }
-                        if (kv[0].equalsIgnoreCase((String.valueOf(PARAM_MAX_PRIORITY)))) {
-                            arguments.put("x-max-priority", Integer.valueOf(kv[1]));
-                        }
-                    }
-                });
+                Arrays.stream(queryParams.split("\\s*\\&\\s*"))
+                        .forEach(
+                                param -> {
+                                    final String[] kv = param.split("\\s*=\\s*");
+                                    if (kv.length == 2) {
+                                        if (kv[0].equalsIgnoreCase(
+                                                String.valueOf(PARAM_EXCHANGE_TYPE))) {
+                                            String value = kv[1];
+                                            if (StringUtils.isEmpty(value)) {
+                                                throw new IllegalArgumentException(
+                                                        "The provided exchange type is empty");
+                                            }
+                                            exchangeType = value;
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_ROUTING_KEY)))) {
+                                            String value = kv[1];
+                                            if (StringUtils.isEmpty(value)) {
+                                                throw new IllegalArgumentException(
+                                                        "The provided routing key is empty");
+                                            }
+                                            routingKey = value;
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_DURABLE)))) {
+                                            durable = Boolean.parseBoolean(kv[1]);
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_EXCLUSIVE)))) {
+                                            exclusive = Boolean.parseBoolean(kv[1]);
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_AUTO_DELETE)))) {
+                                            autoDelete = Boolean.parseBoolean(kv[1]);
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_DELIVERY_MODE)))) {
+                                            setDeliveryMode(Integer.parseInt(kv[1]));
+                                        }
+                                        if (kv[0].equalsIgnoreCase(
+                                                (String.valueOf(PARAM_MAX_PRIORITY)))) {
+                                            arguments.put("x-max-priority", Integer.valueOf(kv[1]));
+                                        }
+                                    }
+                                });
             }
         }
         return this;
     }
 
     @Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!(obj instanceof AMQPSettings))
-			return false;
-		AMQPSettings other = (AMQPSettings) obj;
-		return Objects.equals(arguments, other.arguments) && autoDelete == other.autoDelete
-				&& Objects.equals(contentEncoding, other.contentEncoding)
-				&& Objects.equals(contentType, other.contentType) && deliveryMode == other.deliveryMode
-				&& durable == other.durable && Objects.equals(eventName, other.eventName)
-				&& Objects.equals(exchangeType, other.exchangeType) && exclusive == other.exclusive
-				&& Objects.equals(queueOrExchangeName, other.queueOrExchangeName)
-				&& Objects.equals(queueType, other.queueType) && Objects.equals(routingKey, other.routingKey)
-				&& sequentialProcessing == other.sequentialProcessing;
-	}
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof AMQPSettings)) return false;
+        AMQPSettings other = (AMQPSettings) obj;
+        return Objects.equals(arguments, other.arguments)
+                && autoDelete == other.autoDelete
+                && Objects.equals(contentEncoding, other.contentEncoding)
+                && Objects.equals(contentType, other.contentType)
+                && deliveryMode == other.deliveryMode
+                && durable == other.durable
+                && Objects.equals(eventName, other.eventName)
+                && Objects.equals(exchangeType, other.exchangeType)
+                && exclusive == other.exclusive
+                && Objects.equals(queueOrExchangeName, other.queueOrExchangeName)
+                && Objects.equals(queueType, other.queueType)
+                && Objects.equals(routingKey, other.routingKey)
+                && sequentialProcessing == other.sequentialProcessing;
+    }
 
     @Override
-	public int hashCode() {
-		return Objects.hash(arguments, autoDelete, contentEncoding, contentType, deliveryMode, durable, eventName,
-				exchangeType, exclusive, queueOrExchangeName, queueType, routingKey, sequentialProcessing);
-	}
+    public int hashCode() {
+        return Objects.hash(
+                arguments,
+                autoDelete,
+                contentEncoding,
+                contentType,
+                deliveryMode,
+                durable,
+                eventName,
+                exchangeType,
+                exclusive,
+                queueOrExchangeName,
+                queueType,
+                routingKey,
+                sequentialProcessing);
+    }
 
     @Override
-	public String toString() {
-		return "AMQPSettings [queueOrExchangeName=" + queueOrExchangeName + ", eventName=" + eventName
-				+ ", exchangeType=" + exchangeType + ", queueType=" + queueType + ", routingKey=" + routingKey
-				+ ", contentEncoding=" + contentEncoding + ", contentType=" + contentType + ", durable=" + durable
-				+ ", exclusive=" + exclusive + ", autoDelete=" + autoDelete + ", sequentialProcessing="
-				+ sequentialProcessing + ", deliveryMode=" + deliveryMode + ", arguments=" + arguments + "]";
-	}
+    public String toString() {
+        return "AMQPSettings [queueOrExchangeName="
+                + queueOrExchangeName
+                + ", eventName="
+                + eventName
+                + ", exchangeType="
+                + exchangeType
+                + ", queueType="
+                + queueType
+                + ", routingKey="
+                + routingKey
+                + ", contentEncoding="
+                + contentEncoding
+                + ", contentType="
+                + contentType
+                + ", durable="
+                + durable
+                + ", exclusive="
+                + exclusive
+                + ", autoDelete="
+                + autoDelete
+                + ", sequentialProcessing="
+                + sequentialProcessing
+                + ", deliveryMode="
+                + deliveryMode
+                + ", arguments="
+                + arguments
+                + "]";
+    }
 
     public String getEventName() {
         return eventName;
     }
 
-	/**
-	 * @return the queueType
-	 */
-	public String getQueueType() {
-		return queueType;
-	}
+    /** @return the queueType */
+    public String getQueueType() {
+        return queueType;
+    }
 
-	/**
-	 * @return the sequentialProcessing
-	 */
-	public boolean isSequentialProcessing() {
-		return sequentialProcessing;
-	}
+    /** @return the sequentialProcessing */
+    public boolean isSequentialProcessing() {
+        return sequentialProcessing;
+    }
 }

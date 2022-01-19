@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.contribs.queue.amqp.config.AMQPRetryPattern;
 import com.netflix.conductor.contribs.queue.amqp.util.ConnectionType;
+
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.BlockedListener;
 import com.rabbitmq.client.Channel;
@@ -37,295 +38,353 @@ import com.rabbitmq.client.ShutdownSignalException;
 
 public class AMQPConnection {
 
-	private static Logger LOGGER = LoggerFactory.getLogger(AMQPConnection.class);
-	private volatile Connection publisherConnection = null;
-	private volatile Connection subscriberConnection = null;
-	private ConnectionFactory factory = null;
-	private Address[] addresses = null;
-	private static AMQPConnection amqpConnection = null;
-	private final static String PUBLISHER = "Publisher";
-	private final static String SUBSCRIBER = "Subscriber";
-	private static final Map<ConnectionType, Set<Channel>> RMQ_CHANNEL_MAP = new ConcurrentHashMap<ConnectionType, Set<Channel>>();
-	private static final Map<String, Channel> SUB_CHANNEL_MAP = new ConcurrentHashMap<String, Channel>();
-	private static AMQPRetryPattern retrySettings = null;
+    private static Logger LOGGER = LoggerFactory.getLogger(AMQPConnection.class);
+    private volatile Connection publisherConnection = null;
+    private volatile Connection subscriberConnection = null;
+    private ConnectionFactory factory = null;
+    private Address[] addresses = null;
+    private static AMQPConnection amqpConnection = null;
+    private static final String PUBLISHER = "Publisher";
+    private static final String SUBSCRIBER = "Subscriber";
+    private static final Map<ConnectionType, Set<Channel>> RMQ_CHANNEL_MAP =
+            new ConcurrentHashMap<ConnectionType, Set<Channel>>();
+    private static final Map<String, Channel> SUB_CHANNEL_MAP =
+            new ConcurrentHashMap<String, Channel>();
+    private static AMQPRetryPattern retrySettings = null;
 
-	private AMQPConnection() {
+    private AMQPConnection() {}
 
-	}
+    private AMQPConnection(final ConnectionFactory factory, final Address[] address) {
+        this.factory = factory;
+        this.addresses = address;
+    }
 
-	private AMQPConnection(final ConnectionFactory factory, final Address[] address) {
-		this.factory = factory;
-		this.addresses = address;
-	}
+    public static synchronized AMQPConnection getInstance(
+            final ConnectionFactory factory,
+            final Address[] address,
+            final AMQPRetryPattern retrySettings) {
+        if (AMQPConnection.amqpConnection == null) {
+            AMQPConnection.amqpConnection = new AMQPConnection(factory, address);
+        }
+        AMQPConnection.retrySettings = retrySettings;
+        return AMQPConnection.amqpConnection;
+    }
 
-	public static synchronized AMQPConnection getInstance(final ConnectionFactory factory, final Address[] address,
-			final AMQPRetryPattern retrySettings) {
-		if (AMQPConnection.amqpConnection == null) {
-			AMQPConnection.amqpConnection = new AMQPConnection(factory, address);
-		}
-		AMQPConnection.retrySettings = retrySettings;
-		return AMQPConnection.amqpConnection;
-	}
+    // Exposed for UT
+    public static void setAMQPConnection(AMQPConnection amqpConnection) {
+        AMQPConnection.amqpConnection = amqpConnection;
+    }
 
-	// Exposed for UT
-	public static void setAMQPConnection(AMQPConnection amqpConnection) {
-		AMQPConnection.amqpConnection = amqpConnection;
-	}
+    public Address[] getAddresses() {
+        return addresses;
+    }
 
-	public Address[] getAddresses() {
-		return addresses;
-	}
+    private Connection createConnection(String connectionPrefix) {
+        int retryIndex = 1;
+        while (true) {
+            try {
+                Connection connection =
+                        factory.newConnection(
+                                addresses, System.getenv("HOSTNAME") + "-" + connectionPrefix);
+                if (connection == null || !connection.isOpen()) {
+                    throw new RuntimeException("Failed to open connection");
+                }
+                connection.addShutdownListener(
+                        new ShutdownListener() {
+                            @Override
+                            public void shutdownCompleted(ShutdownSignalException cause) {
+                                LOGGER.error(
+                                        "Received a shutdown exception for the connection {}. reason {} cause{}",
+                                        connection.getClientProvidedName(),
+                                        cause.getMessage(),
+                                        cause);
+                            }
+                        });
+                connection.addBlockedListener(
+                        new BlockedListener() {
+                            @Override
+                            public void handleUnblocked() throws IOException {
+                                LOGGER.info(
+                                        "Connection {} is unblocked",
+                                        connection.getClientProvidedName());
+                            }
 
-	private Connection createConnection(String connectionPrefix) {
-		int retryIndex = 1;
-		while (true) {
-			try {
-				Connection connection = factory.newConnection(addresses,
-						System.getenv("HOSTNAME") + "-" + connectionPrefix);
-				if (connection == null || !connection.isOpen()) {
-					throw new RuntimeException("Failed to open connection");
-				}
-				connection.addShutdownListener(new ShutdownListener() {
-					@Override
-					public void shutdownCompleted(ShutdownSignalException cause) {
-						LOGGER.error("Received a shutdown exception for the connection {}. reason {} cause{}",
-								connection.getClientProvidedName(), cause.getMessage(), cause);
+                            @Override
+                            public void handleBlocked(String reason) throws IOException {
+                                LOGGER.error(
+                                        "Connection {} is blocked. reason: {}",
+                                        connection.getClientProvidedName(),
+                                        reason);
+                            }
+                        });
+                return connection;
+            } catch (final IOException e) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    final String error =
+                            "IO error while connecting to "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(","));
+                    LOGGER.error(error, e);
+                    throw new RuntimeException(error, e);
+                }
+                try {
+                    retry.continueOrPropogate(e, retryIndex);
+                } catch (Exception ex) {
+                    final String error =
+                            "IO error while connecting to "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(","));
+                    LOGGER.error(error, e);
+                    throw new RuntimeException(error, e);
+                }
+                retryIndex++;
+            } catch (final TimeoutException e) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    final String error =
+                            "Timeout while connecting to "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(","));
+                    LOGGER.error(error, e);
+                    throw new RuntimeException(error, e);
+                }
+                try {
+                    retry.continueOrPropogate(e, retryIndex);
+                } catch (Exception ex) {
+                    final String error =
+                            "Timeout while connecting to "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(","));
+                    LOGGER.error(error, e);
+                    throw new RuntimeException(error, e);
+                }
+                retryIndex++;
+            }
+        }
+    }
 
-					}
-				});
-				connection.addBlockedListener(new BlockedListener() {
-					@Override
-					public void handleUnblocked() throws IOException {
-						LOGGER.info("Connection {} is unblocked", connection.getClientProvidedName());
-					}
-					@Override
-					public void handleBlocked(String reason) throws IOException {
-						LOGGER.error("Connection {} is blocked. reason: {}", connection.getClientProvidedName(),
-								reason);
-					}
-				});
-				return connection;
-			} catch (final IOException e) {
-				AMQPRetryPattern retry = retrySettings;
-				if (retry == null) {
-					final String error = "IO error while connecting to " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(","));
-					LOGGER.error(error, e);
-					throw new RuntimeException(error, e);
-				}
-				try {
-					retry.continueOrPropogate(e, retryIndex);
-				} catch (Exception ex) {
-					final String error = "IO error while connecting to " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(","));
-					LOGGER.error(error, e);
-					throw new RuntimeException(error, e);
-				}
-				retryIndex++;
-			} catch (final TimeoutException e) {
-				AMQPRetryPattern retry = retrySettings;
-				if (retry == null) {
-					final String error = "Timeout while connecting to " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(","));
-					LOGGER.error(error, e);
-					throw new RuntimeException(error, e);
-				}
-				try {
-					retry.continueOrPropogate(e, retryIndex);
-				} catch (Exception ex) {
-					final String error = "Timeout while connecting to " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(","));
-					LOGGER.error(error, e);
-					throw new RuntimeException(error, e);
-				}
-				retryIndex++;
-			}
-		}
-	}
+    public Channel getOrCreateChannel(ConnectionType connectionType, String queueOrExchangeName)
+            throws Exception {
+        LOGGER.debug(
+                "Accessing the channel for queueOrExchange {} with type {} ",
+                queueOrExchangeName,
+                connectionType);
+        switch (connectionType) {
+            case SUBSCRIBER:
+                String subChnName = connectionType + ";" + queueOrExchangeName;
+                if (SUB_CHANNEL_MAP.containsKey(subChnName)) {
+                    Channel locChn = SUB_CHANNEL_MAP.get(subChnName);
+                    if (locChn != null && locChn.isOpen()) {
+                        return locChn;
+                    }
+                }
+                synchronized (this) {
+                    if (subscriberConnection == null || !subscriberConnection.isOpen()) {
+                        subscriberConnection = createConnection(SUBSCRIBER);
+                    }
+                }
+                Channel subChn = borrowChannel(connectionType, subscriberConnection);
+                SUB_CHANNEL_MAP.put(subChnName, subChn);
+                return subChn;
+            case PUBLISHER:
+                synchronized (this) {
+                    if (publisherConnection == null || !publisherConnection.isOpen()) {
+                        publisherConnection = createConnection(PUBLISHER);
+                    }
+                }
+                return borrowChannel(connectionType, publisherConnection);
+            default:
+                return null;
+        }
+    }
 
-	public Channel getOrCreateChannel(ConnectionType connectionType, String queueOrExchangeName) throws Exception {
-		LOGGER.debug("Accessing the channel for queueOrExchange {} with type {} ", queueOrExchangeName, connectionType);
-		switch (connectionType) {
-		case SUBSCRIBER:
-			String subChnName = connectionType + ";" + queueOrExchangeName;
-			if (SUB_CHANNEL_MAP.containsKey(subChnName)) {
-				Channel locChn = SUB_CHANNEL_MAP.get(subChnName);
-				if (locChn != null && locChn.isOpen()) {
-					return locChn;
-				}
-			}
-			synchronized (this) {
-				if (subscriberConnection == null || !subscriberConnection.isOpen()) {
-					subscriberConnection = createConnection(SUBSCRIBER);
-				}
-			}
-			Channel subChn = borrowChannel(connectionType, subscriberConnection);
-			SUB_CHANNEL_MAP.put(subChnName, subChn);
-			return subChn;
-		case PUBLISHER:
-			synchronized (this) {
-				if (publisherConnection == null || !publisherConnection.isOpen()) {
-					publisherConnection = createConnection(PUBLISHER);
-				}
-			}
-			return borrowChannel(connectionType, publisherConnection);
-		default:
-			return null;
-		}
-	}
+    private Channel getOrCreateChannel(ConnectionType connType, Connection rmqConnection) {
+        // Channel creation is required
+        Channel locChn = null;
+        int retryIndex = 1;
+        while (true) {
+            try {
+                LOGGER.debug("Creating a channel for " + connType);
+                locChn = rmqConnection.createChannel();
+                if (locChn == null || !locChn.isOpen()) {
+                    throw new RuntimeException("Fail to open " + connType + " channel");
+                }
+                locChn.addShutdownListener(
+                        cause -> {
+                            LOGGER.error(
+                                    connType + " Channel has been shutdown: {}",
+                                    cause.getMessage(),
+                                    cause);
+                        });
+                return locChn;
+            } catch (final IOException e) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    throw new RuntimeException(
+                            "Cannot open "
+                                    + connType
+                                    + " channel on "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(",")),
+                            e);
+                }
+                try {
+                    retry.continueOrPropogate(e, retryIndex);
+                } catch (Exception ex) {
+                    throw new RuntimeException(
+                            "Cannot open "
+                                    + connType
+                                    + " channel on "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(",")),
+                            e);
+                }
+                retryIndex++;
+            } catch (final Exception e) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    throw new RuntimeException(
+                            "Cannot open "
+                                    + connType
+                                    + " channel on "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(",")),
+                            e);
+                }
+                try {
+                    retry.continueOrPropogate(e, retryIndex);
+                } catch (Exception ex) {
+                    throw new RuntimeException(
+                            "Cannot open "
+                                    + connType
+                                    + " channel on "
+                                    + Arrays.stream(addresses)
+                                            .map(address -> address.toString())
+                                            .collect(Collectors.joining(",")),
+                            e);
+                }
+                retryIndex++;
+            }
+        }
+    }
 
-	private Channel getOrCreateChannel(ConnectionType connType, Connection rmqConnection) {
-		// Channel creation is required
-		Channel locChn = null;
-		int retryIndex = 1;
-		while (true) {
-			try {
-				LOGGER.debug("Creating a channel for " + connType);
-				locChn = rmqConnection.createChannel();
-				if (locChn == null || !locChn.isOpen()) {
-					throw new RuntimeException("Fail to open " + connType + " channel");
-				}
-				locChn.addShutdownListener(cause -> {
-					LOGGER.error(connType + " Channel has been shutdown: {}", cause.getMessage(), cause);
-				});
-				return locChn;
-			} catch (final IOException e) {
-				AMQPRetryPattern retry = retrySettings;
-				if (retry == null) {
-					throw new RuntimeException("Cannot open " + connType + " channel on " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(",")), e);
-				}
-				try {
-					retry.continueOrPropogate(e, retryIndex);
-				} catch (Exception ex) {
-					throw new RuntimeException("Cannot open " + connType + " channel on " + Arrays.stream(addresses)
-					.map(address -> address.toString()).collect(Collectors.joining(",")), e);
-				}
-				retryIndex++;
-			} catch (final Exception e) {
-				AMQPRetryPattern retry = retrySettings;
-				if (retry == null) {
-					throw new RuntimeException("Cannot open " + connType + " channel on " + Arrays.stream(addresses)
-							.map(address -> address.toString()).collect(Collectors.joining(",")), e);
-				}
-				try {
-					retry.continueOrPropogate(e, retryIndex);
-				} catch (Exception ex) {
-					throw new RuntimeException("Cannot open " + connType + " channel on " + Arrays.stream(addresses)
-					.map(address -> address.toString()).collect(Collectors.joining(",")), e);
-				}
-				retryIndex++;
-			}
-		}
-	}
+    public void close() {
+        LOGGER.info("Closing all connections and channels");
+        try {
+            closeChannelInMap(ConnectionType.PUBLISHER);
+            closeChannelInMap(ConnectionType.SUBSCRIBER);
+            closeConnection(publisherConnection);
+            closeConnection(subscriberConnection);
+        } finally {
+            RMQ_CHANNEL_MAP.clear();
+            publisherConnection = null;
+            subscriberConnection = null;
+        }
+    }
 
-	public void close() {
-		LOGGER.info("Closing all connections and channels");
-		try {
-			closeChannelInMap(ConnectionType.PUBLISHER);
-			closeChannelInMap(ConnectionType.SUBSCRIBER);
-			closeConnection(publisherConnection);
-			closeConnection(subscriberConnection);
-		} finally {
-			RMQ_CHANNEL_MAP.clear();
-			publisherConnection = null;
-			subscriberConnection = null;
-		}
-	}
+    private void closeChannelInMap(ConnectionType conType) {
+        Set<Channel> channels = RMQ_CHANNEL_MAP.get(conType);
+        if (channels != null && !channels.isEmpty()) {
+            Iterator<Channel> itr = channels.iterator();
+            while (itr.hasNext()) {
+                Channel channel = itr.next();
+                closeChannel(channel);
+            }
+            channels.clear();
+        }
+    }
 
-	private void closeChannelInMap(ConnectionType conType) {
-		Set<Channel> channels = RMQ_CHANNEL_MAP.get(conType);
-		if (channels != null && !channels.isEmpty()) {
-			Iterator<Channel> itr = channels.iterator();
-			while (itr.hasNext()) {
-				Channel channel = itr.next();
-				closeChannel(channel);
-			}
-			channels.clear();
+    private void closeConnection(Connection connection) {
+        if (connection == null) {
+            LOGGER.warn("Connection is null. Do not close it");
+        } else {
+            try {
+                connection.close();
+            } catch (Exception e) {
+                LOGGER.warn("Fail to close connection: {}", e.getMessage(), e);
+            }
+        }
+    }
 
-		}
+    private void closeChannel(Channel channel) {
+        if (channel == null) {
+            LOGGER.warn("Channel is null. Do not close it");
+        } else {
+            try {
+                channel.close();
+            } catch (Exception e) {
+                LOGGER.warn("Fail to close channel: {}", e.getMessage(), e);
+            }
+        }
+    }
 
-	}
+    /**
+     * Gets the channel for specified connectionType.
+     *
+     * @param connectionType
+     * @param rmqConnection
+     * @return channel instance
+     * @throws Exception
+     */
+    private synchronized Channel borrowChannel(
+            ConnectionType connectionType, Connection rmqConnection) throws Exception {
+        if (!RMQ_CHANNEL_MAP.containsKey(connectionType)) {
+            Channel channel = getOrCreateChannel(connectionType, rmqConnection);
+            LOGGER.info(
+                    String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
+            return channel;
+        }
+        Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
+        if (channels != null && channels.isEmpty()) {
+            Channel channel = getOrCreateChannel(connectionType, rmqConnection);
+            LOGGER.info(
+                    String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
+            return channel;
+        }
+        Iterator<Channel> itr = channels.iterator();
+        while (itr.hasNext()) {
+            Channel channel = itr.next();
+            if (channel != null && channel.isOpen()) {
+                itr.remove();
+                LOGGER.info(
+                        String.format(
+                                MessageConstants.INFO_CHANNEL_BORROW_SUCCESS, connectionType));
+                return channel;
+            } else {
+                itr.remove();
+            }
+        }
+        Channel channel = getOrCreateChannel(connectionType, rmqConnection);
+        LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RESET_SUCCESS, connectionType));
+        return channel;
+    }
 
-	private void closeConnection(Connection connection) {
-		if (connection == null) {
-			LOGGER.warn("Connection is null. Do not close it");
-		} else {
-			try {
-				connection.close();
-			} catch (Exception e) {
-				LOGGER.warn("Fail to close connection: {}", e.getMessage(), e);
-			}
-		}
-	}
-
-	private void closeChannel(Channel channel) {
-		if (channel == null) {
-			LOGGER.warn("Channel is null. Do not close it");
-		} else {
-			try {
-				channel.close();
-			} catch (Exception e) {
-				LOGGER.warn("Fail to close channel: {}", e.getMessage(), e);
-			}
-		}
-	}
-
-	/**
-	 * Gets the channel for specified connectionType.
-	 * 
-	 * @param connectionType
-	 * @param rmqConnection
-	 * @return channel instance
-	 * @throws Exception
-	 */
-	private synchronized Channel borrowChannel(ConnectionType connectionType, Connection rmqConnection)
-			throws Exception {
-		if (!RMQ_CHANNEL_MAP.containsKey(connectionType)) {
-			Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-			LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
-			return channel;
-		}
-		Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
-		if (channels != null && channels.isEmpty()) {
-			Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-			LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
-			return channel;
-		}
-		Iterator<Channel> itr = channels.iterator();
-		while (itr.hasNext()) {
-			Channel channel = itr.next();
-			if (channel != null && channel.isOpen()) {
-				itr.remove();
-				LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_BORROW_SUCCESS, connectionType));
-				return channel;
-			} else {
-				itr.remove();
-			}
-		}
-		Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-		LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RESET_SUCCESS, connectionType));
-		return channel;
-	}
-
-	/**
-	 * Returns the channel to connection pool for specified connectionType.
-	 * 
-	 * @param connectionType
-	 * @param channel
-	 * @throws Exception
-	 */
-	public synchronized void returnChannel(ConnectionType connectionType, Channel channel) throws Exception {
-		if (channel == null || !channel.isOpen()) {
-			channel = null; // channel is reset.
-		}
-		Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
-		if (channels == null) {
-			channels = new HashSet<Channel>();
-			RMQ_CHANNEL_MAP.put(connectionType, channels);
-		}
-		channels.add(channel);
-		LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RETURN_SUCCESS, connectionType));
-	}
-
+    /**
+     * Returns the channel to connection pool for specified connectionType.
+     *
+     * @param connectionType
+     * @param channel
+     * @throws Exception
+     */
+    public synchronized void returnChannel(ConnectionType connectionType, Channel channel)
+            throws Exception {
+        if (channel == null || !channel.isOpen()) {
+            channel = null; // channel is reset.
+        }
+        Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
+        if (channels == null) {
+            channels = new HashSet<Channel>();
+            RMQ_CHANNEL_MAP.put(connectionType, channels);
+        }
+        channels.add(channel);
+        LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RETURN_SUCCESS, connectionType));
+    }
 }
