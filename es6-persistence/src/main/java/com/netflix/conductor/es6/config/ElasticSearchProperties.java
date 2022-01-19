@@ -13,16 +13,12 @@
 package com.netflix.conductor.es6.config;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.convert.DurationUnit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
@@ -208,30 +204,5 @@ public class ElasticSearchProperties {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(url + "can not be converted to java.net.URL");
         }
-    }
-
-    public List<URI> getURIs() {
-
-        String clusterAddress = getURL();
-
-        String[] hosts = clusterAddress.split(",");
-
-        return Arrays.stream(hosts).map(host ->
-                (host.startsWith("http://") || host.startsWith("https://") || host.startsWith("tcp://")) ? URI.create(host) : URI.create("tcp://" + host)
-        ).collect(Collectors.toList());
-    }
-
-    private String getProperty(String key, String defaultValue) {
-        String val;
-        val = System.getenv(key.replace('.', '_'));
-        if (val == null || val.isEmpty()) {
-            val = Optional.ofNullable(System.getProperty(key))
-                    .orElse(defaultValue);
-        }
-        return val;
-    }
-
-    private String getURL() {
-        return getProperty("conductor.elasticsearch.url", url);
     }
 }
