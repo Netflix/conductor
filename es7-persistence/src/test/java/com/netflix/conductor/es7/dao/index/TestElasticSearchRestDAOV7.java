@@ -88,7 +88,8 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldIndexWorkflow() {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.indexWorkflow(workflowSummary);
 
         assertWorkflowSummary(workflowSummary.getWorkflowId(), workflowSummary);
@@ -96,7 +97,8 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldIndexWorkflowAsync() throws Exception {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.asyncIndexWorkflow(workflowSummary).get();
 
         assertWorkflowSummary(workflowSummary.getWorkflowId(), workflowSummary);
@@ -104,11 +106,13 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldRemoveWorkflow() {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.indexWorkflow(workflowSummary);
 
         // wait for workflow to be indexed
-        List<String> workflows = tryFindResults(() -> searchWorkflows(workflowSummary.getWorkflowId()), 1);
+        List<String> workflows =
+                tryFindResults(() -> searchWorkflows(workflowSummary.getWorkflowId()), 1);
         assertEquals(1, workflows.size());
 
         indexDAO.removeWorkflow(workflowSummary.getWorkflowId());
@@ -120,11 +124,13 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldAsyncRemoveWorkflow() throws Exception {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.indexWorkflow(workflowSummary);
 
         // wait for workflow to be indexed
-        List<String> workflows = tryFindResults(() -> searchWorkflows(workflowSummary.getWorkflowId()), 1);
+        List<String> workflows =
+                tryFindResults(() -> searchWorkflows(workflowSummary.getWorkflowId()), 1);
         assertEquals(1, workflows.size());
 
         indexDAO.asyncRemoveWorkflow(workflowSummary.getWorkflowId()).get();
@@ -136,7 +142,8 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldUpdateWorkflow() {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.indexWorkflow(workflowSummary);
 
         indexDAO.updateWorkflow(
@@ -150,7 +157,8 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
 
     @Test
     public void shouldAsyncUpdateWorkflow() throws Exception {
-        WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary workflowSummary =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         indexDAO.indexWorkflow(workflowSummary);
 
         indexDAO.asyncUpdateWorkflow(
@@ -286,15 +294,18 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
     // TODO: fix test
     @Test
     public void shouldSearchRecentRunningWorkflows() throws Exception {
-        WorkflowSummary oldWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary oldWorkflow =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         oldWorkflow.setStatus(WorkflowStatus.RUNNING);
         oldWorkflow.setUpdateTime(new DateTime().minusHours(2).toDate().getTime());
 
-        WorkflowSummary recentWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary recentWorkflow =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         recentWorkflow.setStatus(WorkflowStatus.RUNNING);
         recentWorkflow.setUpdateTime(new DateTime().minusHours(1).toDate().getTime());
 
-        WorkflowSummary tooRecentWorkflow = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+        WorkflowSummary tooRecentWorkflow =
+                TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         tooRecentWorkflow.setStatus(WorkflowStatus.RUNNING);
         tooRecentWorkflow.setUpdateTime(new DateTime().toDate().getTime());
 
@@ -314,7 +325,8 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
     public void shouldCountWorkflows() {
         int counts = 1100;
         for (int i = 0; i < counts; i++) {
-            WorkflowSummary workflowSummary = TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
+            WorkflowSummary workflowSummary =
+                    TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
             indexDAO.indexWorkflow(workflowSummary);
         }
 

@@ -15,13 +15,14 @@ package com.netflix.conductor.es6.dao.index;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.TaskSummary;
 import org.junit.Test;
 import org.springframework.test.context.TestPropertySource;
 
+import com.netflix.conductor.common.metadata.tasks.Task.Status;
 import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.TaskSummary;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;

@@ -12,12 +12,14 @@
  */
 package com.netflix.conductor.es7.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Resources;
+import org.apache.commons.io.Charsets;
+
 import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.utils.IDGenerator;
-import org.apache.commons.io.Charsets;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.Resources;
 
 public class TestUtils {
 

@@ -12,14 +12,16 @@
  */
 package com.netflix.conductor.es6.utils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.common.run.TaskSummary;
-import com.netflix.conductor.common.run.WorkflowSummary;
-import com.netflix.conductor.core.utils.IDGenerator;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.FileUtils;
 import org.springframework.util.ResourceUtils;
 
-import java.nio.charset.StandardCharsets;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.WorkflowSummary;
+import com.netflix.conductor.core.utils.IDGenerator;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestUtils {
 

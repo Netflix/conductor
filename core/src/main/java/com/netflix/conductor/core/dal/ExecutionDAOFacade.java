@@ -32,7 +32,9 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
@@ -280,9 +282,10 @@ public class ExecutionDAOFacade {
                 leanWorkflow.getPriority(),
                 properties.getWorkflowOffsetTimeout().getSeconds());
         if (properties.isAsyncIndexingEnabled()) {
-            indexDAO.asyncIndexWorkflow(leanWorkflow);
+            indexDAO.asyncIndexWorkflow(
+                    new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
         } else {
-            indexDAO.indexWorkflow(leanWorkflow);
+            indexDAO.indexWorkflow(new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
         }
         return leanWorkflow.getWorkflowId();
     }
@@ -317,13 +320,19 @@ public class ExecutionDAOFacade {
                 Monitors.recordWorkerQueueSize(
                         "delayQueue", scheduledThreadPoolExecutor.getQueue().size());
             } else {
-                indexDAO.asyncIndexWorkflow(leanWorkflow);
+                indexDAO.asyncIndexWorkflow(
+                        new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
             }
             if (workflow.getStatus().isTerminal()) {
-                workflow.getTasks().forEach(indexDAO::asyncIndexTask);
+                workflow.getTasks()
+                        .forEach(
+                                taskDO -> {
+                                    indexDAO.asyncIndexTask(
+                                            new TaskSummary(domainMapper.getTaskDTO(taskDO)));
+                                });
             }
         } else {
-            indexDAO.indexWorkflow(leanWorkflow);
+            indexDAO.indexWorkflow(new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
         }
         return workflow.getWorkflowId();
     }
@@ -508,7 +517,7 @@ public class ExecutionDAOFacade {
              * If it *is* enabled, tasks will be indexed only when a workflow is in terminal state.
              */
             if (!properties.isAsyncIndexingEnabled()) {
-                indexDAO.indexTask(leanTask);
+                indexDAO.indexTask(new TaskSummary(domainMapper.getTaskDTO(leanTask)));
             }
         } catch (Exception e) {
             String errorMsg =
@@ -650,7 +659,8 @@ public class ExecutionDAOFacade {
         public void run() {
             try {
                 WorkflowDO workflow = executionDAO.getWorkflow(workflowId, false);
-                indexDAO.asyncIndexWorkflow(workflow);
+                indexDAO.asyncIndexWorkflow(
+                        new WorkflowSummary(domainMapper.getWorkflowDTO(workflow)));
             } catch (Exception e) {
                 LOGGER.error("Unable to update workflow: {}", workflowId, e);
             }
