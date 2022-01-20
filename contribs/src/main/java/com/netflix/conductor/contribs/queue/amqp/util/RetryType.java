@@ -12,10 +12,7 @@
  */
 package com.netflix.conductor.contribs.queue.amqp.util;
 
-/**
- * RetryType holds the retry type constants to wait for either same period to retry or for
- * exponential time increase
- */
+/** RetryType holds the retry type */
 public enum RetryType {
     REGULARINTERVALS,
     EXPONENTIALBACKOFF,

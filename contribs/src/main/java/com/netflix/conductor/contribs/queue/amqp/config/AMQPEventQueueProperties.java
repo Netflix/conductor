@@ -45,7 +45,7 @@ public class AMQPEventQueueProperties {
     private int maxChannelCount = 5000;
     private int limit = 50;
     private int duration = 1000;
-    private RetryType type = RetryType.REGULARINTERVALS;
+    private RetryType retryType = RetryType.REGULARINTERVALS;
 
     public int getLimit() {
         return limit;
@@ -64,11 +64,11 @@ public class AMQPEventQueueProperties {
     }
 
     public RetryType getType() {
-        return type;
+        return retryType;
     }
 
     public void setType(RetryType type) {
-        this.type = type;
+        this.retryType = type;
     }
 
     public int getConnectionTimeoutInMilliSecs() {

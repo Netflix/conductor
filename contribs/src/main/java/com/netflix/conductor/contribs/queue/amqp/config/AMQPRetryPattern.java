@@ -20,6 +20,8 @@ public class AMQPRetryPattern {
     private int duration = 1000;
     private RetryType type = RetryType.REGULARINTERVALS;
 
+    public AMQPRetryPattern() {}
+
     public AMQPRetryPattern(int limit, int duration, RetryType type) {
         this.limit = limit;
         this.duration = duration;
@@ -27,8 +29,8 @@ public class AMQPRetryPattern {
     }
 
     /**
-     * Based on the retry configuration, this gets executed if the retry index is within the allowed
-     * limits
+     * This gets executed if the retry index is within the allowed limits, otherwise exception will
+     * be thrown.
      *
      * @throws Exception
      */

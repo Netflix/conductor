@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.contribs.queue.amqp.config.AMQPRetryPattern;
+import com.netflix.conductor.contribs.queue.amqp.util.AMQPConstants;
 import com.netflix.conductor.contribs.queue.amqp.util.ConnectionType;
 
 import com.rabbitmq.client.Address;
@@ -46,9 +47,9 @@ public class AMQPConnection {
     private static AMQPConnection amqpConnection = null;
     private static final String PUBLISHER = "Publisher";
     private static final String SUBSCRIBER = "Subscriber";
-    private static final Map<ConnectionType, Set<Channel>> RMQ_CHANNEL_MAP =
+    private static final Map<ConnectionType, Set<Channel>> availableChannelPool =
             new ConcurrentHashMap<ConnectionType, Set<Channel>>();
-    private static final Map<String, Channel> SUB_CHANNEL_MAP =
+    private static final Map<String, Channel> subscriberReservedChannelPool =
             new ConcurrentHashMap<String, Channel>();
     private static AMQPRetryPattern retrySettings = null;
 
@@ -133,7 +134,7 @@ public class AMQPConnection {
                     retry.continueOrPropogate(e, retryIndex);
                 } catch (Exception ex) {
                     final String error =
-                            "IO error while connecting to "
+                            "Retries completed. IO error while connecting to "
                                     + Arrays.stream(addresses)
                                             .map(address -> address.toString())
                                             .collect(Collectors.joining(","));
@@ -156,7 +157,7 @@ public class AMQPConnection {
                     retry.continueOrPropogate(e, retryIndex);
                 } catch (Exception ex) {
                     final String error =
-                            "Timeout while connecting to "
+                            "Retries completed. Timeout while connecting to "
                                     + Arrays.stream(addresses)
                                             .map(address -> address.toString())
                                             .collect(Collectors.joining(","));
@@ -177,8 +178,8 @@ public class AMQPConnection {
         switch (connectionType) {
             case SUBSCRIBER:
                 String subChnName = connectionType + ";" + queueOrExchangeName;
-                if (SUB_CHANNEL_MAP.containsKey(subChnName)) {
-                    Channel locChn = SUB_CHANNEL_MAP.get(subChnName);
+                if (subscriberReservedChannelPool.containsKey(subChnName)) {
+                    Channel locChn = subscriberReservedChannelPool.get(subChnName);
                     if (locChn != null && locChn.isOpen()) {
                         return locChn;
                     }
@@ -189,7 +190,9 @@ public class AMQPConnection {
                     }
                 }
                 Channel subChn = borrowChannel(connectionType, subscriberConnection);
-                SUB_CHANNEL_MAP.put(subChnName, subChn);
+                // Add the subscribed channels to Map to avoid messages being acknowledged on
+                // different from the subscribed one
+                subscriberReservedChannelPool.put(subChnName, subChn);
                 return subChn;
             case PUBLISHER:
                 synchronized (this) {
@@ -238,7 +241,7 @@ public class AMQPConnection {
                     retry.continueOrPropogate(e, retryIndex);
                 } catch (Exception ex) {
                     throw new RuntimeException(
-                            "Cannot open "
+                            "Retries completed. Cannot open "
                                     + connType
                                     + " channel on "
                                     + Arrays.stream(addresses)
@@ -263,7 +266,7 @@ public class AMQPConnection {
                     retry.continueOrPropogate(e, retryIndex);
                 } catch (Exception ex) {
                     throw new RuntimeException(
-                            "Cannot open "
+                            "Retries completed. Cannot open "
                                     + connType
                                     + " channel on "
                                     + Arrays.stream(addresses)
@@ -279,19 +282,19 @@ public class AMQPConnection {
     public void close() {
         LOGGER.info("Closing all connections and channels");
         try {
-            closeChannelInMap(ConnectionType.PUBLISHER);
-            closeChannelInMap(ConnectionType.SUBSCRIBER);
+            closeChannelsInMap(ConnectionType.PUBLISHER);
+            closeChannelsInMap(ConnectionType.SUBSCRIBER);
             closeConnection(publisherConnection);
             closeConnection(subscriberConnection);
         } finally {
-            RMQ_CHANNEL_MAP.clear();
+            availableChannelPool.clear();
             publisherConnection = null;
             subscriberConnection = null;
         }
     }
 
-    private void closeChannelInMap(ConnectionType conType) {
-        Set<Channel> channels = RMQ_CHANNEL_MAP.get(conType);
+    private void closeChannelsInMap(ConnectionType conType) {
+        Set<Channel> channels = availableChannelPool.get(conType);
         if (channels != null && !channels.isEmpty()) {
             Iterator<Channel> itr = channels.iterator();
             while (itr.hasNext()) {
@@ -303,8 +306,8 @@ public class AMQPConnection {
     }
 
     private void closeConnection(Connection connection) {
-        if (connection == null) {
-            LOGGER.warn("Connection is null. Do not close it");
+        if (connection == null || !connection.isOpen()) {
+            LOGGER.warn("Connection is null or closed already. Not closing it again");
         } else {
             try {
                 connection.close();
@@ -315,8 +318,8 @@ public class AMQPConnection {
     }
 
     private void closeChannel(Channel channel) {
-        if (channel == null) {
-            LOGGER.warn("Channel is null. Do not close it");
+        if (channel == null || !channel.isOpen()) {
+            LOGGER.warn("Channel is null or closed already. Not closing it again");
         } else {
             try {
                 channel.close();
@@ -329,24 +332,23 @@ public class AMQPConnection {
     /**
      * Gets the channel for specified connectionType.
      *
-     * @param connectionType
-     * @param rmqConnection
+     * @param connectionType holds the multiple channels for different connection types for thread
+     *     safe operation.
+     * @param rmqConnection publisher or subscriber connection instance
      * @return channel instance
      * @throws Exception
      */
     private synchronized Channel borrowChannel(
             ConnectionType connectionType, Connection rmqConnection) throws Exception {
-        if (!RMQ_CHANNEL_MAP.containsKey(connectionType)) {
+        if (!availableChannelPool.containsKey(connectionType)) {
             Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-            LOGGER.info(
-                    String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
+            LOGGER.info(String.format(AMQPConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
             return channel;
         }
-        Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
+        Set<Channel> channels = availableChannelPool.get(connectionType);
         if (channels != null && channels.isEmpty()) {
             Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-            LOGGER.info(
-                    String.format(MessageConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
+            LOGGER.info(String.format(AMQPConstants.INFO_CHANNEL_CREATION_SUCCESS, connectionType));
             return channel;
         }
         Iterator<Channel> itr = channels.iterator();
@@ -355,15 +357,14 @@ public class AMQPConnection {
             if (channel != null && channel.isOpen()) {
                 itr.remove();
                 LOGGER.info(
-                        String.format(
-                                MessageConstants.INFO_CHANNEL_BORROW_SUCCESS, connectionType));
+                        String.format(AMQPConstants.INFO_CHANNEL_BORROW_SUCCESS, connectionType));
                 return channel;
             } else {
                 itr.remove();
             }
         }
         Channel channel = getOrCreateChannel(connectionType, rmqConnection);
-        LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RESET_SUCCESS, connectionType));
+        LOGGER.info(String.format(AMQPConstants.INFO_CHANNEL_RESET_SUCCESS, connectionType));
         return channel;
     }
 
@@ -379,12 +380,12 @@ public class AMQPConnection {
         if (channel == null || !channel.isOpen()) {
             channel = null; // channel is reset.
         }
-        Set<Channel> channels = RMQ_CHANNEL_MAP.get(connectionType);
+        Set<Channel> channels = availableChannelPool.get(connectionType);
         if (channels == null) {
             channels = new HashSet<Channel>();
-            RMQ_CHANNEL_MAP.put(connectionType, channels);
+            availableChannelPool.put(connectionType, channels);
         }
         channels.add(channel);
-        LOGGER.info(String.format(MessageConstants.INFO_CHANNEL_RETURN_SUCCESS, connectionType));
+        LOGGER.info(String.format(AMQPConstants.INFO_CHANNEL_RETURN_SUCCESS, connectionType));
     }
 }

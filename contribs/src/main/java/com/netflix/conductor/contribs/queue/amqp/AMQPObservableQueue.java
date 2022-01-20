@@ -148,9 +148,9 @@ public class AMQPObservableQueue implements ObservableQueue {
         } else {
             onSubscribe =
                     subscriber -> {
-                        LOGGER.info("Subscribing for the message processing on-demand basis");
+                        LOGGER.info("Subscribing for the event based AMQP message processing");
                         receiveMessages(subscriber);
-                        LOGGER.info("Subscribed for the message processing on-demand basis");
+                        LOGGER.info("Subscribed for the event based AMQP message processing");
                     };
         }
         return Observable.create(onSubscribe);
@@ -187,16 +187,34 @@ public class AMQPObservableQueue implements ObservableQueue {
     public List<String> ack(List<Message> messages) {
         final List<String> processedDeliveryTags = new ArrayList<>();
         for (final Message message : messages) {
-            try {
-                LOGGER.info("ACK message with delivery tag {}", message.getReceipt());
-                amqpConnection
-                        .getOrCreateChannel(
-                                ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName())
-                        .basicAck(Long.parseLong(message.getReceipt()), false);
-                // Message ACKed
-                processedDeliveryTags.add(message.getReceipt());
-            } catch (final Exception e) {
-                LOGGER.error("Cannot ACK message with delivery tag {}", message.getReceipt(), e);
+            int retryIndex = 1;
+            while (true) {
+                try {
+                    LOGGER.info("ACK message with delivery tag {}", message.getReceipt());
+                    Channel chn =
+                            amqpConnection.getOrCreateChannel(
+                                    ConnectionType.SUBSCRIBER,
+                                    getSettings().getQueueOrExchangeName());
+                    chn.basicAck(Long.parseLong(message.getReceipt()), false);
+                    processedDeliveryTags.add(message.getReceipt());
+                    LOGGER.info("Ack'ed the message with delivery tag {}", message.getReceipt());
+                    break;
+                } catch (final Exception e) {
+                    AMQPRetryPattern retry = retrySettings;
+                    if (retry == null) {
+                        LOGGER.error(
+                                "Cannot ACK message with delivery tag {}", message.getReceipt(), e);
+                    }
+                    try {
+                        retry.continueOrPropogate(e, retryIndex);
+                    } catch (Exception ex) {
+                        LOGGER.error(
+                                "Retries completed. Cannot ACK message with delivery tag {}",
+                                message.getReceipt(),
+                                e);
+                    }
+                    retryIndex++;
+                }
             }
         }
         return processedDeliveryTags;
@@ -221,27 +239,51 @@ public class AMQPObservableQueue implements ObservableQueue {
 
     private void publishMessage(Message message, String exchange, String routingKey) {
         Channel chn = null;
-        try {
-            final String payload = message.getPayload();
-            chn =
-                    amqpConnection.getOrCreateChannel(
-                            ConnectionType.PUBLISHER, getSettings().getQueueOrExchangeName());
-            chn.basicPublish(
-                    exchange,
-                    routingKey,
-                    buildBasicProperties(message, settings),
-                    payload.getBytes(settings.getContentEncoding()));
-            LOGGER.info(String.format("Published message to %s: %s", exchange, payload));
-        } catch (Exception ex) {
-            LOGGER.error("Failed to publish message {} to {}", message.getPayload(), exchange, ex);
-            throw new RuntimeException(ex);
-        } finally {
-            if (chn != null) {
+        int retryIndex = 1;
+        while (true) {
+            try {
+                final String payload = message.getPayload();
+                chn =
+                        amqpConnection.getOrCreateChannel(
+                                ConnectionType.PUBLISHER, getSettings().getQueueOrExchangeName());
+                chn.basicPublish(
+                        exchange,
+                        routingKey,
+                        buildBasicProperties(message, settings),
+                        payload.getBytes(settings.getContentEncoding()));
+                LOGGER.info(String.format("Published message to %s: %s", exchange, payload));
+                break;
+            } catch (Exception ex) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    LOGGER.error(
+                            "Failed to publish message {} to {}",
+                            message.getPayload(),
+                            exchange,
+                            ex);
+                    throw new RuntimeException(ex);
+                }
                 try {
-                    amqpConnection.returnChannel(ConnectionType.PUBLISHER, chn);
+                    retry.continueOrPropogate(ex, retryIndex);
                 } catch (Exception e) {
                     LOGGER.error(
-                            "Failed to return the channel of {}. {}", ConnectionType.PUBLISHER, e);
+                            "Retries completed. Failed to publish message {} to {}",
+                            message.getPayload(),
+                            exchange,
+                            ex);
+                    throw new RuntimeException(ex);
+                }
+                retryIndex++;
+            } finally {
+                if (chn != null) {
+                    try {
+                        amqpConnection.returnChannel(ConnectionType.PUBLISHER, chn);
+                    } catch (Exception e) {
+                        LOGGER.error(
+                                "Failed to return the channel of {}. {}",
+                                ConnectionType.PUBLISHER,
+                                e);
+                    }
                 }
             }
         }
@@ -559,15 +601,23 @@ public class AMQPObservableQueue implements ObservableQueue {
                                 LOGGER.info("receiveMessagesFromQueue- End method {}", messages);
                             }
                         } catch (InterruptedException e) {
+                            LOGGER.error(
+                                    "Issue in handling the mesages for the subscriber with consumer tag {}. {}",
+                                    consumerTag,
+                                    e);
                             Thread.currentThread().interrupt();
                         } catch (Exception e) {
-                            //
+                            LOGGER.error(
+                                    "Issue in handling the mesages for the subscriber with consumer tag {}. {}",
+                                    consumerTag,
+                                    e);
                         }
                     }
 
                     public void handleCancel(String consumerTag) throws IOException {
                         LOGGER.error(
-                                "Recieved a consumer cancel notification for subscriber. Will monitor and make changes");
+                                "Recieved a consumer cancel notification for subscriber {}",
+                                consumerTag);
                     }
                 };
 
@@ -604,13 +654,14 @@ public class AMQPObservableQueue implements ObservableQueue {
                             if (message == null) {
                                 return;
                             }
-                            if (LOGGER.isDebugEnabled()) {
-                                LOGGER.debug("receiveMessagesFromQueue- End method {}", message);
-                            }
                             LOGGER.info(
                                     "Got message with ID {} and receipt {}",
                                     message.getId(),
                                     message.getReceipt());
+                            LOGGER.debug("Message content {}", message);
+                            // Not using thread-pool here as the number of concurrent threads are
+                            // controlled
+                            // by the number of messages delivery using pre-fetch count in RabbitMQ
                             Thread newThread =
                                     new Thread(
                                             () -> {
@@ -621,18 +672,25 @@ public class AMQPObservableQueue implements ObservableQueue {
                                             });
                             newThread.start();
                         } catch (InterruptedException e) {
+                            LOGGER.error(
+                                    "Issue in handling the mesages for the subscriber with consumer tag {}. {}",
+                                    consumerTag,
+                                    e);
                             Thread.currentThread().interrupt();
                         } catch (Exception e) {
-                            //
+                            LOGGER.error(
+                                    "Issue in handling the mesages for the subscriber with consumer tag {}. {}",
+                                    consumerTag,
+                                    e);
                         }
                     }
 
                     public void handleCancel(String consumerTag) throws IOException {
                         LOGGER.error(
-                                "Recieved a consumer cancel notification for subscriber. Will monitor and make changes");
+                                "Recieved a consumer cancel notification for subscriber {}",
+                                consumerTag);
                     }
                 };
-
         amqpConnection
                 .getOrCreateChannel(
                         ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName())
