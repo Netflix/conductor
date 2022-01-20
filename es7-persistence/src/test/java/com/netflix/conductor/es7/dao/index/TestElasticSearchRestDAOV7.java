@@ -12,14 +12,7 @@
  */
 package com.netflix.conductor.es7.dao.index;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Supplier;
-
-import org.joda.time.DateTime;
-import org.junit.Test;
-
+import com.google.common.collect.ImmutableMap;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -28,8 +21,13 @@ import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.es7.utils.TestUtils;
+import org.joda.time.DateTime;
+import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -291,23 +289,22 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
         assertEquals(json, content);
     }
 
-    // TODO: fix test
     @Test
     public void shouldSearchRecentRunningWorkflows() throws Exception {
         WorkflowSummary oldWorkflow =
                 TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         oldWorkflow.setStatus(WorkflowStatus.RUNNING);
-        oldWorkflow.setUpdateTime(new DateTime().minusHours(2).toDate().getTime());
+        oldWorkflow.setUpdateTime(getFormattedTime(new DateTime().minusHours(2).toDate()));
 
         WorkflowSummary recentWorkflow =
                 TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         recentWorkflow.setStatus(WorkflowStatus.RUNNING);
-        recentWorkflow.setUpdateTime(new DateTime().minusHours(1).toDate().getTime());
+        recentWorkflow.setUpdateTime(getFormattedTime(new DateTime().minusHours(1).toDate()));
 
         WorkflowSummary tooRecentWorkflow =
                 TestUtils.loadWorkflowSnapshot(objectMapper, "workflow_summary");
         tooRecentWorkflow.setStatus(WorkflowStatus.RUNNING);
-        tooRecentWorkflow.setUpdateTime(new DateTime().toDate().getTime());
+        tooRecentWorkflow.setUpdateTime(getFormattedTime(new DateTime().toDate()));
 
         indexDAO.indexWorkflow(oldWorkflow);
         indexDAO.indexWorkflow(recentWorkflow);
@@ -378,6 +375,12 @@ public class TestElasticSearchRestDAOV7 extends ElasticSearchRestDaoBaseTest {
         assertEquals(
                 summary.getFailedReferenceTaskNames(),
                 indexDAO.get(workflowId, "failedReferenceTaskNames"));
+    }
+
+    private String getFormattedTime(Date time) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+        return sdf.format(time);
     }
 
     private <T> List<T> tryFindResults(Supplier<List<T>> searchFunction) {

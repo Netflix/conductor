@@ -13,25 +13,5 @@
   "workflowPriority": 1,
   "queueWaitTime": 0,
   "executionTime": 0,
-
-
-
-  "inputData": {
-    "http_request": {
-      "method": "GET",
-      "vipStack": "test_stack",
-      "body": {
-        "requestDetails": {
-          "key1": "value1",
-          "key2": 42
-        },
-        "outputPath": "s3://bucket/outputPath",
-        "inputPaths": [
-          "file://path1",
-          "file://path2"
-        ]
-      },
-      "uri": "/get/something"
-    }
-  }
+  "input": "{http_request={method=GET, vipStack=test_stack, body={requestDetails={key1=value1, key2=42}, outputPath=s3://bucket/outputPath, inputPaths=[file://path1, file://path2]}, uri=/get/something}}"
 }
