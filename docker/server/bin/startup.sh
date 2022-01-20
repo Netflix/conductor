@@ -48,7 +48,7 @@ do
 done
 
 if [[ "$DD_AGENT_HOST" != "" ]]; then
-    export JAVA_OPTS="-javaagent:/app/libs/dd-java-agent-0.46.0.jar $JAVA_OPTS"
+    export JAVA_OPTS="-javaagent:/app/libs/dd-java-agent-0.88.0.jar $JAVA_OPTS"
 fi
 
 # Run java in the foreground and stream messages directly to stdout
