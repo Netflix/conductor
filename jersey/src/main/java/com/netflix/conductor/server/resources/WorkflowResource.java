@@ -903,7 +903,7 @@ public class WorkflowResource {
 		}
 	}
 
-
+	@POST
 	@Path("/getTaskDetails")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.APPLICATION_JSON)
