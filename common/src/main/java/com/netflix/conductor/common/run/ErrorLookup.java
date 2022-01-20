@@ -12,6 +12,7 @@ public class ErrorLookup {
     private String generalMessage;
     private String rootCause;
     private String resolution;
+    private Boolean isRequiredInReporting;
 
     public int getId() {
         return id;
@@ -68,5 +69,14 @@ public class ErrorLookup {
     public void setResolution(String resolution) {
         this.resolution = resolution;
     }
+
+    public Boolean getIsRequiredInReporting() {
+        return isRequiredInReporting;
+    }
+
+    public void setIsRequiredInReporting(Boolean isRequiredInReporting) {
+        this.isRequiredInReporting = isRequiredInReporting;
+    }
+
 
 }

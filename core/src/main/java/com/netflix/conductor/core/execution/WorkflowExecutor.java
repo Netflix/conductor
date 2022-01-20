@@ -1038,11 +1038,13 @@ public class WorkflowExecutor {
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
 		int errorId = 0;
+		Boolean isRequiredInReporting = false;
 		try {
 			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflow.getWorkflowType(), reason).stream().findFirst();
 			if (errorLookupOpt.isPresent()) {
 				ErrorLookup errorLookup = errorLookupOpt.get();
 				errorId = errorLookup.getId();
+				isRequiredInReporting = errorLookup.getIsRequiredInReporting();
 			}
 		} catch (Exception ex) {
 
@@ -1073,19 +1075,21 @@ public class WorkflowExecutor {
 			e.printStackTrace();
 		}
 
-		WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
-		workflowErrorRegistry.setStatus(workflow.getStatus().name());
-		workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
-		workflowErrorRegistry.setWorkflowType(workflow.getWorkflowType());
-		workflowErrorRegistry.setCompleteError(reason);
-		workflowErrorRegistry.setErrorLookUpId(errorId);
-		workflowErrorRegistry.setStartTime(workflow.getStartTime());
-		workflowErrorRegistry.setEndTime(workflow.getEndTime());
-		workflowErrorRegistry.setParentWorkflowId(workflow.getParentWorkflowId());
-		workflowErrorRegistry.setJobId(jobId);
-		workflowErrorRegistry.setRankingId(rankingId);
-		workflowErrorRegistry.setOrderId(orderId);
-		edao.addErrorRegistry(workflowErrorRegistry);
+		if (((isRequiredInReporting && errorId != 0) || errorId == 0) && !workflow.isSubWorkflow()) {
+			WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
+			workflowErrorRegistry.setStatus(workflow.getStatus().name());
+			workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());
+			workflowErrorRegistry.setWorkflowType(workflow.getWorkflowType());
+			workflowErrorRegistry.setCompleteError(reason);
+			workflowErrorRegistry.setErrorLookUpId(errorId);
+			workflowErrorRegistry.setStartTime(workflow.getStartTime());
+			workflowErrorRegistry.setEndTime(workflow.getEndTime());
+			workflowErrorRegistry.setParentWorkflowId(workflow.getParentWorkflowId());
+			workflowErrorRegistry.setJobId(jobId);
+			workflowErrorRegistry.setRankingId(rankingId);
+			workflowErrorRegistry.setOrderId(orderId);
+			edao.addErrorRegistry(workflowErrorRegistry);
+		}
 
 		// Send to data dog
 		MetricService.getInstance().workflowFailure(workflow.getWorkflowType(),
