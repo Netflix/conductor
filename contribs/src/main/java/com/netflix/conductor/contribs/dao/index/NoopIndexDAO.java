@@ -19,10 +19,10 @@ import java.util.concurrent.CompletableFuture;
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.run.SearchResult;
+import com.netflix.conductor.common.run.TaskSummary;
+import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 
 /**
  * Dummy implementation of {@link IndexDAO} which does nothing. Nothing is ever indexed, and no
@@ -34,18 +34,18 @@ public class NoopIndexDAO implements IndexDAO {
     public void setup() {}
 
     @Override
-    public void indexWorkflow(WorkflowDO workflow) {}
+    public void indexWorkflow(WorkflowSummary workflowSummary) {}
 
     @Override
-    public CompletableFuture<Void> asyncIndexWorkflow(WorkflowDO workflow) {
+    public CompletableFuture<Void> asyncIndexWorkflow(WorkflowSummary workflowSummary) {
         return CompletableFuture.completedFuture(null);
     }
 
     @Override
-    public void indexTask(TaskDO task) {}
+    public void indexTask(TaskSummary taskSummary) {}
 
     @Override
-    public CompletableFuture<Void> asyncIndexTask(TaskDO task) {
+    public CompletableFuture<Void> asyncIndexTask(TaskSummary taskSummary) {
         return CompletableFuture.completedFuture(null);
     }
 

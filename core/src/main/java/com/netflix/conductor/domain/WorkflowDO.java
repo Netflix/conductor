@@ -12,30 +12,16 @@
  */
 package com.netflix.conductor.domain;
 
+import com.google.common.base.Preconditions;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-
-import com.google.common.base.Preconditions;
-
-import static com.netflix.conductor.domain.WorkflowStatusDO.RUNNING;
-
 public class WorkflowDO {
 
-    private String ownerApp;
-
-    private Long createdTime;
-
-    private Long updatedTime;
-
-    private String createdBy;
-
-    private String updatedBy;
-
-    private WorkflowStatusDO status = RUNNING;
+    private WorkflowStatusDO status = WorkflowStatusDO.RUNNING;
 
     private long endTime;
 
@@ -51,15 +37,11 @@ public class WorkflowDO {
 
     private Map<String, Object> output = new HashMap<>();
 
-    // ids 10,11 are reserved
-
     private String correlationId;
 
     private String reRunFromWorkflowId;
 
     private String reasonForIncompletion;
-
-    // id 15 is reserved
 
     private String event;
 
@@ -79,45 +61,15 @@ public class WorkflowDO {
 
     private long lastRetriedTime;
 
-    public String getOwnerApp() {
-        return ownerApp;
-    }
+    private String ownerApp;
 
-    public void setOwnerApp(String ownerApp) {
-        this.ownerApp = ownerApp;
-    }
+    private Long createdTime;
 
-    public Long getCreatedTime() {
-        return createdTime;
-    }
+    private Long updatedTime;
 
-    public void setCreatedTime(Long createdTime) {
-        this.createdTime = createdTime;
-    }
+    private String createdBy;
 
-    public Long getUpdatedTime() {
-        return updatedTime;
-    }
-
-    public void setUpdatedTime(Long updatedTime) {
-        this.updatedTime = updatedTime;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
+    private String updatedBy;
 
     public WorkflowStatusDO getStatus() {
         return status;
@@ -172,6 +124,9 @@ public class WorkflowDO {
     }
 
     public void setInput(Map<String, Object> input) {
+        if (input == null) {
+            input = new HashMap<>();
+        }
         this.input = input;
     }
 
@@ -180,6 +135,9 @@ public class WorkflowDO {
     }
 
     public void setOutput(Map<String, Object> output) {
+        if (output == null) {
+            output = new HashMap<>();
+        }
         this.output = output;
     }
 
@@ -260,6 +218,9 @@ public class WorkflowDO {
     }
 
     public void setPriority(int priority) {
+        if (priority < 0 || priority > 99) {
+            throw new IllegalArgumentException("priority MUST be between 0 and 99 (inclusive)");
+        }
         this.priority = priority;
     }
 
@@ -277,6 +238,46 @@ public class WorkflowDO {
 
     public void setLastRetriedTime(long lastRetriedTime) {
         this.lastRetriedTime = lastRetriedTime;
+    }
+
+    public String getOwnerApp() {
+        return ownerApp;
+    }
+
+    public void setOwnerApp(String ownerApp) {
+        this.ownerApp = ownerApp;
+    }
+
+    public Long getCreatedTime() {
+        return createdTime;
+    }
+
+    public void setCreatedTime(Long createdTime) {
+        this.createdTime = createdTime;
+    }
+
+    public Long getUpdatedTime() {
+        return updatedTime;
+    }
+
+    public void setUpdatedTime(Long updatedTime) {
+        this.updatedTime = updatedTime;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     /**
@@ -362,5 +363,78 @@ public class WorkflowDO {
         copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
         return copy;
+    }
+
+    @Override
+    public String toString() {
+        String name = workflowDefinition != null ? workflowDefinition.getName() : null;
+        Integer version = workflowDefinition != null ? workflowDefinition.getVersion() : null;
+        return String.format("%s.%s/%s.%s", name, version, workflowId, status);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WorkflowDO that = (WorkflowDO) o;
+        return getEndTime() == that.getEndTime()
+                && getPriority() == that.getPriority()
+                && getLastRetriedTime() == that.getLastRetriedTime()
+                && getStatus() == that.getStatus()
+                && Objects.equals(getWorkflowId(), that.getWorkflowId())
+                && Objects.equals(getParentWorkflowId(), that.getParentWorkflowId())
+                && Objects.equals(getParentWorkflowTaskId(), that.getParentWorkflowTaskId())
+                && Objects.equals(getTasks(), that.getTasks())
+                && Objects.equals(getInput(), that.getInput())
+                && Objects.equals(getOutput(), that.getOutput())
+                && Objects.equals(getCorrelationId(), that.getCorrelationId())
+                && Objects.equals(getReRunFromWorkflowId(), that.getReRunFromWorkflowId())
+                && Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion())
+                && Objects.equals(getEvent(), that.getEvent())
+                && Objects.equals(getTaskToDomain(), that.getTaskToDomain())
+                && Objects.equals(getFailedReferenceTaskNames(), that.getFailedReferenceTaskNames())
+                && Objects.equals(getWorkflowDefinition(), that.getWorkflowDefinition())
+                && Objects.equals(
+                        getExternalInputPayloadStoragePath(),
+                        that.getExternalInputPayloadStoragePath())
+                && Objects.equals(
+                        getExternalOutputPayloadStoragePath(),
+                        that.getExternalOutputPayloadStoragePath())
+                && Objects.equals(getVariables(), that.getVariables())
+                && Objects.equals(getOwnerApp(), that.getOwnerApp())
+                && Objects.equals(getCreatedTime(), that.getCreatedTime())
+                && Objects.equals(getUpdatedTime(), that.getUpdatedTime())
+                && Objects.equals(getCreatedBy(), that.getCreatedBy())
+                && Objects.equals(getUpdatedBy(), that.getUpdatedBy());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                getStatus(),
+                getEndTime(),
+                getWorkflowId(),
+                getParentWorkflowId(),
+                getParentWorkflowTaskId(),
+                getTasks(),
+                getInput(),
+                getOutput(),
+                getCorrelationId(),
+                getReRunFromWorkflowId(),
+                getReasonForIncompletion(),
+                getEvent(),
+                getTaskToDomain(),
+                getFailedReferenceTaskNames(),
+                getWorkflowDefinition(),
+                getExternalInputPayloadStoragePath(),
+                getExternalOutputPayloadStoragePath(),
+                getPriority(),
+                getVariables(),
+                getLastRetriedTime(),
+                getOwnerApp(),
+                getCreatedTime(),
+                getUpdatedTime(),
+                getCreatedBy(),
+                getUpdatedBy());
     }
 }

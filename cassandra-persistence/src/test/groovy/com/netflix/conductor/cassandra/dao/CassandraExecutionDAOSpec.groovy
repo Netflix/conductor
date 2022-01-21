@@ -76,7 +76,7 @@ class CassandraExecutionDAOSpec extends CassandraSpec {
         workflow.setWorkflowId(workflowId)
         workflow.setInput(new HashMap<>())
         workflow.setStatus(WorkflowStatusDO.RUNNING)
-        workflow.setCreateTime(System.currentTimeMillis())
+        workflow.setCreatedTime(System.currentTimeMillis())
 
         when:
         // create a new workflow in the datastore
@@ -122,7 +122,7 @@ class CassandraExecutionDAOSpec extends CassandraSpec {
         given: 'we create a workflow'
         String workflowId = IDGenerator.generate()
         WorkflowDef workflowDef = new WorkflowDef(name: 'def1', version: 1)
-        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createTime: System.currentTimeMillis())
+        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createdTime: System.currentTimeMillis())
         executionDAO.createWorkflow(workflow)
 
         and: 'create tasks for this workflow'
@@ -194,7 +194,7 @@ class CassandraExecutionDAOSpec extends CassandraSpec {
         given: 'we create a workflow'
         String workflowId = IDGenerator.generate()
         WorkflowDef workflowDef = new WorkflowDef(name: 'def1', version: 1)
-        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createTime: System.currentTimeMillis())
+        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createdTime: System.currentTimeMillis())
         executionDAO.createWorkflow(workflow)
 
         and: 'create tasks for this workflow'
@@ -232,7 +232,7 @@ class CassandraExecutionDAOSpec extends CassandraSpec {
         given: 'we create a workflow'
         String workflowId = IDGenerator.generate()
         WorkflowDef workflowDef = new WorkflowDef(name: 'def1', version: 1)
-        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createTime: System.currentTimeMillis())
+        WorkflowDO workflow = new WorkflowDO(workflowDefinition: workflowDef, workflowId: workflowId, input: new HashMap(), status: WorkflowStatusDO.RUNNING, createdTime: System.currentTimeMillis())
         executionDAO.createWorkflow(workflow)
 
         and: 'create tasks for this workflow'

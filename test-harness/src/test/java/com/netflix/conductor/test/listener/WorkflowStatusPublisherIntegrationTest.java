@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.netflix.conductor.domain.WorkflowStatusDO;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -193,7 +194,7 @@ public class WorkflowStatusPublisherIntegrationTest {
     private void checkIfWorkflowIsCompleted(String id) throws InterruptedException {
         int statusRetrieveAttempts = 0;
         while (workflowExecutor.getWorkflow(id, false).getStatus()
-                != Workflow.WorkflowStatus.COMPLETED) {
+                != WorkflowStatusDO.COMPLETED) {
             if (statusRetrieveAttempts > 5) {
                 break;
             }

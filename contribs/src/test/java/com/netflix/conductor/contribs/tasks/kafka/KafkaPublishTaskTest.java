@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -28,9 +28,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,15 +51,15 @@ public class KafkaPublishTaskTest {
     public void missingRequest_Fail() {
         KafkaPublishTask kafkaPublishTask =
                 new KafkaPublishTask(getKafkaProducerManager(), objectMapper);
-        Task task = new Task();
-        kafkaPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.FAILED, task.getStatus());
+        TaskDO task = new TaskDO();
+        kafkaPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.FAILED, task.getStatus());
     }
 
     @Test
     public void missingValue_Fail() {
 
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         KafkaPublishTask.Input input = new KafkaPublishTask.Input();
         input.setBootStrapServers("localhost:9092");
         input.setTopic("testTopic");
@@ -67,14 +68,14 @@ public class KafkaPublishTaskTest {
 
         KafkaPublishTask kPublishTask =
                 new KafkaPublishTask(getKafkaProducerManager(), objectMapper);
-        kPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.FAILED, task.getStatus());
+        kPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.FAILED, task.getStatus());
     }
 
     @Test
     public void missingBootStrapServers_Fail() {
 
-        Task task = new Task();
+        TaskDO task = new TaskDO();
         KafkaPublishTask.Input input = new KafkaPublishTask.Input();
 
         Map<String, Object> value = new HashMap<>();
@@ -85,15 +86,15 @@ public class KafkaPublishTaskTest {
 
         KafkaPublishTask kPublishTask =
                 new KafkaPublishTask(getKafkaProducerManager(), objectMapper);
-        kPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.FAILED, task.getStatus());
+        kPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.FAILED, task.getStatus());
     }
 
     @Test
     public void kafkaPublishExecutionException_Fail()
             throws ExecutionException, InterruptedException {
 
-        Task task = getTask();
+        TaskDO task = getTask();
 
         KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
         KafkaPublishTask kafkaPublishTask = new KafkaPublishTask(producerManager, objectMapper);
@@ -109,8 +110,8 @@ public class KafkaPublishTaskTest {
         when(executionException.getMessage()).thenReturn("Execution exception");
         when(publishingFuture.get()).thenThrow(executionException);
 
-        kafkaPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.FAILED, task.getStatus());
+        kafkaPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.FAILED, task.getStatus());
         assertEquals(
                 "Failed to invoke kafka task due to: Execution exception",
                 task.getReasonForIncompletion());
@@ -119,7 +120,7 @@ public class KafkaPublishTaskTest {
     @Test
     public void kafkaPublishUnknownException_Fail() {
 
-        Task task = getTask();
+        TaskDO task = getTask();
 
         KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
         KafkaPublishTask kPublishTask = new KafkaPublishTask(producerManager, objectMapper);
@@ -129,8 +130,8 @@ public class KafkaPublishTaskTest {
         when(producerManager.getProducer(any())).thenReturn(producer);
         when(producer.send(any())).thenThrow(new RuntimeException("Unknown exception"));
 
-        kPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.FAILED, task.getStatus());
+        kPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.FAILED, task.getStatus());
         assertEquals(
                 "Failed to invoke kafka task due to: Unknown exception",
                 task.getReasonForIncompletion());
@@ -139,7 +140,7 @@ public class KafkaPublishTaskTest {
     @Test
     public void kafkaPublishSuccess_Completed() {
 
-        Task task = getTask();
+        TaskDO task = getTask();
 
         KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
         KafkaPublishTask kPublishTask = new KafkaPublishTask(producerManager, objectMapper);
@@ -149,14 +150,14 @@ public class KafkaPublishTaskTest {
         when(producerManager.getProducer(any())).thenReturn(producer);
         when(producer.send(any())).thenReturn(mock(Future.class));
 
-        kPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.COMPLETED, task.getStatus());
+        kPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
     }
 
     @Test
     public void kafkaPublishSuccess_AsyncComplete() {
 
-        Task task = getTask();
+        TaskDO task = getTask();
         task.getInputData().put("asyncComplete", true);
 
         KafkaProducerManager producerManager = mock(KafkaProducerManager.class);
@@ -167,12 +168,12 @@ public class KafkaPublishTaskTest {
         when(producerManager.getProducer(any())).thenReturn(producer);
         when(producer.send(any())).thenReturn(mock(Future.class));
 
-        kPublishTask.start(mock(Workflow.class), task, mock(WorkflowExecutor.class));
-        assertEquals(Task.Status.IN_PROGRESS, task.getStatus());
+        kPublishTask.start(mock(WorkflowDO.class), task, mock(WorkflowExecutor.class));
+        assertEquals(TaskStatusDO.IN_PROGRESS, task.getStatus());
     }
 
-    private Task getTask() {
-        Task task = new Task();
+    private TaskDO getTask() {
+        TaskDO task = new TaskDO();
         KafkaPublishTask.Input input = new KafkaPublishTask.Input();
         input.setBootStrapServers("localhost:9092");
 

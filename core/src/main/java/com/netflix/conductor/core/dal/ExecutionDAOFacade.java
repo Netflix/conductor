@@ -128,6 +128,10 @@ public class ExecutionDAOFacade {
         }
     }
 
+    public WorkflowDO getWorkflowDO(String workflowId, boolean includeTasks) {
+        return domainMapper.getWorkflowDO(getWorkflowFromDatastore(workflowId, includeTasks));
+    }
+
     /**
      * Fetches the {@link Workflow} object from the data store given the id. Attempts to fetch from
      * {@link ExecutionDAO} first, if not found, attempts to fetch from {@link IndexDAO}.
@@ -141,38 +145,6 @@ public class ExecutionDAOFacade {
      *       <li>parsing the {@link Workflow} object fails
      *     </ul>
      */
-    //    public Workflow getWorkflowById(String workflowId, boolean includeTasks) {
-    //        Workflow workflow = executionDAO.getWorkflow(workflowId, includeTasks);
-    //        if (workflow == null) {
-    //            LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO",
-    // workflowId);
-    //            String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
-    //            if (json == null) {
-    //                String errorMsg = String.format("No such workflow found by id: %s",
-    // workflowId);
-    //                LOGGER.error(errorMsg);
-    //                throw new ApplicationException(ApplicationException.Code.NOT_FOUND, errorMsg);
-    //            }
-    //
-    //            try {
-    //                workflow = objectMapper.readValue(json, Workflow.class);
-    //                if (!includeTasks) {
-    //                    workflow.getTasks().clear();
-    //                }
-    //            } catch (IOException e) {
-    //                String errorMsg = String.format("Error reading workflow: %s", workflowId);
-    //                LOGGER.error(errorMsg);
-    //                throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR,
-    // errorMsg, e);
-    //            }
-    //        }
-    //        return workflow;
-    //    }
-
-    public WorkflowDO getWorkflowDO(String workflowId, boolean includeTasks) {
-        return domainMapper.getWorkflowDO(getWorkflowFromDatastore(workflowId, includeTasks));
-    }
-
     public Workflow getWorkflowDTO(String workflowId, boolean includeTasks) {
         return domainMapper.getWorkflowDTO(getWorkflowFromDatastore(workflowId, includeTasks));
     }
@@ -456,10 +428,6 @@ public class ExecutionDAOFacade {
                 .map(domainMapper::getTaskDTO)
                 .collect(Collectors.toList());
     }
-
-    //    public Task getTaskById(String taskId) {
-    //        return executionDAO.getTask(taskId);
-    //    }
 
     public TaskDO getTaskDO(String taskId) {
         return domainMapper.getTaskDO(getTaskFromDatastore(taskId));

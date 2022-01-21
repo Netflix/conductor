@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -18,14 +18,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 
@@ -43,7 +43,8 @@ public class UserTask extends WorkflowSystemTask {
     private final ObjectMapper objectMapper;
 
     private static final TypeReference<Map<String, Map<String, List<Object>>>>
-            mapStringListObjects = new TypeReference<Map<String, Map<String, List<Object>>>>() {};
+            mapStringListObjects = new TypeReference<>() {
+    };
 
     @Autowired
     public UserTask(ObjectMapper objectMapper) {
@@ -53,11 +54,11 @@ public class UserTask extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(Workflow workflow, Task task, WorkflowExecutor executor) {
+    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
         if (task.getWorkflowTask().isAsyncComplete()) {
-            task.setStatus(Status.IN_PROGRESS);
+            task.setStatus(TaskStatusDO.IN_PROGRESS);
         } else {
             Map<String, Map<String, List<Object>>> map =
                     objectMapper.convertValue(task.getInputData(), mapStringListObjects);
@@ -68,7 +69,7 @@ public class UserTask extends WorkflowSystemTask {
                     "size",
                     map.getOrDefault("largeInput", defaultLargeInput).get("TEST_SAMPLE").size());
             task.setOutputData(output);
-            task.setStatus(Status.COMPLETED);
+            task.setStatus(TaskStatusDO.COMPLETED);
         }
     }
 

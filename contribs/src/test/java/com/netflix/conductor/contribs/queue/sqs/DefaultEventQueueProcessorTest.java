@@ -64,7 +64,7 @@ public class DefaultEventQueueProcessorTest {
     @Autowired private ObjectMapper objectMapper;
 
     private static final List<Message> messages = new LinkedList<>();
-    private static final List<Task> updatedTasks = new LinkedList<>();
+    private static final List<TaskResult> updatedTasks = new LinkedList<>();
 
     @Before
     public void init() {
@@ -130,7 +130,7 @@ public class DefaultEventQueueProcessorTest {
         doAnswer(
                         (Answer<Void>)
                                 invocation -> {
-                                    updatedTasks.add(invocation.getArgument(0, Task.class));
+                                    updatedTasks.add(invocation.getArgument(0, TaskResult.class));
                                     return null;
                                 })
                 .when(executionService)

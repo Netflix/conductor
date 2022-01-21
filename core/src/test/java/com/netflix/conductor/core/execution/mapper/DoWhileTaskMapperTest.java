@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -20,16 +20,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
+import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.domain.WorkflowDO;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DO_WHILE;
 
@@ -38,9 +39,9 @@ import static org.junit.Assert.assertNotNull;
 
 public class DoWhileTaskMapperTest {
 
-    private Task task1;
+    private TaskDO task1;
     private DeciderService deciderService;
-    private Workflow workflow;
+    private WorkflowDO workflow;
     private WorkflowTask workflowTask1;
     private TaskMapperContext taskMapperContext;
     private MetadataDAO metadataDAO;
@@ -50,9 +51,9 @@ public class DoWhileTaskMapperTest {
         WorkflowTask taskToSchedule = new WorkflowTask();
         taskToSchedule.setType(TaskType.DO_WHILE.name());
         taskToSchedule.setTaskReferenceName("Test");
-        task1 = new Task();
+        task1 = new TaskDO();
         task1.setReferenceTaskName("task1");
-        Task task2 = new Task();
+        TaskDO task2 = new TaskDO();
         task2.setReferenceTaskName("task2");
         workflowTask1 = new WorkflowTask();
         workflowTask1.setTaskReferenceName("task1");
@@ -67,7 +68,7 @@ public class DoWhileTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        workflow = new Workflow();
+        workflow = new WorkflowDO();
         workflow.setWorkflowDefinition(workflowDef);
 
         deciderService = Mockito.mock(DeciderService.class);
@@ -92,7 +93,7 @@ public class DoWhileTaskMapperTest {
                 .when(deciderService)
                 .getTasksToBeScheduled(workflow, workflowTask1, 0);
 
-        List<Task> mappedTasks =
+        List<TaskDO> mappedTasks =
                 new DoWhileTaskMapper(metadataDAO).getMappedTasks(taskMapperContext);
 
         assertNotNull(mappedTasks);
@@ -105,9 +106,9 @@ public class DoWhileTaskMapperTest {
     @Test
     public void shouldNotScheduleCompletedTask() {
 
-        task1.setStatus(Task.Status.COMPLETED);
+        task1.setStatus(TaskStatusDO.COMPLETED);
 
-        List<Task> mappedTasks =
+        List<TaskDO> mappedTasks =
                 new DoWhileTaskMapper(metadataDAO).getMappedTasks(taskMapperContext);
 
         assertNotNull(mappedTasks);

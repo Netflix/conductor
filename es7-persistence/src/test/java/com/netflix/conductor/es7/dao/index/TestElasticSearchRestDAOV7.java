@@ -12,7 +12,14 @@
  */
 package com.netflix.conductor.es7.dao.index;
 
-import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.function.Supplier;
+
+import org.joda.time.DateTime;
+import org.junit.Test;
+
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.events.EventHandler;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
@@ -21,13 +28,8 @@ import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.es7.utils.TestUtils;
-import org.joda.time.DateTime;
-import org.junit.Test;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Supplier;
+import com.google.common.collect.ImmutableMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
