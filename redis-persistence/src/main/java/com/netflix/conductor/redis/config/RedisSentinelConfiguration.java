@@ -47,8 +47,10 @@ public class RedisSentinelConfiguration extends JedisCommandsConfigurer {
         genericObjectPoolConfig.setMaxIdle(properties.getMaxIdleConnections());
         genericObjectPoolConfig.setMaxTotal(properties.getMaxConnectionsPerHost());
         genericObjectPoolConfig.setTestWhileIdle(properties.isTestWhileIdle());
-        genericObjectPoolConfig.setMinEvictableIdleTimeMillis(properties.getMinEvictableIdleTimeMillis());
-        genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(properties.getTimeBetweenEvictionRunsMillis());
+        genericObjectPoolConfig.setMinEvictableIdleTimeMillis(
+                properties.getMinEvictableIdleTimeMillis());
+        genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(
+                properties.getTimeBetweenEvictionRunsMillis());
         genericObjectPoolConfig.setNumTestsPerEvictionRun(properties.getNumTestsPerEvictionRun());
         log.info(
                 "Starting conductor server using redis_sentinel and cluster "
