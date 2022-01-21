@@ -28,197 +28,264 @@ import com.netflix.dyno.connectionpool.impl.RunOnce;
 @ConfigurationProperties("conductor.redis")
 public class RedisProperties {
 
-    private final ConductorProperties conductorProperties;
+	private final ConductorProperties conductorProperties;
 
-    @Autowired
-    public RedisProperties(ConductorProperties conductorProperties) {
-        this.conductorProperties = conductorProperties;
-    }
+	@Autowired
+	public RedisProperties(ConductorProperties conductorProperties) {
+		this.conductorProperties = conductorProperties;
+	}
 
-    /**
-     * Data center region. If hosting on Amazon the value is something like us-east-1, us-west-2
-     * etc.
-     */
-    private String dataCenterRegion = "us-east-1";
+	/**
+	 * Data center region. If hosting on Amazon the value is something like
+	 * us-east-1, us-west-2 etc.
+	 */
+	private String dataCenterRegion = "us-east-1";
 
-    /**
-     * Local rack / availability zone. For AWS deployments, the value is something like us-east-1a,
-     * etc.
-     */
-    private String availabilityZone = "us-east-1c";
+	/**
+	 * Local rack / availability zone. For AWS deployments, the value is something
+	 * like us-east-1a, etc.
+	 */
+	private String availabilityZone = "us-east-1c";
 
-    /** The name of the redis / dynomite cluster */
-    private String clusterName = "";
+	/** The name of the redis / dynomite cluster */
+	private String clusterName = "";
 
-    /** Dynomite Cluster details. Format is host:port:rack separated by semicolon */
-    private String hosts = null;
+	/** Dynomite Cluster details. Format is host:port:rack separated by semicolon */
+	private String hosts = null;
 
-    /** The prefix used to prepend workflow data in redis */
-    private String workflowNamespacePrefix = null;
+	/** The prefix used to prepend workflow data in redis */
+	private String workflowNamespacePrefix = null;
 
-    /** The prefix used to prepend keys for queues in redis */
-    private String queueNamespacePrefix = null;
+	/** The prefix used to prepend keys for queues in redis */
+	private String queueNamespacePrefix = null;
 
-    /**
-     * The domain name to be used in the key prefix for logical separation of workflow data and
-     * queues in a shared redis setup
-     */
-    private String keyspaceDomain = null;
+	/**
+	 * The domain name to be used in the key prefix for logical separation of
+	 * workflow data and queues in a shared redis setup
+	 */
+	private String keyspaceDomain = null;
 
-    /**
-     * The maximum number of connections that can be managed by the connection pool on a given
-     * instance
-     */
-    private int maxConnectionsPerHost = 10;
+	/**
+	 * The maximum number of connections that can be managed by the connection pool
+	 * on a given instance
+	 */
+	private int maxConnectionsPerHost = 10;
 
-    /**
-     * The maximum amount of time to wait for a connection to become available from the connection
-     * pool
-     */
-    private Duration maxTimeoutWhenExhausted = Duration.ofMillis(800);
+	/**
+	 * The maximum amount of time to wait for a connection to become available from
+	 * the connection pool
+	 */
+	private Duration maxTimeoutWhenExhausted = Duration.ofMillis(800);
 
-    /** The maximum retry attempts to use with this connection pool */
-    private int maxRetryAttempts = 0;
+	/** The maximum retry attempts to use with this connection pool */
+	private int maxRetryAttempts = 0;
 
-    /** The read connection port to be used for connecting to dyno-queues */
-    private int queuesNonQuorumPort = 22122;
+	/** The read connection port to be used for connecting to dyno-queues */
+	private int queuesNonQuorumPort = 22122;
 
-    /** The sharding strategy to be used for the dyno queue configuration */
-    private String queueShardingStrategy = RedisQueuesShardingStrategyProvider.ROUND_ROBIN_STRATEGY;
+	/** The sharding strategy to be used for the dyno queue configuration */
+	private String queueShardingStrategy = RedisQueuesShardingStrategyProvider.ROUND_ROBIN_STRATEGY;
 
-    /** The time in seconds after which the in-memory task definitions cache will be refreshed */
-    @DurationUnit(ChronoUnit.SECONDS)
-    private Duration taskDefCacheRefreshInterval = Duration.ofSeconds(60);
+	/**
+	 * The time in seconds after which the in-memory task definitions cache will be
+	 * refreshed
+	 */
+	@DurationUnit(ChronoUnit.SECONDS)
+	private Duration taskDefCacheRefreshInterval = Duration.ofSeconds(60);
 
-    /** The time to live in seconds for which the event execution will be persisted */
-    @DurationUnit(ChronoUnit.SECONDS)
-    private Duration eventExecutionPersistenceTTL = Duration.ofSeconds(60);
+	/**
+	 * The time to live in seconds for which the event execution will be persisted
+	 */
+	@DurationUnit(ChronoUnit.SECONDS)
+	private Duration eventExecutionPersistenceTTL = Duration.ofSeconds(60);
 
-    public String getDataCenterRegion() {
-        return dataCenterRegion;
-    }
+	// Maximum number of idle connections to be maintained
+	private int maxIdleConnections = 8;
 
-    public void setDataCenterRegion(String dataCenterRegion) {
-        this.dataCenterRegion = dataCenterRegion;
-    }
+	// Minimum number of idle connections to be maintained
+	private int minIdleConnections = 5;
 
-    public String getAvailabilityZone() {
-        return availabilityZone;
-    }
+	private long minEvictableIdleTimeMillis = 1800000;
 
-    public void setAvailabilityZone(String availabilityZone) {
-        this.availabilityZone = availabilityZone;
-    }
+	private long timeBetweenEvictionRunsMillis = -1L;
 
-    public String getClusterName() {
-        return clusterName;
-    }
+	private boolean testWhileIdle = false;
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
+	private int numTestsPerEvictionRun = 3;
 
-    public String getHosts() {
-        return hosts;
-    }
+	public int getNumTestsPerEvictionRun() {
+		return numTestsPerEvictionRun;
+	}
 
-    public void setHosts(String hosts) {
-        this.hosts = hosts;
-    }
+	public void setNumTestsPerEvictionRun(int numTestsPerEvictionRun) {
+		this.numTestsPerEvictionRun = numTestsPerEvictionRun;
+	}
 
-    public String getWorkflowNamespacePrefix() {
-        return workflowNamespacePrefix;
-    }
+	public boolean isTestWhileIdle() {
+		return testWhileIdle;
+	}
 
-    public void setWorkflowNamespacePrefix(String workflowNamespacePrefix) {
-        this.workflowNamespacePrefix = workflowNamespacePrefix;
-    }
+	public void setTestWhileIdle(boolean testWhileIdle) {
+		this.testWhileIdle = testWhileIdle;
+	}
 
-    public String getQueueNamespacePrefix() {
-        return queueNamespacePrefix;
-    }
+	public long getMinEvictableIdleTimeMillis() {
+		return minEvictableIdleTimeMillis;
+	}
 
-    public void setQueueNamespacePrefix(String queueNamespacePrefix) {
-        this.queueNamespacePrefix = queueNamespacePrefix;
-    }
+	public void setMinEvictableIdleTimeMillis(long minEvictableIdleTimeMillis) {
+		this.minEvictableIdleTimeMillis = minEvictableIdleTimeMillis;
+	}
 
-    public String getKeyspaceDomain() {
-        return keyspaceDomain;
-    }
+	public long getTimeBetweenEvictionRunsMillis() {
+		return timeBetweenEvictionRunsMillis;
+	}
 
-    public void setKeyspaceDomain(String keyspaceDomain) {
-        this.keyspaceDomain = keyspaceDomain;
-    }
+	public void setTimeBetweenEvictionRunsMillis(long timeBetweenEvictionRunsMillis) {
+		this.timeBetweenEvictionRunsMillis = timeBetweenEvictionRunsMillis;
+	}
 
-    public int getMaxConnectionsPerHost() {
-        return maxConnectionsPerHost;
-    }
+	public int getMinIdleConnections() {
+		return minIdleConnections;
+	}
 
-    public void setMaxConnectionsPerHost(int maxConnectionsPerHost) {
-        this.maxConnectionsPerHost = maxConnectionsPerHost;
-    }
+	public void setMinIdleConnections(int minIdleConnections) {
+		this.minIdleConnections = minIdleConnections;
+	}
 
-    public Duration getMaxTimeoutWhenExhausted() {
-        return maxTimeoutWhenExhausted;
-    }
+	public int getMaxIdleConnections() {
+		return maxIdleConnections;
+	}
 
-    public void setMaxTimeoutWhenExhausted(Duration maxTimeoutWhenExhausted) {
-        this.maxTimeoutWhenExhausted = maxTimeoutWhenExhausted;
-    }
+	public void setMaxIdleConnections(int maxIdleConnections) {
+		this.maxIdleConnections = maxIdleConnections;
+	}
 
-    public int getMaxRetryAttempts() {
-        return maxRetryAttempts;
-    }
+	public String getDataCenterRegion() {
+		return dataCenterRegion;
+	}
 
-    public void setMaxRetryAttempts(int maxRetryAttempts) {
-        this.maxRetryAttempts = maxRetryAttempts;
-    }
+	public void setDataCenterRegion(String dataCenterRegion) {
+		this.dataCenterRegion = dataCenterRegion;
+	}
 
-    public int getQueuesNonQuorumPort() {
-        return queuesNonQuorumPort;
-    }
+	public String getAvailabilityZone() {
+		return availabilityZone;
+	}
 
-    public void setQueuesNonQuorumPort(int queuesNonQuorumPort) {
-        this.queuesNonQuorumPort = queuesNonQuorumPort;
-    }
+	public void setAvailabilityZone(String availabilityZone) {
+		this.availabilityZone = availabilityZone;
+	}
 
-    public String getQueueShardingStrategy() {
-        return queueShardingStrategy;
-    }
+	public String getClusterName() {
+		return clusterName;
+	}
 
-    public void setQueueShardingStrategy(String queueShardingStrategy) {
-        this.queueShardingStrategy = queueShardingStrategy;
-    }
+	public void setClusterName(String clusterName) {
+		this.clusterName = clusterName;
+	}
 
-    public Duration getTaskDefCacheRefreshInterval() {
-        return taskDefCacheRefreshInterval;
-    }
+	public String getHosts() {
+		return hosts;
+	}
 
-    public void setTaskDefCacheRefreshInterval(Duration taskDefCacheRefreshInterval) {
-        this.taskDefCacheRefreshInterval = taskDefCacheRefreshInterval;
-    }
+	public void setHosts(String hosts) {
+		this.hosts = hosts;
+	}
 
-    public Duration getEventExecutionPersistenceTTL() {
-        return eventExecutionPersistenceTTL;
-    }
+	public String getWorkflowNamespacePrefix() {
+		return workflowNamespacePrefix;
+	}
 
-    public void setEventExecutionPersistenceTTL(Duration eventExecutionPersistenceTTL) {
-        this.eventExecutionPersistenceTTL = eventExecutionPersistenceTTL;
-    }
+	public void setWorkflowNamespacePrefix(String workflowNamespacePrefix) {
+		this.workflowNamespacePrefix = workflowNamespacePrefix;
+	}
 
-    public String getQueuePrefix() {
-        String prefix = getQueueNamespacePrefix() + "." + conductorProperties.getStack();
-        if (getKeyspaceDomain() != null) {
-            prefix = prefix + "." + getKeyspaceDomain();
-        }
-        return prefix;
-    }
+	public String getQueueNamespacePrefix() {
+		return queueNamespacePrefix;
+	}
 
-    public RetryPolicyFactory getConnectionRetryPolicy() {
-        if (getMaxRetryAttempts() == 0) {
-            return RunOnce::new;
-        } else {
-            return () -> new RetryNTimes(maxRetryAttempts, false);
-        }
-    }
+	public void setQueueNamespacePrefix(String queueNamespacePrefix) {
+		this.queueNamespacePrefix = queueNamespacePrefix;
+	}
+
+	public String getKeyspaceDomain() {
+		return keyspaceDomain;
+	}
+
+	public void setKeyspaceDomain(String keyspaceDomain) {
+		this.keyspaceDomain = keyspaceDomain;
+	}
+
+	public int getMaxConnectionsPerHost() {
+		return maxConnectionsPerHost;
+	}
+
+	public void setMaxConnectionsPerHost(int maxConnectionsPerHost) {
+		this.maxConnectionsPerHost = maxConnectionsPerHost;
+	}
+
+	public Duration getMaxTimeoutWhenExhausted() {
+		return maxTimeoutWhenExhausted;
+	}
+
+	public void setMaxTimeoutWhenExhausted(Duration maxTimeoutWhenExhausted) {
+		this.maxTimeoutWhenExhausted = maxTimeoutWhenExhausted;
+	}
+
+	public int getMaxRetryAttempts() {
+		return maxRetryAttempts;
+	}
+
+	public void setMaxRetryAttempts(int maxRetryAttempts) {
+		this.maxRetryAttempts = maxRetryAttempts;
+	}
+
+	public int getQueuesNonQuorumPort() {
+		return queuesNonQuorumPort;
+	}
+
+	public void setQueuesNonQuorumPort(int queuesNonQuorumPort) {
+		this.queuesNonQuorumPort = queuesNonQuorumPort;
+	}
+
+	public String getQueueShardingStrategy() {
+		return queueShardingStrategy;
+	}
+
+	public void setQueueShardingStrategy(String queueShardingStrategy) {
+		this.queueShardingStrategy = queueShardingStrategy;
+	}
+
+	public Duration getTaskDefCacheRefreshInterval() {
+		return taskDefCacheRefreshInterval;
+	}
+
+	public void setTaskDefCacheRefreshInterval(Duration taskDefCacheRefreshInterval) {
+		this.taskDefCacheRefreshInterval = taskDefCacheRefreshInterval;
+	}
+
+	public Duration getEventExecutionPersistenceTTL() {
+		return eventExecutionPersistenceTTL;
+	}
+
+	public void setEventExecutionPersistenceTTL(Duration eventExecutionPersistenceTTL) {
+		this.eventExecutionPersistenceTTL = eventExecutionPersistenceTTL;
+	}
+
+	public String getQueuePrefix() {
+		String prefix = getQueueNamespacePrefix() + "." + conductorProperties.getStack();
+		if (getKeyspaceDomain() != null) {
+			prefix = prefix + "." + getKeyspaceDomain();
+		}
+		return prefix;
+	}
+
+	public RetryPolicyFactory getConnectionRetryPolicy() {
+		if (getMaxRetryAttempts() == 0) {
+			return RunOnce::new;
+		} else {
+			return () -> new RetryNTimes(maxRetryAttempts, false);
+		}
+	}
 }
