@@ -25,6 +25,8 @@ public class WorkflowError {
 
 	private String lookup;
 
+	private Boolean isRequiredInReporting;
+
 	private String totalCount;
 
 
@@ -60,6 +62,16 @@ public class WorkflowError {
 	public void setTotalCount(String totalCount) {
 		this.totalCount = totalCount;
 	}
+
+
+	public Boolean getIsRequiredInReporting() {
+		return isRequiredInReporting;
+	}
+
+	public void setIsRequiredInReporting(Boolean isRequiredInReporting) {
+		this.isRequiredInReporting = isRequiredInReporting;
+	}
+
 
 
 
