@@ -749,8 +749,8 @@ public abstract class AbstractProtoMapper {
         TaskDefPb.TaskDef.RetryLogic to;
         switch (from) {
             case FIXED: to = TaskDefPb.TaskDef.RetryLogic.FIXED; break;
-            case LINEAR_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             case EXPONENTIAL_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
+            case LINEAR_BACKOFF: to = TaskDefPb.TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;
@@ -760,8 +760,8 @@ public abstract class AbstractProtoMapper {
         TaskDef.RetryLogic to;
         switch (from) {
             case FIXED: to = TaskDef.RetryLogic.FIXED; break;
-            case LINEAR_BACKOFF: to = TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             case EXPONENTIAL_BACKOFF: to = TaskDef.RetryLogic.EXPONENTIAL_BACKOFF; break;
+            case LINEAR_BACKOFF: to = TaskDef.RetryLogic.LINEAR_BACKOFF; break;
             default: throw new IllegalArgumentException("Unexpected enum constant: " + from);
         }
         return to;

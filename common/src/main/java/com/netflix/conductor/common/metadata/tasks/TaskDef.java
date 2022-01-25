@@ -46,8 +46,8 @@ public class TaskDef extends Auditable {
     @ProtoEnum
     public enum RetryLogic {
         FIXED,
-        LINEAR_BACKOFF,
-        EXPONENTIAL_BACKOFF
+        EXPONENTIAL_BACKOFF,
+        LINEAR_BACKOFF
     }
 
     private static final int ONE_HOUR = 60 * 60;
