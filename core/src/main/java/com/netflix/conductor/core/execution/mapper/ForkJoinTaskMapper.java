@@ -24,13 +24,12 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#FORK_JOIN} to a LinkedList of {@link TaskDO} beginning with a completed {@link
+ * TaskType#FORK_JOIN} to a LinkedList of {@link TaskModel} beginning with a completed {@link
  * TaskType#TASK_TYPE_FORK}, followed by the user defined fork tasks
  */
 @Component
@@ -48,32 +47,32 @@ public class ForkJoinTaskMapper implements TaskMapper {
      * type {@link TaskType#FORK_JOIN}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return List of tasks in the following order: *
      *     <ul>
-     *       <li>{@link TaskType#TASK_TYPE_FORK} with {@link TaskStatusDO#COMPLETED}
+     *       <li>{@link TaskType#TASK_TYPE_FORK} with {@link TaskModel.Status#COMPLETED}
      *       <li>Might be any kind of task, but in most cases is a UserDefinedTask with {@link
-     *           TaskStatusDO#SCHEDULED}
+     *           TaskModel.Status#SCHEDULED}
      *     </ul>
      *
      * @throws TerminateWorkflowException When the task after {@link TaskType#FORK_JOIN} is not a
      *     {@link TaskType#JOIN}
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in ForkJoinTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         int retryCount = taskMapperContext.getRetryCount();
 
         String taskId = taskMapperContext.getTaskId();
 
-        List<TaskDO> tasksToBeScheduled = new LinkedList<>();
-        TaskDO forkTask = new TaskDO();
+        List<TaskModel> tasksToBeScheduled = new LinkedList<>();
+        TaskModel forkTask = new TaskModel();
         forkTask.setTaskType(TaskType.TASK_TYPE_FORK);
         forkTask.setTaskDefName(TaskType.TASK_TYPE_FORK);
         forkTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -84,7 +83,7 @@ public class ForkJoinTaskMapper implements TaskMapper {
         forkTask.setStartTime(System.currentTimeMillis());
         forkTask.setInputData(taskInput);
         forkTask.setTaskId(taskId);
-        forkTask.setStatus(TaskStatusDO.COMPLETED);
+        forkTask.setStatus(TaskModel.Status.COMPLETED);
         forkTask.setWorkflowPriority(workflowInstance.getPriority());
         forkTask.setWorkflowTask(taskToSchedule);
 
@@ -92,7 +91,7 @@ public class ForkJoinTaskMapper implements TaskMapper {
         List<List<WorkflowTask>> forkTasks = taskToSchedule.getForkTasks();
         for (List<WorkflowTask> wfts : forkTasks) {
             WorkflowTask wft = wfts.get(0);
-            List<TaskDO> tasks2 =
+            List<TaskModel> tasks2 =
                     taskMapperContext
                             .getDeciderService()
                             .getTasksToBeScheduled(workflowInstance, wft, retryCount);

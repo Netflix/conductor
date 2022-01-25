@@ -30,9 +30,8 @@ import org.springframework.web.client.RestTemplate;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.Utils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -75,12 +74,12 @@ public class HttpTask extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         Object request = task.getInputData().get(requestParameter);
         task.setWorkerId(Utils.getServerId());
         if (request == null) {
             task.setReasonForIncompletion(MISSING_REQUEST);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             return;
         }
 
@@ -89,14 +88,14 @@ public class HttpTask extends WorkflowSystemTask {
             String reason =
                     "Missing HTTP URI.  See documentation for HttpTask for required input parameters";
             task.setReasonForIncompletion(reason);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             return;
         }
 
         if (input.getMethod() == null) {
             String reason = "No HTTP method specified";
             task.setReasonForIncompletion(reason);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             return;
         }
 
@@ -109,9 +108,9 @@ public class HttpTask extends WorkflowSystemTask {
                     task.getTaskId());
             if (response.statusCode > 199 && response.statusCode < 300) {
                 if (isAsyncComplete(task)) {
-                    task.setStatus(TaskStatusDO.IN_PROGRESS);
+                    task.setStatus(TaskModel.Status.IN_PROGRESS);
                 } else {
-                    task.setStatus(TaskStatusDO.COMPLETED);
+                    task.setStatus(TaskModel.Status.COMPLETED);
                 }
             } else {
                 if (response.body != null) {
@@ -119,7 +118,7 @@ public class HttpTask extends WorkflowSystemTask {
                 } else {
                     task.setReasonForIncompletion("No response from the remote service");
                 }
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
             }
             //noinspection ConstantConditions
             if (response != null) {
@@ -135,7 +134,7 @@ public class HttpTask extends WorkflowSystemTask {
                     input.getVipAddress(),
                     task.getWorkflowInstanceId(),
                     e);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion(
                     "Failed to invoke " + getTaskType() + " task due to: " + e);
             task.getOutputData().put("response", e.toString());
@@ -202,13 +201,13 @@ public class HttpTask extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public boolean execute(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         return false;
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
-        task.setStatus(TaskStatusDO.CANCELED);
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
+        task.setStatus(TaskModel.Status.CANCELED);
     }
 
     @Override

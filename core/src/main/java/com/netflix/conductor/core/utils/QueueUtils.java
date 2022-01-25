@@ -15,7 +15,7 @@ package com.netflix.conductor.core.utils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.model.TaskModel;
 
 public class QueueUtils {
 
@@ -23,12 +23,12 @@ public class QueueUtils {
     private static final String ISOLATION_SEPARATOR = "-";
     private static final String EXECUTION_NAME_SPACE_SEPARATOR = "@";
 
-    public static String getQueueName(TaskDO taskDO) {
+    public static String getQueueName(TaskModel taskModel) {
         return getQueueName(
-                taskDO.getTaskType(),
-                taskDO.getDomain(),
-                taskDO.getIsolationGroupId(),
-                taskDO.getExecutionNameSpace());
+                taskModel.getTaskType(),
+                taskModel.getDomain(),
+                taskModel.getIsolationGroupId(),
+                taskModel.getExecutionNameSpace());
     }
 
     public static String getQueueName(Task task) {

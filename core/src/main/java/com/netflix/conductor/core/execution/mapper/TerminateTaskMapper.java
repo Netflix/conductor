@@ -22,9 +22,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
 
@@ -46,12 +45,12 @@ public class TerminateTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         logger.debug("TaskMapperContext {} in TerminateTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         Map<String, Object> taskInput =
@@ -61,7 +60,7 @@ public class TerminateTaskMapper implements TaskMapper {
                         taskId,
                         null);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType(TASK_TYPE_TERMINATE);
         task.setTaskDefName(taskToSchedule.getName());
         task.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -72,7 +71,7 @@ public class TerminateTaskMapper implements TaskMapper {
         task.setStartTime(System.currentTimeMillis());
         task.setInputData(taskInput);
         task.setTaskId(taskId);
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
         task.setWorkflowTask(taskToSchedule);
         task.setWorkflowPriority(workflowInstance.getPriority());
         return singletonList(task);

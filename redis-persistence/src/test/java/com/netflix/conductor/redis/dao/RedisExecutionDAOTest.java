@@ -28,8 +28,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
+import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisMock;
 import com.netflix.conductor.redis.jedis.JedisProxy;
@@ -72,14 +71,14 @@ public class RedisExecutionDAOTest extends ExecutionDAOTest {
         def.setName("task1");
         def.setConcurrentExecLimit(1);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskId(taskId);
         task.setWorkflowInstanceId(workflowId);
         task.setReferenceTaskName("ref_name");
         task.setTaskDefName(taskDefName);
         task.setTaskType(taskDefName);
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
-        List<TaskDO> tasks = executionDAO.createTasks(Collections.singletonList(task));
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
+        List<TaskModel> tasks = executionDAO.createTasks(Collections.singletonList(task));
         assertNotNull(tasks);
         assertEquals(1, tasks.size());
 

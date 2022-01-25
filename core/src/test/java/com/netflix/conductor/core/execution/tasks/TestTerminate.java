@@ -19,9 +19,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationStatusParameter;
 import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationWorkflowOutputParameter;
@@ -36,49 +35,49 @@ public class TestTerminate {
 
     @Test
     public void should_fail_if_input_status_is_not_valid() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
 
         Map<String, Object> input = new HashMap<>();
         input.put(getTerminationStatusParameter(), "PAUSED");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
     }
 
     @Test
     public void should_fail_if_input_status_is_empty() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
 
         Map<String, Object> input = new HashMap<>();
         input.put(getTerminationStatusParameter(), "");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
     }
 
     @Test
     public void should_fail_if_input_status_is_null() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
 
         Map<String, Object> input = new HashMap<>();
         input.put(getTerminationStatusParameter(), null);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
     }
 
     @Test
     public void should_complete_workflow_on_terminate_task_success() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
         workflow.setOutput(Collections.singletonMap("output", "${task1.output.value}"));
 
@@ -93,16 +92,16 @@ public class TestTerminate {
         input.put(getTerminationStatusParameter(), "COMPLETED");
         input.put(getTerminationWorkflowOutputParameter(), "${task0.output.value}");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertEquals(expectedOutput, task.getOutputData());
     }
 
     @Test
     public void should_fail_workflow_on_terminate_task_success() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
         workflow.setOutput(Collections.singletonMap("output", "${task1.output.value}"));
 
@@ -117,31 +116,31 @@ public class TestTerminate {
         input.put(getTerminationStatusParameter(), "FAILED");
         input.put(getTerminationWorkflowOutputParameter(), "${task0.output.value}");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertEquals(expectedOutput, task.getOutputData());
     }
 
     @Test
     public void should_fail_workflow_on_terminate_task_success_with_empty_output() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
 
         Map<String, Object> input = new HashMap<>();
         input.put(getTerminationStatusParameter(), "FAILED");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertTrue(task.getOutputData().isEmpty());
     }
 
     @Test
     public void should_fail_workflow_on_terminate_task_success_with_resolved_output() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         Terminate terminateTask = new Terminate();
 
         HashMap<String, Object> expectedOutput =
@@ -155,9 +154,9 @@ public class TestTerminate {
         input.put(getTerminationStatusParameter(), "FAILED");
         input.put(getTerminationWorkflowOutputParameter(), expectedOutput);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(input);
         terminateTask.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
     }
 }

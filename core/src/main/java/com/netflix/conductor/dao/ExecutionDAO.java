@@ -16,8 +16,8 @@ import java.util.List;
 
 import com.netflix.conductor.common.metadata.events.EventExecution;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /** Data access layer for storing workflow executions */
 public interface ExecutionDAO {
@@ -27,7 +27,7 @@ public interface ExecutionDAO {
      * @param workflowId Workflow instance id
      * @return List of pending tasks (in_progress)
      */
-    List<TaskDO> getPendingTasksByWorkflow(String taskName, String workflowId);
+    List<TaskModel> getPendingTasksByWorkflow(String taskName, String workflowId);
 
     /**
      * @param taskType Type of task
@@ -35,7 +35,7 @@ public interface ExecutionDAO {
      * @param count number of tasks to return
      * @return List of tasks starting from startKey
      */
-    List<TaskDO> getTasks(String taskType, String startKey, int count);
+    List<TaskModel> getTasks(String taskType, String startKey, int count);
 
     /**
      * @param tasks tasks to be created
@@ -45,10 +45,10 @@ public interface ExecutionDAO {
      *     key. Given two tasks with the same reference name and retryCount only one should be added
      *     to the database.
      */
-    List<TaskDO> createTasks(List<TaskDO> tasks);
+    List<TaskModel> createTasks(List<TaskModel> tasks);
 
     /** @param task Task to be updated */
-    void updateTask(TaskDO task);
+    void updateTask(TaskModel task);
 
     /**
      * Checks if the number of tasks in progress for the given taskDef will exceed the limit if the
@@ -58,10 +58,10 @@ public interface ExecutionDAO {
      * @param task The task to be executed. Limit is set in the Task's definition
      * @return true if by executing this task, the limit is breached. false otherwise.
      * @see TaskDef#concurrencyLimit()
-     * @deprecated Since v3.3.5. Use {@link ConcurrentExecutionLimitDAO#exceedsLimit(TaskDO)}.
+     * @deprecated Since v3.3.5. Use {@link ConcurrentExecutionLimitDAO#exceedsLimit(TaskModel)}.
      */
     @Deprecated
-    default boolean exceedsInProgressLimit(TaskDO task) {
+    default boolean exceedsInProgressLimit(TaskModel task) {
         throw new UnsupportedOperationException(
                 getClass() + "does not support exceedsInProgressLimit");
     }
@@ -76,37 +76,37 @@ public interface ExecutionDAO {
      * @param taskId Task instance id
      * @return Task
      */
-    TaskDO getTask(String taskId);
+    TaskModel getTask(String taskId);
 
     /**
      * @param taskIds Task instance ids
      * @return List of tasks
      */
-    List<TaskDO> getTasks(List<String> taskIds);
+    List<TaskModel> getTasks(List<String> taskIds);
 
     /**
      * @param taskType Type of the task for which to retrieve the list of pending tasks
      * @return List of pending tasks
      */
-    List<TaskDO> getPendingTasksForTaskType(String taskType);
+    List<TaskModel> getPendingTasksForTaskType(String taskType);
 
     /**
      * @param workflowId Workflow instance id
      * @return List of tasks for the given workflow instance id
      */
-    List<TaskDO> getTasksForWorkflow(String workflowId);
+    List<TaskModel> getTasksForWorkflow(String workflowId);
 
     /**
      * @param workflow Workflow to be created
      * @return Id of the newly created workflow
      */
-    String createWorkflow(WorkflowDO workflow);
+    String createWorkflow(WorkflowModel workflow);
 
     /**
      * @param workflow Workflow to be updated
      * @return Id of the updated workflow
      */
-    String updateWorkflow(WorkflowDO workflow);
+    String updateWorkflow(WorkflowModel workflow);
 
     /**
      * @param workflowId workflow instance id
@@ -133,7 +133,7 @@ public interface ExecutionDAO {
      * @param workflowId workflow instance id
      * @return Workflow
      */
-    WorkflowDO getWorkflow(String workflowId);
+    WorkflowModel getWorkflow(String workflowId);
 
     /**
      * @param workflowId workflow instance id
@@ -141,7 +141,7 @@ public interface ExecutionDAO {
      *     Sequence number in Workflow.
      * @return Workflow instance details
      */
-    WorkflowDO getWorkflow(String workflowId, boolean includeTasks);
+    WorkflowModel getWorkflow(String workflowId, boolean includeTasks);
 
     /**
      * @param workflowName name of the workflow
@@ -155,7 +155,7 @@ public interface ExecutionDAO {
      * @param version the workflow version
      * @return List of workflows that are running
      */
-    List<WorkflowDO> getPendingWorkflowsByType(String workflowName, int version);
+    List<WorkflowModel> getPendingWorkflowsByType(String workflowName, int version);
 
     /**
      * @param workflowName Name of the workflow
@@ -175,7 +175,7 @@ public interface ExecutionDAO {
      * @param endTime epoch time
      * @return List of workflows between start and end time
      */
-    List<WorkflowDO> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
+    List<WorkflowModel> getWorkflowsByType(String workflowName, Long startTime, Long endTime);
 
     /**
      * @param workflowName workflow name
@@ -183,7 +183,7 @@ public interface ExecutionDAO {
      * @param includeTasks Option to includeTasks in results
      * @return List of workflows by correlation id
      */
-    List<WorkflowDO> getWorkflowsByCorrelationId(
+    List<WorkflowModel> getWorkflowsByCorrelationId(
             String workflowName, String correlationId, boolean includeTasks);
 
     /**

@@ -23,9 +23,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 @Component
 public class ExclusiveJoinTaskMapper implements TaskMapper {
@@ -38,12 +37,12 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in ExclusiveJoinTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         Map<String, Object> joinInput = new HashMap<>();
@@ -53,7 +52,7 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
             joinInput.put("defaultExclusiveJoinTask", taskToSchedule.getDefaultExclusiveJoinTask());
         }
 
-        TaskDO joinTask = new TaskDO();
+        TaskModel joinTask = new TaskModel();
         joinTask.setTaskType(TaskType.TASK_TYPE_EXCLUSIVE_JOIN);
         joinTask.setTaskDefName(TaskType.TASK_TYPE_EXCLUSIVE_JOIN);
         joinTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -64,7 +63,7 @@ public class ExclusiveJoinTaskMapper implements TaskMapper {
         joinTask.setStartTime(System.currentTimeMillis());
         joinTask.setInputData(joinInput);
         joinTask.setTaskId(taskId);
-        joinTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        joinTask.setStatus(TaskModel.Status.IN_PROGRESS);
         joinTask.setWorkflowPriority(workflowInstance.getPriority());
         joinTask.setWorkflowTask(taskToSchedule);
 

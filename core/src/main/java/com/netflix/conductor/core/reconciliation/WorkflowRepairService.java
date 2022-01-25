@@ -28,10 +28,9 @@ import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.core.utils.Utils;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -58,7 +57,7 @@ public class WorkflowRepairService {
     and in SCHEDULED or IN_PROGRESS state. (Example: SUB_WORKFLOW tasks in SCHEDULED state)
     For simple task -> Verify the task is in SCHEDULED state.
     */
-    private final Predicate<TaskDO> isTaskRepairable =
+    private final Predicate<TaskModel> isTaskRepairable =
             task -> {
                 if (systemTaskRegistry.isSystemTask(task.getTaskType())) { // If system task
                     WorkflowSystemTask workflowSystemTask =
@@ -66,11 +65,11 @@ public class WorkflowRepairService {
                     return workflowSystemTask.isAsync()
                             && (!workflowSystemTask.isAsyncComplete(task)
                                     || (workflowSystemTask.isAsyncComplete(task)
-                                            && task.getStatus() == TaskStatusDO.SCHEDULED))
-                            && (task.getStatus() == TaskStatusDO.IN_PROGRESS
-                                    || task.getStatus() == TaskStatusDO.SCHEDULED);
+                                            && task.getStatus() == TaskModel.Status.SCHEDULED))
+                            && (task.getStatus() == TaskModel.Status.IN_PROGRESS
+                                    || task.getStatus() == TaskModel.Status.SCHEDULED);
                 } else { // Else if simple task
-                    return task.getStatus() == TaskStatusDO.SCHEDULED;
+                    return task.getStatus() == TaskModel.Status.SCHEDULED;
                 }
             };
 
@@ -91,7 +90,7 @@ public class WorkflowRepairService {
      * has relevant message in the queue.
      */
     public boolean verifyAndRepairWorkflow(String workflowId, boolean includeTasks) {
-        WorkflowDO workflow = executionDAO.getWorkflow(workflowId, includeTasks);
+        WorkflowModel workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         AtomicBoolean repaired = new AtomicBoolean(false);
         repaired.set(verifyAndRepairDeciderQueue(workflow));
         if (includeTasks) {
@@ -102,7 +101,7 @@ public class WorkflowRepairService {
 
     /** Verify and repair tasks in a workflow. */
     public void verifyAndRepairWorkflowTasks(String workflowId) {
-        WorkflowDO workflow = executionDAO.getWorkflow(workflowId, true);
+        WorkflowModel workflow = executionDAO.getWorkflow(workflowId, true);
         workflow.getTasks().forEach(this::verifyAndRepairTask);
         // repair the parent workflow if needed
         verifyAndRepairWorkflow(workflow.getParentWorkflowId());
@@ -113,7 +112,7 @@ public class WorkflowRepairService {
      *
      * @return true - if the workflow was queued for repair
      */
-    private boolean verifyAndRepairDeciderQueue(WorkflowDO workflow) {
+    private boolean verifyAndRepairDeciderQueue(WorkflowModel workflow) {
         if (!workflow.getStatus().isTerminal()) {
             return verifyAndRepairWorkflow(workflow.getWorkflowId());
         }
@@ -127,7 +126,7 @@ public class WorkflowRepairService {
      * @return true - if the task was queued for repair
      */
     @VisibleForTesting
-    boolean verifyAndRepairTask(TaskDO task) {
+    boolean verifyAndRepairTask(TaskModel task) {
         if (isTaskRepairable.test(task)) {
             // Ensure QueueDAO contains this taskId
             String taskQueueName = QueueUtils.getQueueName(task);

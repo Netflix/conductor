@@ -21,20 +21,20 @@ import org.mockito.Mockito;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.contribs.listener.archive.ArchivingWorkflowStatusListener;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.mockito.Mockito.*;
 
 /** @author pavel.halabala */
 public class ArchivingWorkflowStatusListenerTest {
 
-    WorkflowDO workflow;
+    WorkflowModel workflow;
     ExecutionDAOFacade executionDAOFacade;
     ArchivingWorkflowStatusListener listener;
 
     @Before
     public void before() {
-        workflow = new WorkflowDO();
+        workflow = new WorkflowModel();
         WorkflowDef def = new WorkflowDef();
         def.setName("name1");
         def.setVersion(1);

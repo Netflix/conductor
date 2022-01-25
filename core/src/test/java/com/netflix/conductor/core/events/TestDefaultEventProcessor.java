@@ -20,7 +20,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,17 +38,18 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action.Type;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.dal.DomainMapper;
+import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
 import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
+import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 import com.netflix.conductor.service.ExecutionService;
 import com.netflix.conductor.service.MetadataService;
 
@@ -77,7 +77,7 @@ public class TestDefaultEventProcessor {
     private MetadataService metadataService;
     private ExecutionService executionService;
     private WorkflowExecutor workflowExecutor;
-    private DomainMapper domainMapper;
+    private ModelMapper modelMapper;
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;
     private SimpleActionProcessor actionProcessor;
     private ParametersUtils parametersUtils;
@@ -102,7 +102,7 @@ public class TestDefaultEventProcessor {
         executionService = mock(ExecutionService.class);
         workflowExecutor = mock(WorkflowExecutor.class);
         externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
-        domainMapper = new DomainMapper(externalPayloadStorageUtils);
+        modelMapper = new ModelMapper(externalPayloadStorageUtils);
         actionProcessor = mock(SimpleActionProcessor.class);
         parametersUtils = new ParametersUtils(objectMapper);
         jsonUtils = new JsonUtils(objectMapper);
@@ -184,9 +184,9 @@ public class TestDefaultEventProcessor {
                 .when(workflowExecutor)
                 .updateTask(any());
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setReferenceTaskName(completeTaskAction.getComplete_task().getTaskRefName());
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setTasks(Collections.singletonList(task));
         when(workflowExecutor.getWorkflow(
                         completeTaskAction.getComplete_task().getWorkflowId(), true))
@@ -195,7 +195,7 @@ public class TestDefaultEventProcessor {
 
         SimpleActionProcessor actionProcessor =
                 new SimpleActionProcessor(
-                        workflowExecutor, domainMapper, parametersUtils, jsonUtils);
+                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -262,7 +262,7 @@ public class TestDefaultEventProcessor {
 
         SimpleActionProcessor actionProcessor =
                 new SimpleActionProcessor(
-                        workflowExecutor, domainMapper, parametersUtils, jsonUtils);
+                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -327,7 +327,7 @@ public class TestDefaultEventProcessor {
 
         SimpleActionProcessor actionProcessor =
                 new SimpleActionProcessor(
-                        workflowExecutor, domainMapper, parametersUtils, jsonUtils);
+                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(

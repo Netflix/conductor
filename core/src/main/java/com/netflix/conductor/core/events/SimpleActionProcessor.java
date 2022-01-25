@@ -25,14 +25,13 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.core.dal.DomainMapper;
+import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * Action Processor subscribes to the Event Actions queue and processes the actions (e.g. start
@@ -44,17 +43,17 @@ public class SimpleActionProcessor implements ActionProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SimpleActionProcessor.class);
 
     private final WorkflowExecutor workflowExecutor;
-    private final DomainMapper domainMapper;
+    private final ModelMapper modelMapper;
     private final ParametersUtils parametersUtils;
     private final JsonUtils jsonUtils;
 
     public SimpleActionProcessor(
             WorkflowExecutor workflowExecutor,
-            DomainMapper domainMapper,
+            ModelMapper modelMapper,
             ParametersUtils parametersUtils,
             JsonUtils jsonUtils) {
         this.workflowExecutor = workflowExecutor;
-        this.domainMapper = domainMapper;
+        this.modelMapper = modelMapper;
         this.parametersUtils = parametersUtils;
         this.jsonUtils = jsonUtils;
     }
@@ -81,7 +80,7 @@ public class SimpleActionProcessor implements ActionProcessor {
                         action,
                         jsonObject,
                         action.getComplete_task(),
-                        TaskStatusDO.COMPLETED,
+                        TaskModel.Status.COMPLETED,
                         event,
                         messageId);
             case fail_task:
@@ -89,7 +88,7 @@ public class SimpleActionProcessor implements ActionProcessor {
                         action,
                         jsonObject,
                         action.getFail_task(),
-                        TaskStatusDO.FAILED,
+                        TaskModel.Status.FAILED,
                         event,
                         messageId);
             default:
@@ -103,7 +102,7 @@ public class SimpleActionProcessor implements ActionProcessor {
             Action action,
             Object payload,
             TaskDetails taskDetails,
-            TaskStatusDO status,
+            TaskModel.Status status,
             String event,
             String messageId) {
 
@@ -118,11 +117,11 @@ public class SimpleActionProcessor implements ActionProcessor {
         String taskId = (String) replaced.get("taskId");
         String taskRefName = (String) replaced.get("taskRefName");
 
-        TaskDO task = null;
+        TaskModel task = null;
         if (StringUtils.isNotEmpty(taskId)) {
             task = workflowExecutor.getTask(taskId);
         } else if (StringUtils.isNotEmpty(workflowId) && StringUtils.isNotEmpty(taskRefName)) {
-            WorkflowDO workflow = workflowExecutor.getWorkflow(workflowId, true);
+            WorkflowModel workflow = workflowExecutor.getWorkflow(workflowId, true);
             if (workflow == null) {
                 replaced.put("error", "No workflow found with ID: " + workflowId);
                 return replaced;
@@ -149,7 +148,7 @@ public class SimpleActionProcessor implements ActionProcessor {
         task.getOutputData().put("conductor.event.name", event);
 
         try {
-            workflowExecutor.updateTask(new TaskResult(domainMapper.getTaskDTO(task)));
+            workflowExecutor.updateTask(new TaskResult(modelMapper.getTask(task)));
             LOGGER.debug(
                     "Updated task: {} in workflow:{} with status: {} for event: {} for message:{}",
                     taskId,

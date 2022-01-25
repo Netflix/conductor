@@ -18,11 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.common.run.WorkflowSummary;
-import com.netflix.conductor.core.dal.DomainMapper;
+import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +36,7 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ConductorQueueStatusPublisher.class);
     private final QueueDAO queueDAO;
-    private final DomainMapper domainMapper;
+    private final ModelMapper modelMapper;
     private final ObjectMapper objectMapper;
 
     private final String successStatusQueue;
@@ -45,11 +45,11 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
 
     public ConductorQueueStatusPublisher(
             QueueDAO queueDAO,
-            DomainMapper domainMapper,
+            ModelMapper modelMapper,
             ObjectMapper objectMapper,
             ConductorQueueStatusPublisherProperties properties) {
         this.queueDAO = queueDAO;
-        this.domainMapper = domainMapper;
+        this.modelMapper = modelMapper;
         this.objectMapper = objectMapper;
         this.successStatusQueue = properties.getSuccessQueue();
         this.failureStatusQueue = properties.getFailureQueue();
@@ -57,26 +57,26 @@ public class ConductorQueueStatusPublisher implements WorkflowStatusListener {
     }
 
     @Override
-    public void onWorkflowCompleted(WorkflowDO workflow) {
+    public void onWorkflowCompleted(WorkflowModel workflow) {
         LOGGER.info("Publishing callback of workflow {} on completion ", workflow.getWorkflowId());
         queueDAO.push(successStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
     @Override
-    public void onWorkflowTerminated(WorkflowDO workflow) {
+    public void onWorkflowTerminated(WorkflowModel workflow) {
         LOGGER.info("Publishing callback of workflow {} on termination", workflow.getWorkflowId());
         queueDAO.push(failureStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
     @Override
-    public void onWorkflowFinalized(WorkflowDO workflow) {
+    public void onWorkflowFinalized(WorkflowModel workflow) {
         LOGGER.info("Publishing callback of workflow {} on finalization", workflow.getWorkflowId());
         queueDAO.push(finalizeStatusQueue, Collections.singletonList(workflowToMessage(workflow)));
     }
 
-    private Message workflowToMessage(WorkflowDO workflow) {
+    private Message workflowToMessage(WorkflowModel workflow) {
         String jsonWfSummary;
-        WorkflowSummary summary = new WorkflowSummary(domainMapper.getWorkflowDTO(workflow));
+        WorkflowSummary summary = new WorkflowSummary(modelMapper.getWorkflow(workflow));
         try {
             jsonWfSummary = objectMapper.writeValueAsString(summary);
         } catch (JsonProcessingException e) {

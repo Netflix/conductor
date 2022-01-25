@@ -26,9 +26,8 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * @author x-ultra
@@ -55,12 +54,12 @@ public class LambdaTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in LambdaTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         TaskDef taskDefinition =
@@ -74,7 +73,7 @@ public class LambdaTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        TaskDO lambdaTask = new TaskDO();
+        TaskModel lambdaTask = new TaskModel();
         lambdaTask.setTaskType(TaskType.TASK_TYPE_LAMBDA);
         lambdaTask.setTaskDefName(taskMapperContext.getTaskToSchedule().getName());
         lambdaTask.setReferenceTaskName(
@@ -86,7 +85,7 @@ public class LambdaTaskMapper implements TaskMapper {
         lambdaTask.setScheduledTime(System.currentTimeMillis());
         lambdaTask.setInputData(taskInput);
         lambdaTask.setTaskId(taskId);
-        lambdaTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        lambdaTask.setStatus(TaskModel.Status.IN_PROGRESS);
         lambdaTask.setWorkflowTask(taskToSchedule);
         lambdaTask.setWorkflowPriority(workflowInstance.getPriority());
 

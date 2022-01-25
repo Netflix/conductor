@@ -15,9 +15,8 @@ package com.netflix.conductor.core.execution.tasks;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 
@@ -29,17 +28,18 @@ public class Wait extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         return false;
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
-        task.setStatus(TaskStatusDO.CANCELED);
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
+        task.setStatus(TaskModel.Status.CANCELED);
     }
 }

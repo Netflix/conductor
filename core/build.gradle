@@ -12,13 +12,6 @@
  */
 apply plugin: 'groovy'
 
-spotless {
-    groovy {
-        importOrder('java', 'javax', 'org', 'com.netflix', '', '\\#com.netflix', '\\#')
-        licenseHeaderFile("$rootDir/licenseheader.txt")
-    }
-}
-
 dependencies {
     implementation project(':conductor-common')
     compileOnly 'org.springframework.boot:spring-boot-starter'

@@ -28,7 +28,7 @@ import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.ExecutionDAOTest;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.WorkflowModel;
 import com.netflix.conductor.postgres.config.PostgresConfiguration;
 
 import static org.junit.Assert.assertEquals;
@@ -61,12 +61,12 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         WorkflowDef def = new WorkflowDef();
         def.setName("pending_count_correlation_jtest");
 
-        WorkflowDO workflow = createTestWorkflow();
+        WorkflowModel workflow = createTestWorkflow();
         workflow.setWorkflowDefinition(def);
 
         generateWorkflows(workflow, 10);
 
-        List<WorkflowDO> bycorrelationId =
+        List<WorkflowModel> bycorrelationId =
                 getExecutionDAO()
                         .getWorkflowsByCorrelationId(
                                 "pending_count_correlation_jtest", "corr001", true);
@@ -79,7 +79,7 @@ public class PostgresExecutionDAOTest extends ExecutionDAOTest {
         WorkflowDef def = new WorkflowDef();
         def.setName("workflow");
 
-        WorkflowDO workflow = createTestWorkflow();
+        WorkflowModel workflow = createTestWorkflow();
         workflow.setWorkflowDefinition(def);
 
         List<String> ids = generateWorkflows(workflow, 1);

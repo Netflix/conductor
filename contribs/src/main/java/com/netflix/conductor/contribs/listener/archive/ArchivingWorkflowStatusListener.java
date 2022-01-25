@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * Provides default implementation of workflow archiving immediately after workflow is completed or
@@ -37,14 +37,14 @@ public class ArchivingWorkflowStatusListener implements WorkflowStatusListener {
     }
 
     @Override
-    public void onWorkflowCompleted(WorkflowDO workflow) {
+    public void onWorkflowCompleted(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on completion ", workflow.getWorkflowId());
         this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true);
         Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
     }
 
     @Override
-    public void onWorkflowTerminated(WorkflowDO workflow) {
+    public void onWorkflowTerminated(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on termination", workflow.getWorkflowId());
         this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true);
         Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());

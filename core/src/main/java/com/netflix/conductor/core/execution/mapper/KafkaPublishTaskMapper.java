@@ -30,9 +30,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 @Component
 public class KafkaPublishTaskMapper implements TaskMapper {
@@ -55,21 +54,21 @@ public class KafkaPublishTaskMapper implements TaskMapper {
 
     /**
      * This method maps a {@link WorkflowTask} of type {@link TaskType#KAFKA_PUBLISH} to a {@link
-     * TaskDO} in a {@link TaskStatusDO#SCHEDULED} state
+     * TaskModel} in a {@link TaskModel.Status#SCHEDULED} state
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return a List with just one Kafka task
      * @throws TerminateWorkflowException In case if the task definition does not exist
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in KafkaPublishTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
         int retryCount = taskMapperContext.getRetryCount();
 
@@ -84,7 +83,7 @@ public class KafkaPublishTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        TaskDO kafkaPublishTask = new TaskDO();
+        TaskModel kafkaPublishTask = new TaskModel();
         kafkaPublishTask.setTaskType(taskToSchedule.getType());
         kafkaPublishTask.setTaskDefName(taskToSchedule.getName());
         kafkaPublishTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -94,7 +93,7 @@ public class KafkaPublishTaskMapper implements TaskMapper {
         kafkaPublishTask.setScheduledTime(System.currentTimeMillis());
         kafkaPublishTask.setTaskId(taskId);
         kafkaPublishTask.setInputData(input);
-        kafkaPublishTask.setStatus(TaskStatusDO.SCHEDULED);
+        kafkaPublishTask.setStatus(TaskModel.Status.SCHEDULED);
         kafkaPublishTask.setRetryCount(retryCount);
         kafkaPublishTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
         kafkaPublishTask.setWorkflowTask(taskToSchedule);

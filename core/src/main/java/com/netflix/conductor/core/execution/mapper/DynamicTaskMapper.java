@@ -29,15 +29,14 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#DYNAMIC} to a {@link TaskDO} based on definition derived from the dynamic task name
+ * TaskType#DYNAMIC} to a {@link TaskModel} based on definition derived from the dynamic task name
  * defined in {@link WorkflowTask#getInputParameters()}
  */
 @Component
@@ -60,20 +59,20 @@ public class DynamicTaskMapper implements TaskMapper {
     }
 
     /**
-     * This method maps a dynamic task to a {@link TaskDO} based on the input params
+     * This method maps a dynamic task to a {@link TaskModel} based on the input params
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
-     * @return A {@link List} that contains a single {@link TaskDO} with a {@link
-     *     TaskStatusDO#SCHEDULED}
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
+     * @return A {@link List} that contains a single {@link TaskModel} with a {@link
+     *     TaskModel.Status#SCHEDULED}
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
         LOGGER.debug("TaskMapperContext {} in DynamicTaskMapper", taskMapperContext);
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         int retryCount = taskMapperContext.getRetryCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
 
@@ -89,14 +88,14 @@ public class DynamicTaskMapper implements TaskMapper {
                         workflowInstance,
                         taskDefinition,
                         taskMapperContext.getTaskId());
-        TaskDO dynamicTask = new TaskDO();
+        TaskModel dynamicTask = new TaskModel();
         dynamicTask.setStartDelayInSeconds(taskToSchedule.getStartDelay());
         dynamicTask.setTaskId(taskMapperContext.getTaskId());
         dynamicTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         dynamicTask.setInputData(input);
         dynamicTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         dynamicTask.setWorkflowType(workflowInstance.getWorkflowName());
-        dynamicTask.setStatus(TaskStatusDO.SCHEDULED);
+        dynamicTask.setStatus(TaskModel.Status.SCHEDULED);
         dynamicTask.setTaskType(taskToSchedule.getType());
         dynamicTask.setTaskDefName(taskToSchedule.getName());
         dynamicTask.setCorrelationId(workflowInstance.getCorrelationId());

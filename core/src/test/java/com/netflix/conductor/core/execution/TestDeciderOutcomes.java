@@ -63,9 +63,8 @@ import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -185,7 +184,7 @@ public class TestDeciderOutcomes {
         WorkflowDef def = objectMapper.readValue(stream, WorkflowDef.class);
         assertNotNull(def);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.setCreatedTime(0L);
         workflow.getInput().put("param1", "nested");
@@ -197,7 +196,7 @@ public class TestDeciderOutcomes {
         assertTrue(outcome.tasksToBeUpdated.isEmpty());
         assertEquals(3, outcome.tasksToBeScheduled.size());
 
-        outcome.tasksToBeScheduled.forEach(t -> t.setStatus(TaskStatusDO.COMPLETED));
+        outcome.tasksToBeScheduled.forEach(t -> t.setStatus(TaskModel.Status.COMPLETED));
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
         outcome = deciderService.decide(workflow);
         assertFalse(outcome.isComplete);
@@ -213,7 +212,7 @@ public class TestDeciderOutcomes {
         WorkflowDef def = objectMapper.readValue(stream, WorkflowDef.class);
         assertNotNull(def);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.setCreatedTime(0L);
         workflow.getInput().put("param1", "nested");
@@ -225,7 +224,7 @@ public class TestDeciderOutcomes {
         assertTrue(outcome.tasksToBeUpdated.isEmpty());
         assertEquals(3, outcome.tasksToBeScheduled.size());
 
-        outcome.tasksToBeScheduled.forEach(t -> t.setStatus(TaskStatusDO.COMPLETED));
+        outcome.tasksToBeScheduled.forEach(t -> t.setStatus(TaskModel.Status.COMPLETED));
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
         outcome = deciderService.decide(workflow);
         assertFalse(outcome.isComplete);
@@ -250,7 +249,7 @@ public class TestDeciderOutcomes {
         def.getTasks().add(workflowTask);
         def.setSchemaVersion(2);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.getInput().put("requestId", 123);
         workflow.setCreatedTime(System.currentTimeMillis());
@@ -266,7 +265,7 @@ public class TestDeciderOutcomes {
         assertEquals(task1Id, outcome.tasksToBeScheduled.get(0).getInputData().get("taskId"));
         assertEquals(123, outcome.tasksToBeScheduled.get(0).getInputData().get("requestId"));
 
-        outcome.tasksToBeScheduled.get(0).setStatus(TaskStatusDO.FAILED);
+        outcome.tasksToBeScheduled.get(0).setStatus(TaskModel.Status.FAILED);
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
 
         outcome = deciderService.decide(workflow);
@@ -317,7 +316,7 @@ public class TestDeciderOutcomes {
             input.put("k1", 1);
             forkedInputs.put(wft.getTaskReferenceName(), input);
         }
-        workflow = new WorkflowDO();
+        workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.getInput().put("requestId", 123);
         workflow.setCreatedTime(System.currentTimeMillis());
@@ -337,8 +336,8 @@ public class TestDeciderOutcomes {
                 outcome.tasksToBeScheduled.get(1).getInputData().get("taskId"));
         task1Id = outcome.tasksToBeScheduled.get(1).getTaskId();
 
-        outcome.tasksToBeScheduled.get(1).setStatus(TaskStatusDO.FAILED);
-        for (TaskDO taskToBeScheduled : outcome.tasksToBeScheduled) {
+        outcome.tasksToBeScheduled.get(1).setStatus(TaskModel.Status.FAILED);
+        for (TaskModel taskToBeScheduled : outcome.tasksToBeScheduled) {
             taskToBeScheduled.setUpdateTime(System.currentTimeMillis());
         }
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
@@ -348,12 +347,12 @@ public class TestDeciderOutcomes {
                 outcome.tasksToBeScheduled.stream()
                         .anyMatch(task1 -> task1.getReferenceTaskName().equals("f0")));
 
-        Optional<TaskDO> optionalTask =
+        Optional<TaskModel> optionalTask =
                 outcome.tasksToBeScheduled.stream()
                         .filter(t -> t.getReferenceTaskName().equals("f0"))
                         .findFirst();
         assertTrue(optionalTask.isPresent());
-        TaskDO task = optionalTask.get();
+        TaskModel task = optionalTask.get();
         assertEquals("v", task.getInputData().get("k"));
         assertEquals(1, task.getInputData().get("k1"));
         assertEquals(task.getTaskId(), task.getInputData().get("taskId"));
@@ -384,7 +383,7 @@ public class TestDeciderOutcomes {
         def.getTasks().add(task2);
         def.setSchemaVersion(2);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.setCreatedTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);
@@ -400,7 +399,7 @@ public class TestDeciderOutcomes {
 
             workflow.getTasks().clear();
             workflow.getTasks().addAll(outcome.tasksToBeScheduled);
-            workflow.getTasks().get(0).setStatus(TaskStatusDO.FAILED);
+            workflow.getTasks().get(0).setStatus(TaskModel.Status.FAILED);
 
             outcome = deciderService.decide(workflow);
 
@@ -408,7 +407,7 @@ public class TestDeciderOutcomes {
             assertEquals(1, outcome.tasksToBeUpdated.size());
             assertEquals(1, outcome.tasksToBeScheduled.size());
 
-            assertEquals(TaskStatusDO.FAILED, workflow.getTasks().get(0).getStatus());
+            assertEquals(TaskModel.Status.FAILED, workflow.getTasks().get(0).getStatus());
             assertEquals(task1Id, outcome.tasksToBeUpdated.get(0).getTaskId());
             assertEquals(
                     task1.getTaskReferenceName(),
@@ -420,7 +419,7 @@ public class TestDeciderOutcomes {
 
         workflow.getTasks().clear();
         workflow.getTasks().addAll(outcome.tasksToBeScheduled);
-        workflow.getTasks().get(0).setStatus(TaskStatusDO.FAILED);
+        workflow.getTasks().get(0).setStatus(TaskModel.Status.FAILED);
 
         outcome = deciderService.decide(workflow);
 
@@ -428,7 +427,8 @@ public class TestDeciderOutcomes {
         assertEquals(1, outcome.tasksToBeUpdated.size());
         assertEquals(1, outcome.tasksToBeScheduled.size());
 
-        assertEquals(TaskStatusDO.COMPLETED_WITH_ERRORS, workflow.getTasks().get(0).getStatus());
+        assertEquals(
+                TaskModel.Status.COMPLETED_WITH_ERRORS, workflow.getTasks().get(0).getStatus());
         assertEquals(task1Id, outcome.tasksToBeUpdated.get(0).getTaskId());
         assertEquals(
                 task2.getTaskReferenceName(),
@@ -458,7 +458,7 @@ public class TestDeciderOutcomes {
         def.getTasks().add(task2);
         def.setSchemaVersion(2);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         List<WorkflowTask> forks = new LinkedList<>();
         Map<String, Map<String, Object>> forkedInputs = new HashMap<>();
@@ -483,16 +483,16 @@ public class TestDeciderOutcomes {
         assertEquals(5, outcome.tasksToBeScheduled.size());
         assertEquals(0, outcome.tasksToBeUpdated.size());
         assertEquals(TASK_TYPE_FORK, outcome.tasksToBeScheduled.get(0).getTaskType());
-        assertEquals(TaskStatusDO.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
 
         for (int retryCount = 0; retryCount < 4; retryCount++) {
 
-            for (TaskDO taskToBeScheduled : outcome.tasksToBeScheduled) {
+            for (TaskModel taskToBeScheduled : outcome.tasksToBeScheduled) {
                 if (taskToBeScheduled.getTaskDefName().equals("join0")) {
-                    assertEquals(TaskStatusDO.IN_PROGRESS, taskToBeScheduled.getStatus());
+                    assertEquals(TaskModel.Status.IN_PROGRESS, taskToBeScheduled.getStatus());
                 } else if (taskToBeScheduled.getTaskType().matches("(f0|f1|f2)")) {
-                    assertEquals(TaskStatusDO.SCHEDULED, taskToBeScheduled.getStatus());
-                    taskToBeScheduled.setStatus(TaskStatusDO.FAILED);
+                    assertEquals(TaskModel.Status.SCHEDULED, taskToBeScheduled.getStatus());
+                    taskToBeScheduled.setStatus(TaskModel.Status.FAILED);
                 }
 
                 taskToBeScheduled.setUpdateTime(System.currentTimeMillis());
@@ -505,14 +505,14 @@ public class TestDeciderOutcomes {
 
         for (int i = 0; i < 3; i++) {
             assertEquals(
-                    TaskStatusDO.COMPLETED_WITH_ERRORS,
+                    TaskModel.Status.COMPLETED_WITH_ERRORS,
                     outcome.tasksToBeUpdated.get(i).getStatus());
             assertEquals("f" + (i), outcome.tasksToBeUpdated.get(i).getTaskDefName());
         }
 
-        assertEquals(TaskStatusDO.IN_PROGRESS, outcome.tasksToBeScheduled.get(0).getStatus());
+        assertEquals(TaskModel.Status.IN_PROGRESS, outcome.tasksToBeScheduled.get(0).getStatus());
         new Join().execute(workflow, outcome.tasksToBeScheduled.get(0), null);
-        assertEquals(TaskStatusDO.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
     }
 
     @Test
@@ -554,7 +554,7 @@ public class TestDeciderOutcomes {
         def.getTasks().add(decide);
         def.setSchemaVersion(2);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.setCreatedTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);

@@ -27,14 +27,13 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#SWITCH} to a List {@link TaskDO} starting with Task of type {@link TaskType#SWITCH}
- * which is marked as IN_PROGRESS, followed by the list of {@link TaskDO} based on the case
+ * TaskType#SWITCH} to a List {@link TaskModel} starting with Task of type {@link TaskType#SWITCH}
+ * which is marked as IN_PROGRESS, followed by the list of {@link TaskModel} based on the case
  * expression evaluation in the Switch task.
  */
 @Component
@@ -59,10 +58,10 @@ public class SwitchTaskMapper implements TaskMapper {
      * type {@link TaskType#SWITCH}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return List of tasks in the following order:
      *     <ul>
-     *       <li>{@link TaskType#SWITCH} with {@link TaskStatusDO#IN_PROGRESS}
+     *       <li>{@link TaskType#SWITCH} with {@link TaskModel.Status#IN_PROGRESS}
      *       <li>List of tasks based on the evaluation of {@link WorkflowTask#getEvaluatorType()}
      *           and {@link WorkflowTask#getExpression()} are scheduled.
      *       <li>In the case of no matching {@link WorkflowTask#getEvaluatorType()}, workflow will
@@ -72,11 +71,11 @@ public class SwitchTaskMapper implements TaskMapper {
      *     </ul>
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
         LOGGER.debug("TaskMapperContext {} in SwitchTaskMapper", taskMapperContext);
-        List<TaskDO> tasksToBeScheduled = new LinkedList<>();
+        List<TaskModel> tasksToBeScheduled = new LinkedList<>();
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         int retryCount = taskMapperContext.getRetryCount();
         String taskId = taskMapperContext.getTaskId();
@@ -92,7 +91,7 @@ public class SwitchTaskMapper implements TaskMapper {
         String evalResult = "" + evaluator.evaluate(taskToSchedule.getExpression(), taskInput);
 
         // QQ why is the case value and the caseValue passed and caseOutput passes as the same ??
-        TaskDO switchTask = new TaskDO();
+        TaskModel switchTask = new TaskModel();
         switchTask.setTaskType(TaskType.TASK_TYPE_SWITCH);
         switchTask.setTaskDefName(TaskType.TASK_TYPE_SWITCH);
         switchTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -104,7 +103,7 @@ public class SwitchTaskMapper implements TaskMapper {
         switchTask.getOutputData().put("evaluationResult", Collections.singletonList(evalResult));
         switchTask.setTaskId(taskId);
         switchTask.setStartTime(System.currentTimeMillis());
-        switchTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        switchTask.setStatus(TaskModel.Status.IN_PROGRESS);
         switchTask.setWorkflowTask(taskToSchedule);
         switchTask.setWorkflowPriority(workflowInstance.getPriority());
         tasksToBeScheduled.add(switchTask);
@@ -123,7 +122,7 @@ public class SwitchTaskMapper implements TaskMapper {
                     selectedTasks.get(0); // Schedule the first task to be executed...
             // TODO break out this recursive call using function composition of what needs to be
             // done and then walk back the condition tree
-            List<TaskDO> caseTasks =
+            List<TaskModel> caseTasks =
                     taskMapperContext
                             .getDeciderService()
                             .getTasksToBeScheduled(

@@ -25,9 +25,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -48,7 +47,7 @@ public class SetVariable extends WorkflowSystemTask {
     }
 
     private boolean validateVariablesSize(
-            WorkflowDO workflow, TaskDO task, Map<String, Object> variables) {
+            WorkflowModel workflow, TaskModel task, Map<String, Object> variables) {
         String workflowId = workflow.getWorkflowId();
         long maxThreshold = properties.getMaxWorkflowVariablesPayloadSizeThreshold().toKilobytes();
 
@@ -75,7 +74,7 @@ public class SetVariable extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor provider) {
+    public boolean execute(WorkflowModel workflow, TaskModel task, WorkflowExecutor provider) {
         Map<String, Object> variables = workflow.getVariables();
         Map<String, Object> input = task.getInputData();
         String taskId = task.getTaskId();
@@ -106,12 +105,12 @@ public class SetVariable extends WorkflowSystemTask {
                                     variables.put(key, previousValues.get(key));
                                 });
                 newKeys.forEach(variables::remove);
-                task.setStatus(TaskStatusDO.FAILED_WITH_TERMINAL_ERROR);
+                task.setStatus(TaskModel.Status.FAILED_WITH_TERMINAL_ERROR);
                 return true;
             }
         }
 
-        task.setStatus(TaskStatusDO.COMPLETED);
+        task.setStatus(TaskModel.Status.COMPLETED);
         return true;
     }
 }

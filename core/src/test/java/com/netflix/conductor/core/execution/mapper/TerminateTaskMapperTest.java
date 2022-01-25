@@ -24,8 +24,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.mockito.Mockito.mock;
 
@@ -46,7 +46,7 @@ public class TerminateTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -59,7 +59,7 @@ public class TerminateTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks =
+        List<TaskModel> mappedTasks =
                 new TerminateTaskMapper(parametersUtils).getMappedTasks(taskMapperContext);
 
         Assert.assertNotNull(mappedTasks);

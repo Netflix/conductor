@@ -13,7 +13,7 @@
 package com.netflix.conductor.dao;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.model.TaskModel;
 
 /**
  * A contract to support concurrency limits of tasks.
@@ -22,12 +22,12 @@ import com.netflix.conductor.domain.TaskDO;
  */
 public interface ConcurrentExecutionLimitDAO {
 
-    default void addTaskToLimit(TaskDO task) {
+    default void addTaskToLimit(TaskModel task) {
         throw new UnsupportedOperationException(
                 getClass() + " does not support addTaskToLimit method.");
     }
 
-    default void removeTaskFromLimit(TaskDO task) {
+    default void removeTaskFromLimit(TaskModel task) {
         throw new UnsupportedOperationException(
                 getClass() + " does not support removeTaskFromLimit method.");
     }
@@ -41,5 +41,5 @@ public interface ConcurrentExecutionLimitDAO {
      * @return true if by executing this task, the limit is breached. false otherwise.
      * @see TaskDef#concurrencyLimit()
      */
-    boolean exceedsLimit(TaskDO task);
+    boolean exceedsLimit(TaskModel task);
 }

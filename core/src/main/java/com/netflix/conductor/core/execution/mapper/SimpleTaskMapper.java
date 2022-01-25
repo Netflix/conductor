@@ -27,14 +27,13 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#SIMPLE} to a {@link TaskDO} with status {@link TaskStatusDO#SCHEDULED}. <b>NOTE:</b>
- * There is not type defined for simples task.
+ * TaskType#SIMPLE} to a {@link TaskModel} with status {@link TaskModel.Status#SCHEDULED}.
+ * <b>NOTE:</b> There is not type defined for simples task.
  */
 @Component
 public class SimpleTaskMapper implements TaskMapper {
@@ -55,18 +54,18 @@ public class SimpleTaskMapper implements TaskMapper {
      * This method maps a {@link WorkflowTask} of type {@link TaskType#SIMPLE} to a {@link Task}
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @throws TerminateWorkflowException In case if the task definition does not exist
      * @return a List with just one simple task
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in SimpleTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         int retryCount = taskMapperContext.getRetryCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
 
@@ -87,14 +86,14 @@ public class SimpleTaskMapper implements TaskMapper {
                         workflowInstance,
                         taskDefinition,
                         taskMapperContext.getTaskId());
-        TaskDO simpleTask = new TaskDO();
+        TaskModel simpleTask = new TaskModel();
         simpleTask.setStartDelayInSeconds(taskToSchedule.getStartDelay());
         simpleTask.setTaskId(taskMapperContext.getTaskId());
         simpleTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
         simpleTask.setInputData(input);
         simpleTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
         simpleTask.setWorkflowType(workflowInstance.getWorkflowName());
-        simpleTask.setStatus(TaskStatusDO.SCHEDULED);
+        simpleTask.setStatus(TaskModel.Status.SCHEDULED);
         simpleTask.setTaskType(taskToSchedule.getName());
         simpleTask.setTaskDefName(taskToSchedule.getName());
         simpleTask.setCorrelationId(workflowInstance.getCorrelationId());

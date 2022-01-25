@@ -31,11 +31,9 @@ import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -82,7 +80,7 @@ public class ExternalPayloadStorageUtils {
      *
      * @param entity the task or workflow for which the payload is to be verified and uploaded
      * @param payloadType the {@link PayloadType} of the payload
-     * @param <T> {@link TaskDO} or {@link WorkflowDO}
+     * @param <T> {@link TaskModel} or {@link WorkflowModel}
      * @throws ApplicationException in case of JSON parsing errors or upload errors
      * @throws TerminateWorkflowException if the payload size is bigger than permissible limit as
      *     per {@link ConductorProperties}
@@ -96,26 +94,26 @@ public class ExternalPayloadStorageUtils {
             case TASK_INPUT:
                 threshold = properties.getTaskInputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxTaskInputPayloadSizeThreshold().toKilobytes();
-                payload = ((TaskDO) entity).getInputData();
-                workflowId = ((TaskDO) entity).getWorkflowInstanceId();
+                payload = ((TaskModel) entity).getInputData();
+                workflowId = ((TaskModel) entity).getWorkflowInstanceId();
                 break;
             case TASK_OUTPUT:
                 threshold = properties.getTaskOutputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxTaskOutputPayloadSizeThreshold().toKilobytes();
-                payload = ((TaskDO) entity).getOutputData();
-                workflowId = ((TaskDO) entity).getWorkflowInstanceId();
+                payload = ((TaskModel) entity).getOutputData();
+                workflowId = ((TaskModel) entity).getWorkflowInstanceId();
                 break;
             case WORKFLOW_INPUT:
                 threshold = properties.getWorkflowInputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxWorkflowInputPayloadSizeThreshold().toKilobytes();
-                payload = ((WorkflowDO) entity).getInput();
-                workflowId = ((WorkflowDO) entity).getWorkflowId();
+                payload = ((WorkflowModel) entity).getInput();
+                workflowId = ((WorkflowModel) entity).getWorkflowId();
                 break;
             case WORKFLOW_OUTPUT:
                 threshold = properties.getWorkflowOutputPayloadSizeThreshold().toKilobytes();
                 maxThreshold = properties.getMaxWorkflowOutputPayloadSizeThreshold().toKilobytes();
-                payload = ((WorkflowDO) entity).getOutput();
-                workflowId = ((WorkflowDO) entity).getWorkflowId();
+                payload = ((WorkflowModel) entity).getOutput();
+                workflowId = ((WorkflowModel) entity).getWorkflowId();
                 break;
         }
 
@@ -125,73 +123,73 @@ public class ExternalPayloadStorageUtils {
             long payloadSize = payloadBytes.length;
 
             if (payloadSize > maxThreshold * 1024) {
-                if (entity instanceof TaskDO) {
+                if (entity instanceof TaskModel) {
                     String errorMsg =
                             String.format(
                                     "The payload size: %dB of task: %s in workflow: %s  is greater than the permissible limit: %dKB",
                                     payloadSize,
-                                    ((TaskDO) entity).getTaskId(),
-                                    ((TaskDO) entity).getWorkflowInstanceId(),
+                                    ((TaskModel) entity).getTaskId(),
+                                    ((TaskModel) entity).getWorkflowInstanceId(),
                                     maxThreshold);
-                    failTask(((TaskDO) entity), payloadType, errorMsg);
+                    failTask(((TaskModel) entity), payloadType, errorMsg);
                 } else {
                     String errorMsg =
                             String.format(
                                     "The output payload size: %dB of workflow: %s is greater than the permissible limit: %dKB",
                                     payloadSize,
-                                    ((WorkflowDO) entity).getWorkflowId(),
+                                    ((WorkflowModel) entity).getWorkflowId(),
                                     maxThreshold);
-                    failWorkflow(((WorkflowDO) entity), payloadType, errorMsg);
+                    failWorkflow(((WorkflowModel) entity), payloadType, errorMsg);
                 }
             } else if (payloadSize > threshold * 1024) {
                 switch (payloadType) {
                     case TASK_INPUT:
-                        ((TaskDO) entity).setInputData(new HashMap<>());
-                        ((TaskDO) entity)
+                        ((TaskModel) entity).setInputData(new HashMap<>());
+                        ((TaskModel) entity)
                                 .setExternalInputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes, payloadSize, PayloadType.TASK_INPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((TaskDO) entity).getTaskDefName(),
+                                ((TaskModel) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_INPUT.toString());
                         break;
                     case TASK_OUTPUT:
-                        ((TaskDO) entity).setOutputData(new HashMap<>());
-                        ((TaskDO) entity)
+                        ((TaskModel) entity).setOutputData(new HashMap<>());
+                        ((TaskModel) entity)
                                 .setExternalOutputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes,
                                                 payloadSize,
                                                 PayloadType.TASK_OUTPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((TaskDO) entity).getTaskDefName(),
+                                ((TaskModel) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_OUTPUT.toString());
                         break;
                     case WORKFLOW_INPUT:
-                        ((WorkflowDO) entity).setInput(new HashMap<>());
-                        ((WorkflowDO) entity)
+                        ((WorkflowModel) entity).setInput(new HashMap<>());
+                        ((WorkflowModel) entity)
                                 .setExternalInputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes,
                                                 payloadSize,
                                                 PayloadType.WORKFLOW_INPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((WorkflowDO) entity).getWorkflowName(),
+                                ((WorkflowModel) entity).getWorkflowName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.WORKFLOW_INPUT.toString());
                         break;
                     case WORKFLOW_OUTPUT:
-                        ((WorkflowDO) entity).setOutput(new HashMap<>());
-                        ((WorkflowDO) entity)
+                        ((WorkflowModel) entity).setOutput(new HashMap<>());
+                        ((WorkflowModel) entity)
                                 .setExternalOutputPayloadStoragePath(
                                         uploadHelper(
                                                 payloadBytes,
                                                 payloadSize,
                                                 PayloadType.WORKFLOW_OUTPUT));
                         Monitors.recordExternalPayloadStorageUsage(
-                                ((WorkflowDO) entity).getWorkflowName(),
+                                ((WorkflowModel) entity).getWorkflowName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.WORKFLOW_OUTPUT.toString());
                         break;
@@ -216,20 +214,20 @@ public class ExternalPayloadStorageUtils {
     }
 
     @VisibleForTesting
-    void failTask(TaskDO task, PayloadType payloadType, String errorMsg) {
+    void failTask(TaskModel task, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
         task.setReasonForIncompletion(errorMsg);
-        task.setStatus(TaskStatusDO.FAILED_WITH_TERMINAL_ERROR);
+        task.setStatus(TaskModel.Status.FAILED_WITH_TERMINAL_ERROR);
         if (payloadType == PayloadType.TASK_INPUT) {
             task.setInputData(new HashMap<>());
         } else {
             task.setOutputData(new HashMap<>());
         }
-        throw new TerminateWorkflowException(errorMsg, WorkflowStatusDO.FAILED, task);
+        throw new TerminateWorkflowException(errorMsg, WorkflowModel.Status.FAILED, task);
     }
 
     @VisibleForTesting
-    void failWorkflow(WorkflowDO workflow, PayloadType payloadType, String errorMsg) {
+    void failWorkflow(WorkflowModel workflow, PayloadType payloadType, String errorMsg) {
         LOGGER.error(errorMsg);
         if (payloadType == PayloadType.WORKFLOW_INPUT) {
             workflow.setInput(new HashMap<>());

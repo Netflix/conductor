@@ -18,9 +18,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -28,7 +27,7 @@ import static org.mockito.Mockito.mock;
 /** @author x-ultra */
 public class TestLambda {
 
-    private final WorkflowDO workflow = new WorkflowDO();
+    private final WorkflowModel workflow = new WorkflowModel();
     private final WorkflowExecutor executor = mock(WorkflowExecutor.class);
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -40,24 +39,24 @@ public class TestLambda {
         inputObj.put("a", 1);
 
         // test for scriptExpression == null
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().put("input", inputObj);
         lambda.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
 
         // test for normal
-        task = new TaskDO();
+        task = new TaskModel();
         task.getInputData().put("input", inputObj);
         task.getInputData().put("scriptExpression", "if ($.input.a==1){return 1}else{return 0 } ");
         lambda.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertEquals(task.getOutputData().toString(), "{result=1}");
 
         // test for scriptExpression ScriptException
-        task = new TaskDO();
+        task = new TaskModel();
         task.getInputData().put("input", inputObj);
         task.getInputData().put("scriptExpression", "if ($.a.size==1){return 1}else{return 0 } ");
         lambda.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
     }
 }

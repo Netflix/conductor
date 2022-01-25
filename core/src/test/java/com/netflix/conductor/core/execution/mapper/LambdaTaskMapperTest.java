@@ -24,8 +24,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -55,7 +55,7 @@ public class LambdaTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -68,7 +68,7 @@ public class LambdaTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks =
+        List<TaskModel> mappedTasks =
                 new LambdaTaskMapper(parametersUtils, metadataDAO)
                         .getMappedTasks(taskMapperContext);
 
@@ -88,7 +88,7 @@ public class LambdaTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -101,7 +101,7 @@ public class LambdaTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks =
+        List<TaskModel> mappedTasks =
                 new LambdaTaskMapper(parametersUtils, metadataDAO)
                         .getMappedTasks(taskMapperContext);
 

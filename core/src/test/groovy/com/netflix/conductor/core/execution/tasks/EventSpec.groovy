@@ -18,9 +18,8 @@ import com.netflix.conductor.core.events.queue.Message
 import com.netflix.conductor.core.events.queue.ObservableQueue
 import com.netflix.conductor.core.exception.ApplicationException
 import com.netflix.conductor.core.utils.ParametersUtils
-import com.netflix.conductor.domain.TaskDO
-import com.netflix.conductor.domain.TaskStatusDO
-import com.netflix.conductor.domain.WorkflowDO
+import com.netflix.conductor.model.TaskModel
+import com.netflix.conductor.model.WorkflowModel
 
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -31,12 +30,12 @@ class EventSpec extends Specification {
 
     EventQueues eventQueues
     ParametersUtils parametersUtils
-    ObjectMapper mapper
+    ObjectMapper objectMapper
     ObservableQueue observableQueue
 
     String payloadJSON = "payloadJSON"
     WorkflowDef testWorkflowDefinition
-    WorkflowDO workflow
+    WorkflowModel workflow
 
     @Subject
     Event event
@@ -45,14 +44,14 @@ class EventSpec extends Specification {
         parametersUtils = Mock(ParametersUtils.class)
         eventQueues = Mock(EventQueues.class)
         observableQueue = Mock(ObservableQueue.class)
-        mapper = Mock(ObjectMapper.class) {
+        objectMapper = Mock(ObjectMapper.class) {
             writeValueAsString(_) >> payloadJSON
         }
 
         testWorkflowDefinition = new WorkflowDef(name: "testWorkflow", version: 2)
-        workflow = new WorkflowDO(workflowDefinition: testWorkflowDefinition, workflowId: 'workflowId', correlationId: 'corrId')
+        workflow = new WorkflowModel(workflowDefinition: testWorkflowDefinition, workflowId: 'workflowId', correlationId: 'corrId')
 
-        event = new Event(eventQueues, parametersUtils, mapper)
+        event = new Event(eventQueues, parametersUtils, objectMapper)
     }
 
     def "verify that event task is async"() {
@@ -66,7 +65,7 @@ class EventSpec extends Specification {
     def "event cancel calls ack on the queue"() {
         given:
         // status is intentionally left as null
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor'])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor'])
 
         String queueName = "conductor:${workflow.workflowName}:${task.referenceTaskName}"
 
@@ -84,7 +83,7 @@ class EventSpec extends Specification {
 
     def "event task with 'conductor' as sink"() {
         given:
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor'])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor'])
 
         String queueName = "conductor:${workflow.workflowName}:${task.referenceTaskName}"
         Message expectedMessage
@@ -93,7 +92,7 @@ class EventSpec extends Specification {
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.COMPLETED
+        task.status == TaskModel.Status.COMPLETED
         verifyOutputData(task, queueName)
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': 'conductor']
@@ -109,7 +108,7 @@ class EventSpec extends Specification {
         String eventName = 'testEvent'
         String sinkValue = "conductor:$eventName".toString()
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
 
         String queueName = "conductor:${workflow.workflowName}:$eventName"
         Message expectedMessage
@@ -118,7 +117,7 @@ class EventSpec extends Specification {
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.COMPLETED
+        task.status == TaskModel.Status.COMPLETED
         verifyOutputData(task, queueName)
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
@@ -134,7 +133,7 @@ class EventSpec extends Specification {
         String eventName = 'testEvent'
         String sinkValue = "sqs:$eventName".toString()
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
 
         // for non conductor queues, queueName is the same as the value of the 'sink' field in the inputData
         String queueName = sinkValue
@@ -144,7 +143,7 @@ class EventSpec extends Specification {
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.COMPLETED
+        task.status == TaskModel.Status.COMPLETED
         verifyOutputData(task, queueName)
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
@@ -157,7 +156,7 @@ class EventSpec extends Specification {
 
     def "event task with 'conductor' as sink and async complete"() {
         given:
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor', 'asyncComplete': true])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': 'conductor', 'asyncComplete': true])
 
         String queueName = "conductor:${workflow.workflowName}:${task.referenceTaskName}"
         Message expectedMessage
@@ -166,7 +165,7 @@ class EventSpec extends Specification {
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         verifyOutputData(task, queueName)
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': 'conductor']
@@ -181,13 +180,13 @@ class EventSpec extends Specification {
         given:
         String sinkValue = 'conductorinvalidsink'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
 
         when:
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.FAILED
+        task.status == TaskModel.Status.FAILED
         task.reasonForIncompletion != null
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
@@ -197,7 +196,7 @@ class EventSpec extends Specification {
         given:
         String sinkValue = 'rabbitmq:abc_123'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', inputData: ['sink': sinkValue])
 
         // for non conductor queues, queueName is the same as the value of the 'sink' field in the inputData
         String queueName = sinkValue
@@ -206,7 +205,7 @@ class EventSpec extends Specification {
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.FAILED
+        task.status == TaskModel.Status.FAILED
         task.reasonForIncompletion != null
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
@@ -217,13 +216,13 @@ class EventSpec extends Specification {
         given:
         String sinkValue = 'conductor'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskStatusDO.SCHEDULED, inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskModel.Status.SCHEDULED, inputData: ['sink': sinkValue])
 
         when:
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.SCHEDULED
+        task.status == TaskModel.Status.SCHEDULED
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
         1 * eventQueues.getQueue(_) >> observableQueue
@@ -235,13 +234,13 @@ class EventSpec extends Specification {
         given:
         String sinkValue = 'conductor'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskStatusDO.SCHEDULED, inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskModel.Status.SCHEDULED, inputData: ['sink': sinkValue])
 
         when:
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.FAILED
+        task.status == TaskModel.Status.FAILED
         task.reasonForIncompletion != null
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
@@ -254,36 +253,36 @@ class EventSpec extends Specification {
         given:
         String sinkValue = 'conductor'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskStatusDO.SCHEDULED, inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskModel.Status.SCHEDULED, inputData: ['sink': sinkValue])
 
         when:
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.FAILED
+        task.status == TaskModel.Status.FAILED
         task.reasonForIncompletion != null
 
-        1 * mapper.writeValueAsString(_ as Map) >> { throw new JsonParseException(null, "invalid json") }
+        1 * objectMapper.writeValueAsString(_ as Map) >> { throw new JsonParseException(null, "invalid json") }
     }
 
     def "event task fails with an unexpected exception"() {
         given:
         String sinkValue = 'conductor'
 
-        TaskDO task = new TaskDO(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskStatusDO.SCHEDULED, inputData: ['sink': sinkValue])
+        TaskModel task = new TaskModel(referenceTaskName: 'task0', taskId: 'task_id_0', status: TaskModel.Status.SCHEDULED, inputData: ['sink': sinkValue])
 
         when:
         event.start(workflow, task, null)
 
         then:
-        task.status == TaskStatusDO.FAILED
+        task.status == TaskModel.Status.FAILED
         task.reasonForIncompletion != null
 
         1 * parametersUtils.getTaskInputV2(_, workflow, task.taskId, _) >> ['sink': sinkValue]
         1 * eventQueues.getQueue(_) >> { throw new NullPointerException("some object is null") }
     }
 
-    private void verifyOutputData(TaskDO task, String queueName) {
+    private void verifyOutputData(TaskModel task, String queueName) {
         assert task.outputData != null
         assert task.outputData['event_produced'] == queueName
         assert task.outputData['workflowInstanceId'] == workflow.workflowId
@@ -292,7 +291,7 @@ class EventSpec extends Specification {
         assert task.outputData['correlationId'] == workflow.correlationId
     }
 
-    private void verifyMessage(Message expectedMessage, TaskDO task) {
+    private void verifyMessage(Message expectedMessage, TaskModel task) {
         assert expectedMessage != null
         assert expectedMessage.id == task.taskId
         assert expectedMessage.receipt == task.taskId

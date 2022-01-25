@@ -22,9 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.WorkflowModel;
 
 public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusListener {
 
@@ -76,7 +75,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
     }
 
     @Override
-    public void onWorkflowCompleted(WorkflowDO workflow) {
+    public void onWorkflowCompleted(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on completion ", workflow.getWorkflowId());
         if (delayArchiveSeconds > 0) {
             scheduledThreadPoolExecutor.schedule(
@@ -91,7 +90,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
     }
 
     @Override
-    public void onWorkflowTerminated(WorkflowDO workflow) {
+    public void onWorkflowTerminated(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on termination", workflow.getWorkflowId());
         if (delayArchiveSeconds > 0) {
             scheduledThreadPoolExecutor.schedule(
@@ -109,10 +108,10 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
 
         private final String workflowId;
         private final String workflowName;
-        private final WorkflowStatusDO status;
+        private final WorkflowModel.Status status;
         private final ExecutionDAOFacade executionDAOFacade;
 
-        DelayArchiveWorkflow(WorkflowDO workflow, ExecutionDAOFacade executionDAOFacade) {
+        DelayArchiveWorkflow(WorkflowModel workflow, ExecutionDAOFacade executionDAOFacade) {
             this.workflowId = workflow.getWorkflowId();
             this.workflowName = workflow.getWorkflowName();
             this.status = workflow.getStatus();

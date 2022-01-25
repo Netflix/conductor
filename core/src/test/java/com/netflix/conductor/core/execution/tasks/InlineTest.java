@@ -21,16 +21,15 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
 import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
 import com.netflix.conductor.core.execution.evaluators.ValueParamEvaluator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 public class InlineTest {
 
-    private final WorkflowDO workflow = new WorkflowDO();
+    private final WorkflowModel workflow = new WorkflowModel();
     private final WorkflowExecutor executor = mock(WorkflowExecutor.class);
 
     @Test
@@ -42,10 +41,10 @@ public class InlineTest {
         inputObj.put("expression", "");
         inputObj.put("evaluatorType", "value-param");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(inputObj);
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
         assertEquals(
                 "Empty 'expression' in Inline task's input parameters. A non-empty String value must be provided.",
                 task.getReasonForIncompletion());
@@ -55,10 +54,10 @@ public class InlineTest {
         inputObj.put("expression", "value");
         inputObj.put("evaluatorType", "");
 
-        task = new TaskDO();
+        task = new TaskModel();
         task.getInputData().putAll(inputObj);
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
         assertEquals(
                 "Empty 'evaluatorType' in Inline task's input parameters. A non-empty String value must be provided.",
                 task.getReasonForIncompletion());
@@ -73,11 +72,11 @@ public class InlineTest {
         inputObj.put("expression", "value");
         inputObj.put("evaluatorType", "value-param");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(inputObj);
 
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertNull(task.getReasonForIncompletion());
         assertEquals(101, task.getOutputData().get("result"));
 
@@ -86,11 +85,11 @@ public class InlineTest {
         inputObj.put("expression", "value");
         inputObj.put("evaluatorType", "value-param");
 
-        task = new TaskDO();
+        task = new TaskModel();
         task.getInputData().putAll(inputObj);
 
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertNull(task.getReasonForIncompletion());
         assertEquals("StringValue", task.getOutputData().get("result"));
     }
@@ -107,11 +106,11 @@ public class InlineTest {
                 "function e() { if ($.value == 101){return {\"evalResult\": true}} else { return {\"evalResult\": false}}} e();");
         inputObj.put("evaluatorType", "javascript");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.getInputData().putAll(inputObj);
 
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertNull(task.getReasonForIncompletion());
         assertEquals(
                 true, ((Map<String, Object>) task.getOutputData().get("result")).get("evalResult"));
@@ -123,11 +122,11 @@ public class InlineTest {
                 "function e() { if ($.value == 'StringValue'){return {\"evalResult\": true}} else { return {\"evalResult\": false}}} e();");
         inputObj.put("evaluatorType", "javascript");
 
-        task = new TaskDO();
+        task = new TaskModel();
         task.getInputData().putAll(inputObj);
 
         inline.execute(workflow, task, executor);
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertNull(task.getReasonForIncompletion());
         assertEquals(
                 true, ((Map<String, Object>) task.getOutputData().get("result")).get("evalResult"));

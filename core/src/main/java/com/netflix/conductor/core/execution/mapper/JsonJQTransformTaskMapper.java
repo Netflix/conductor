@@ -26,9 +26,8 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 @Component
 public class JsonJQTransformTaskMapper implements TaskMapper {
@@ -48,12 +47,12 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in JsonJQTransformTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         TaskDef taskDefinition =
@@ -67,7 +66,7 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        TaskDO jsonJQTransformTask = new TaskDO();
+        TaskModel jsonJQTransformTask = new TaskModel();
         jsonJQTransformTask.setTaskType(taskToSchedule.getType());
         jsonJQTransformTask.setTaskDefName(taskToSchedule.getName());
         jsonJQTransformTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -78,7 +77,7 @@ public class JsonJQTransformTaskMapper implements TaskMapper {
         jsonJQTransformTask.setScheduledTime(System.currentTimeMillis());
         jsonJQTransformTask.setInputData(taskInput);
         jsonJQTransformTask.setTaskId(taskId);
-        jsonJQTransformTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        jsonJQTransformTask.setStatus(TaskModel.Status.IN_PROGRESS);
         jsonJQTransformTask.setWorkflowTask(taskToSchedule);
         jsonJQTransformTask.setWorkflowPriority(workflowInstance.getPriority());
 

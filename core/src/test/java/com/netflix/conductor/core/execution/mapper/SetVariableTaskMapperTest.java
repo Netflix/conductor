@@ -22,8 +22,8 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 public class SetVariableTaskMapperTest {
 
@@ -36,7 +36,7 @@ public class SetVariableTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -49,7 +49,7 @@ public class SetVariableTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks = new SetVariableTaskMapper().getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = new SetVariableTaskMapper().getMappedTasks(taskMapperContext);
 
         Assert.assertNotNull(mappedTasks);
         Assert.assertEquals(1, mappedTasks.size());

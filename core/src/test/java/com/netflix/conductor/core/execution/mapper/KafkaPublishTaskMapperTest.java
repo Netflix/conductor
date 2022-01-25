@@ -27,8 +27,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -56,7 +56,7 @@ public class KafkaPublishTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 
@@ -73,7 +73,7 @@ public class KafkaPublishTaskMapperTest {
                         .build();
 
         // when
-        List<TaskDO> mappedTasks = kafkaTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = kafkaTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertEquals(1, mappedTasks.size());
@@ -89,7 +89,7 @@ public class KafkaPublishTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 
@@ -111,7 +111,7 @@ public class KafkaPublishTaskMapperTest {
                         .build();
 
         // when
-        List<TaskDO> mappedTasks = kafkaTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = kafkaTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertEquals(1, mappedTasks.size());

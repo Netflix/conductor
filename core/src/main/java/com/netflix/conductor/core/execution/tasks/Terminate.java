@@ -18,9 +18,8 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.COMPLETED;
@@ -67,16 +66,17 @@ public class Terminate extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         String returnStatus = (String) task.getInputData().get(TERMINATION_STATUS_PARAMETER);
 
         if (validateInputStatus(returnStatus)) {
             task.setOutputData(getInputFromParam(task.getInputData()));
-            task.setStatus(TaskStatusDO.COMPLETED);
+            task.setStatus(TaskModel.Status.COMPLETED);
             return true;
         }
         task.setReasonForIncompletion("given termination status is not valid");
-        task.setStatus(TaskStatusDO.FAILED);
+        task.setStatus(TaskModel.Status.FAILED);
         return false;
     }
 

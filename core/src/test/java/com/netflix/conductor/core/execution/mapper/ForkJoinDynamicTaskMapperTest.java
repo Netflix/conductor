@@ -35,8 +35,8 @@ import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,7 +82,7 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
@@ -123,16 +123,16 @@ public class ForkJoinDynamicTaskMapperTest {
         dynamicTasksInput.put("dynamicTasksInput", dynamicTasksInput);
 
         // when
-        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(dynamicTasksInput);
 
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenReturn(Arrays.asList(wt2, wt3));
 
-        TaskDO simpleTask1 = new TaskDO();
+        TaskModel simpleTask1 = new TaskModel();
         simpleTask1.setReferenceTaskName("xdt1");
 
-        TaskDO simpleTask2 = new TaskDO();
+        TaskModel simpleTask2 = new TaskModel();
         simpleTask2.setReferenceTaskName("xdt2");
 
         when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0))
@@ -166,7 +166,7 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
@@ -208,15 +208,15 @@ public class ForkJoinDynamicTaskMapperTest {
         dynamicTasksInput.put("dynamicTasksInput", dynamicTasksInput);
 
         // when
-        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(dynamicTasksInput);
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenReturn(Arrays.asList(wt2, wt3));
 
-        TaskDO simpleTask1 = new TaskDO();
+        TaskModel simpleTask1 = new TaskModel();
         simpleTask1.setReferenceTaskName("xdt1");
 
-        TaskDO simpleTask2 = new TaskDO();
+        TaskModel simpleTask2 = new TaskModel();
         simpleTask2.setReferenceTaskName("xdt2");
 
         when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0))
@@ -236,7 +236,7 @@ public class ForkJoinDynamicTaskMapperTest {
                         .build();
 
         // then
-        List<TaskDO> mappedTasks = forkJoinDynamicTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = forkJoinDynamicTaskMapper.getMappedTasks(taskMapperContext);
 
         assertEquals(4, mappedTasks.size());
 
@@ -275,14 +275,14 @@ public class ForkJoinDynamicTaskMapperTest {
 
         // when
         when(parametersUtils.getTaskInput(
-                        anyMap(), any(WorkflowDO.class), any(TaskDef.class), anyString()))
+                        anyMap(), any(WorkflowModel.class), any(TaskDef.class), anyString()))
                 .thenReturn(dynamicTasksInput);
 
         when(objectMapper.convertValue(any(), any(Class.class))).thenReturn(dtasks);
 
         Pair<List<WorkflowTask>, Map<String, Map<String, Object>>> dynamicForkJoinTasksAndInput =
                 forkJoinDynamicTaskMapper.getDynamicForkJoinTasksAndInput(
-                        dynamicForkJoinToSchedule, new WorkflowDO());
+                        dynamicForkJoinToSchedule, new WorkflowModel());
         // then
         assertNotNull(dynamicForkJoinTasksAndInput.getLeft());
         assertEquals(2, dynamicForkJoinTasksAndInput.getLeft().size());
@@ -318,7 +318,7 @@ public class ForkJoinDynamicTaskMapperTest {
 
         // when
         when(parametersUtils.getTaskInput(
-                        anyMap(), any(WorkflowDO.class), any(TaskDef.class), anyString()))
+                        anyMap(), any(WorkflowModel.class), any(TaskDef.class), anyString()))
                 .thenReturn(dynamicTasksInput);
 
         when(objectMapper.convertValue(any(), any(Class.class))).thenReturn(null);
@@ -327,7 +327,7 @@ public class ForkJoinDynamicTaskMapperTest {
         expectedException.expect(TerminateWorkflowException.class);
 
         forkJoinDynamicTaskMapper.getDynamicForkJoinTasksAndInput(
-                dynamicForkJoinToSchedule, new WorkflowDO());
+                dynamicForkJoinToSchedule, new WorkflowModel());
     }
 
     @Test
@@ -365,7 +365,7 @@ public class ForkJoinDynamicTaskMapperTest {
         dynamicTasksInput.put("dynamicTasksInput", dynamicTasksInput);
 
         // when
-        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(dynamicTasksInput);
 
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
@@ -373,7 +373,7 @@ public class ForkJoinDynamicTaskMapperTest {
 
         Pair<List<WorkflowTask>, Map<String, Map<String, Object>>> dynamicTasks =
                 forkJoinDynamicTaskMapper.getDynamicForkTasksAndInput(
-                        dynamicForkJoinToSchedule, new WorkflowDO(), "dynamicTasks");
+                        dynamicForkJoinToSchedule, new WorkflowModel(), "dynamicTasks");
 
         // then
         assertNotNull(dynamicTasks.getLeft());
@@ -414,7 +414,7 @@ public class ForkJoinDynamicTaskMapperTest {
         dynamicTasksInput.put("dynamicTasks", Arrays.asList(wt2, wt3));
         dynamicTasksInput.put("dynamicTasksInput", null);
 
-        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(dynamicTasksInput);
 
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
@@ -423,7 +423,7 @@ public class ForkJoinDynamicTaskMapperTest {
         expectedException.expect(TerminateWorkflowException.class);
         // when
         forkJoinDynamicTaskMapper.getDynamicForkTasksAndInput(
-                dynamicForkJoinToSchedule, new WorkflowDO(), "dynamicTasks");
+                dynamicForkJoinToSchedule, new WorkflowModel(), "dynamicTasks");
     }
 
     @Test
@@ -434,7 +434,7 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
@@ -476,12 +476,12 @@ public class ForkJoinDynamicTaskMapperTest {
         dynamicTasksInput.put("dynamicTasksInput", dynamicTasksInput);
 
         // dynamic
-        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInput(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(dynamicTasksInput);
         when(objectMapper.convertValue(any(), any(TypeReference.class)))
                 .thenReturn(Arrays.asList(wt2, wt3));
 
-        TaskDO simpleTask1 = new TaskDO();
+        TaskModel simpleTask1 = new TaskModel();
         simpleTask1.setReferenceTaskName("xdt1");
 
         // Empty list, this is a bad state, workflow should terminate

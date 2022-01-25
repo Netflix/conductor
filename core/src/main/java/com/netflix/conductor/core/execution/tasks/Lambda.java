@@ -21,9 +21,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_LAMBDA;
 
@@ -64,7 +63,8 @@ public class Lambda extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> taskInput = task.getInputData();
         Map<String, Object> taskOutput = task.getOutputData();
         String scriptExpression;
@@ -80,14 +80,14 @@ public class Lambda extends WorkflowSystemTask {
                         task.getTaskId());
                 Object returnValue = ScriptEvaluator.eval(scriptExpressionBuilder, taskInput);
                 taskOutput.put("result", returnValue);
-                task.setStatus(TaskStatusDO.COMPLETED);
+                task.setStatus(TaskModel.Status.COMPLETED);
             } else {
                 LOGGER.error("Empty {} in Lambda task. ", QUERY_EXPRESSION_PARAMETER);
                 task.setReasonForIncompletion(
                         "Empty '"
                                 + QUERY_EXPRESSION_PARAMETER
                                 + "' in Lambda task's input parameters. A non-empty String value must be provided.");
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
             }
         } catch (Exception e) {
             LOGGER.error(
@@ -95,7 +95,7 @@ public class Lambda extends WorkflowSystemTask {
                     task.getTaskId(),
                     workflow.getWorkflowId(),
                     e);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             taskOutput.put(
                     "error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());

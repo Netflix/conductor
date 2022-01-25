@@ -29,17 +29,16 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#DECISION} to a List {@link TaskDO} starting with Task of type {@link TaskType#DECISION}
- * which is marked as IN_PROGRESS, followed by the list of {@link TaskDO} based on the case
- * expression evaluation in the Decision task.
+ * TaskType#DECISION} to a List {@link TaskModel} starting with Task of type {@link
+ * TaskType#DECISION} which is marked as IN_PROGRESS, followed by the list of {@link TaskModel}
+ * based on the case expression evaluation in the Decision task.
  *
  * @deprecated {@link com.netflix.conductor.core.execution.tasks.Decision} is also deprecated. Use
  *     {@link com.netflix.conductor.core.execution.tasks.Switch} and so ${@link SwitchTaskMapper}
@@ -61,10 +60,10 @@ public class DecisionTaskMapper implements TaskMapper {
      * type {@link TaskType#DECISION}.
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return List of tasks in the following order:
      *     <ul>
-     *       <li>{@link TaskType#DECISION} with {@link TaskStatusDO#IN_PROGRESS}
+     *       <li>{@link TaskType#DECISION} with {@link TaskModel.Status#IN_PROGRESS}
      *       <li>List of task based on the evaluation of {@link WorkflowTask#getCaseExpression()}
      *           are scheduled.
      *       <li>In case of no matching result after the evaluation of the {@link
@@ -73,11 +72,11 @@ public class DecisionTaskMapper implements TaskMapper {
      *     </ul>
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
         LOGGER.debug("TaskMapperContext {} in DecisionTaskMapper", taskMapperContext);
-        List<TaskDO> tasksToBeScheduled = new LinkedList<>();
+        List<TaskModel> tasksToBeScheduled = new LinkedList<>();
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         int retryCount = taskMapperContext.getRetryCount();
         String taskId = taskMapperContext.getTaskId();
@@ -86,7 +85,7 @@ public class DecisionTaskMapper implements TaskMapper {
         String caseValue = getEvaluatedCaseValue(taskToSchedule, taskInput);
 
         // QQ why is the case value and the caseValue passed and caseOutput passes as the same ??
-        TaskDO decisionTask = new TaskDO();
+        TaskModel decisionTask = new TaskModel();
         decisionTask.setTaskType(TaskType.TASK_TYPE_DECISION);
         decisionTask.setTaskDefName(TaskType.TASK_TYPE_DECISION);
         decisionTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -98,7 +97,7 @@ public class DecisionTaskMapper implements TaskMapper {
         decisionTask.getOutputData().put("caseOutput", Collections.singletonList(caseValue));
         decisionTask.setTaskId(taskId);
         decisionTask.setStartTime(System.currentTimeMillis());
-        decisionTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        decisionTask.setStatus(TaskModel.Status.IN_PROGRESS);
         decisionTask.setWorkflowTask(taskToSchedule);
         decisionTask.setWorkflowPriority(workflowInstance.getPriority());
         tasksToBeScheduled.add(decisionTask);
@@ -117,7 +116,7 @@ public class DecisionTaskMapper implements TaskMapper {
                     selectedTasks.get(0); // Schedule the first task to be executed...
             // TODO break out this recursive call using function composition of what needs to be
             // done and then walk back the condition tree
-            List<TaskDO> caseTasks =
+            List<TaskModel> caseTasks =
                     taskMapperContext
                             .getDeciderService()
                             .getTasksToBeScheduled(

@@ -37,9 +37,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.Utils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,7 +76,7 @@ public class KafkaPublishTask extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
 
         long taskStartMillis = Instant.now().toEpochMilli();
         task.setWorkerId(Utils.getServerId());
@@ -110,9 +109,9 @@ public class KafkaPublishTask extends WorkflowSystemTask {
             try {
                 recordMetaDataFuture.get();
                 if (isAsyncComplete(task)) {
-                    task.setStatus(TaskStatusDO.IN_PROGRESS);
+                    task.setStatus(TaskModel.Status.IN_PROGRESS);
                 } else {
-                    task.setStatus(TaskStatusDO.COMPLETED);
+                    task.setStatus(TaskModel.Status.COMPLETED);
                 }
                 long timeTakenToCompleteTask = Instant.now().toEpochMilli() - taskStartMillis;
                 LOGGER.debug("Published message {}, Time taken {}", input, timeTakenToCompleteTask);
@@ -134,9 +133,9 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         }
     }
 
-    private void markTaskAsFailed(TaskDO task, String reasonForIncompletion) {
+    private void markTaskAsFailed(TaskModel task, String reasonForIncompletion) {
         task.setReasonForIncompletion(reasonForIncompletion);
-        task.setStatus(TaskStatusDO.FAILED);
+        task.setStatus(TaskModel.Status.FAILED);
     }
 
     /**
@@ -196,13 +195,13 @@ public class KafkaPublishTask extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public boolean execute(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         return false;
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
-        task.setStatus(TaskStatusDO.CANCELED);
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
+        task.setStatus(TaskModel.Status.CANCELED);
     }
 
     @Override

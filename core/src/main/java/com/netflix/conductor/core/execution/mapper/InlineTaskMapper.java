@@ -26,14 +26,13 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#INLINE} to a List {@link TaskDO} starting with Task of type {@link TaskType#INLINE}
- * which is marked as IN_PROGRESS, followed by the list of {@link TaskDO} based on the case
+ * TaskType#INLINE} to a List {@link TaskModel} starting with Task of type {@link TaskType#INLINE}
+ * which is marked as IN_PROGRESS, followed by the list of {@link TaskModel} based on the case
  * expression evaluation in the Inline task.
  */
 @Component
@@ -54,12 +53,12 @@ public class InlineTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in InlineTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         TaskDef taskDefinition =
@@ -73,7 +72,7 @@ public class InlineTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        TaskDO inlineTask = new TaskDO();
+        TaskModel inlineTask = new TaskModel();
         inlineTask.setTaskType(TaskType.TASK_TYPE_INLINE);
         inlineTask.setTaskDefName(taskMapperContext.getTaskToSchedule().getName());
         inlineTask.setReferenceTaskName(
@@ -85,7 +84,7 @@ public class InlineTaskMapper implements TaskMapper {
         inlineTask.setScheduledTime(System.currentTimeMillis());
         inlineTask.setInputData(taskInput);
         inlineTask.setTaskId(taskId);
-        inlineTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        inlineTask.setStatus(TaskModel.Status.IN_PROGRESS);
         inlineTask.setWorkflowTask(taskToSchedule);
         inlineTask.setWorkflowPriority(workflowInstance.getPriority());
 

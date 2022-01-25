@@ -14,17 +14,16 @@ package com.netflix.conductor.core.reconciliation;
 
 import java.time.Duration;
 
-import com.netflix.conductor.core.execution.tasks.*;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.execution.tasks.*;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -61,9 +60,9 @@ public class TestWorkflowRepairService {
 
     @Test
     public void verifyAndRepairSimpleTaskInScheduledState() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType("SIMPLE");
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
         task.setTaskId("abcd");
         task.setCallbackAfterSeconds(60);
 
@@ -77,9 +76,9 @@ public class TestWorkflowRepairService {
 
     @Test
     public void verifySimpleTaskInProgressState() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType("SIMPLE");
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
         task.setTaskId("abcd");
         task.setCallbackAfterSeconds(60);
 
@@ -94,9 +93,9 @@ public class TestWorkflowRepairService {
     @Test
     public void verifyAndRepairSystemTask() {
         String taskType = "TEST_SYS_TASK";
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType(taskType);
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
         task.setTaskId("abcd");
         task.setCallbackAfterSeconds(60);
 
@@ -110,13 +109,15 @@ public class TestWorkflowRepairService {
                             }
 
                             @Override
-                            public boolean isAsyncComplete(TaskDO task) {
+                            public boolean isAsyncComplete(TaskModel task) {
                                 return false;
                             }
 
                             @Override
                             public void start(
-                                    WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+                                    WorkflowModel workflow,
+                                    TaskModel task,
+                                    WorkflowExecutor executor) {
                                 super.start(workflow, task, executor);
                             }
                         });
@@ -129,7 +130,7 @@ public class TestWorkflowRepairService {
 
         // Verify a system task in IN_PROGRESS state can be recovered.
         reset(queueDAO);
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
         assertTrue(workflowRepairService.verifyAndRepairTask(task));
         // Verify that a new queue message is pushed for async System task in IN_PROGRESS state that
         // fails queue contains check.
@@ -144,9 +145,9 @@ public class TestWorkflowRepairService {
         when(systemTaskRegistry.get(TASK_TYPE_SWITCH)).thenReturn(new Switch());
         when(systemTaskRegistry.isSystemTask(TASK_TYPE_SWITCH)).thenReturn(true);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType(TASK_TYPE_DECISION);
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
 
         assertFalse(workflowRepairService.verifyAndRepairTask(task));
         // Verify that queue contains is never checked for sync system tasks
@@ -154,9 +155,9 @@ public class TestWorkflowRepairService {
         // Verify that queue message is never pushed for sync system tasks
         verify(queueDAO, never()).push(anyString(), anyString(), anyLong());
 
-        task = new TaskDO();
+        task = new TaskModel();
         task.setTaskType(TASK_TYPE_SWITCH);
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
 
         assertFalse(workflowRepairService.verifyAndRepairTask(task));
         // Verify that queue contains is never checked for sync system tasks
@@ -167,9 +168,9 @@ public class TestWorkflowRepairService {
 
     @Test
     public void assertAsyncCompleteInProgressSystemTasksAreNotCheckedAgainstQueue() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType(TASK_TYPE_SUB_WORKFLOW);
-        task.setStatus(TaskStatusDO.IN_PROGRESS);
+        task.setStatus(TaskModel.Status.IN_PROGRESS);
         task.setTaskId("abcd");
         task.setCallbackAfterSeconds(60);
 
@@ -186,9 +187,9 @@ public class TestWorkflowRepairService {
 
     @Test
     public void assertAsyncCompleteScheduledSystemTasksAreCheckedAgainstQueue() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setTaskType(TASK_TYPE_SUB_WORKFLOW);
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
         task.setTaskId("abcd");
         task.setCallbackAfterSeconds(60);
 
@@ -206,7 +207,7 @@ public class TestWorkflowRepairService {
 
     @Test
     public void verifyAndRepairParentWorkflow() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowId("abcd");
         workflow.setParentWorkflowId("parentWorkflowId");
 

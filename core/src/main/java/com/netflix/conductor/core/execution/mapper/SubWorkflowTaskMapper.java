@@ -25,9 +25,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -53,10 +52,10 @@ public class SubWorkflowTaskMapper implements TaskMapper {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
         LOGGER.debug("TaskMapperContext {} in SubWorkflowTaskMapper", taskMapperContext);
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
         // Check if there are sub workflow parameters, if not throw an exception, cannot initiate a
         // sub-workflow without workflow params
@@ -76,7 +75,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
             subWorkflowTaskToDomain = (Map) uncheckedTaskToDomain;
         }
 
-        TaskDO subWorkflowTask = new TaskDO();
+        TaskModel subWorkflowTask = new TaskModel();
         subWorkflowTask.setTaskType(TASK_TYPE_SUB_WORKFLOW);
         subWorkflowTask.setTaskDefName(taskToSchedule.getName());
         subWorkflowTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -90,7 +89,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         subWorkflowTask.getInputData().put("subWorkflowDefinition", subWorkflowDefinition);
         subWorkflowTask.getInputData().put("workflowInput", taskMapperContext.getTaskInput());
         subWorkflowTask.setTaskId(taskId);
-        subWorkflowTask.setStatus(TaskStatusDO.SCHEDULED);
+        subWorkflowTask.setStatus(TaskModel.Status.SCHEDULED);
         subWorkflowTask.setWorkflowTask(taskToSchedule);
         subWorkflowTask.setWorkflowPriority(workflowInstance.getPriority());
         subWorkflowTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
@@ -114,7 +113,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
     }
 
     private Map<String, Object> getSubWorkflowInputParameters(
-            WorkflowDO workflowInstance, SubWorkflowParams subWorkflowParams) {
+            WorkflowModel workflowInstance, SubWorkflowParams subWorkflowParams) {
         Map<String, Object> params = new HashMap<>();
         params.put("name", subWorkflowParams.getName());
 

@@ -29,9 +29,9 @@ import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -93,7 +93,7 @@ public class MetadataMapperService {
         return metadataDAO.getLatestWorkflowDef(workflowName);
     }
 
-    public WorkflowDO populateWorkflowWithDefinitions(WorkflowDO workflow) {
+    public WorkflowModel populateWorkflowWithDefinitions(WorkflowModel workflow) {
         Preconditions.checkNotNull(workflow, "workflow cannot be null");
         WorkflowDef workflowDefinition =
                 Optional.ofNullable(workflow.getWorkflowDefinition())
@@ -178,7 +178,7 @@ public class MetadataMapperService {
         }
     }
 
-    public TaskDO populateTaskWithDefinition(TaskDO task) {
+    public TaskModel populateTaskWithDefinition(TaskModel task) {
         Preconditions.checkNotNull(task, "Task cannot be null");
         populateWorkflowTaskWithDefinition(task.getWorkflowTask());
         return task;

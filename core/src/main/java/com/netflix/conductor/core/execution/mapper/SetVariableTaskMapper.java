@@ -23,9 +23,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 @Component
 public class SetVariableTaskMapper implements TaskMapper {
@@ -38,16 +37,16 @@ public class SetVariableTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
         LOGGER.debug("TaskMapperContext {} in SetVariableMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         Map<String, Object> taskInput = taskMapperContext.getTaskInput();
         String taskId = taskMapperContext.getTaskId();
 
-        TaskDO varTask = new TaskDO();
+        TaskModel varTask = new TaskModel();
         varTask.setTaskType(taskToSchedule.getType());
         varTask.setTaskDefName(taskToSchedule.getName());
         varTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -58,7 +57,7 @@ public class SetVariableTaskMapper implements TaskMapper {
         varTask.setScheduledTime(System.currentTimeMillis());
         varTask.setInputData(taskInput);
         varTask.setTaskId(taskId);
-        varTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        varTask.setStatus(TaskModel.Status.IN_PROGRESS);
         varTask.setWorkflowTask(taskToSchedule);
         varTask.setWorkflowPriority(workflowInstance.getPriority());
 

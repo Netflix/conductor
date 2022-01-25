@@ -24,8 +24,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,11 +48,11 @@ public class EventTaskMapperTest {
         eventTaskInput.put("sink", "SQSSINK");
 
         when(parametersUtils.getTaskInput(
-                        anyMap(), any(WorkflowDO.class), any(TaskDef.class), anyString()))
+                        anyMap(), any(WorkflowModel.class), any(TaskDef.class), anyString()))
                 .thenReturn(eventTaskInput);
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -65,10 +65,10 @@ public class EventTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks = eventTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = eventTaskMapper.getMappedTasks(taskMapperContext);
         assertEquals(1, mappedTasks.size());
 
-        TaskDO eventTask = mappedTasks.get(0);
+        TaskModel eventTask = mappedTasks.get(0);
         assertEquals(taskId, eventTask.getTaskId());
     }
 }

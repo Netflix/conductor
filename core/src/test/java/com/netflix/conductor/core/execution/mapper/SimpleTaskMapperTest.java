@@ -26,8 +26,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -56,7 +56,7 @@ public class SimpleTaskMapperTest {
         String retriedTaskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =
@@ -71,7 +71,7 @@ public class SimpleTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks = simpleTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = simpleTaskMapper.getMappedTasks(taskMapperContext);
         assertNotNull(mappedTasks);
         assertEquals(1, mappedTasks.size());
     }
@@ -86,7 +86,7 @@ public class SimpleTaskMapperTest {
         String retriedTaskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         TaskMapperContext taskMapperContext =

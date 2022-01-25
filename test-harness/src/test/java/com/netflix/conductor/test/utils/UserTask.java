@@ -18,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +25,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,8 +42,7 @@ public class UserTask extends WorkflowSystemTask {
     private final ObjectMapper objectMapper;
 
     private static final TypeReference<Map<String, Map<String, List<Object>>>>
-            mapStringListObjects = new TypeReference<>() {
-    };
+            mapStringListObjects = new TypeReference<>() {};
 
     @Autowired
     public UserTask(ObjectMapper objectMapper) {
@@ -54,11 +52,11 @@ public class UserTask extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
         if (task.getWorkflowTask().isAsyncComplete()) {
-            task.setStatus(TaskStatusDO.IN_PROGRESS);
+            task.setStatus(TaskModel.Status.IN_PROGRESS);
         } else {
             Map<String, Map<String, List<Object>>> map =
                     objectMapper.convertValue(task.getInputData(), mapStringListObjects);
@@ -69,7 +67,7 @@ public class UserTask extends WorkflowSystemTask {
                     "size",
                     map.getOrDefault("largeInput", defaultLargeInput).get("TEST_SAMPLE").size());
             task.setOutputData(output);
-            task.setStatus(TaskStatusDO.COMPLETED);
+            task.setStatus(TaskModel.Status.COMPLETED);
         }
     }
 

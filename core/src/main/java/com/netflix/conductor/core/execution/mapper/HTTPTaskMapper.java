@@ -26,14 +26,13 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#HTTP} to a {@link TaskDO} of type {@link TaskType#HTTP} with {@link
- * TaskStatusDO#SCHEDULED}
+ * TaskType#HTTP} to a {@link TaskModel} of type {@link TaskType#HTTP} with {@link
+ * TaskModel.Status#SCHEDULED}
  */
 @Component
 public class HTTPTaskMapper implements TaskMapper {
@@ -55,23 +54,23 @@ public class HTTPTaskMapper implements TaskMapper {
     }
 
     /**
-     * This method maps a {@link WorkflowTask} of type {@link TaskType#HTTP} to a {@link TaskDO} in
-     * a {@link TaskStatusDO#SCHEDULED} state
+     * This method maps a {@link WorkflowTask} of type {@link TaskType#HTTP} to a {@link TaskModel}
+     * in a {@link TaskModel.Status#SCHEDULED} state
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return a List with just one HTTP task
      * @throws TerminateWorkflowException In case if the task definition does not exist
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in HTTPTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
         taskToSchedule.getInputParameters().put("asyncComplete", taskToSchedule.isAsyncComplete());
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
         int retryCount = taskMapperContext.getRetryCount();
 
@@ -87,7 +86,7 @@ public class HTTPTaskMapper implements TaskMapper {
                         taskDefinition);
         Boolean asynComplete = (Boolean) input.get("asyncComplete");
 
-        TaskDO httpTask = new TaskDO();
+        TaskModel httpTask = new TaskModel();
         httpTask.setTaskType(taskToSchedule.getType());
         httpTask.setTaskDefName(taskToSchedule.getName());
         httpTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -98,7 +97,7 @@ public class HTTPTaskMapper implements TaskMapper {
         httpTask.setTaskId(taskId);
         httpTask.setInputData(input);
         httpTask.getInputData().put("asyncComplete", asynComplete);
-        httpTask.setStatus(TaskStatusDO.SCHEDULED);
+        httpTask.setStatus(TaskModel.Status.SCHEDULED);
         httpTask.setRetryCount(retryCount);
         httpTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
         httpTask.setWorkflowTask(taskToSchedule);

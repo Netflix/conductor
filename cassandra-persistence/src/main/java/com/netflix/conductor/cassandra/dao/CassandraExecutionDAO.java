@@ -33,10 +33,9 @@ import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.ConcurrentExecutionLimitDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.PreparedStatement;
@@ -172,11 +171,11 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public List<TaskDO> getPendingTasksByWorkflow(String taskName, String workflowId) {
-        List<TaskDO> tasks = getTasksForWorkflow(workflowId);
+    public List<TaskModel> getPendingTasksByWorkflow(String taskName, String workflowId) {
+        List<TaskModel> tasks = getTasksForWorkflow(workflowId);
         return tasks.stream()
                 .filter(task -> taskName.equals(task.getTaskType()))
-                .filter(task -> TaskStatusDO.IN_PROGRESS.equals(task.getStatus()))
+                .filter(task -> TaskModel.Status.IN_PROGRESS.equals(task.getStatus()))
                 .collect(Collectors.toList());
     }
 
@@ -185,7 +184,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public List<TaskDO> getTasks(String taskType, String startKey, int count) {
+    public List<TaskModel> getTasks(String taskType, String startKey, int count) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
     }
@@ -198,7 +197,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * @param tasks tasks to be created
      */
     @Override
-    public List<TaskDO> createTasks(List<TaskDO> tasks) {
+    public List<TaskModel> createTasks(List<TaskModel> tasks) {
         validateTasks(tasks);
         String workflowId = tasks.get(0).getWorkflowInstanceId();
         try {
@@ -259,7 +258,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public void updateTask(TaskDO task) {
+    public void updateTask(TaskModel task) {
         try {
             // TODO: calculate the shard number the task belongs to
             String taskPayload = toJson(task);
@@ -276,7 +275,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
                     && task.getTaskDefinition().get().concurrencyLimit() > 0) {
                 if (task.getStatus().isTerminal()) {
                     removeTaskFromLimit(task);
-                } else if (task.getStatus() == TaskStatusDO.IN_PROGRESS) {
+                } else if (task.getStatus() == TaskModel.Status.IN_PROGRESS) {
                     addTaskToLimit(task);
                 }
             }
@@ -296,7 +295,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public boolean exceedsLimit(TaskDO task) {
+    public boolean exceedsLimit(TaskModel task) {
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
         if (taskDefinition.isEmpty()) {
             return false;
@@ -342,7 +341,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
 
     @Override
     public boolean removeTask(String taskId) {
-        TaskDO task = getTask(taskId);
+        TaskModel task = getTask(taskId);
         if (task == null) {
             LOGGER.warn("No such task found by id {}", taskId);
             return false;
@@ -351,7 +350,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public TaskDO getTask(String taskId) {
+    public TaskModel getTask(String taskId) {
         try {
             String workflowId = lookupWorkflowIdFromTaskId(taskId);
             if (workflowId == null) {
@@ -366,7 +365,8 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
             return Optional.ofNullable(resultSet.one())
                     .map(
                             row -> {
-                                TaskDO task = readValue(row.getString(PAYLOAD_KEY), TaskDO.class);
+                                TaskModel task =
+                                        readValue(row.getString(PAYLOAD_KEY), TaskModel.class);
                                 recordCassandraDaoRequests(
                                         "getTask", task.getTaskType(), task.getWorkflowType());
                                 recordCassandraDaoPayloadSize(
@@ -388,7 +388,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public List<TaskDO> getTasks(List<String> taskIds) {
+    public List<TaskModel> getTasks(List<String> taskIds) {
         Preconditions.checkNotNull(taskIds);
         Preconditions.checkArgument(taskIds.size() > 0, "Task ids list cannot be empty");
         String workflowId = lookupWorkflowIdFromTaskId(taskIds.get(0));
@@ -405,20 +405,20 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public List<TaskDO> getPendingTasksForTaskType(String taskType) {
+    public List<TaskModel> getPendingTasksForTaskType(String taskType) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
     }
 
     @Override
-    public List<TaskDO> getTasksForWorkflow(String workflowId) {
+    public List<TaskModel> getTasksForWorkflow(String workflowId) {
         return getWorkflow(workflowId, true).getTasks();
     }
 
     @Override
-    public String createWorkflow(WorkflowDO workflow) {
+    public String createWorkflow(WorkflowModel workflow) {
         try {
-            List<TaskDO> tasks = workflow.getTasks();
+            List<TaskModel> tasks = workflow.getTasks();
             workflow.setTasks(new LinkedList<>());
             String payload = toJson(workflow);
 
@@ -441,9 +441,9 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public String updateWorkflow(WorkflowDO workflow) {
+    public String updateWorkflow(WorkflowModel workflow) {
         try {
-            List<TaskDO> tasks = workflow.getTasks();
+            List<TaskModel> tasks = workflow.getTasks();
             workflow.setTasks(new LinkedList<>());
             String payload = toJson(workflow);
             recordCassandraDaoRequests("updateWorkflow", "n/a", workflow.getWorkflowName());
@@ -465,7 +465,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
 
     @Override
     public boolean removeWorkflow(String workflowId) {
-        WorkflowDO workflow = getWorkflow(workflowId, true);
+        WorkflowModel workflow = getWorkflow(workflowId, true);
         boolean removed = false;
         // TODO: calculate number of shards and iterate
         if (workflow != null) {
@@ -508,13 +508,13 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public WorkflowDO getWorkflow(String workflowId) {
+    public WorkflowModel getWorkflow(String workflowId) {
         return getWorkflow(workflowId, true);
     }
 
     @Override
-    public WorkflowDO getWorkflow(String workflowId, boolean includeTasks) {
-        WorkflowDO workflow = null;
+    public WorkflowModel getWorkflow(String workflowId, boolean includeTasks) {
+        WorkflowModel workflow = null;
         try {
             ResultSet resultSet;
             if (includeTasks) {
@@ -522,7 +522,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
                         session.execute(
                                 selectWorkflowWithTasksStatement.bind(
                                         UUID.fromString(workflowId), DEFAULT_SHARD_ID));
-                List<TaskDO> tasks = new ArrayList<>();
+                List<TaskModel> tasks = new ArrayList<>();
 
                 List<Row> rows = resultSet.all();
                 if (rows.size() == 0) {
@@ -532,9 +532,9 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
                 for (Row row : rows) {
                     String entityKey = row.getString(ENTITY_KEY);
                     if (ENTITY_TYPE_WORKFLOW.equals(entityKey)) {
-                        workflow = readValue(row.getString(PAYLOAD_KEY), WorkflowDO.class);
+                        workflow = readValue(row.getString(PAYLOAD_KEY), WorkflowModel.class);
                     } else if (ENTITY_TYPE_TASK.equals(entityKey)) {
-                        TaskDO task = readValue(row.getString(PAYLOAD_KEY), TaskDO.class);
+                        TaskModel task = readValue(row.getString(PAYLOAD_KEY), TaskModel.class);
                         tasks.add(task);
                     } else {
                         throw new ApplicationException(
@@ -547,7 +547,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
 
                 if (workflow != null) {
                     recordCassandraDaoRequests("getWorkflow", "n/a", workflow.getWorkflowName());
-                    tasks.sort(Comparator.comparingInt(TaskDO::getSeq));
+                    tasks.sort(Comparator.comparingInt(TaskModel::getSeq));
                     workflow.setTasks(tasks);
                 }
             } else {
@@ -557,10 +557,10 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
                         Optional.ofNullable(resultSet.one())
                                 .map(
                                         row -> {
-                                            WorkflowDO wf =
+                                            WorkflowModel wf =
                                                     readValue(
                                                             row.getString(PAYLOAD_KEY),
-                                                            WorkflowDO.class);
+                                                            WorkflowModel.class);
                                             recordCassandraDaoRequests(
                                                     "getWorkflow", "n/a", wf.getWorkflowName());
                                             return wf;
@@ -598,7 +598,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public List<WorkflowDO> getPendingWorkflowsByType(String workflowName, int version) {
+    public List<WorkflowModel> getPendingWorkflowsByType(String workflowName, int version) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
     }
@@ -628,7 +628,8 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public List<WorkflowDO> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
+    public List<WorkflowModel> getWorkflowsByType(
+            String workflowName, Long startTime, Long endTime) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
     }
@@ -638,7 +639,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
      * Conductor
      */
     @Override
-    public List<WorkflowDO> getWorkflowsByCorrelationId(
+    public List<WorkflowModel> getWorkflowsByCorrelationId(
             String workflowName, String correlationId, boolean includeTasks) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in CassandraExecutionDAO. Please use ExecutionDAOFacade instead.");
@@ -741,7 +742,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public void addTaskToLimit(TaskDO task) {
+    public void addTaskToLimit(TaskModel task) {
         try {
             recordCassandraDaoRequests(
                     "addTaskToLimit", task.getTaskType(), task.getWorkflowType());
@@ -770,7 +771,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @Override
-    public void removeTaskFromLimit(TaskDO task) {
+    public void removeTaskFromLimit(TaskModel task) {
         try {
             recordCassandraDaoRequests(
                     "removeTaskFromLimit", task.getTaskType(), task.getWorkflowType());
@@ -797,7 +798,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
         }
     }
 
-    private boolean removeTask(TaskDO task) {
+    private boolean removeTask(TaskModel task) {
         // TODO: calculate shard number based on seq and maxTasksPerShard
         try {
             // get total tasks for this workflow
@@ -834,7 +835,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
         }
     }
 
-    private void removeTaskLookup(TaskDO task) {
+    private void removeTaskLookup(TaskModel task) {
         try {
             recordCassandraDaoRequests(
                     "removeTaskLookup", task.getTaskType(), task.getWorkflowType());
@@ -854,7 +855,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
     }
 
     @VisibleForTesting
-    void validateTasks(List<TaskDO> tasks) {
+    void validateTasks(List<TaskModel> tasks) {
         Preconditions.checkNotNull(tasks, "Tasks object cannot be null");
         Preconditions.checkArgument(!tasks.isEmpty(), "Tasks object cannot be empty");
         tasks.forEach(
@@ -868,7 +869,7 @@ public class CassandraExecutionDAO extends CassandraBaseDAO
                 });
 
         String workflowId = tasks.get(0).getWorkflowInstanceId();
-        Optional<TaskDO> optionalTask =
+        Optional<TaskModel> optionalTask =
                 tasks.stream()
                         .filter(task -> !workflowId.equals(task.getWorkflowInstanceId()))
                         .findAny();

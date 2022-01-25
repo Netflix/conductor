@@ -22,9 +22,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_INLINE;
 
@@ -68,7 +67,8 @@ public class Inline extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> taskInput = task.getInputData();
         Map<String, Object> taskOutput = task.getOutputData();
         String evaluatorType = (String) taskInput.get(QUERY_EVALUATOR_TYPE);
@@ -80,14 +80,14 @@ public class Inline extends WorkflowSystemTask {
             Evaluator evaluator = evaluators.get(evaluatorType);
             Object evalResult = evaluator.evaluate(expression, taskInput);
             taskOutput.put("result", evalResult);
-            task.setStatus(TaskStatusDO.COMPLETED);
+            task.setStatus(TaskModel.Status.COMPLETED);
         } catch (Exception e) {
             LOGGER.error(
                     "Failed to execute Inline Task: {} in workflow: {}",
                     task.getTaskId(),
                     workflow.getWorkflowId(),
                     e);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             taskOutput.put(
                     "error", e.getCause() != null ? e.getCause().getMessage() : e.getMessage());

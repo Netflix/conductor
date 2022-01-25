@@ -26,10 +26,8 @@ import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -61,10 +59,10 @@ public class TestSubWorkflow {
     @Test
     public void testStartSubWorkflow() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();
@@ -73,7 +71,7 @@ public class TestSubWorkflow {
         task.setInputData(inputData);
 
         String workflowId = "workflow_1";
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowId(workflowId);
 
         when(workflowExecutor.startWorkflow(
@@ -90,31 +88,31 @@ public class TestSubWorkflow {
 
         when(workflowExecutor.getWorkflow(anyString(), eq(false))).thenReturn(workflow);
 
-        workflow.setStatus(WorkflowStatusDO.RUNNING);
+        workflow.setStatus(WorkflowModel.Status.RUNNING);
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertEquals("workflow_1", task.getSubWorkflowId());
-        assertEquals(TaskStatusDO.IN_PROGRESS, task.getStatus());
+        assertEquals(TaskModel.Status.IN_PROGRESS, task.getStatus());
 
-        workflow.setStatus(WorkflowStatusDO.TERMINATED);
+        workflow.setStatus(WorkflowModel.Status.TERMINATED);
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertEquals("workflow_1", task.getSubWorkflowId());
-        assertEquals(TaskStatusDO.CANCELED, task.getStatus());
+        assertEquals(TaskModel.Status.CANCELED, task.getStatus());
 
-        workflow.setStatus(WorkflowStatusDO.COMPLETED);
+        workflow.setStatus(WorkflowModel.Status.COMPLETED);
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertEquals("workflow_1", task.getSubWorkflowId());
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
     }
 
     @Test
     public void testStartSubWorkflowQueueFailure() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
 
         Map<String, Object> inputData = new HashMap<>();
         inputData.put("subWorkflowName", "UnitWorkFlow");
@@ -137,19 +135,19 @@ public class TestSubWorkflow {
 
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertNull("subWorkflowId should be null", task.getSubWorkflowId());
-        assertEquals(TaskStatusDO.SCHEDULED, task.getStatus());
+        assertEquals(TaskModel.Status.SCHEDULED, task.getStatus());
         assertTrue("Output data should be empty", task.getOutputData().isEmpty());
     }
 
     @Test
     public void testStartSubWorkflowStartError() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
-        task.setStatus(TaskStatusDO.SCHEDULED);
+        task.setStatus(TaskModel.Status.SCHEDULED);
 
         Map<String, Object> inputData = new HashMap<>();
         inputData.put("subWorkflowName", "UnitWorkFlow");
@@ -173,7 +171,7 @@ public class TestSubWorkflow {
 
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertNull("subWorkflowId should be null", task.getSubWorkflowId());
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
         assertEquals(failureReason, task.getReasonForIncompletion());
         assertTrue("Output data should be empty", task.getOutputData().isEmpty());
     }
@@ -181,10 +179,10 @@ public class TestSubWorkflow {
     @Test
     public void testStartSubWorkflowWithEmptyWorkflowInput() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();
@@ -214,10 +212,10 @@ public class TestSubWorkflow {
     @Test
     public void testStartSubWorkflowWithWorkflowInput() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();
@@ -248,7 +246,7 @@ public class TestSubWorkflow {
     @Test
     public void testStartSubWorkflowTaskToDomain() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
         Map<String, String> taskToDomain =
                 new HashMap<>() {
@@ -257,7 +255,7 @@ public class TestSubWorkflow {
                     }
                 };
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();
@@ -285,10 +283,10 @@ public class TestSubWorkflow {
     @Test
     public void testExecuteSubWorkflowWithoutId() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();
@@ -314,8 +312,8 @@ public class TestSubWorkflow {
     @Test
     public void testExecuteWorkflowStatus() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
-        WorkflowDO subWorkflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
+        WorkflowModel subWorkflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
         Map<String, String> taskToDomain =
                 new HashMap<>() {
@@ -324,7 +322,7 @@ public class TestSubWorkflow {
                     }
                 };
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         Map<String, Object> outputData = new HashMap<>();
         task.setOutputData(outputData);
         task.setSubWorkflowId("sub-workflow-id");
@@ -349,48 +347,48 @@ public class TestSubWorkflow {
         when(workflowExecutor.getWorkflow(eq("sub-workflow-id"), eq(false)))
                 .thenReturn(subWorkflowInstance);
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.RUNNING);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.RUNNING);
         assertFalse(subWorkflow.execute(workflowInstance, task, workflowExecutor));
         assertNull(task.getStatus());
         assertNull(task.getReasonForIncompletion());
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.PAUSED);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.PAUSED);
         assertFalse(subWorkflow.execute(workflowInstance, task, workflowExecutor));
         assertNull(task.getStatus());
         assertNull(task.getReasonForIncompletion());
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.COMPLETED);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.COMPLETED);
         assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
-        assertEquals(TaskStatusDO.COMPLETED, task.getStatus());
+        assertEquals(TaskModel.Status.COMPLETED, task.getStatus());
         assertNull(task.getReasonForIncompletion());
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.FAILED);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.FAILED);
         subWorkflowInstance.setReasonForIncompletion("unit1");
         assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
-        assertEquals(TaskStatusDO.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED, task.getStatus());
         assertTrue(task.getReasonForIncompletion().contains("unit1"));
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.TIMED_OUT);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.TIMED_OUT);
         subWorkflowInstance.setReasonForIncompletion("unit2");
         assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
-        assertEquals(TaskStatusDO.TIMED_OUT, task.getStatus());
+        assertEquals(TaskModel.Status.TIMED_OUT, task.getStatus());
         assertTrue(task.getReasonForIncompletion().contains("unit2"));
 
-        subWorkflowInstance.setStatus(WorkflowStatusDO.TERMINATED);
+        subWorkflowInstance.setStatus(WorkflowModel.Status.TERMINATED);
         subWorkflowInstance.setReasonForIncompletion("unit3");
         assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
-        assertEquals(TaskStatusDO.CANCELED, task.getStatus());
+        assertEquals(TaskModel.Status.CANCELED, task.getStatus());
         assertTrue(task.getReasonForIncompletion().contains("unit3"));
     }
 
     @Test
     public void testCancelWithWorkflowId() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
-        WorkflowDO subWorkflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
+        WorkflowModel subWorkflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setSubWorkflowId("sub-workflow-id");
 
         Map<String, Object> inputData = new HashMap<>();
@@ -412,20 +410,20 @@ public class TestSubWorkflow {
         when(workflowExecutor.getWorkflow(eq("sub-workflow-id"), eq(true)))
                 .thenReturn(subWorkflowInstance);
 
-        workflowInstance.setStatus(WorkflowStatusDO.TIMED_OUT);
+        workflowInstance.setStatus(WorkflowModel.Status.TIMED_OUT);
         subWorkflow.cancel(workflowInstance, task, workflowExecutor);
 
-        assertEquals(WorkflowStatusDO.TERMINATED, subWorkflowInstance.getStatus());
+        assertEquals(WorkflowModel.Status.TERMINATED, subWorkflowInstance.getStatus());
     }
 
     @Test
     public void testCancelWithoutWorkflowId() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
-        WorkflowDO subWorkflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
+        WorkflowModel subWorkflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         Map<String, Object> outputData = new HashMap<>();
         task.setOutputData(outputData);
 
@@ -450,7 +448,7 @@ public class TestSubWorkflow {
 
         subWorkflow.cancel(workflowInstance, task, workflowExecutor);
 
-        assertEquals(WorkflowStatusDO.RUNNING, subWorkflowInstance.getStatus());
+        assertEquals(WorkflowModel.Status.RUNNING, subWorkflowInstance.getStatus());
     }
 
     @Test
@@ -461,13 +459,13 @@ public class TestSubWorkflow {
     @Test
     public void testStartSubWorkflowWithSubWorkflowDefinition() {
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
 
         WorkflowDef subWorkflowDef = new WorkflowDef();
         subWorkflowDef.setName("subWorkflow_1");
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         Map<String, Object> inputData = new HashMap<>();

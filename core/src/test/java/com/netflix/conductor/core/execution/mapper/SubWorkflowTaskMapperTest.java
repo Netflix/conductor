@@ -29,9 +29,8 @@ import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
 
@@ -62,7 +61,7 @@ public class SubWorkflowTaskMapperTest {
     public void getMappedTasks() {
         // Given
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
         WorkflowTask taskToSchedule = new WorkflowTask();
         SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
@@ -82,7 +81,7 @@ public class SubWorkflowTaskMapperTest {
         subWorkflowParamMap.put("name", "FooWorkFlow");
         subWorkflowParamMap.put("version", 2);
         subWorkflowParamMap.put("taskToDomain", taskToDomain);
-        when(parametersUtils.getTaskInputV2(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInputV2(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(subWorkflowParamMap);
 
         // When
@@ -97,14 +96,14 @@ public class SubWorkflowTaskMapperTest {
                         .withDeciderService(deciderService)
                         .build();
 
-        List<TaskDO> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertFalse(mappedTasks.isEmpty());
         assertEquals(1, mappedTasks.size());
 
-        TaskDO subWorkFlowTask = mappedTasks.get(0);
-        assertEquals(TaskStatusDO.SCHEDULED, subWorkFlowTask.getStatus());
+        TaskModel subWorkFlowTask = mappedTasks.get(0);
+        assertEquals(TaskModel.Status.SCHEDULED, subWorkFlowTask.getStatus());
         assertEquals(TASK_TYPE_SUB_WORKFLOW, subWorkFlowTask.getTaskType());
         assertEquals(30, subWorkFlowTask.getCallbackAfterSeconds());
         assertEquals(taskToDomain, subWorkFlowTask.getInputData().get("subWorkflowTaskToDomain"));
@@ -114,7 +113,7 @@ public class SubWorkflowTaskMapperTest {
     public void testTaskToDomain() {
         // Given
         WorkflowDef workflowDef = new WorkflowDef();
-        WorkflowDO workflowInstance = new WorkflowDO();
+        WorkflowModel workflowInstance = new WorkflowModel();
         workflowInstance.setWorkflowDefinition(workflowDef);
         WorkflowTask taskToSchedule = new WorkflowTask();
         Map<String, String> taskToDomain =
@@ -134,7 +133,7 @@ public class SubWorkflowTaskMapperTest {
         subWorkflowParamMap.put("name", "FooWorkFlow");
         subWorkflowParamMap.put("version", 2);
 
-        when(parametersUtils.getTaskInputV2(anyMap(), any(WorkflowDO.class), any(), any()))
+        when(parametersUtils.getTaskInputV2(anyMap(), any(WorkflowModel.class), any(), any()))
                 .thenReturn(subWorkflowParamMap);
 
         // When
@@ -149,14 +148,14 @@ public class SubWorkflowTaskMapperTest {
                         .withDeciderService(deciderService)
                         .build();
 
-        List<TaskDO> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = subWorkflowTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertFalse(mappedTasks.isEmpty());
         assertEquals(1, mappedTasks.size());
 
-        TaskDO subWorkFlowTask = mappedTasks.get(0);
-        assertEquals(TaskStatusDO.SCHEDULED, subWorkFlowTask.getStatus());
+        TaskModel subWorkFlowTask = mappedTasks.get(0);
+        assertEquals(TaskModel.Status.SCHEDULED, subWorkFlowTask.getStatus());
         assertEquals(TASK_TYPE_SUB_WORKFLOW, subWorkFlowTask.getTaskType());
     }
 

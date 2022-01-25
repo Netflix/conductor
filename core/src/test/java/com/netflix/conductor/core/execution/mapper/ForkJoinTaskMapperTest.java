@@ -30,8 +30,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
 
@@ -101,13 +101,13 @@ public class ForkJoinTaskMapperTest {
         def.getTasks().add(join);
         def.getTasks().add(wft4);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
 
-        TaskDO task1 = new TaskDO();
+        TaskModel task1 = new TaskModel();
         task1.setReferenceTaskName(wft1.getTaskReferenceName());
 
-        TaskDO task3 = new TaskDO();
+        TaskModel task3 = new TaskModel();
         task3.setReferenceTaskName(wft3.getTaskReferenceName());
 
         Mockito.when(deciderService.getTasksToBeScheduled(workflow, wft1, 0))
@@ -126,7 +126,7 @@ public class ForkJoinTaskMapperTest {
                         .withDeciderService(deciderService)
                         .build();
 
-        List<TaskDO> mappedTasks = forkJoinTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = forkJoinTaskMapper.getMappedTasks(taskMapperContext);
 
         assertEquals(3, mappedTasks.size());
         assertEquals(TASK_TYPE_FORK, mappedTasks.get(0).getTaskType());
@@ -182,13 +182,13 @@ public class ForkJoinTaskMapperTest {
 
         def.getTasks().add(wft4);
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
 
-        TaskDO task1 = new TaskDO();
+        TaskModel task1 = new TaskModel();
         task1.setReferenceTaskName(wft1.getTaskReferenceName());
 
-        TaskDO task3 = new TaskDO();
+        TaskModel task3 = new TaskModel();
         task3.setReferenceTaskName(wft3.getTaskReferenceName());
 
         Mockito.when(deciderService.getTasksToBeScheduled(workflow, wft1, 0))

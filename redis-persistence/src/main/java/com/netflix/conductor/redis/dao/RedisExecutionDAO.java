@@ -28,10 +28,9 @@ import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.ConcurrentExecutionLimitDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 import com.netflix.conductor.redis.config.AnyRedisCondition;
 import com.netflix.conductor.redis.config.RedisProperties;
 import com.netflix.conductor.redis.jedis.JedisProxy;
@@ -97,10 +96,10 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> getPendingTasksByWorkflow(String taskName, String workflowId) {
-        List<TaskDO> tasks = new LinkedList<>();
+    public List<TaskModel> getPendingTasksByWorkflow(String taskName, String workflowId) {
+        List<TaskModel> tasks = new LinkedList<>();
 
-        List<TaskDO> pendingTasks = getPendingTasksForTaskType(taskName);
+        List<TaskModel> pendingTasks = getPendingTasksForTaskType(taskName);
         pendingTasks.forEach(
                 pendingTask -> {
                     if (pendingTask.getWorkflowInstanceId().equals(workflowId)) {
@@ -112,13 +111,13 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> getTasks(String taskDefName, String startKey, int count) {
-        List<TaskDO> tasks = new LinkedList<>();
+    public List<TaskModel> getTasks(String taskDefName, String startKey, int count) {
+        List<TaskModel> tasks = new LinkedList<>();
 
-        List<TaskDO> pendingTasks = getPendingTasksForTaskType(taskDefName);
+        List<TaskModel> pendingTasks = getPendingTasksForTaskType(taskDefName);
         boolean startKeyFound = startKey == null;
         int foundcount = 0;
-        for (TaskDO pendingTask : pendingTasks) {
+        for (TaskModel pendingTask : pendingTasks) {
             if (!startKeyFound) {
                 if (pendingTask.getTaskId().equals(startKey)) {
                     startKeyFound = true;
@@ -136,11 +135,11 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> createTasks(List<TaskDO> tasks) {
+    public List<TaskModel> createTasks(List<TaskModel> tasks) {
 
-        List<TaskDO> tasksCreated = new LinkedList<>();
+        List<TaskModel> tasksCreated = new LinkedList<>();
 
-        for (TaskDO task : tasks) {
+        for (TaskModel task : tasks) {
             validate(task);
 
             recordRedisDaoRequests("createTask", task.getTaskType(), task.getWorkflowType());
@@ -192,12 +191,12 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public void updateTask(TaskDO task) {
+    public void updateTask(TaskModel task) {
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
 
         if (taskDefinition.isPresent() && taskDefinition.get().concurrencyLimit() > 0) {
 
-            if (task.getStatus() != null && task.getStatus().equals(TaskStatusDO.IN_PROGRESS)) {
+            if (task.getStatus() != null && task.getStatus().equals(TaskModel.Status.IN_PROGRESS)) {
                 jedisProxy.sadd(
                         nsKey(TASKS_IN_PROGRESS_STATUS, task.getTaskDefName()), task.getTaskId());
                 LOGGER.debug(
@@ -263,7 +262,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public boolean exceedsLimit(TaskDO task) {
+    public boolean exceedsLimit(TaskModel task) {
         Optional<TaskDef> taskDefinition = task.getTaskDefinition();
         if (taskDefinition.isEmpty()) {
             return false;
@@ -311,7 +310,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
         return rateLimited;
     }
 
-    private void removeTaskMappings(TaskDO task) {
+    private void removeTaskMappings(TaskModel task) {
         String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
 
         jedisProxy.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
@@ -321,7 +320,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
         jedisProxy.zrem(nsKey(TASK_LIMIT_BUCKET, task.getTaskDefName()), task.getTaskId());
     }
 
-    private void removeTaskMappingsWithExpiry(TaskDO task) {
+    private void removeTaskMappingsWithExpiry(TaskModel task) {
         String taskKey = task.getReferenceTaskName() + "" + task.getRetryCount();
 
         jedisProxy.hdel(nsKey(SCHEDULED_TASKS, task.getWorkflowInstanceId()), taskKey);
@@ -332,7 +331,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
 
     @Override
     public boolean removeTask(String taskId) {
-        TaskDO task = getTask(taskId);
+        TaskModel task = getTask(taskId);
         if (task == null) {
             LOGGER.warn("No such task found by id {}", taskId);
             return false;
@@ -345,7 +344,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     private boolean removeTaskWithExpiry(String taskId, int ttlSeconds) {
-        TaskDO task = getTask(taskId);
+        TaskModel task = getTask(taskId);
         if (task == null) {
             LOGGER.warn("No such task found by id {}", taskId);
             return false;
@@ -358,12 +357,12 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public TaskDO getTask(String taskId) {
+    public TaskModel getTask(String taskId) {
         Preconditions.checkNotNull(taskId, "taskId cannot be null");
         return Optional.ofNullable(jedisProxy.get(nsKey(TASK, taskId)))
                 .map(
                         json -> {
-                            TaskDO task = readValue(json, TaskDO.class);
+                            TaskModel task = readValue(json, TaskModel.class);
                             recordRedisDaoRequests(
                                     "getTask", task.getTaskType(), task.getWorkflowType());
                             recordRedisDaoPayloadSize(
@@ -377,14 +376,14 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> getTasks(List<String> taskIds) {
+    public List<TaskModel> getTasks(List<String> taskIds) {
         return taskIds.stream()
                 .map(taskId -> nsKey(TASK, taskId))
                 .map(jedisProxy::get)
                 .filter(Objects::nonNull)
                 .map(
                         jsonString -> {
-                            TaskDO task = readValue(jsonString, TaskDO.class);
+                            TaskModel task = readValue(jsonString, TaskModel.class);
                             recordRedisDaoRequests(
                                     "getTask", task.getTaskType(), task.getWorkflowType());
                             recordRedisDaoPayloadSize(
@@ -398,7 +397,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> getTasksForWorkflow(String workflowId) {
+    public List<TaskModel> getTasksForWorkflow(String workflowId) {
         Preconditions.checkNotNull(workflowId, "workflowId cannot be null");
         Set<String> taskIds = jedisProxy.smembers(nsKey(WORKFLOW_TO_TASKS, workflowId));
         recordRedisDaoRequests("getTasksForWorkflow");
@@ -406,7 +405,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<TaskDO> getPendingTasksForTaskType(String taskName) {
+    public List<TaskModel> getPendingTasksForTaskType(String taskName) {
         Preconditions.checkNotNull(taskName, "task name cannot be null");
         Set<String> taskIds = jedisProxy.smembers(nsKey(IN_PROGRESS_TASKS, taskName));
         recordRedisDaoRequests("getPendingTasksForTaskType");
@@ -414,18 +413,18 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public String createWorkflow(WorkflowDO workflow) {
+    public String createWorkflow(WorkflowModel workflow) {
         return insertOrUpdateWorkflow(workflow, false);
     }
 
     @Override
-    public String updateWorkflow(WorkflowDO workflow) {
+    public String updateWorkflow(WorkflowModel workflow) {
         return insertOrUpdateWorkflow(workflow, true);
     }
 
     @Override
     public boolean removeWorkflow(String workflowId) {
-        WorkflowDO workflow = getWorkflow(workflowId, true);
+        WorkflowModel workflow = getWorkflow(workflowId, true);
         if (workflow != null) {
             recordRedisDaoRequests("removeWorkflow");
 
@@ -441,7 +440,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
 
             // Remove the object
             jedisProxy.del(nsKey(WORKFLOW, workflowId));
-            for (TaskDO task : workflow.getTasks()) {
+            for (TaskModel task : workflow.getTasks()) {
                 removeTask(task.getTaskId());
             }
             return true;
@@ -450,7 +449,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     public boolean removeWorkflowWithExpiry(String workflowId, int ttlSeconds) {
-        WorkflowDO workflow = getWorkflow(workflowId, true);
+        WorkflowModel workflow = getWorkflow(workflowId, true);
         if (workflow != null) {
             recordRedisDaoRequests("removeWorkflow");
 
@@ -466,7 +465,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
 
             // Remove the object
             jedisProxy.expire(nsKey(WORKFLOW, workflowId), ttlSeconds);
-            for (TaskDO task : workflow.getTasks()) {
+            for (TaskModel task : workflow.getTasks()) {
                 removeTaskWithExpiry(task.getTaskId(), ttlSeconds);
             }
             jedisProxy.expire(nsKey(WORKFLOW_TO_TASKS, workflowId), ttlSeconds);
@@ -484,25 +483,25 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public WorkflowDO getWorkflow(String workflowId) {
+    public WorkflowModel getWorkflow(String workflowId) {
         return getWorkflow(workflowId, true);
     }
 
     @Override
-    public WorkflowDO getWorkflow(String workflowId, boolean includeTasks) {
+    public WorkflowModel getWorkflow(String workflowId, boolean includeTasks) {
         String json = jedisProxy.get(nsKey(WORKFLOW, workflowId));
-        WorkflowDO workflow = null;
+        WorkflowModel workflow = null;
 
         if (json != null) {
-            workflow = readValue(json, WorkflowDO.class);
+            workflow = readValue(json, WorkflowModel.class);
             recordRedisDaoRequests("getWorkflow", "n/a", workflow.getWorkflowName());
             recordRedisDaoPayloadSize(
                     "getWorkflow", json.length(), "n/a", workflow.getWorkflowName());
             if (includeTasks) {
-                List<TaskDO> tasks = getTasksForWorkflow(workflowId);
+                List<TaskModel> tasks = getTasksForWorkflow(workflowId);
                 tasks.sort(
-                        Comparator.comparingLong(TaskDO::getScheduledTime)
-                                .thenComparingInt(TaskDO::getSeq));
+                        Comparator.comparingLong(TaskModel::getScheduledTime)
+                                .thenComparingInt(TaskModel::getSeq));
                 workflow.setTasks(tasks);
             }
         }
@@ -531,7 +530,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
      * @return list of workflows that are in RUNNING state
      */
     @Override
-    public List<WorkflowDO> getPendingWorkflowsByType(String workflowName, int version) {
+    public List<WorkflowModel> getPendingWorkflowsByType(String workflowName, int version) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         List<String> workflowIds = getRunningWorkflowIds(workflowName, version);
         return workflowIds.stream()
@@ -541,12 +540,13 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<WorkflowDO> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
+    public List<WorkflowModel> getWorkflowsByType(
+            String workflowName, Long startTime, Long endTime) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         Preconditions.checkNotNull(startTime, "startTime cannot be null");
         Preconditions.checkNotNull(endTime, "endTime cannot be null");
 
-        List<WorkflowDO> workflows = new LinkedList<>();
+        List<WorkflowModel> workflows = new LinkedList<>();
 
         // Get all date strings between start and end
         List<String> dateStrs = dateStrBetweenDates(startTime, endTime);
@@ -558,7 +558,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
                             .forEach(
                                     workflowId -> {
                                         try {
-                                            WorkflowDO workflow = getWorkflow(workflowId);
+                                            WorkflowModel workflow = getWorkflow(workflowId);
                                             if (workflow.getCreatedTime() >= startTime
                                                     && workflow.getCreatedTime() <= endTime) {
                                                 workflows.add(workflow);
@@ -574,7 +574,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
     }
 
     @Override
-    public List<WorkflowDO> getWorkflowsByCorrelationId(
+    public List<WorkflowModel> getWorkflowsByCorrelationId(
             String workflowName, String correlationId, boolean includeTasks) {
         throw new UnsupportedOperationException(
                 "This method is not implemented in RedisExecutionDAO. Please use ExecutionDAOFacade instead.");
@@ -593,10 +593,10 @@ public class RedisExecutionDAO extends BaseDynoDAO
      * @param update flag to identify if update or create operation
      * @return the workflowId
      */
-    private String insertOrUpdateWorkflow(WorkflowDO workflow, boolean update) {
+    private String insertOrUpdateWorkflow(WorkflowModel workflow, boolean update) {
         Preconditions.checkNotNull(workflow, "workflow object cannot be null");
 
-        List<TaskDO> tasks = workflow.getTasks();
+        List<TaskModel> tasks = workflow.getTasks();
         workflow.setTasks(new LinkedList<>());
 
         String payload = toJson(workflow);
@@ -763,7 +763,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
         }
     }
 
-    private void validate(TaskDO task) {
+    private void validate(TaskModel task) {
         try {
             Preconditions.checkNotNull(task, "task object cannot be null");
             Preconditions.checkNotNull(task.getTaskId(), "Task id cannot be null");

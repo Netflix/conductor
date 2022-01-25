@@ -28,14 +28,13 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#USER_DEFINED} to a {@link TaskDO} of type {@link TaskType#USER_DEFINED} with {@link
- * TaskStatusDO#SCHEDULED}
+ * TaskType#USER_DEFINED} to a {@link TaskModel} of type {@link TaskType#USER_DEFINED} with {@link
+ * TaskModel.Status#SCHEDULED}
  */
 @Component
 public class UserDefinedTaskMapper implements TaskMapper {
@@ -57,21 +56,21 @@ public class UserDefinedTaskMapper implements TaskMapper {
 
     /**
      * This method maps a {@link WorkflowTask} of type {@link TaskType#USER_DEFINED} to a {@link
-     * TaskDO} in a {@link TaskStatusDO#SCHEDULED} state
+     * TaskModel} in a {@link TaskModel.Status#SCHEDULED} state
      *
      * @param taskMapperContext: A wrapper class containing the {@link WorkflowTask}, {@link
-     *     WorkflowDef}, {@link WorkflowDO} and a string representation of the TaskId
+     *     WorkflowDef}, {@link WorkflowModel} and a string representation of the TaskId
      * @return a List with just one User defined task
      * @throws TerminateWorkflowException In case if the task definition does not exist
      */
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException {
 
         LOGGER.debug("TaskMapperContext {} in UserDefinedTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
         int retryCount = taskMapperContext.getRetryCount();
 
@@ -100,7 +99,7 @@ public class UserDefinedTaskMapper implements TaskMapper {
                         taskId,
                         taskDefinition);
 
-        TaskDO userDefinedTask = new TaskDO();
+        TaskModel userDefinedTask = new TaskModel();
         userDefinedTask.setTaskType(taskToSchedule.getType());
         userDefinedTask.setTaskDefName(taskToSchedule.getName());
         userDefinedTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -110,7 +109,7 @@ public class UserDefinedTaskMapper implements TaskMapper {
         userDefinedTask.setScheduledTime(System.currentTimeMillis());
         userDefinedTask.setTaskId(taskId);
         userDefinedTask.setInputData(input);
-        userDefinedTask.setStatus(TaskStatusDO.SCHEDULED);
+        userDefinedTask.setStatus(TaskModel.Status.SCHEDULED);
         userDefinedTask.setRetryCount(retryCount);
         userDefinedTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
         userDefinedTask.setWorkflowTask(taskToSchedule);

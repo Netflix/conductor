@@ -13,9 +13,8 @@
 package com.netflix.conductor.core.execution;
 
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 public class WorkflowSystemTaskStub extends WorkflowSystemTask {
 
@@ -26,9 +25,9 @@ public class WorkflowSystemTaskStub extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         started = true;
-        task.setStatus(TaskStatusDO.COMPLETED);
+        task.setStatus(TaskModel.Status.COMPLETED);
         super.start(workflow, task, executor);
     }
 

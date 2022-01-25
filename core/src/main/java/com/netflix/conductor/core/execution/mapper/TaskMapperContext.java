@@ -18,12 +18,12 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.execution.DeciderService;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.WorkflowModel;
 
 /** Business Object class used for interaction between the DeciderService and Different Mappers */
 public class TaskMapperContext {
 
-    private final WorkflowDO workflowInstance;
+    private final WorkflowModel workflowInstance;
     private final TaskDef taskDefinition;
     private final WorkflowTask taskToSchedule;
     private final Map<String, Object> taskInput;
@@ -65,7 +65,7 @@ public class TaskMapperContext {
         return workflowInstance.getWorkflowDefinition();
     }
 
-    public WorkflowDO getWorkflowInstance() {
+    public WorkflowModel getWorkflowInstance() {
         return workflowInstance;
     }
 
@@ -169,7 +169,7 @@ public class TaskMapperContext {
     public static final class Builder {
 
         private WorkflowDef workflowDefinition;
-        private WorkflowDO workflowInstance;
+        private WorkflowModel workflowInstance;
         private TaskDef taskDefinition;
         private WorkflowTask taskToSchedule;
         private Map<String, Object> taskInput;
@@ -199,7 +199,7 @@ public class TaskMapperContext {
          * @param val the {@code workflowInstance} to set
          * @return a reference to this Builder
          */
-        public Builder withWorkflowInstance(WorkflowDO val) {
+        public Builder withWorkflowInstance(WorkflowModel val) {
             workflowInstance = val;
             return this;
         }

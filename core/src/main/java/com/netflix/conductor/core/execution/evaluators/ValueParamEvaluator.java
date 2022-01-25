@@ -26,6 +26,7 @@ public class ValueParamEvaluator implements Evaluator {
     public static final String NAME = "value-param";
     private static final Logger LOGGER = LoggerFactory.getLogger(ValueParamEvaluator.class);
 
+    @SuppressWarnings("unchecked")
     @Override
     public Object evaluate(String expression, Object input) {
         LOGGER.debug("ValueParam evaluator -- evaluating: {}", expression);

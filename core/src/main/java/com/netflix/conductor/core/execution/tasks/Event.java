@@ -26,9 +26,8 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +54,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> payload = new HashMap<>(task.getInputData());
         payload.put("workflowInstanceId", workflow.getWorkflowId());
         payload.put("workflowType", workflow.getWorkflowName());
@@ -70,14 +69,16 @@ public class Event extends WorkflowSystemTask {
             LOGGER.debug("Published message:{} to queue:{}", message.getId(), queue.getName());
             task.getOutputData().putAll(payload);
             task.setStatus(
-                    isAsyncComplete(task) ? TaskStatusDO.IN_PROGRESS : TaskStatusDO.COMPLETED);
+                    isAsyncComplete(task)
+                            ? TaskModel.Status.IN_PROGRESS
+                            : TaskModel.Status.COMPLETED);
         } catch (ApplicationException ae) {
             if (ae.isRetryable()) {
                 LOGGER.info(
                         "A transient backend error happened when task {} tried to publish an event.",
                         task.getTaskId());
             } else {
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
                 task.setReasonForIncompletion(ae.getMessage());
                 LOGGER.error(
                         "Error executing task: {}, workflow: {}",
@@ -86,14 +87,14 @@ public class Event extends WorkflowSystemTask {
                         ae);
             }
         } catch (JsonProcessingException jpe) {
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion("Error serializing JSON payload: " + jpe.getMessage());
             LOGGER.error(
                     "Error serializing JSON payload for task: {}, workflow: {}",
                     task.getTaskId(),
                     workflow.getWorkflowId());
         } catch (Exception e) {
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             LOGGER.error(
                     "Error executing task: {}, workflow: {}",
@@ -104,7 +105,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Message message = new Message(task.getTaskId(), null, task.getTaskId());
         ObservableQueue queue = getQueue(workflow, task);
         queue.ack(List.of(message));
@@ -116,7 +117,7 @@ public class Event extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    ObservableQueue getQueue(WorkflowDO workflow, TaskDO task) {
+    ObservableQueue getQueue(WorkflowModel workflow, TaskModel task) {
         String sinkValueRaw = (String) task.getInputData().get("sink");
         Map<String, Object> input = new HashMap<>();
         input.put("sink", sinkValueRaw);

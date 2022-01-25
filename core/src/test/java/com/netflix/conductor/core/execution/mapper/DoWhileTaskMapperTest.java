@@ -28,9 +28,8 @@ import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.execution.DeciderService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DO_WHILE;
 
@@ -39,9 +38,9 @@ import static org.junit.Assert.assertNotNull;
 
 public class DoWhileTaskMapperTest {
 
-    private TaskDO task1;
+    private TaskModel task1;
     private DeciderService deciderService;
-    private WorkflowDO workflow;
+    private WorkflowModel workflow;
     private WorkflowTask workflowTask1;
     private TaskMapperContext taskMapperContext;
     private MetadataDAO metadataDAO;
@@ -51,9 +50,9 @@ public class DoWhileTaskMapperTest {
         WorkflowTask taskToSchedule = new WorkflowTask();
         taskToSchedule.setType(TaskType.DO_WHILE.name());
         taskToSchedule.setTaskReferenceName("Test");
-        task1 = new TaskDO();
+        task1 = new TaskModel();
         task1.setReferenceTaskName("task1");
-        TaskDO task2 = new TaskDO();
+        TaskModel task2 = new TaskModel();
         task2.setReferenceTaskName("task2");
         workflowTask1 = new WorkflowTask();
         workflowTask1.setTaskReferenceName("task1");
@@ -68,7 +67,7 @@ public class DoWhileTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
-        workflow = new WorkflowDO();
+        workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(workflowDef);
 
         deciderService = Mockito.mock(DeciderService.class);
@@ -93,7 +92,7 @@ public class DoWhileTaskMapperTest {
                 .when(deciderService)
                 .getTasksToBeScheduled(workflow, workflowTask1, 0);
 
-        List<TaskDO> mappedTasks =
+        List<TaskModel> mappedTasks =
                 new DoWhileTaskMapper(metadataDAO).getMappedTasks(taskMapperContext);
 
         assertNotNull(mappedTasks);
@@ -106,9 +105,9 @@ public class DoWhileTaskMapperTest {
     @Test
     public void shouldNotScheduleCompletedTask() {
 
-        task1.setStatus(TaskStatusDO.COMPLETED);
+        task1.setStatus(TaskModel.Status.COMPLETED);
 
-        List<TaskDO> mappedTasks =
+        List<TaskModel> mappedTasks =
                 new DoWhileTaskMapper(metadataDAO).getMappedTasks(taskMapperContext);
 
         assertNotNull(mappedTasks);

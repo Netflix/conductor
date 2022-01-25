@@ -10,23 +10,65 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.domain;
+package com.netflix.conductor.model;
 
 import com.google.protobuf.Any;
+import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TaskDO {
+public class TaskModel {
+
+    public enum Status {
+        IN_PROGRESS(false, true, true),
+        CANCELED(true, false, false),
+        FAILED(true, false, true),
+        FAILED_WITH_TERMINAL_ERROR(true, false, false),
+        COMPLETED(true, true, true),
+        COMPLETED_WITH_ERRORS(true, true, true),
+        SCHEDULED(false, true, true),
+        TIMED_OUT(true, false, true),
+        SKIPPED(true, true, false);
+
+        private final boolean terminal;
+
+        private final boolean successful;
+
+        private final boolean retriable;
+
+        Status(boolean terminal, boolean successful, boolean retriable) {
+            this.terminal = terminal;
+            this.successful = successful;
+            this.retriable = retriable;
+        }
+
+        public boolean isTerminal() {
+            return terminal;
+        }
+
+        public boolean isSuccessful() {
+            return successful;
+        }
+
+        public boolean isRetriable() {
+            return retriable;
+        }
+
+        public static Task.Status getTaskStatusDTO(Status status) {
+            return Task.Status.valueOf(status.name());
+        }
+    }
 
     private String taskType;
 
-    private TaskStatusDO status;
+    private Status status;
 
     private Map<String, Object> inputData = new HashMap<>();
 
@@ -122,11 +164,11 @@ public class TaskDO {
         this.taskType = taskType;
     }
 
-    public TaskStatusDO getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(TaskStatusDO status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
@@ -484,68 +526,16 @@ public class TaskDO {
         return 0L;
     }
 
-    public TaskDO copy() {
-        TaskDO copy = new TaskDO();
-        copy.setCallbackAfterSeconds(callbackAfterSeconds);
-        copy.setCallbackFromWorker(callbackFromWorker);
-        copy.setCorrelationId(correlationId);
-        copy.setInputData(inputData);
-        copy.setOutputData(outputData);
-        copy.setReferenceTaskName(referenceTaskName);
-        copy.setStartDelayInSeconds(startDelayInSeconds);
-        copy.setTaskDefName(taskDefName);
-        copy.setTaskType(taskType);
-        copy.setWorkflowInstanceId(workflowInstanceId);
-        copy.setWorkflowType(workflowType);
-        copy.setResponseTimeoutSeconds(responseTimeoutSeconds);
-        copy.setStatus(status);
-        copy.setRetryCount(retryCount);
-        copy.setPollCount(pollCount);
-        copy.setTaskId(taskId);
-        copy.setWorkflowTask(workflowTask);
-        copy.setDomain(domain);
-        copy.setInputMessage(inputMessage);
-        copy.setOutputMessage(outputMessage);
-        copy.setRateLimitPerFrequency(rateLimitPerFrequency);
-        copy.setRateLimitFrequencyInSeconds(rateLimitFrequencyInSeconds);
-        copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
-        copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
-        copy.setWorkflowPriority(workflowPriority);
-        copy.setIteration(iteration);
-        copy.setExecutionNameSpace(executionNameSpace);
-        copy.setIsolationGroupId(isolationGroupId);
-        copy.setSubWorkflowId(getSubWorkflowId());
-        copy.setSubworkflowChanged(subworkflowChanged);
-
+    /** @return a deep copy of the task instance */
+    public TaskModel copy() {
+        TaskModel copy = new TaskModel();
+        BeanUtils.copyProperties(this, copy);
         return copy;
-    }
-
-    /**
-     * @return a deep copy of the task instance tTo be used inside copy Workflow method to provide a
-     *     valid deep copied object.
-     *     <p><b>Note:</b> This does not copy the following fields:
-     *     <ul>
-     *       <li>retried
-     *       <li>executed
-     *       <li>updateTime
-     *       <li>retriedTaskId
-     *     </ul>
-     */
-    public TaskDO deepCopy() {
-        TaskDO deepCopy = copy();
-        deepCopy.setStartTime(startTime);
-        deepCopy.setScheduledTime(scheduledTime);
-        deepCopy.setEndTime(endTime);
-        deepCopy.setWorkerId(workerId);
-        deepCopy.setReasonForIncompletion(reasonForIncompletion);
-        deepCopy.setSeq(seq);
-
-        return deepCopy;
     }
 
     @Override
     public String toString() {
-        return "TaskDO{"
+        return "TaskModel{"
                 + "taskType='"
                 + taskType
                 + '\''
@@ -649,51 +639,51 @@ public class TaskDO {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TaskDO taskDO = (TaskDO) o;
-        return getRetryCount() == taskDO.getRetryCount()
-                && getSeq() == taskDO.getSeq()
-                && getPollCount() == taskDO.getPollCount()
-                && getScheduledTime() == taskDO.getScheduledTime()
-                && getStartTime() == taskDO.getStartTime()
-                && getEndTime() == taskDO.getEndTime()
-                && getUpdateTime() == taskDO.getUpdateTime()
-                && getStartDelayInSeconds() == taskDO.getStartDelayInSeconds()
-                && isRetried() == taskDO.isRetried()
-                && isExecuted() == taskDO.isExecuted()
-                && isCallbackFromWorker() == taskDO.isCallbackFromWorker()
-                && getResponseTimeoutSeconds() == taskDO.getResponseTimeoutSeconds()
-                && getCallbackAfterSeconds() == taskDO.getCallbackAfterSeconds()
-                && getRateLimitPerFrequency() == taskDO.getRateLimitPerFrequency()
-                && getRateLimitFrequencyInSeconds() == taskDO.getRateLimitFrequencyInSeconds()
-                && getWorkflowPriority() == taskDO.getWorkflowPriority()
-                && getIteration() == taskDO.getIteration()
-                && isSubworkflowChanged() == taskDO.isSubworkflowChanged()
-                && Objects.equals(getTaskType(), taskDO.getTaskType())
-                && getStatus() == taskDO.getStatus()
-                && Objects.equals(getInputData(), taskDO.getInputData())
-                && Objects.equals(getReferenceTaskName(), taskDO.getReferenceTaskName())
-                && Objects.equals(getCorrelationId(), taskDO.getCorrelationId())
-                && Objects.equals(getTaskDefName(), taskDO.getTaskDefName())
-                && Objects.equals(getRetriedTaskId(), taskDO.getRetriedTaskId())
-                && Objects.equals(getWorkflowInstanceId(), taskDO.getWorkflowInstanceId())
-                && Objects.equals(getWorkflowType(), taskDO.getWorkflowType())
-                && Objects.equals(getTaskId(), taskDO.getTaskId())
-                && Objects.equals(getReasonForIncompletion(), taskDO.getReasonForIncompletion())
-                && Objects.equals(getWorkerId(), taskDO.getWorkerId())
-                && Objects.equals(getOutputData(), taskDO.getOutputData())
-                && Objects.equals(getWorkflowTask(), taskDO.getWorkflowTask())
-                && Objects.equals(getDomain(), taskDO.getDomain())
-                && Objects.equals(getInputMessage(), taskDO.getInputMessage())
-                && Objects.equals(getOutputMessage(), taskDO.getOutputMessage())
+        TaskModel taskModel = (TaskModel) o;
+        return getRetryCount() == taskModel.getRetryCount()
+                && getSeq() == taskModel.getSeq()
+                && getPollCount() == taskModel.getPollCount()
+                && getScheduledTime() == taskModel.getScheduledTime()
+                && getStartTime() == taskModel.getStartTime()
+                && getEndTime() == taskModel.getEndTime()
+                && getUpdateTime() == taskModel.getUpdateTime()
+                && getStartDelayInSeconds() == taskModel.getStartDelayInSeconds()
+                && isRetried() == taskModel.isRetried()
+                && isExecuted() == taskModel.isExecuted()
+                && isCallbackFromWorker() == taskModel.isCallbackFromWorker()
+                && getResponseTimeoutSeconds() == taskModel.getResponseTimeoutSeconds()
+                && getCallbackAfterSeconds() == taskModel.getCallbackAfterSeconds()
+                && getRateLimitPerFrequency() == taskModel.getRateLimitPerFrequency()
+                && getRateLimitFrequencyInSeconds() == taskModel.getRateLimitFrequencyInSeconds()
+                && getWorkflowPriority() == taskModel.getWorkflowPriority()
+                && getIteration() == taskModel.getIteration()
+                && isSubworkflowChanged() == taskModel.isSubworkflowChanged()
+                && Objects.equals(getTaskType(), taskModel.getTaskType())
+                && getStatus() == taskModel.getStatus()
+                && Objects.equals(getInputData(), taskModel.getInputData())
+                && Objects.equals(getReferenceTaskName(), taskModel.getReferenceTaskName())
+                && Objects.equals(getCorrelationId(), taskModel.getCorrelationId())
+                && Objects.equals(getTaskDefName(), taskModel.getTaskDefName())
+                && Objects.equals(getRetriedTaskId(), taskModel.getRetriedTaskId())
+                && Objects.equals(getWorkflowInstanceId(), taskModel.getWorkflowInstanceId())
+                && Objects.equals(getWorkflowType(), taskModel.getWorkflowType())
+                && Objects.equals(getTaskId(), taskModel.getTaskId())
+                && Objects.equals(getReasonForIncompletion(), taskModel.getReasonForIncompletion())
+                && Objects.equals(getWorkerId(), taskModel.getWorkerId())
+                && Objects.equals(getOutputData(), taskModel.getOutputData())
+                && Objects.equals(getWorkflowTask(), taskModel.getWorkflowTask())
+                && Objects.equals(getDomain(), taskModel.getDomain())
+                && Objects.equals(getInputMessage(), taskModel.getInputMessage())
+                && Objects.equals(getOutputMessage(), taskModel.getOutputMessage())
                 && Objects.equals(
                         getExternalInputPayloadStoragePath(),
-                        taskDO.getExternalInputPayloadStoragePath())
+                        taskModel.getExternalInputPayloadStoragePath())
                 && Objects.equals(
                         getExternalOutputPayloadStoragePath(),
-                        taskDO.getExternalOutputPayloadStoragePath())
-                && Objects.equals(getExecutionNameSpace(), taskDO.getExecutionNameSpace())
-                && Objects.equals(getIsolationGroupId(), taskDO.getIsolationGroupId())
-                && Objects.equals(getSubWorkflowId(), taskDO.getSubWorkflowId());
+                        taskModel.getExternalOutputPayloadStoragePath())
+                && Objects.equals(getExecutionNameSpace(), taskModel.getExecutionNameSpace())
+                && Objects.equals(getIsolationGroupId(), taskModel.getIsolationGroupId())
+                && Objects.equals(getSubWorkflowId(), taskModel.getSubWorkflowId());
     }
 
     @Override

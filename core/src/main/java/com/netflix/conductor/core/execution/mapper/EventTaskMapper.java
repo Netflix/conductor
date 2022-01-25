@@ -24,9 +24,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_EVENT;
 
@@ -48,12 +47,12 @@ public class EventTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in EventTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         taskToSchedule.getInputParameters().put("sink", taskToSchedule.getSink());
@@ -64,7 +63,7 @@ public class EventTaskMapper implements TaskMapper {
         String sink = (String) eventTaskInput.get("sink");
         Boolean asynComplete = (Boolean) eventTaskInput.get("asyncComplete");
 
-        TaskDO eventTask = new TaskDO();
+        TaskModel eventTask = new TaskModel();
         eventTask.setTaskType(TASK_TYPE_EVENT);
         eventTask.setTaskDefName(taskToSchedule.getName());
         eventTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
@@ -76,7 +75,7 @@ public class EventTaskMapper implements TaskMapper {
         eventTask.getInputData().put("sink", sink);
         eventTask.getInputData().put("asyncComplete", asynComplete);
         eventTask.setTaskId(taskId);
-        eventTask.setStatus(TaskStatusDO.SCHEDULED);
+        eventTask.setStatus(TaskModel.Status.SCHEDULED);
         eventTask.setWorkflowPriority(workflowInstance.getPriority());
         eventTask.setWorkflowTask(taskToSchedule);
 

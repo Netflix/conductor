@@ -24,15 +24,15 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.execution.tasks.Wait;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 
 /**
  * An implementation of {@link TaskMapper} to map a {@link WorkflowTask} of type {@link
- * TaskType#WAIT} to a {@link TaskDO} of type {@link Wait} with {@link TaskStatusDO#IN_PROGRESS}
+ * TaskType#WAIT} to a {@link TaskModel} of type {@link Wait} with {@link
+ * TaskModel.Status#IN_PROGRESS}
  */
 @Component
 public class WaitTaskMapper implements TaskMapper {
@@ -51,12 +51,12 @@ public class WaitTaskMapper implements TaskMapper {
     }
 
     @Override
-    public List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext) {
+    public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
 
         LOGGER.debug("TaskMapperContext {} in WaitTaskMapper", taskMapperContext);
 
         WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowDO workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
         String taskId = taskMapperContext.getTaskId();
 
         Map<String, Object> waitTaskInput =
@@ -66,7 +66,7 @@ public class WaitTaskMapper implements TaskMapper {
                         taskId,
                         null);
 
-        TaskDO waitTask = new TaskDO();
+        TaskModel waitTask = new TaskModel();
         waitTask.setTaskType(TASK_TYPE_WAIT);
         waitTask.setTaskDefName(taskMapperContext.getTaskToSchedule().getName());
         waitTask.setReferenceTaskName(taskMapperContext.getTaskToSchedule().getTaskReferenceName());
@@ -76,7 +76,7 @@ public class WaitTaskMapper implements TaskMapper {
         waitTask.setScheduledTime(System.currentTimeMillis());
         waitTask.setInputData(waitTaskInput);
         waitTask.setTaskId(taskId);
-        waitTask.setStatus(TaskStatusDO.IN_PROGRESS);
+        waitTask.setStatus(TaskModel.Status.IN_PROGRESS);
         waitTask.setWorkflowTask(taskToSchedule);
         waitTask.setWorkflowPriority(workflowInstance.getPriority());
         return Collections.singletonList(waitTask);

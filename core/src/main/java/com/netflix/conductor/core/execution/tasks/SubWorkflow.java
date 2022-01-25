@@ -22,10 +22,8 @@ import org.springframework.stereotype.Component;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,7 +44,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> input = task.getInputData();
         String name = input.get("subWorkflowName").toString();
         int version = (int) input.get("subWorkflowVersion");
@@ -105,7 +103,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 
             // Set task status based on current sub-workflow status, as the status can change in
             // recursion by the time we update here.
-            WorkflowDO subWorkflow = workflowExecutor.getWorkflow(subWorkflowId, false);
+            WorkflowModel subWorkflow = workflowExecutor.getWorkflow(subWorkflowId, false);
             updateTaskStatus(subWorkflow, task);
         } catch (ApplicationException ae) {
             if (ae.isRetryable()) {
@@ -115,7 +113,7 @@ public class SubWorkflow extends WorkflowSystemTask {
                         workflow.toShortString(),
                         name);
             } else {
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
                 task.setReasonForIncompletion(ae.getMessage());
                 LOGGER.error(
                         "Error starting sub workflow: {} from workflow: {}",
@@ -124,7 +122,7 @@ public class SubWorkflow extends WorkflowSystemTask {
                         ae);
             }
         } catch (Exception e) {
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion(e.getMessage());
             LOGGER.error(
                     "Error starting sub workflow: {} from workflow: {}",
@@ -135,14 +133,15 @@ public class SubWorkflow extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         String workflowId = task.getSubWorkflowId();
         if (StringUtils.isEmpty(workflowId)) {
             return false;
         }
 
-        WorkflowDO subWorkflow = workflowExecutor.getWorkflow(workflowId, false);
-        WorkflowStatusDO subWorkflowStatus = subWorkflow.getStatus();
+        WorkflowModel subWorkflow = workflowExecutor.getWorkflow(workflowId, false);
+        WorkflowModel.Status subWorkflowStatus = subWorkflow.getStatus();
         if (!subWorkflowStatus.isTerminal()) {
             return false;
         }
@@ -152,13 +151,13 @@ public class SubWorkflow extends WorkflowSystemTask {
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         String workflowId = task.getSubWorkflowId();
         if (StringUtils.isEmpty(workflowId)) {
             return;
         }
-        WorkflowDO subWorkflow = workflowExecutor.getWorkflow(workflowId, true);
-        subWorkflow.setStatus(WorkflowStatusDO.TERMINATED);
+        WorkflowModel subWorkflow = workflowExecutor.getWorkflow(workflowId, true);
+        subWorkflow.setStatus(WorkflowModel.Status.TERMINATED);
         String reason =
                 StringUtils.isEmpty(workflow.getReasonForIncompletion())
                         ? "Parent workflow has been terminated with status " + workflow.getStatus()
@@ -181,28 +180,28 @@ public class SubWorkflow extends WorkflowSystemTask {
      * @return
      */
     @Override
-    public boolean isAsyncComplete(TaskDO task) {
+    public boolean isAsyncComplete(TaskModel task) {
         return true;
     }
 
-    private void updateTaskStatus(WorkflowDO subworkflow, TaskDO task) {
-        WorkflowStatusDO status = subworkflow.getStatus();
+    private void updateTaskStatus(WorkflowModel subworkflow, TaskModel task) {
+        WorkflowModel.Status status = subworkflow.getStatus();
         switch (status) {
             case RUNNING:
             case PAUSED:
-                task.setStatus(TaskStatusDO.IN_PROGRESS);
+                task.setStatus(TaskModel.Status.IN_PROGRESS);
                 break;
             case COMPLETED:
-                task.setStatus(TaskStatusDO.COMPLETED);
+                task.setStatus(TaskModel.Status.COMPLETED);
                 break;
             case FAILED:
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
                 break;
             case TERMINATED:
-                task.setStatus(TaskStatusDO.CANCELED);
+                task.setStatus(TaskModel.Status.CANCELED);
                 break;
             case TIMED_OUT:
-                task.setStatus(TaskStatusDO.TIMED_OUT);
+                task.setStatus(TaskModel.Status.TIMED_OUT);
                 break;
             default:
                 throw new ApplicationException(

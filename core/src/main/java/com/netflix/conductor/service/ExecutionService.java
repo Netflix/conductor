@@ -43,8 +43,8 @@ import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.Operation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.dal.DomainMapper;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
+import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -52,9 +52,8 @@ import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.core.utils.Utils;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
 
 @Trace
 @Service
@@ -63,7 +62,7 @@ public class ExecutionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionService.class);
 
     private final WorkflowExecutor workflowExecutor;
-    private final DomainMapper domainMapper;
+    private final ModelMapper modelMapper;
     private final ExecutionDAOFacade executionDAOFacade;
     private final QueueDAO queueDAO;
     private final ExternalPayloadStorage externalPayloadStorage;
@@ -77,14 +76,14 @@ public class ExecutionService {
 
     public ExecutionService(
             WorkflowExecutor workflowExecutor,
-            DomainMapper domainMapper,
+            ModelMapper modelMapper,
             ExecutionDAOFacade executionDAOFacade,
             QueueDAO queueDAO,
             ConductorProperties properties,
             ExternalPayloadStorage externalPayloadStorage,
             SystemTaskRegistry systemTaskRegistry) {
         this.workflowExecutor = workflowExecutor;
-        this.domainMapper = domainMapper;
+        this.modelMapper = modelMapper;
         this.executionDAOFacade = executionDAOFacade;
         this.queueDAO = queueDAO;
         this.externalPayloadStorage = externalPayloadStorage;
@@ -138,7 +137,7 @@ public class ExecutionService {
 
         for (String taskId : taskIds) {
             try {
-                TaskDO task = executionDAOFacade.getTaskDO(taskId);
+                TaskModel task = executionDAOFacade.getTaskModel(taskId);
                 if (task == null || task.getStatus().isTerminal()) {
                     // Remove taskId(s) without a valid Task/terminal state task from the queue
                     queueDAO.remove(queueName, taskId);
@@ -180,7 +179,7 @@ public class ExecutionService {
                     continue;
                 }
 
-                task.setStatus(TaskStatusDO.IN_PROGRESS);
+                task.setStatus(TaskModel.Status.IN_PROGRESS);
                 if (task.getStartTime() == 0) {
                     task.setStartTime(System.currentTimeMillis());
                     Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
@@ -190,7 +189,7 @@ public class ExecutionService {
                 task.setWorkerId(workerId);
                 task.incrementPollCount();
                 executionDAOFacade.updateTask(task);
-                tasks.add(domainMapper.getTaskDTO(task));
+                tasks.add(modelMapper.getTask(task));
             } catch (Exception e) {
                 // db operation failed for dequeued message, re-enqueue with a delay
                 LOGGER.warn(
@@ -267,7 +266,7 @@ public class ExecutionService {
     }
 
     public Task getTask(String taskId) {
-        return executionDAOFacade.getTaskDTO(taskId);
+        return executionDAOFacade.getTask(taskId);
     }
 
     public Task getPendingTaskForWorkflow(String taskReferenceName, String workflowId) {
@@ -388,7 +387,7 @@ public class ExecutionService {
     }
 
     public Workflow getExecutionStatus(String workflowId, boolean includeTasks) {
-        return executionDAOFacade.getWorkflowDTO(workflowId, includeTasks);
+        return executionDAOFacade.getWorkflow(workflowId, includeTasks);
     }
 
     public List<String> getRunningWorkflows(String workflowName, int version) {
@@ -411,8 +410,7 @@ public class ExecutionService {
                                 workflowId -> {
                                     try {
                                         return new WorkflowSummary(
-                                                executionDAOFacade.getWorkflowDTO(
-                                                        workflowId, false));
+                                                executionDAOFacade.getWorkflow(workflowId, false));
                                     } catch (Exception e) {
                                         LOGGER.error(
                                                 "Error fetching workflow by id: {}", workflowId, e);
@@ -437,7 +435,7 @@ public class ExecutionService {
                         .map(
                                 workflowId -> {
                                     try {
-                                        return executionDAOFacade.getWorkflowDTO(workflowId, false);
+                                        return executionDAOFacade.getWorkflow(workflowId, false);
                                     } catch (Exception e) {
                                         LOGGER.error(
                                                 "Error fetching workflow by id: {}", workflowId, e);
@@ -463,8 +461,7 @@ public class ExecutionService {
                                     try {
                                         String workflowId = taskSummary.getWorkflowId();
                                         return new WorkflowSummary(
-                                                executionDAOFacade.getWorkflowDTO(
-                                                        workflowId, false));
+                                                executionDAOFacade.getWorkflow(workflowId, false));
                                     } catch (Exception e) {
                                         LOGGER.error(
                                                 "Error fetching workflow by id: {}",
@@ -492,7 +489,7 @@ public class ExecutionService {
                                 taskSummary -> {
                                     try {
                                         String workflowId = taskSummary.getWorkflowId();
-                                        return executionDAOFacade.getWorkflowDTO(workflowId, false);
+                                        return executionDAOFacade.getWorkflow(workflowId, false);
                                     } catch (Exception e) {
                                         LOGGER.error(
                                                 "Error fetching workflow by id: {}",
@@ -520,7 +517,7 @@ public class ExecutionService {
                         .map(
                                 task -> {
                                     try {
-                                        return new TaskSummary(executionDAOFacade.getTaskDTO(task));
+                                        return new TaskSummary(executionDAOFacade.getTask(task));
                                     } catch (Exception e) {
                                         LOGGER.error("Error fetching task by id: {}", task, e);
                                         return null;
@@ -554,7 +551,7 @@ public class ExecutionService {
                         .map(
                                 task -> {
                                     try {
-                                        return executionDAOFacade.getTaskDTO(task);
+                                        return executionDAOFacade.getTask(task);
                                     } catch (Exception e) {
                                         LOGGER.error("Error fetching task by id: {}", task, e);
                                         return null;

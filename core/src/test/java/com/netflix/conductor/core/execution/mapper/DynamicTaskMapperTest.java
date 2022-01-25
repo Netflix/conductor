@@ -28,8 +28,8 @@ import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,12 +67,12 @@ public class DynamicTaskMapperTest {
         taskInput.put("dynamicTaskName", "DynoTask");
 
         when(parametersUtils.getTaskInput(
-                        anyMap(), any(WorkflowDO.class), any(TaskDef.class), anyString()))
+                        anyMap(), any(WorkflowModel.class), any(TaskDef.class), anyString()))
                 .thenReturn(taskInput);
 
         String taskId = IDGenerator.generate();
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 
@@ -89,11 +89,11 @@ public class DynamicTaskMapperTest {
 
         when(metadataDAO.getTaskDef("DynoTask")).thenReturn(new TaskDef());
 
-        List<TaskDO> mappedTasks = dynamicTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = dynamicTaskMapper.getMappedTasks(taskMapperContext);
 
         assertEquals(1, mappedTasks.size());
 
-        TaskDO dynamicTask = mappedTasks.get(0);
+        TaskModel dynamicTask = mappedTasks.get(0);
         assertEquals(taskId, dynamicTask.getTaskId());
     }
 

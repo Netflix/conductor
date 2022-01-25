@@ -16,12 +16,12 @@ import java.util.List;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
+import com.netflix.conductor.model.TaskModel;
 
 public interface TaskMapper {
 
     TaskType getTaskType();
 
-    List<TaskDO> getMappedTasks(TaskMapperContext taskMapperContext)
+    List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException;
 }

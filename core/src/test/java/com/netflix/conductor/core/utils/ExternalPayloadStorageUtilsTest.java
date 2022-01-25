@@ -35,9 +35,8 @@ import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -124,7 +123,7 @@ public class ExternalPayloadStorageUtilsTest {
                 .when(externalPayloadStorage)
                 .upload(anyString(), any(), anyLong());
 
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setInputData(payload);
         externalPayloadStorageUtils.verifyAndUpload(
                 task, ExternalPayloadStorage.PayloadType.TASK_INPUT);
@@ -156,7 +155,7 @@ public class ExternalPayloadStorageUtilsTest {
                 .when(externalPayloadStorage)
                 .upload(anyString(), any(), anyLong());
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef def = new WorkflowDef();
         def.setName("name");
         def.setVersion(1);
@@ -194,7 +193,7 @@ public class ExternalPayloadStorageUtilsTest {
 
     @Test
     public void testFailTaskWithInputPayload() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setInputData(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
@@ -206,7 +205,7 @@ public class ExternalPayloadStorageUtilsTest {
 
     @Test
     public void testFailTaskWithOutputPayload() {
-        TaskDO task = new TaskDO();
+        TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
@@ -218,7 +217,7 @@ public class ExternalPayloadStorageUtilsTest {
 
     @Test
     public void testFailWorkflowWithInputPayload() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setInput(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
@@ -226,12 +225,12 @@ public class ExternalPayloadStorageUtilsTest {
                 workflow, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
         assertNotNull(workflow);
         assertTrue(workflow.getInput().isEmpty());
-        assertEquals(WorkflowStatusDO.FAILED, workflow.getStatus());
+        assertEquals(WorkflowModel.Status.FAILED, workflow.getStatus());
     }
 
     @Test
     public void testFailWorkflowWithOutputPayload() {
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setOutput(new HashMap<>());
 
         expectedException.expect(TerminateWorkflowException.class);
@@ -239,6 +238,6 @@ public class ExternalPayloadStorageUtilsTest {
                 workflow, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
         assertNotNull(workflow);
         assertTrue(workflow.getOutput().isEmpty());
-        assertEquals(WorkflowStatusDO.FAILED, workflow.getStatus());
+        assertEquals(WorkflowModel.Status.FAILED, workflow.getStatus());
     }
 }

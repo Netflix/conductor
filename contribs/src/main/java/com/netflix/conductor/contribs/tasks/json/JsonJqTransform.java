@@ -24,9 +24,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +58,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
+    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         final Map<String, Object> taskInput = task.getInputData();
         final Map<String, Object> taskOutput = task.getOutputData();
 
@@ -68,7 +67,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
         if (queryExpression == null) {
             task.setReasonForIncompletion(
                     "Missing '" + QUERY_EXPRESSION_PARAMETER + "' in input parameters");
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             return;
         }
 
@@ -80,7 +79,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
 
             final List<JsonNode> result = query.apply(childScope, input);
 
-            task.setStatus(TaskStatusDO.COMPLETED);
+            task.setStatus(TaskModel.Status.COMPLETED);
             if (result == null) {
                 taskOutput.put(OUTPUT_RESULT, null);
                 taskOutput.put(OUTPUT_RESULT_LIST, null);
@@ -97,7 +96,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
                     task.getTaskId(),
                     workflow.getWorkflowId(),
                     e);
-            task.setStatus(TaskStatusDO.FAILED);
+            task.setStatus(TaskModel.Status.FAILED);
             final String message = extractFirstValidMessage(e);
             task.setReasonForIncompletion(message);
             taskOutput.put(OUTPUT_ERROR, message);

@@ -28,8 +28,8 @@ import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -57,7 +57,7 @@ public class UserDefinedTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 
@@ -74,7 +74,7 @@ public class UserDefinedTaskMapperTest {
                         .build();
 
         // when
-        List<TaskDO> mappedTasks = userDefinedTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = userDefinedTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertEquals(1, mappedTasks.size());
@@ -90,7 +90,7 @@ public class UserDefinedTaskMapperTest {
         String taskId = IDGenerator.generate();
         String retriedTaskId = IDGenerator.generate();
 
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 

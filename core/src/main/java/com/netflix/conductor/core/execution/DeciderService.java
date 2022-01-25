@@ -39,16 +39,14 @@ import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
-import com.netflix.conductor.domain.WorkflowStatusDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
-import static com.netflix.conductor.domain.TaskStatusDO.*;
+import static com.netflix.conductor.model.TaskModel.Status.*;
 
 /**
  * Decider evaluates the state of the workflow by inspecting the current state along with the
@@ -70,10 +68,10 @@ public class DeciderService {
 
     private final Map<TaskType, TaskMapper> taskMappers;
 
-    private final Predicate<TaskDO> isNonPendingTask =
+    private final Predicate<TaskModel> isNonPendingTask =
             task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted();
 
-    private final Predicate<WorkflowDO> containsSuccessfulTerminateTask =
+    private final Predicate<WorkflowModel> containsSuccessfulTerminateTask =
             workflow ->
                     workflow.getTasks().stream()
                             .anyMatch(
@@ -98,19 +96,19 @@ public class DeciderService {
         this.systemTaskRegistry = systemTaskRegistry;
     }
 
-    public DeciderOutcome decide(WorkflowDO workflow) throws TerminateWorkflowException {
+    public DeciderOutcome decide(WorkflowModel workflow) throws TerminateWorkflowException {
 
         // In case of a new workflow the list of tasks will be empty.
-        final List<TaskDO> tasks = workflow.getTasks();
+        final List<TaskModel> tasks = workflow.getTasks();
         // Filter the list of tasks and include only tasks that are not executed,
         // not marked to be skipped and not ready for rerun.
         // For a new workflow, the list of unprocessedTasks will be empty
-        List<TaskDO> unprocessedTasks =
+        List<TaskModel> unprocessedTasks =
                 tasks.stream()
                         .filter(t -> !t.getStatus().equals(SKIPPED) && !t.isExecuted())
                         .collect(Collectors.toList());
 
-        List<TaskDO> tasksToBeScheduled = new LinkedList<>();
+        List<TaskModel> tasksToBeScheduled = new LinkedList<>();
         if (unprocessedTasks.isEmpty()) {
             // this is the flow that the new workflow will go through
             tasksToBeScheduled = startWorkflow(workflow);
@@ -121,7 +119,7 @@ public class DeciderService {
         return decide(workflow, tasksToBeScheduled);
     }
 
-    private DeciderOutcome decide(final WorkflowDO workflow, List<TaskDO> preScheduledTasks)
+    private DeciderOutcome decide(final WorkflowModel workflow, List<TaskModel> preScheduledTasks)
             throws TerminateWorkflowException {
 
         DeciderOutcome outcome = new DeciderOutcome();
@@ -137,7 +135,7 @@ public class DeciderService {
 
         checkWorkflowTimeout(workflow);
 
-        if (workflow.getStatus().equals(WorkflowStatusDO.PAUSED)) {
+        if (workflow.getStatus().equals(WorkflowModel.Status.PAUSED)) {
             LOGGER.debug("Workflow " + workflow.getWorkflowId() + " is paused");
             return outcome;
         }
@@ -145,18 +143,18 @@ public class DeciderService {
         // Filter the list of tasks and include only tasks that are not retried, not executed
         // marked to be skipped and not part of System tasks that is DECISION, FORK, JOIN
         // This list will be empty for a new workflow being started
-        List<TaskDO> pendingTasks =
+        List<TaskModel> pendingTasks =
                 workflow.getTasks().stream().filter(isNonPendingTask).collect(Collectors.toList());
 
         // Get all the tasks that have not completed their lifecycle yet
         // This list will be empty for a new workflow
         Set<String> executedTaskRefNames =
                 workflow.getTasks().stream()
-                        .filter(TaskDO::isExecuted)
-                        .map(TaskDO::getReferenceTaskName)
+                        .filter(TaskModel::isExecuted)
+                        .map(TaskModel::getReferenceTaskName)
                         .collect(Collectors.toSet());
 
-        Map<String, TaskDO> tasksToBeScheduled = new LinkedHashMap<>();
+        Map<String, TaskModel> tasksToBeScheduled = new LinkedHashMap<>();
 
         preScheduledTasks.forEach(
                 preScheduledTask -> {
@@ -165,7 +163,7 @@ public class DeciderService {
                 });
 
         // A new workflow does not enter this code branch
-        for (TaskDO pendingTask : pendingTasks) {
+        for (TaskModel pendingTask : pendingTasks) {
 
             if (systemTaskRegistry.isSystemTask(pendingTask.getTaskType())
                     && !pendingTask.getStatus().isTerminal()) {
@@ -201,7 +199,7 @@ public class DeciderService {
                                     .getTaskByRefName(pendingTask.getReferenceTaskName());
                 }
 
-                Optional<TaskDO> retryTask =
+                Optional<TaskModel> retryTask =
                         retry(taskDefinition.orElse(null), workflowTask, pendingTask, workflow);
                 if (retryTask.isPresent()) {
                     tasksToBeScheduled.put(retryTask.get().getReferenceTaskName(), retryTask.get());
@@ -216,7 +214,7 @@ public class DeciderService {
                     && !pendingTask.isRetried()
                     && pendingTask.getStatus().isTerminal()) {
                 pendingTask.setExecuted(true);
-                List<TaskDO> nextTasks = getNextTask(workflow, pendingTask);
+                List<TaskModel> nextTasks = getNextTask(workflow, pendingTask);
                 if (pendingTask.isLoopOverTask()
                         && !TaskType.DO_WHILE.name().equals(pendingTask.getTaskType())
                         && !nextTasks.isEmpty()) {
@@ -230,13 +228,15 @@ public class DeciderService {
                 LOGGER.debug(
                         "Scheduling Tasks from {}, next = {} for workflowId: {}",
                         pendingTask.getTaskDefName(),
-                        nextTasks.stream().map(TaskDO::getTaskDefName).collect(Collectors.toList()),
+                        nextTasks.stream()
+                                .map(TaskModel::getTaskDefName)
+                                .collect(Collectors.toList()),
                         workflow.getWorkflowId());
             }
         }
 
         // All the tasks that need to scheduled are added to the outcome, in case of
-        List<TaskDO> unScheduledTasks =
+        List<TaskModel> unScheduledTasks =
                 tasksToBeScheduled.values().stream()
                         .filter(task -> !executedTaskRefNames.contains(task.getReferenceTaskName()))
                         .collect(Collectors.toList());
@@ -244,7 +244,7 @@ public class DeciderService {
             LOGGER.debug(
                     "Scheduling Tasks: {} for workflow: {}",
                     unScheduledTasks.stream()
-                            .map(TaskDO::getTaskDefName)
+                            .map(TaskModel::getTaskDefName)
                             .collect(Collectors.toList()),
                     workflow.getWorkflowId());
             outcome.tasksToBeScheduled.addAll(unScheduledTasks);
@@ -259,8 +259,8 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    List<TaskDO> filterNextLoopOverTasks(
-            List<TaskDO> tasks, TaskDO pendingTask, WorkflowDO workflow) {
+    List<TaskModel> filterNextLoopOverTasks(
+            List<TaskModel> tasks, TaskModel pendingTask, WorkflowModel workflow) {
 
         // Update the task reference name and iteration
         tasks.forEach(
@@ -275,9 +275,9 @@ public class DeciderService {
                 workflow.getTasks().stream()
                         .filter(
                                 runningTask ->
-                                        runningTask.getStatus().equals(TaskStatusDO.IN_PROGRESS)
+                                        runningTask.getStatus().equals(TaskModel.Status.IN_PROGRESS)
                                                 || runningTask.getStatus().isTerminal())
-                        .map(TaskDO::getReferenceTaskName)
+                        .map(TaskModel::getReferenceTaskName)
                         .collect(Collectors.toList());
 
         return tasks.stream()
@@ -287,19 +287,20 @@ public class DeciderService {
                 .collect(Collectors.toList());
     }
 
-    private List<TaskDO> startWorkflow(WorkflowDO workflow) throws TerminateWorkflowException {
+    private List<TaskModel> startWorkflow(WorkflowModel workflow)
+            throws TerminateWorkflowException {
         final WorkflowDef workflowDef = workflow.getWorkflowDefinition();
 
         LOGGER.debug("Starting workflow: {}", workflow);
 
         // The tasks will be empty in case of new workflow
-        List<TaskDO> tasks = workflow.getTasks();
+        List<TaskModel> tasks = workflow.getTasks();
         // Check if the workflow is a re-run case or if it is a new workflow execution
         if (workflow.getReRunFromWorkflowId() == null || tasks.isEmpty()) {
 
             if (workflowDef.getTasks().isEmpty()) {
                 throw new TerminateWorkflowException(
-                        "No tasks found to be executed", WorkflowStatusDO.COMPLETED);
+                        "No tasks found to be executed", WorkflowModel.Status.COMPLETED);
             }
 
             WorkflowTask taskToSchedule =
@@ -316,7 +317,7 @@ public class DeciderService {
         }
 
         // Get the first task to schedule
-        TaskDO rerunFromTask =
+        TaskModel rerunFromTask =
                 tasks.stream()
                         .findFirst()
                         .map(
@@ -348,14 +349,14 @@ public class DeciderService {
      *     last task in the workflow will be copied to workflow output of no output parameters are
      *     specified in the workflow definition
      */
-    void updateWorkflowOutput(final WorkflowDO workflow, TaskDO task) {
-        List<TaskDO> allTasks = workflow.getTasks();
+    void updateWorkflowOutput(final WorkflowModel workflow, TaskModel task) {
+        List<TaskModel> allTasks = workflow.getTasks();
         if (allTasks.isEmpty()) {
             return;
         }
 
         Map<String, Object> output = new HashMap<>();
-        Optional<TaskDO> optionalTask =
+        Optional<TaskModel> optionalTask =
                 allTasks.stream()
                         .filter(
                                 t ->
@@ -364,7 +365,7 @@ public class DeciderService {
                                                 && t.getStatus().isSuccessful())
                         .findFirst();
         if (optionalTask.isPresent()) {
-            TaskDO terminateTask = optionalTask.get();
+            TaskModel terminateTask = optionalTask.get();
             if (StringUtils.isNotBlank(terminateTask.getExternalOutputPayloadStoragePath())) {
                 output =
                         externalPayloadStorageUtils.downloadPayload(
@@ -377,7 +378,7 @@ public class DeciderService {
                 output = terminateTask.getOutputData();
             }
         } else {
-            TaskDO last = Optional.ofNullable(task).orElse(allTasks.get(allTasks.size() - 1));
+            TaskModel last = Optional.ofNullable(task).orElse(allTasks.get(allTasks.size() - 1));
             WorkflowDef workflowDef = workflow.getWorkflowDefinition();
             if (workflowDef.getOutputParameters() != null
                     && !workflowDef.getOutputParameters().isEmpty()) {
@@ -400,9 +401,9 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    boolean checkForWorkflowCompletion(final WorkflowDO workflow)
+    boolean checkForWorkflowCompletion(final WorkflowModel workflow)
             throws TerminateWorkflowException {
-        List<TaskDO> allTasks = workflow.getTasks();
+        List<TaskModel> allTasks = workflow.getTasks();
         if (allTasks.isEmpty()) {
             return false;
         }
@@ -411,7 +412,7 @@ public class DeciderService {
             return true;
         }
 
-        Map<String, TaskStatusDO> taskStatusMap = new HashMap<>();
+        Map<String, TaskModel.Status> taskStatusMap = new HashMap<>();
         workflow.getTasks()
                 .forEach(task -> taskStatusMap.put(task.getReferenceTaskName(), task.getStatus()));
 
@@ -421,14 +422,15 @@ public class DeciderService {
                         .parallel()
                         .allMatch(
                                 wftask -> {
-                                    TaskStatusDO status =
+                                    TaskModel.Status status =
                                             taskStatusMap.get(wftask.getTaskReferenceName());
                                     return status != null
                                             && status.isSuccessful()
                                             && status.isTerminal();
                                 });
 
-        boolean noPendingTasks = taskStatusMap.values().stream().allMatch(TaskStatusDO::isTerminal);
+        boolean noPendingTasks =
+                taskStatusMap.values().stream().allMatch(TaskModel.Status::isTerminal);
 
         boolean noPendingSchedule =
                 workflow.getTasks().stream()
@@ -442,7 +444,7 @@ public class DeciderService {
         return allCompletedSuccessfully && noPendingTasks && noPendingSchedule;
     }
 
-    List<TaskDO> getNextTask(WorkflowDO workflow, TaskDO task) {
+    List<TaskModel> getNextTask(WorkflowModel workflow, TaskModel task) {
         final WorkflowDef workflowDef = workflow.getWorkflowDefinition();
 
         // Get the following task after the last completed task
@@ -481,7 +483,7 @@ public class DeciderService {
         return Collections.emptyList();
     }
 
-    private String getNextTasksToBeScheduled(WorkflowDO workflow, TaskDO task) {
+    private String getNextTasksToBeScheduled(WorkflowModel workflow, TaskModel task) {
         final WorkflowDef def = workflow.getWorkflowDefinition();
 
         String taskReferenceName = task.getReferenceTaskName();
@@ -493,8 +495,11 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    Optional<TaskDO> retry(
-            TaskDef taskDefinition, WorkflowTask workflowTask, TaskDO task, WorkflowDO workflow)
+    Optional<TaskModel> retry(
+            TaskDef taskDefinition,
+            WorkflowTask workflowTask,
+            TaskModel task,
+            WorkflowModel workflow)
             throws TerminateWorkflowException {
 
         int retryCount = task.getRetryCount();
@@ -515,16 +520,16 @@ public class DeciderService {
             if (workflowTask != null && workflowTask.isOptional()) {
                 return Optional.empty();
             }
-            WorkflowStatusDO status;
+            WorkflowModel.Status status;
             switch (task.getStatus()) {
                 case CANCELED:
-                    status = WorkflowStatusDO.TERMINATED;
+                    status = WorkflowModel.Status.TERMINATED;
                     break;
                 case TIMED_OUT:
-                    status = WorkflowStatusDO.TIMED_OUT;
+                    status = WorkflowModel.Status.TIMED_OUT;
                     break;
                 default:
-                    status = WorkflowStatusDO.FAILED;
+                    status = WorkflowModel.Status.FAILED;
                     break;
             }
             updateWorkflowOutput(workflow, task);
@@ -560,7 +565,7 @@ public class DeciderService {
 
         task.setRetried(true);
 
-        TaskDO rescheduled = task.copy();
+        TaskModel rescheduled = task.copy();
         rescheduled.setStartDelayInSeconds(startDelay);
         rescheduled.setCallbackAfterSeconds(startDelay);
         rescheduled.setRetryCount(task.getRetryCount() + 1);
@@ -573,6 +578,12 @@ public class DeciderService {
         rescheduled.getInputData().putAll(task.getInputData());
         rescheduled.setReasonForIncompletion(null);
         rescheduled.setSubWorkflowId(null);
+        rescheduled.setSeq(0);
+        rescheduled.setScheduledTime(0);
+        rescheduled.setStartTime(0);
+        rescheduled.setEndTime(0);
+        rescheduled.setWorkerId(null);
+        rescheduled.setSeq(0);
 
         if (StringUtils.isNotBlank(task.getExternalInputPayloadStoragePath())) {
             rescheduled.setExternalInputPayloadStoragePath(
@@ -594,7 +605,7 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    void checkWorkflowTimeout(WorkflowDO workflow) {
+    void checkWorkflowTimeout(WorkflowModel workflow) {
         WorkflowDef workflowDef = workflow.getWorkflowDefinition();
         if (workflowDef == null) {
             LOGGER.warn("Missing workflow definition : {}", workflow.getWorkflowId());
@@ -628,16 +639,16 @@ public class DeciderService {
                 LOGGER.info(reason);
                 Monitors.recordWorkflowTermination(
                         workflow.getWorkflowName(),
-                        WorkflowStatusDO.TIMED_OUT,
+                        WorkflowModel.Status.TIMED_OUT,
                         workflow.getOwnerApp());
                 return;
             case TIME_OUT_WF:
-                throw new TerminateWorkflowException(reason, WorkflowStatusDO.TIMED_OUT);
+                throw new TerminateWorkflowException(reason, WorkflowModel.Status.TIMED_OUT);
         }
     }
 
     @VisibleForTesting
-    void checkTaskTimeout(TaskDef taskDef, TaskDO task) {
+    void checkTaskTimeout(TaskDef taskDef, TaskModel task) {
 
         if (taskDef == null) {
             LOGGER.warn(
@@ -673,7 +684,7 @@ public class DeciderService {
     }
 
     @VisibleForTesting
-    void checkTaskPollTimeout(TaskDef taskDef, TaskDO task) {
+    void checkTaskPollTimeout(TaskDef taskDef, TaskModel task) {
         if (taskDef == null) {
             LOGGER.warn(
                     "Missing task definition for task:{}/{} in workflow:{}",
@@ -707,7 +718,7 @@ public class DeciderService {
         timeoutTaskWithTimeoutPolicy(reason, taskDef, task);
     }
 
-    void timeoutTaskWithTimeoutPolicy(String reason, TaskDef taskDef, TaskDO task) {
+    void timeoutTaskWithTimeoutPolicy(String reason, TaskDef taskDef, TaskModel task) {
         Monitors.recordTaskTimeout(task.getTaskDefName());
 
         switch (taskDef.getTimeoutPolicy()) {
@@ -721,12 +732,12 @@ public class DeciderService {
             case TIME_OUT_WF:
                 task.setStatus(TIMED_OUT);
                 task.setReasonForIncompletion(reason);
-                throw new TerminateWorkflowException(reason, WorkflowStatusDO.TIMED_OUT, task);
+                throw new TerminateWorkflowException(reason, WorkflowModel.Status.TIMED_OUT, task);
         }
     }
 
     @VisibleForTesting
-    boolean isResponseTimedOut(TaskDef taskDefinition, TaskDO task) {
+    boolean isResponseTimedOut(TaskDef taskDefinition, TaskModel task) {
         if (taskDefinition == null) {
             LOGGER.warn(
                     "missing task type : {}, workflowId= {}",
@@ -784,7 +795,7 @@ public class DeciderService {
         return true;
     }
 
-    private void timeoutTask(TaskDef taskDef, TaskDO task) {
+    private void timeoutTask(TaskDef taskDef, TaskModel task) {
         String reason =
                 "responseTimeout: "
                         + taskDef.getResponseTimeoutSeconds()
@@ -797,13 +808,13 @@ public class DeciderService {
         task.setReasonForIncompletion(reason);
     }
 
-    public List<TaskDO> getTasksToBeScheduled(
-            WorkflowDO workflow, WorkflowTask taskToSchedule, int retryCount) {
+    public List<TaskModel> getTasksToBeScheduled(
+            WorkflowModel workflow, WorkflowTask taskToSchedule, int retryCount) {
         return getTasksToBeScheduled(workflow, taskToSchedule, retryCount, null);
     }
 
-    public List<TaskDO> getTasksToBeScheduled(
-            WorkflowDO workflow,
+    public List<TaskModel> getTasksToBeScheduled(
+            WorkflowModel workflow,
             WorkflowTask taskToSchedule,
             int retryCount,
             String retriedTaskId) {
@@ -819,9 +830,9 @@ public class DeciderService {
                 workflow.getTasks().stream()
                         .filter(
                                 runningTask ->
-                                        runningTask.getStatus().equals(TaskStatusDO.IN_PROGRESS)
+                                        runningTask.getStatus().equals(TaskModel.Status.IN_PROGRESS)
                                                 || runningTask.getStatus().isTerminal())
-                        .map(TaskDO::getReferenceTaskName)
+                        .map(TaskModel::getReferenceTaskName)
                         .collect(Collectors.toList());
 
         String taskId = IDGenerator.generate();
@@ -848,11 +859,11 @@ public class DeciderService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isTaskSkipped(WorkflowTask taskToSchedule, WorkflowDO workflow) {
+    private boolean isTaskSkipped(WorkflowTask taskToSchedule, WorkflowModel workflow) {
         try {
             boolean isTaskSkipped = false;
             if (taskToSchedule != null) {
-                TaskDO t = workflow.getTaskByRefName(taskToSchedule.getTaskReferenceName());
+                TaskModel t = workflow.getTaskByRefName(taskToSchedule.getTaskReferenceName());
                 if (t == null) {
                     isTaskSkipped = false;
                 } else if (t.getStatus().equals(SKIPPED)) {
@@ -865,15 +876,15 @@ public class DeciderService {
         }
     }
 
-    private boolean isAyncCompleteSystemTask(TaskDO task) {
+    private boolean isAyncCompleteSystemTask(TaskModel task) {
         return systemTaskRegistry.isSystemTask(task.getTaskType())
                 && systemTaskRegistry.get(task.getTaskType()).isAsyncComplete(task);
     }
 
     public static class DeciderOutcome {
 
-        List<TaskDO> tasksToBeScheduled = new LinkedList<>();
-        List<TaskDO> tasksToBeUpdated = new LinkedList<>();
+        List<TaskModel> tasksToBeScheduled = new LinkedList<>();
+        List<TaskModel> tasksToBeUpdated = new LinkedList<>();
         boolean isComplete;
 
         private DeciderOutcome() {}

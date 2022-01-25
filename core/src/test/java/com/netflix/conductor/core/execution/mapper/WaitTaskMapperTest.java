@@ -23,8 +23,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 
@@ -43,7 +43,7 @@ public class WaitTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         ParametersUtils parametersUtils = mock(ParametersUtils.class);
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
         workflow.setWorkflowDefinition(workflowDef);
 
@@ -60,7 +60,7 @@ public class WaitTaskMapperTest {
 
         WaitTaskMapper waitTaskMapper = new WaitTaskMapper(parametersUtils);
         // When
-        List<TaskDO> mappedTasks = waitTaskMapper.getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = waitTaskMapper.getMappedTasks(taskMapperContext);
 
         // Then
         assertEquals(1, mappedTasks.size());

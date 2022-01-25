@@ -27,9 +27,8 @@ import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.ParametersUtils;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -48,12 +47,13 @@ public class DoWhile extends WorkflowSystemTask {
     }
 
     @Override
-    public void cancel(WorkflowDO workflow, TaskDO task, WorkflowExecutor executor) {
-        task.setStatus(TaskStatusDO.CANCELED);
+    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
+        task.setStatus(TaskModel.Status.CANCELED);
     }
 
     @Override
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
 
         boolean allDone = true;
         boolean hasFailures = false;
@@ -65,9 +65,9 @@ public class DoWhile extends WorkflowSystemTask {
          * Get the latest set of tasks (the ones that have the highest retry count). We don't want to evaluate any tasks
          * that have already failed if there is a more current one (a later retry count).
          */
-        Map<String, TaskDO> relevantTasks = new LinkedHashMap<>();
-        TaskDO relevantTask = null;
-        for (TaskDO t : workflow.getTasks()) {
+        Map<String, TaskModel> relevantTasks = new LinkedHashMap<>();
+        TaskModel relevantTask = null;
+        for (TaskModel t : workflow.getTasks()) {
             if (task.getWorkflowTask()
                             .has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName()))
                     && !task.getReferenceTaskName().equals(t.getReferenceTaskName())) {
@@ -77,10 +77,10 @@ public class DoWhile extends WorkflowSystemTask {
                 }
             }
         }
-        Collection<TaskDO> loopOver = relevantTasks.values();
+        Collection<TaskModel> loopOver = relevantTasks.values();
 
-        for (TaskDO loopOverTask : loopOver) {
-            TaskStatusDO taskStatus = loopOverTask.getStatus();
+        for (TaskModel loopOverTask : loopOver) {
+            TaskModel.Status taskStatus = loopOverTask.getStatus();
             hasFailures = !taskStatus.isSuccessful();
             if (hasFailures) {
                 failureReason.append(loopOverTask.getReasonForIncompletion()).append(" ");
@@ -97,7 +97,7 @@ public class DoWhile extends WorkflowSystemTask {
         if (hasFailures) {
             LOGGER.debug(
                     "taskid {} failed in {} iteration", task.getTaskId(), task.getIteration() + 1);
-            return updateLoopTask(task, TaskStatusDO.FAILED, failureReason.toString());
+            return updateLoopTask(task, TaskModel.Status.FAILED, failureReason.toString());
         } else if (!allDone) {
             return false;
         }
@@ -122,12 +122,12 @@ public class DoWhile extends WorkflowSystemTask {
                             task.getWorkflowTask().getLoopCondition(), e.getMessage());
             LOGGER.error(message);
             LOGGER.error("Marking task {} failed with error.", task.getTaskId());
-            return updateLoopTask(task, TaskStatusDO.FAILED_WITH_TERMINAL_ERROR, message);
+            return updateLoopTask(task, TaskModel.Status.FAILED_WITH_TERMINAL_ERROR, message);
         }
     }
 
     boolean scheduleNextIteration(
-            TaskDO task, WorkflowDO workflow, WorkflowExecutor workflowExecutor) {
+            TaskModel task, WorkflowModel workflow, WorkflowExecutor workflowExecutor) {
         LOGGER.debug(
                 "Scheduling loop tasks for taskid {} as condition {} evaluated to true",
                 task.getTaskId(),
@@ -137,24 +137,24 @@ public class DoWhile extends WorkflowSystemTask {
         // execution DAO.
     }
 
-    boolean updateLoopTask(TaskDO task, TaskStatusDO status, String failureReason) {
+    boolean updateLoopTask(TaskModel task, TaskModel.Status status, String failureReason) {
         task.setReasonForIncompletion(failureReason);
         task.setStatus(status);
         return true;
     }
 
-    boolean markLoopTaskSuccess(TaskDO task) {
+    boolean markLoopTaskSuccess(TaskModel task) {
         LOGGER.debug(
                 "taskid {} took {} iterations to complete",
                 task.getTaskId(),
                 task.getIteration() + 1);
-        task.setStatus(TaskStatusDO.COMPLETED);
+        task.setStatus(TaskModel.Status.COMPLETED);
         return true;
     }
 
     @VisibleForTesting
     boolean getEvaluatedCondition(
-            WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor)
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor)
             throws ScriptException {
         TaskDef taskDefinition = null;
         try {
@@ -170,7 +170,7 @@ public class DoWhile extends WorkflowSystemTask {
                         task.getTaskId(),
                         taskDefinition);
         taskInput.put(task.getReferenceTaskName(), task.getOutputData());
-        List<TaskDO> loopOver =
+        List<TaskModel> loopOver =
                 workflow.getTasks().stream()
                         .filter(
                                 t ->
@@ -184,7 +184,7 @@ public class DoWhile extends WorkflowSystemTask {
                                                         .equals(t.getReferenceTaskName())))
                         .collect(Collectors.toList());
 
-        for (TaskDO loopOverTask : loopOver) {
+        for (TaskModel loopOverTask : loopOver) {
             taskInput.put(
                     TaskUtils.removeIterationFromTaskRefName(loopOverTask.getReferenceTaskName()),
                     loopOverTask.getOutputData());

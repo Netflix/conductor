@@ -40,9 +40,9 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
 import com.netflix.conductor.dao.*;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
 import com.netflix.conductor.metrics.Monitors;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,7 +68,7 @@ public class ExecutionDAOFacade {
     private final RateLimitingDAO rateLimitingDao;
     private final ConcurrentExecutionLimitDAO concurrentExecutionLimitDAO;
     private final PollDataDAO pollDataDAO;
-    private final DomainMapper domainMapper;
+    private final ModelMapper modelMapper;
     private final ObjectMapper objectMapper;
     private final ConductorProperties properties;
 
@@ -81,7 +81,7 @@ public class ExecutionDAOFacade {
             RateLimitingDAO rateLimitingDao,
             ConcurrentExecutionLimitDAO concurrentExecutionLimitDAO,
             PollDataDAO pollDataDAO,
-            DomainMapper domainMapper,
+            ModelMapper modelMapper,
             ObjectMapper objectMapper,
             ConductorProperties properties) {
         this.executionDAO = executionDAO;
@@ -90,7 +90,7 @@ public class ExecutionDAOFacade {
         this.rateLimitingDao = rateLimitingDao;
         this.concurrentExecutionLimitDAO = concurrentExecutionLimitDAO;
         this.pollDataDAO = pollDataDAO;
-        this.domainMapper = domainMapper;
+        this.modelMapper = modelMapper;
         this.objectMapper = objectMapper;
         this.properties = properties;
         this.scheduledThreadPoolExecutor =
@@ -128,8 +128,8 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public WorkflowDO getWorkflowDO(String workflowId, boolean includeTasks) {
-        return domainMapper.getWorkflowDO(getWorkflowFromDatastore(workflowId, includeTasks));
+    public WorkflowModel getWorkflowModel(String workflowId, boolean includeTasks) {
+        return modelMapper.getFullCopy(getWorkflowFromDatastore(workflowId, includeTasks));
     }
 
     /**
@@ -145,12 +145,12 @@ public class ExecutionDAOFacade {
      *       <li>parsing the {@link Workflow} object fails
      *     </ul>
      */
-    public Workflow getWorkflowDTO(String workflowId, boolean includeTasks) {
-        return domainMapper.getWorkflowDTO(getWorkflowFromDatastore(workflowId, includeTasks));
+    public Workflow getWorkflow(String workflowId, boolean includeTasks) {
+        return modelMapper.getWorkflow(getWorkflowFromDatastore(workflowId, includeTasks));
     }
 
-    private WorkflowDO getWorkflowFromDatastore(String workflowId, boolean includeTasks) {
-        WorkflowDO workflow = executionDAO.getWorkflow(workflowId, includeTasks);
+    private WorkflowModel getWorkflowFromDatastore(String workflowId, boolean includeTasks) {
+        WorkflowModel workflow = executionDAO.getWorkflow(workflowId, includeTasks);
         if (workflow == null) {
             LOGGER.debug("Workflow {} not found in executionDAO, checking indexDAO", workflowId);
             String json = indexDAO.get(workflowId, RAW_JSON_FIELD);
@@ -161,7 +161,7 @@ public class ExecutionDAOFacade {
             }
 
             try {
-                workflow = objectMapper.readValue(json, WorkflowDO.class);
+                workflow = objectMapper.readValue(json, WorkflowModel.class);
                 if (!includeTasks) {
                     workflow.getTasks().clear();
                 }
@@ -196,7 +196,7 @@ public class ExecutionDAOFacade {
                     .map(
                             workflowId -> {
                                 try {
-                                    return getWorkflowDTO(workflowId, includeTasks);
+                                    return getWorkflow(workflowId, includeTasks);
                                 } catch (ApplicationException e) {
                                     // This might happen when the workflow archival failed and the
                                     // workflow was removed from primary datastore
@@ -214,19 +214,19 @@ public class ExecutionDAOFacade {
         return executionDAO
                 .getWorkflowsByCorrelationId(workflowName, correlationId, includeTasks)
                 .stream()
-                .map(domainMapper::getWorkflowDTO)
+                .map(modelMapper::getWorkflow)
                 .collect(Collectors.toList());
     }
 
     public List<Workflow> getWorkflowsByName(String workflowName, Long startTime, Long endTime) {
         return executionDAO.getWorkflowsByType(workflowName, startTime, endTime).stream()
-                .map(domainMapper::getWorkflowDTO)
+                .map(modelMapper::getWorkflow)
                 .collect(Collectors.toList());
     }
 
     public List<Workflow> getPendingWorkflowsByName(String workflowName, int version) {
         return executionDAO.getPendingWorkflowsByType(workflowName, version).stream()
-                .map(domainMapper::getWorkflowDTO)
+                .map(modelMapper::getWorkflow)
                 .collect(Collectors.toList());
     }
 
@@ -244,8 +244,8 @@ public class ExecutionDAOFacade {
      * @param workflow the workflow to be created
      * @return the id of the created workflow
      */
-    public String createWorkflow(WorkflowDO workflow) {
-        WorkflowDO leanWorkflow = domainMapper.getLeanCopy(workflow);
+    public String createWorkflow(WorkflowModel workflow) {
+        WorkflowModel leanWorkflow = modelMapper.getLeanCopy(workflow);
         executionDAO.createWorkflow(leanWorkflow);
         // Add to decider queue
         queueDAO.push(
@@ -254,10 +254,9 @@ public class ExecutionDAOFacade {
                 leanWorkflow.getPriority(),
                 properties.getWorkflowOffsetTimeout().getSeconds());
         if (properties.isAsyncIndexingEnabled()) {
-            indexDAO.asyncIndexWorkflow(
-                    new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
+            indexDAO.asyncIndexWorkflow(new WorkflowSummary(modelMapper.getWorkflow(leanWorkflow)));
         } else {
-            indexDAO.indexWorkflow(new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
+            indexDAO.indexWorkflow(new WorkflowSummary(modelMapper.getWorkflow(leanWorkflow)));
         }
         return leanWorkflow.getWorkflowId();
     }
@@ -268,12 +267,12 @@ public class ExecutionDAOFacade {
      * @param workflow the workflow tp be updated
      * @return the id of the updated workflow
      */
-    public String updateWorkflow(WorkflowDO workflow) {
+    public String updateWorkflow(WorkflowModel workflow) {
         workflow.setUpdatedTime(System.currentTimeMillis());
         if (workflow.getStatus().isTerminal()) {
             workflow.setEndTime(System.currentTimeMillis());
         }
-        WorkflowDO leanWorkflow = domainMapper.getLeanCopy(workflow);
+        WorkflowModel leanWorkflow = modelMapper.getLeanCopy(workflow);
         executionDAO.updateWorkflow(leanWorkflow);
         if (properties.isAsyncIndexingEnabled()) {
             if (workflow.getStatus().isTerminal()
@@ -293,18 +292,18 @@ public class ExecutionDAOFacade {
                         "delayQueue", scheduledThreadPoolExecutor.getQueue().size());
             } else {
                 indexDAO.asyncIndexWorkflow(
-                        new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
+                        new WorkflowSummary(modelMapper.getWorkflow(leanWorkflow)));
             }
             if (workflow.getStatus().isTerminal()) {
                 workflow.getTasks()
                         .forEach(
-                                taskDO -> {
+                                taskModel -> {
                                     indexDAO.asyncIndexTask(
-                                            new TaskSummary(domainMapper.getTaskDTO(taskDO)));
+                                            new TaskSummary(modelMapper.getTask(taskModel)));
                                 });
             }
         } else {
-            indexDAO.indexWorkflow(new WorkflowSummary(domainMapper.getWorkflowDTO(leanWorkflow)));
+            indexDAO.indexWorkflow(new WorkflowSummary(modelMapper.getWorkflow(leanWorkflow)));
         }
         return workflow.getWorkflowId();
     }
@@ -322,7 +321,7 @@ public class ExecutionDAOFacade {
      */
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         try {
-            WorkflowDO workflow = getWorkflowFromDatastore(workflowId, true);
+            WorkflowModel workflow = getWorkflowFromDatastore(workflowId, true);
 
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO
@@ -347,7 +346,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    private void removeWorkflowIndex(WorkflowDO workflow, boolean archiveWorkflow)
+    private void removeWorkflowIndex(WorkflowModel workflow, boolean archiveWorkflow)
             throws JsonProcessingException {
         if (archiveWorkflow) {
             if (workflow.getStatus().isTerminal()) {
@@ -373,7 +372,7 @@ public class ExecutionDAOFacade {
     public void removeWorkflowWithExpiry(
             String workflowId, boolean archiveWorkflow, int ttlSeconds) {
         try {
-            WorkflowDO workflow = getWorkflowFromDatastore(workflowId, true);
+            WorkflowModel workflow = getWorkflowFromDatastore(workflowId, true);
 
             removeWorkflowIndex(workflow, archiveWorkflow);
             // remove workflow from DAO with TTL
@@ -418,38 +417,38 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public List<TaskDO> createTasks(List<TaskDO> tasks) {
-        tasks = tasks.stream().map(domainMapper::getLeanCopy).collect(Collectors.toList());
+    public List<TaskModel> createTasks(List<TaskModel> tasks) {
+        tasks = tasks.stream().map(modelMapper::getLeanCopy).collect(Collectors.toList());
         return executionDAO.createTasks(tasks);
     }
 
     public List<Task> getTasksForWorkflow(String workflowId) {
         return executionDAO.getTasksForWorkflow(workflowId).stream()
-                .map(domainMapper::getTaskDTO)
+                .map(modelMapper::getTask)
                 .collect(Collectors.toList());
     }
 
-    public TaskDO getTaskDO(String taskId) {
-        return domainMapper.getTaskDO(getTaskFromDatastore(taskId));
+    public TaskModel getTaskModel(String taskId) {
+        return modelMapper.getFullCopy(getTaskFromDatastore(taskId));
     }
 
-    public Task getTaskDTO(String taskId) {
-        return domainMapper.getTaskDTO(getTaskFromDatastore(taskId));
+    public Task getTask(String taskId) {
+        return modelMapper.getTask(getTaskFromDatastore(taskId));
     }
 
-    private TaskDO getTaskFromDatastore(String taskId) {
+    private TaskModel getTaskFromDatastore(String taskId) {
         return executionDAO.getTask(taskId);
     }
 
     public List<Task> getTasksByName(String taskName, String startKey, int count) {
         return executionDAO.getTasks(taskName, startKey, count).stream()
-                .map(domainMapper::getTaskDTO)
+                .map(modelMapper::getTask)
                 .collect(Collectors.toList());
     }
 
     public List<Task> getPendingTasksForTaskType(String taskType) {
         return executionDAO.getPendingTasksForTaskType(taskType).stream()
-                .map(domainMapper::getTaskDTO)
+                .map(modelMapper::getTask)
                 .collect(Collectors.toList());
     }
 
@@ -465,7 +464,7 @@ public class ExecutionDAOFacade {
      * @param task the task to be updated in the data store
      * @throws ApplicationException if the dao operations fail
      */
-    public void updateTask(TaskDO task) {
+    public void updateTask(TaskModel task) {
         try {
             if (task.getStatus() != null) {
                 if (!task.getStatus().isTerminal()
@@ -476,7 +475,7 @@ public class ExecutionDAOFacade {
                     task.setEndTime(System.currentTimeMillis());
                 }
             }
-            TaskDO leanTask = domainMapper.getLeanCopy(task);
+            TaskModel leanTask = modelMapper.getLeanCopy(task);
             executionDAO.updateTask(leanTask);
             /*
              * Indexing a task for every update adds a lot of volume. That is ok but if async indexing
@@ -485,7 +484,7 @@ public class ExecutionDAOFacade {
              * If it *is* enabled, tasks will be indexed only when a workflow is in terminal state.
              */
             if (!properties.isAsyncIndexingEnabled()) {
-                indexDAO.indexTask(new TaskSummary(domainMapper.getTaskDTO(leanTask)));
+                indexDAO.indexTask(new TaskSummary(modelMapper.getTask(leanTask)));
             }
         } catch (Exception e) {
             String errorMsg =
@@ -497,7 +496,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    public void updateTasks(List<TaskDO> tasks) {
+    public void updateTasks(List<TaskModel> tasks) {
         tasks.forEach(this::updateTask);
     }
 
@@ -573,11 +572,11 @@ public class ExecutionDAOFacade {
         executionDAO.removeEventExecution(eventExecution);
     }
 
-    public boolean exceedsInProgressLimit(TaskDO task) {
+    public boolean exceedsInProgressLimit(TaskModel task) {
         return concurrentExecutionLimitDAO.exceedsLimit(task);
     }
 
-    public boolean exceedsRateLimitPerFrequency(TaskDO task, TaskDef taskDef) {
+    public boolean exceedsRateLimitPerFrequency(TaskModel task, TaskDef taskDef) {
         return rateLimitingDao.exceedsRateLimitPerFrequency(task, taskDef);
     }
 
@@ -626,9 +625,8 @@ public class ExecutionDAOFacade {
         @Override
         public void run() {
             try {
-                WorkflowDO workflow = executionDAO.getWorkflow(workflowId, false);
-                indexDAO.asyncIndexWorkflow(
-                        new WorkflowSummary(domainMapper.getWorkflowDTO(workflow)));
+                WorkflowModel workflow = executionDAO.getWorkflow(workflowId, false);
+                indexDAO.asyncIndexWorkflow(new WorkflowSummary(modelMapper.getWorkflow(workflow)));
             } catch (Exception e) {
                 LOGGER.error("Unable to update workflow: {}", workflowId, e);
             }

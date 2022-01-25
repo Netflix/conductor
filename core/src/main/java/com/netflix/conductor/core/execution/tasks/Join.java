@@ -19,9 +19,8 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.TaskStatusDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
 
@@ -34,7 +33,8 @@ public class Join extends WorkflowSystemTask {
 
     @Override
     @SuppressWarnings("unchecked")
-    public boolean execute(WorkflowDO workflow, TaskDO task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
 
         boolean allDone = true;
         boolean hasFailures = false;
@@ -48,13 +48,13 @@ public class Join extends WorkflowSystemTask {
                             .collect(Collectors.toList());
         }
         for (String joinOnRef : joinOn) {
-            TaskDO forkedTask = workflow.getTaskByRefName(joinOnRef);
+            TaskModel forkedTask = workflow.getTaskByRefName(joinOnRef);
             if (forkedTask == null) {
                 // Task is not even scheduled yet
                 allDone = false;
                 break;
             }
-            TaskStatusDO taskStatus = forkedTask.getStatus();
+            TaskModel.Status taskStatus = forkedTask.getStatus();
             hasFailures = !taskStatus.isSuccessful() && !forkedTask.getWorkflowTask().isOptional();
             if (hasFailures) {
                 failureReason.append(forkedTask.getReasonForIncompletion()).append(" ");
@@ -70,9 +70,9 @@ public class Join extends WorkflowSystemTask {
         if (allDone || hasFailures) {
             if (hasFailures) {
                 task.setReasonForIncompletion(failureReason.toString());
-                task.setStatus(TaskStatusDO.FAILED);
+                task.setStatus(TaskModel.Status.FAILED);
             } else {
-                task.setStatus(TaskStatusDO.COMPLETED);
+                task.setStatus(TaskModel.Status.COMPLETED);
             }
             return true;
         }

@@ -22,8 +22,8 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.utils.IDGenerator;
-import com.netflix.conductor.domain.TaskDO;
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
 
@@ -42,7 +42,7 @@ public class JoinTaskMapperTest {
         String taskId = IDGenerator.generate();
 
         WorkflowDef wd = new WorkflowDef();
-        WorkflowDO workflow = new WorkflowDO();
+        WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(wd);
 
         TaskMapperContext taskMapperContext =
@@ -55,7 +55,7 @@ public class JoinTaskMapperTest {
                         .withTaskId(taskId)
                         .build();
 
-        List<TaskDO> mappedTasks = new JoinTaskMapper().getMappedTasks(taskMapperContext);
+        List<TaskModel> mappedTasks = new JoinTaskMapper().getMappedTasks(taskMapperContext);
 
         assertNotNull(mappedTasks);
         assertEquals(TASK_TYPE_JOIN, mappedTasks.get(0).getTaskType());

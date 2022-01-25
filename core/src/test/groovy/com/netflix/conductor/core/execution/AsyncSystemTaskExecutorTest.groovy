@@ -23,10 +23,8 @@ import com.netflix.conductor.core.utils.IDGenerator
 import com.netflix.conductor.core.utils.QueueUtils
 import com.netflix.conductor.dao.MetadataDAO
 import com.netflix.conductor.dao.QueueDAO
-import com.netflix.conductor.domain.TaskDO
-import com.netflix.conductor.domain.TaskStatusDO
-import com.netflix.conductor.domain.WorkflowDO
-import com.netflix.conductor.domain.WorkflowStatusDO
+import com.netflix.conductor.model.TaskModel
+import com.netflix.conductor.model.WorkflowModel
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
@@ -69,7 +67,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         SubWorkflow subWorkflowTask = new SubWorkflow(new ObjectMapper())
 
         String task1Id = IDGenerator.generate()
-        TaskDO task1 = new TaskDO()
+        TaskModel task1 = new TaskModel()
         task1.setTaskType(SUB_WORKFLOW.name())
         task1.setReferenceTaskName("waitTask")
         task1.setWorkflowInstanceId(workflowId)
@@ -78,25 +76,25 @@ class AsyncSystemTaskExecutorTest extends Specification {
         task1.getInputData().put("asyncComplete", true)
         task1.getInputData().put("subWorkflowName", "junit1")
         task1.getInputData().put("subWorkflowVersion", 1)
-        task1.setStatus(TaskStatusDO.SCHEDULED)
+        task1.setStatus(TaskModel.Status.SCHEDULED)
 
         String queueName = QueueUtils.getQueueName(task1)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
-        WorkflowDO subWorkflow = new WorkflowDO(workflowId: subWorkflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
+        WorkflowModel subWorkflow = new WorkflowModel(workflowId: subWorkflowId, status: WorkflowModel.Status.RUNNING)
 
         when:
         executor.execute(subWorkflowTask, task1Id)
 
         then:
-        1 * executionDAOFacade.getTaskDO(task1Id) >> task1
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(task1Id) >> task1
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * workflowExecutor.startWorkflow(*_) >> subWorkflowId
         1 * workflowExecutor.getWorkflow(subWorkflowId, false) >> subWorkflow
 
         // SUB_WORKFLOW is asyncComplete so its removed from the queue
         1 * queueDAO.remove(queueName, task1Id)
 
-        task1.status == TaskStatusDO.IN_PROGRESS
+        task1.status == TaskModel.Status.IN_PROGRESS
         task1.subWorkflowId == subWorkflowId
         task1.startTime != 0
     }
@@ -109,7 +107,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> null
+        1 * executionDAOFacade.getTaskModel(taskId) >> null
         0 * workflowSystemTask.start(*_)
         0 * executionDAOFacade.updateTask(_)
     }
@@ -122,7 +120,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> { throw new RuntimeException("datastore unavailable") }
+        1 * executionDAOFacade.getTaskModel(taskId) >> { throw new RuntimeException("datastore unavailable") }
         0 * workflowSystemTask.start(*_)
         0 * executionDAOFacade.updateTask(_)
     }
@@ -130,13 +128,13 @@ class AsyncSystemTaskExecutorTest extends Specification {
     def "Execute with a task id that is in terminal state"() {
         given:
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.COMPLETED, taskId: taskId)
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.COMPLETED, taskId: taskId)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
         1 * queueDAO.remove(task.taskType, taskId)
         0 * workflowSystemTask.start(*_)
         0 * executionDAOFacade.updateTask(_)
@@ -146,19 +144,19 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.COMPLETED)
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.COMPLETED)
         String queueName = QueueUtils.getQueueName(task)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * queueDAO.remove(queueName, taskId)
 
-        task.status == TaskStatusDO.CANCELED
+        task.status == TaskModel.Status.CANCELED
         task.startTime == 0
     }
 
@@ -167,7 +165,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         String workflowId = "workflowId"
         String taskId = "taskId"
 
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 workflowPriority: 10)
         String queueName = QueueUtils.getQueueName(task)
 
@@ -175,11 +173,11 @@ class AsyncSystemTaskExecutorTest extends Specification {
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
         1 * executionDAOFacade.exceedsInProgressLimit(task) >> true
         1 * queueDAO.postpone(queueName, taskId, task.workflowPriority, properties.taskExecutionPostponeDuration.seconds)
 
-        task.status == TaskStatusDO.SCHEDULED
+        task.status == TaskModel.Status.SCHEDULED
         task.startTime == 0
     }
 
@@ -187,7 +185,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 rateLimitPerFrequency: 1, taskDefName: "taskDefName", workflowPriority: 10)
         String queueName = QueueUtils.getQueueName(task)
         TaskDef taskDef = new TaskDef()
@@ -196,12 +194,12 @@ class AsyncSystemTaskExecutorTest extends Specification {
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
         1 * metadataDAO.getTaskDef(task.taskDefName) >> taskDef
         1 * executionDAOFacade.exceedsRateLimitPerFrequency(task, taskDef) >> taskDef
         1 * queueDAO.postpone(queueName, taskId, task.workflowPriority, properties.taskExecutionPostponeDuration.seconds)
 
-        task.status == TaskStatusDO.SCHEDULED
+        task.status == TaskModel.Status.SCHEDULED
         task.startTime == 0
     }
 
@@ -209,7 +207,7 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 rateLimitPerFrequency: 1, taskDefName: "taskDefName", workflowPriority: 10)
         String queueName = QueueUtils.getQueueName(task)
         TaskDef taskDef = new TaskDef()
@@ -218,12 +216,12 @@ class AsyncSystemTaskExecutorTest extends Specification {
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
         1 * metadataDAO.getTaskDef(task.taskDefName) >> taskDef
         1 * executionDAOFacade.exceedsRateLimitPerFrequency(task, taskDef) >> taskDef
         1 * queueDAO.postpone(queueName, taskId, task.workflowPriority, properties.taskExecutionPostponeDuration.seconds) >> { throw new RuntimeException("queue unavailable") }
 
-        task.status == TaskStatusDO.SCHEDULED
+        task.status == TaskModel.Status.SCHEDULED
         task.startTime == 0
     }
 
@@ -231,24 +229,24 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 taskDefName: "taskDefName", workflowPriority: 10)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
         String queueName = QueueUtils.getQueueName(task)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task)
         1 * queueDAO.postpone(queueName, taskId, task.workflowPriority, properties.systemTaskWorkerCallbackDuration.seconds)
-        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskStatusDO.IN_PROGRESS }
+        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskModel.Status.IN_PROGRESS }
 
         0 * workflowExecutor.decide(workflowId) // verify that workflow is NOT decided
 
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         task.startTime != 0 // verify that startTime is set
         task.endTime == 0 // verify that endTime is not set
         task.pollCount == 1 // verify that poll count is incremented
@@ -259,24 +257,24 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 taskDefName: "taskDefName", workflowPriority: 10)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
         String queueName = QueueUtils.getQueueName(task)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task)
 
-        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskStatusDO.COMPLETED }
+        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskModel.Status.COMPLETED }
         1 * queueDAO.remove(queueName, taskId)
         1 * workflowExecutor.decide(workflowId) // verify that workflow is decided
 
-        task.status == TaskStatusDO.COMPLETED
+        task.status == TaskModel.Status.COMPLETED
         task.startTime != 0 // verify that startTime is set
         task.endTime != 0 // verify that endTime is set
         task.pollCount == 1 // verify that poll count is incremented
@@ -286,28 +284,28 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 taskDefName: "taskDefName", workflowPriority: 10)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task)
 
         // simulating a "start" failure that happens after the Task object is modified
         // the modification will be persisted
         1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> {
-            task.status = TaskStatusDO.IN_PROGRESS
+            task.status = TaskModel.Status.IN_PROGRESS
             throw new RuntimeException("unknown system task failure")
         }
 
         0 * workflowExecutor.decide(workflowId) // verify that workflow is NOT decided
 
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         task.startTime != 0 // verify that startTime is set
         task.endTime == 0 // verify that endTime is not set
         task.pollCount == 1 // verify that poll count is incremented
@@ -317,26 +315,26 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.SCHEDULED, taskId: taskId, workflowInstanceId: workflowId,
                 taskDefName: "taskDefName", workflowPriority: 10)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
         String queueName = QueueUtils.getQueueName(task)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task) // 1st call for pollCount, 2nd call for status update
 
         1 * workflowSystemTask.isAsyncComplete(task) >> true
-        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskStatusDO.IN_PROGRESS }
+        1 * workflowSystemTask.start(workflow, task, workflowExecutor) >> { task.status = TaskModel.Status.IN_PROGRESS }
         1 * queueDAO.remove(queueName, taskId)
 
         1 * workflowExecutor.decide(workflowId) // verify that workflow is decided
 
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         task.startTime != 0 // verify that startTime is set
         task.endTime == 0 // verify that endTime is not set
         task.pollCount == 1 // verify that poll count is incremented
@@ -346,22 +344,22 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.IN_PROGRESS, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.IN_PROGRESS, taskId: taskId, workflowInstanceId: workflowId,
                 rateLimitPerFrequency: 1, taskDefName: "taskDefName", workflowPriority: 10, pollCount: 1)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task) // 1st call for pollCount, 2nd call for status update
 
         0 * workflowSystemTask.start(workflow, task, workflowExecutor)
         1 * workflowSystemTask.execute(workflow, task, workflowExecutor)
 
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         task.endTime == 0 // verify that endTime is not set
         task.pollCount == 2 // verify that poll count is incremented
     }
@@ -370,23 +368,23 @@ class AsyncSystemTaskExecutorTest extends Specification {
         given:
         String workflowId = "workflowId"
         String taskId = "taskId"
-        TaskDO task = new TaskDO(taskType: "type1", status: TaskStatusDO.IN_PROGRESS, taskId: taskId, workflowInstanceId: workflowId,
+        TaskModel task = new TaskModel(taskType: "type1", status: TaskModel.Status.IN_PROGRESS, taskId: taskId, workflowInstanceId: workflowId,
                 rateLimitPerFrequency: 1, taskDefName: "taskDefName", workflowPriority: 10, pollCount: 1)
-        WorkflowDO workflow = new WorkflowDO(workflowId: workflowId, status: WorkflowStatusDO.RUNNING)
+        WorkflowModel workflow = new WorkflowModel(workflowId: workflowId, status: WorkflowModel.Status.RUNNING)
 
         when:
         executor.execute(workflowSystemTask, taskId)
 
         then:
-        1 * executionDAOFacade.getTaskDO(taskId) >> task
-        1 * executionDAOFacade.getWorkflowDO(workflowId, true) >> workflow
+        1 * executionDAOFacade.getTaskModel(taskId) >> task
+        1 * executionDAOFacade.getWorkflowModel(workflowId, true) >> workflow
         1 * executionDAOFacade.updateTask(task) // only one call since pollCount is not incremented
 
         1 * workflowSystemTask.isAsyncComplete(task) >> true
         0 * workflowSystemTask.start(workflow, task, workflowExecutor)
         1 * workflowSystemTask.execute(workflow, task, workflowExecutor)
 
-        task.status == TaskStatusDO.IN_PROGRESS
+        task.status == TaskModel.Status.IN_PROGRESS
         task.endTime == 0 // verify that endTime is not set
         task.pollCount == 1 // verify that poll count is NOT incremented
     }

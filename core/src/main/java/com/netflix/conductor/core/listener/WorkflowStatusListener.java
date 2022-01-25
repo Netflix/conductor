@@ -12,32 +12,32 @@
  */
 package com.netflix.conductor.core.listener;
 
-import com.netflix.conductor.domain.WorkflowDO;
+import com.netflix.conductor.model.WorkflowModel;
 
 /** Listener for the completed and terminated workflows */
 public interface WorkflowStatusListener {
 
-    default void onWorkflowCompletedIfEnabled(WorkflowDO workflow) {
+    default void onWorkflowCompletedIfEnabled(WorkflowModel workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowCompleted(workflow);
         }
     }
 
-    default void onWorkflowTerminatedIfEnabled(WorkflowDO workflow) {
+    default void onWorkflowTerminatedIfEnabled(WorkflowModel workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowTerminated(workflow);
         }
     }
 
-    default void onWorkflowFinalizedIfEnabled(WorkflowDO workflow) {
+    default void onWorkflowFinalizedIfEnabled(WorkflowModel workflow) {
         if (workflow.getWorkflowDefinition().isWorkflowStatusListenerEnabled()) {
             onWorkflowFinalized(workflow);
         }
     }
 
-    void onWorkflowCompleted(WorkflowDO workflow);
+    void onWorkflowCompleted(WorkflowModel workflow);
 
-    void onWorkflowTerminated(WorkflowDO workflow);
+    void onWorkflowTerminated(WorkflowModel workflow);
 
-    default void onWorkflowFinalized(WorkflowDO workflow) {}
+    default void onWorkflowFinalized(WorkflowModel workflow) {}
 }
