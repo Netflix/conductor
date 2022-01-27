@@ -422,8 +422,8 @@ public class MySQLExecutionDAO extends MySQLBaseDAO
                             workflowId -> {
                                 try {
                                     WorkflowModel wf = getWorkflow(workflowId);
-                                    if (wf.getCreatedTime() >= startTime
-                                            && wf.getCreatedTime() <= endTime) {
+                                    if (wf.getCreateTime() >= startTime
+                                            && wf.getCreateTime() <= endTime) {
                                         workflows.add(wf);
                                     }
                                 } catch (Exception e) {
@@ -791,7 +791,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO
                 INSERT_WORKFLOW_DEF_TO_WORKFLOW,
                 q ->
                         q.addParameter(workflow.getWorkflowName())
-                                .addParameter(dateStr(workflow.getCreatedTime()))
+                                .addParameter(dateStr(workflow.getCreateTime()))
                                 .addParameter(workflow.getWorkflowId())
                                 .executeUpdate());
     }
@@ -805,7 +805,7 @@ public class MySQLExecutionDAO extends MySQLBaseDAO
                 REMOVE_WORKFLOW_DEF_TO_WORKFLOW,
                 q ->
                         q.addParameter(workflow.getWorkflowName())
-                                .addParameter(dateStr(workflow.getCreatedTime()))
+                                .addParameter(dateStr(workflow.getCreateTime()))
                                 .addParameter(workflow.getWorkflowId())
                                 .executeUpdate());
     }

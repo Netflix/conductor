@@ -583,7 +583,6 @@ public class DeciderService {
         rescheduled.setStartTime(0);
         rescheduled.setEndTime(0);
         rescheduled.setWorkerId(null);
-        rescheduled.setSeq(0);
 
         if (StringUtils.isNotBlank(task.getExternalInputPayloadStoragePath())) {
             rescheduled.setExternalInputPayloadStoragePath(
@@ -620,7 +619,7 @@ public class DeciderService {
         long elapsedTime =
                 workflow.getLastRetriedTime() > 0
                         ? now - workflow.getLastRetriedTime()
-                        : now - workflow.getCreatedTime();
+                        : now - workflow.getCreateTime();
 
         if (elapsedTime < timeout) {
             return;

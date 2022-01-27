@@ -12,17 +12,19 @@
  */
 package com.netflix.conductor.model;
 
-import com.google.protobuf.Any;
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+
+import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+
+import com.google.protobuf.Any;
 
 public class TaskModel {
 

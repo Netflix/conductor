@@ -367,7 +367,7 @@ public class TestWorkflowExecutor {
         workflow.setWorkflowId("1");
         workflow.setStatus(WorkflowModel.Status.RUNNING);
         workflow.setOwnerApp("junit_test");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         workflow.setOutput(Collections.EMPTY_MAP);
 
@@ -430,7 +430,7 @@ public class TestWorkflowExecutor {
         workflow.setWorkflowId("1");
         workflow.setStatus(WorkflowModel.Status.RUNNING);
         workflow.setOwnerApp("junit_test");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         workflow.setOutput(Collections.EMPTY_MAP);
 
@@ -493,7 +493,7 @@ public class TestWorkflowExecutor {
         workflow.setWorkflowId("1");
         workflow.setStatus(WorkflowModel.Status.RUNNING);
         workflow.setOwnerApp("junit_test");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         workflow.setOutput(Collections.EMPTY_MAP);
 
@@ -545,7 +545,7 @@ public class TestWorkflowExecutor {
         workflow.setWorkflowId("1");
         workflow.setStatus(WorkflowModel.Status.RUNNING);
         workflow.setOwnerApp("junit_test");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         workflow.setOutput(Collections.EMPTY_MAP);
 
@@ -689,7 +689,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -735,7 +735,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -847,7 +847,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -926,7 +926,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -1016,7 +1016,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -1170,7 +1170,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -1242,7 +1242,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRerunWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -1386,7 +1386,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRerunWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);
@@ -2033,7 +2033,7 @@ public class TestWorkflowExecutor {
         workflowDef.setVersion(1);
         workflow.setWorkflowDefinition(workflowDef);
         workflow.setOwnerApp("junit_testRetryWorkflowId");
-        workflow.setCreatedTime(10L);
+        workflow.setCreateTime(10L);
         workflow.setEndTime(100L);
         //noinspection unchecked
         workflow.setOutput(Collections.EMPTY_MAP);

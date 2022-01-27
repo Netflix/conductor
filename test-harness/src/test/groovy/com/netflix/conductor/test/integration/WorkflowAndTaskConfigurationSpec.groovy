@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -798,7 +798,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
         task1Try1.status = Task.Status.IN_PROGRESS
         task1Try1.callbackAfterSeconds = 2L
-        workflowExecutionService.updateTask(task1Try1) // TODO
+        workflowExecutionService.updateTask(new TaskResult(task1Try1))
 
         then: "verify that the workflow is in running state and the task is in SCHEDULED"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -845,7 +845,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         def task2Try1 = workflowExecutionService.poll('integration_task_2', 'task2.worker')
         task2Try1.status = Task.Status.IN_PROGRESS
         task2Try1.callbackAfterSeconds = 5L
-        workflowExecutionService.updateTask(task2Try1) // TODO
+        workflowExecutionService.updateTask(new TaskResult(task2Try1))
 
         then: "Verify that the workflow is in running state and the task is in scheduled state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {

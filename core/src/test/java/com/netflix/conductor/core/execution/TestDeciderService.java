@@ -440,7 +440,7 @@ public class TestDeciderService {
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
-        workflow.setCreatedTime(0L);
+        workflow.setCreateTime(0L);
         workflow.setWorkflowId("a");
         workflow.setCorrelationId("b");
         workflow.setStatus(WorkflowModel.Status.RUNNING);
@@ -760,10 +760,10 @@ public class TestDeciderService {
 
     @Test
     public void testLinearBackoff() {
-        Workflow workflow = createDefaultWorkflow();
+        WorkflowModel workflow = createDefaultWorkflow();
 
-        Task task = new Task();
-        task.setStatus(Status.FAILED);
+        TaskModel task = new TaskModel();
+        task.setStatus(TaskModel.Status.FAILED);
         task.setTaskId("t1");
 
         TaskDef taskDef = new TaskDef();
@@ -772,19 +772,22 @@ public class TestDeciderService {
         taskDef.setBackoffScaleFactor(2);
         WorkflowTask workflowTask = new WorkflowTask();
 
-        Optional<Task> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
+        Optional<TaskModel> task2 = deciderService.retry(taskDef, workflowTask, task, workflow);
         assertEquals(120, task2.get().getCallbackAfterSeconds()); // 60*2*1
 
-        Optional<Task> task3 = deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
+        Optional<TaskModel> task3 =
+                deciderService.retry(taskDef, workflowTask, task2.get(), workflow);
         assertEquals(240, task3.get().getCallbackAfterSeconds()); // 60*2*2
 
-        Optional<Task> task4 = deciderService.retry(taskDef, workflowTask, task3.get(), workflow);
+        Optional<TaskModel> task4 =
+                deciderService.retry(taskDef, workflowTask, task3.get(), workflow);
         // // 60*2*3
         assertEquals(360, task4.get().getCallbackAfterSeconds()); // 60*2*3
 
         taskDef.setRetryCount(Integer.MAX_VALUE);
         task4.get().setRetryCount(Integer.MAX_VALUE - 100);
-        Optional<Task> task5 = deciderService.retry(taskDef, workflowTask, task4.get(), workflow);
+        Optional<TaskModel> task5 =
+                deciderService.retry(taskDef, workflowTask, task4.get(), workflow);
         assertEquals(Integer.MAX_VALUE, task5.get().getCallbackAfterSeconds());
     }
 
@@ -1145,7 +1148,7 @@ public class TestDeciderService {
         workflowDef.setName("test");
         WorkflowModel workflow = new WorkflowModel();
         workflow.setOwnerApp("junit");
-        workflow.setCreatedTime(System.currentTimeMillis() - 10_000);
+        workflow.setCreateTime(System.currentTimeMillis() - 10_000);
         workflow.setWorkflowId("workflow_id");
 
         // no-op

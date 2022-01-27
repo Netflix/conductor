@@ -373,7 +373,7 @@ public class WorkflowExecutor {
         workflow.setParentWorkflowId(parentWorkflowId);
         workflow.setParentWorkflowTaskId(parentWorkflowTaskId);
         workflow.setOwnerApp(WorkflowContext.get().getClientApp());
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         workflow.setUpdatedBy(null);
         workflow.setUpdatedTime(null);
         workflow.setEvent(event);
@@ -568,7 +568,7 @@ public class WorkflowExecutor {
 
         workflow.getTasks().clear();
         workflow.setReasonForIncompletion(null);
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         workflow.setEndTime(0);
         workflow.setLastRetriedTime(0);
         // Change the status to running
@@ -869,7 +869,7 @@ public class WorkflowExecutor {
         workflowStatusListener.onWorkflowCompletedIfEnabled(workflow);
         Monitors.recordWorkflowCompletion(
                 workflow.getWorkflowName(),
-                workflow.getEndTime() - workflow.getCreatedTime(),
+                workflow.getEndTime() - workflow.getCreateTime(),
                 workflow.getOwnerApp());
 
         if (workflow.hasParent()) {

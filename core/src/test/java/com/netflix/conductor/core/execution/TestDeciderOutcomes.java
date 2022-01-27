@@ -186,7 +186,7 @@ public class TestDeciderOutcomes {
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
-        workflow.setCreatedTime(0L);
+        workflow.setCreateTime(0L);
         workflow.getInput().put("param1", "nested");
         workflow.getInput().put("param2", "one");
 
@@ -214,7 +214,7 @@ public class TestDeciderOutcomes {
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
-        workflow.setCreatedTime(0L);
+        workflow.setCreateTime(0L);
         workflow.getInput().put("param1", "nested");
         workflow.getInput().put("param2", "one");
 
@@ -252,7 +252,7 @@ public class TestDeciderOutcomes {
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.getInput().put("requestId", 123);
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
 
@@ -319,7 +319,7 @@ public class TestDeciderOutcomes {
         workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
         workflow.getInput().put("requestId", 123);
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
 
         workflow.getInput().put("forks", forks);
         workflow.getInput().put("forkedInputs", forkedInputs);
@@ -385,7 +385,7 @@ public class TestDeciderOutcomes {
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
         assertEquals(1, outcome.tasksToBeScheduled.size());
@@ -477,7 +477,7 @@ public class TestDeciderOutcomes {
         workflow.getInput().put("forks", forks);
         workflow.getInput().put("forkedInputs", forkedInputs);
 
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
         assertEquals(5, outcome.tasksToBeScheduled.size());
@@ -556,7 +556,7 @@ public class TestDeciderOutcomes {
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowDefinition(def);
-        workflow.setCreatedTime(System.currentTimeMillis());
+        workflow.setCreateTime(System.currentTimeMillis());
         DeciderOutcome outcome = deciderService.decide(workflow);
         assertNotNull(outcome);
         assertEquals(2, outcome.tasksToBeScheduled.size());

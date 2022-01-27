@@ -350,8 +350,8 @@ public abstract class ExecutionDAOTest {
                 getExecutionDAO()
                         .getWorkflowsByType(
                                 workflow.getWorkflowName(),
-                                workflow.getCreatedTime() - 10,
-                                workflow.getCreatedTime() + 10);
+                                workflow.getCreateTime() - 10,
+                                workflow.getCreateTime() + 10);
         assertNotNull(bytime);
         assertEquals(1, bytime.size());
     }
@@ -383,7 +383,7 @@ public abstract class ExecutionDAOTest {
         workflow.setParentWorkflowTaskId("parentWFTaskId");
         workflow.setReasonForIncompletion("missing recipe");
         workflow.setReRunFromWorkflowId("re-run from id1");
-        workflow.setCreatedTime(90L);
+        workflow.setCreateTime(90L);
         workflow.setStatus(WorkflowModel.Status.FAILED);
         workflow.setWorkflowId(UUID.randomUUID().toString());
 

@@ -13,14 +13,13 @@
 package com.netflix.conductor.model;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 
 import com.google.common.base.Preconditions;
-import org.springframework.beans.BeanUtils;
 
 public class WorkflowModel {
 
@@ -91,7 +90,7 @@ public class WorkflowModel {
 
     private String ownerApp;
 
-    private Long createdTime;
+    private Long createTime;
 
     private Long updatedTime;
 
@@ -276,12 +275,12 @@ public class WorkflowModel {
         this.ownerApp = ownerApp;
     }
 
-    public Long getCreatedTime() {
-        return createdTime;
+    public Long getCreateTime() {
+        return createTime;
     }
 
-    public void setCreatedTime(Long createdTime) {
-        this.createdTime = createdTime;
+    public void setCreateTime(Long createTime) {
+        this.createTime = createTime;
     }
 
     public Long getUpdatedTime() {
@@ -411,7 +410,7 @@ public class WorkflowModel {
                         that.getExternalOutputPayloadStoragePath())
                 && Objects.equals(getVariables(), that.getVariables())
                 && Objects.equals(getOwnerApp(), that.getOwnerApp())
-                && Objects.equals(getCreatedTime(), that.getCreatedTime())
+                && Objects.equals(getCreateTime(), that.getCreateTime())
                 && Objects.equals(getUpdatedTime(), that.getUpdatedTime())
                 && Objects.equals(getCreatedBy(), that.getCreatedBy())
                 && Objects.equals(getUpdatedBy(), that.getUpdatedBy());
@@ -441,7 +440,7 @@ public class WorkflowModel {
                 getVariables(),
                 getLastRetriedTime(),
                 getOwnerApp(),
-                getCreatedTime(),
+                getCreateTime(),
                 getUpdatedTime(),
                 getCreatedBy(),
                 getUpdatedBy());

@@ -433,7 +433,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
                     nsKey(
                             WORKFLOW_DEF_TO_WORKFLOWS,
                             workflow.getWorkflowName(),
-                            dateStr(workflow.getCreatedTime()));
+                            dateStr(workflow.getCreateTime()));
             jedisProxy.srem(key, workflowId);
             jedisProxy.srem(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflowId);
             jedisProxy.srem(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowName()), workflowId);
@@ -458,7 +458,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
                     nsKey(
                             WORKFLOW_DEF_TO_WORKFLOWS,
                             workflow.getWorkflowName(),
-                            dateStr(workflow.getCreatedTime()));
+                            dateStr(workflow.getCreateTime()));
             jedisProxy.srem(key, workflowId);
             jedisProxy.srem(nsKey(CORR_ID_TO_WORKFLOWS, workflow.getCorrelationId()), workflowId);
             jedisProxy.srem(nsKey(PENDING_WORKFLOWS, workflow.getWorkflowName()), workflowId);
@@ -559,8 +559,8 @@ public class RedisExecutionDAO extends BaseDynoDAO
                                     workflowId -> {
                                         try {
                                             WorkflowModel workflow = getWorkflow(workflowId);
-                                            if (workflow.getCreatedTime() >= startTime
-                                                    && workflow.getCreatedTime() <= endTime) {
+                                            if (workflow.getCreateTime() >= startTime
+                                                    && workflow.getCreateTime() <= endTime) {
                                                 workflows.add(workflow);
                                             }
                                         } catch (Exception e) {
@@ -611,7 +611,7 @@ public class RedisExecutionDAO extends BaseDynoDAO
                     nsKey(
                             WORKFLOW_DEF_TO_WORKFLOWS,
                             workflow.getWorkflowName(),
-                            dateStr(workflow.getCreatedTime()));
+                            dateStr(workflow.getCreateTime()));
             jedisProxy.sadd(key, workflow.getWorkflowId());
             if (workflow.getCorrelationId() != null) {
                 // Add to list of workflows for a correlationId

@@ -73,9 +73,7 @@ public class HttpTaskTest {
         map.put("SomeKey", null);
         JSON_RESPONSE = objectMapper.writeValueAsString(map);
 
-        final TypeReference<Map<String, Object>> mapOfObj =
-                new TypeReference<>() {
-                };
+        final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<>() {};
         MockServerClient client =
                 new MockServerClient(mockServer.getHost(), mockServer.getServerPort());
         client.when(request().withPath("/post").withMethod("POST"))

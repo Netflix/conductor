@@ -276,7 +276,7 @@ public class ExecutionDAOFacade {
         executionDAO.updateWorkflow(leanWorkflow);
         if (properties.isAsyncIndexingEnabled()) {
             if (workflow.getStatus().isTerminal()
-                    && workflow.getEndTime() - workflow.getCreatedTime()
+                    && workflow.getEndTime() - workflow.getCreateTime()
                             < properties.getAsyncUpdateShortRunningWorkflowDuration().toMillis()) {
                 final String workflowId = workflow.getWorkflowId();
                 DelayWorkflowUpdate delayWorkflowUpdate = new DelayWorkflowUpdate(workflowId);
@@ -429,11 +429,19 @@ public class ExecutionDAOFacade {
     }
 
     public TaskModel getTaskModel(String taskId) {
-        return modelMapper.getFullCopy(getTaskFromDatastore(taskId));
+        TaskModel taskModel = getTaskFromDatastore(taskId);
+        if (taskModel != null) {
+            return modelMapper.getFullCopy(taskModel);
+        }
+        return null;
     }
 
     public Task getTask(String taskId) {
-        return modelMapper.getTask(getTaskFromDatastore(taskId));
+        TaskModel taskModel = getTaskFromDatastore(taskId);
+        if (taskModel != null) {
+            return modelMapper.getTask(taskModel);
+        }
+        return null;
     }
 
     private TaskModel getTaskFromDatastore(String taskId) {
