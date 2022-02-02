@@ -120,8 +120,13 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 		parseQuery(query, SQL, params);
 		parseFreeText(freeText, SQL, params);
 
-		SQL.append("ORDER BY start_time DESC LIMIT ? OFFSET ?");
-
+		if (!sort.isEmpty()) {
+			SQL.append("ORDER BY ");
+			parseSort(sort, SQL);
+			SQL.append(" LIMIT ? OFFSET ?");
+		} else {
+			SQL.append("ORDER BY start_time DESC LIMIT ? OFFSET ?");
+		}
 		return queryWithTransaction(SQL.toString(), q -> {
 			params.forEach(p -> {
 				if (p instanceof Timestamp) {
@@ -148,6 +153,18 @@ public class AuroraIndexDAO extends AuroraBaseDAO implements IndexDAO {
 				return new SearchResult<>(totalHits, ids);
 			});
 		});
+	}
+
+	// Parse sort = workflowId:DESC | workflowType: ASC
+	private void parseSort(List<String> sort, StringBuilder SQL) {
+		String separator = "";
+		for (String sortValue : sort) {
+			String param = sortValue.split(":")[0];
+			String paramWithoutCamelcase = param.replaceAll("([A-Z]+)","\\_$1").toLowerCase();
+			String order = sortValue.substring(sortValue.lastIndexOf(':') + 1);
+			SQL.append(separator + paramWithoutCamelcase + " " + order);
+			separator = ",";
+		}
 	}
 
 	// Parse query: workflowType IN (deluxe.dependencygraph.source_wait.sherlock.1.0,deluxe.atlas.createasset.process.1.0)  AND status IN (RUNNING,FAILED)
