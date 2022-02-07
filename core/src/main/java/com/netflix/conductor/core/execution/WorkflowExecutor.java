@@ -1082,7 +1082,8 @@ public class WorkflowExecutor {
             }
 
         } catch (TerminateWorkflowException twe) {
-            LOGGER.info("Execution terminated of workflow: {}", workflowId, twe);
+            final String taskId  = Optional.ofNullable(twe.task).map(t -> t.getTaskId()).orElse("UNKNOWN_TASK");
+            LOGGER.info("Execution terminated of workflow: {}, due to task: {}", workflowId, taskId, twe);
             terminate(workflow, twe);
             return true;
         } catch (RuntimeException e) {
