@@ -30,6 +30,7 @@ public class ArchivingWorkflowStatusListener implements WorkflowStatusListener {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ArchivingWorkflowStatusListener.class);
+    private static final String REASON = "archived";
     private final ExecutionDAOFacade executionDAOFacade;
 
     public ArchivingWorkflowStatusListener(ExecutionDAOFacade executionDAOFacade) {
@@ -39,14 +40,14 @@ public class ArchivingWorkflowStatusListener implements WorkflowStatusListener {
     @Override
     public void onWorkflowCompleted(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on completion ", workflow.getWorkflowId());
-        this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true);
+        this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true, REASON);
         Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
     }
 
     @Override
     public void onWorkflowTerminated(WorkflowModel workflow) {
         LOGGER.info("Archiving workflow {} on termination", workflow.getWorkflowId());
-        this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true);
+        this.executionDAOFacade.removeWorkflow(workflow.getWorkflowId(), true, REASON);
         Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
     }
 }

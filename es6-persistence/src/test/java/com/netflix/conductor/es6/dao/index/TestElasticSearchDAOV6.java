@@ -122,7 +122,7 @@ public class TestElasticSearchDAOV6 extends ElasticSearchDaoBaseTest {
         List<String> workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 1);
         assertEquals(1, workflows.size());
 
-        indexDAO.removeWorkflow(workflow.getWorkflowId());
+        indexDAO.removeWorkflow(workflow.getWorkflowId(), "test");
 
         workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 0);
 
@@ -138,7 +138,7 @@ public class TestElasticSearchDAOV6 extends ElasticSearchDaoBaseTest {
         List<String> workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 1);
         assertEquals(1, workflows.size());
 
-        indexDAO.asyncRemoveWorkflow(workflow.getWorkflowId()).get();
+        indexDAO.asyncRemoveWorkflow(workflow.getWorkflowId(), "test").get();
 
         workflows = tryFindResults(() -> searchWorkflows(workflow.getWorkflowId()), 0);
 

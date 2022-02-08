@@ -29,6 +29,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ArchivingWithTTLWorkflowStatusListener.class);
+    private static final String REASON = "archived";
 
     private final ExecutionDAOFacade executionDAOFacade;
     private final int archiveTTLSeconds;
@@ -84,7 +85,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
                     TimeUnit.SECONDS);
         } else {
             this.executionDAOFacade.removeWorkflowWithExpiry(
-                    workflow.getWorkflowId(), true, archiveTTLSeconds);
+                    workflow.getWorkflowId(), true, archiveTTLSeconds, REASON);
             Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
         }
     }
@@ -99,7 +100,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
                     TimeUnit.SECONDS);
         } else {
             this.executionDAOFacade.removeWorkflowWithExpiry(
-                    workflow.getWorkflowId(), true, archiveTTLSeconds);
+                    workflow.getWorkflowId(), true, archiveTTLSeconds, REASON);
             Monitors.recordWorkflowArchived(workflow.getWorkflowName(), workflow.getStatus());
         }
     }
@@ -122,7 +123,7 @@ public class ArchivingWithTTLWorkflowStatusListener implements WorkflowStatusLis
         public void run() {
             try {
                 this.executionDAOFacade.removeWorkflowWithExpiry(
-                        workflowId, true, archiveTTLSeconds);
+                        workflowId, true, archiveTTLSeconds, REASON);
                 LOGGER.info("Archived workflow {}", workflowId);
                 Monitors.recordWorkflowArchived(workflowName, status);
                 Monitors.recordArchivalDelayQueueSize(

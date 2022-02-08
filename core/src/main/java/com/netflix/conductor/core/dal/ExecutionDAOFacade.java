@@ -318,12 +318,13 @@ public class ExecutionDAOFacade {
      * @param workflowId the id of the workflow to be removed
      * @param archiveWorkflow if true, the workflow will be archived in the {@link IndexDAO} after
      *     removal from {@link ExecutionDAO}
+     * @param reason reason of why the workflow needs to be removed
      */
-    public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
+    public void removeWorkflow(String workflowId, boolean archiveWorkflow, String reason) {
         try {
             WorkflowModel workflow = getWorkflowFromDatastore(workflowId, true);
 
-            removeWorkflowIndex(workflow, archiveWorkflow);
+            removeWorkflowIndex(workflow, archiveWorkflow, reason);
             // remove workflow from DAO
             try {
                 executionDAO.removeWorkflow(workflowId);
@@ -346,7 +347,7 @@ public class ExecutionDAOFacade {
         }
     }
 
-    private void removeWorkflowIndex(WorkflowModel workflow, boolean archiveWorkflow)
+    private void removeWorkflowIndex(WorkflowModel workflow, boolean archiveWorkflow, String reason)
             throws JsonProcessingException {
         if (archiveWorkflow) {
             if (workflow.getStatus().isTerminal()) {
@@ -365,16 +366,16 @@ public class ExecutionDAOFacade {
             }
         } else {
             // Not archiving, also remove workflow from index
-            indexDAO.asyncRemoveWorkflow(workflow.getWorkflowId());
+            indexDAO.asyncRemoveWorkflow(workflow.getWorkflowId(), reason);
         }
     }
 
     public void removeWorkflowWithExpiry(
-            String workflowId, boolean archiveWorkflow, int ttlSeconds) {
+            String workflowId, boolean archiveWorkflow, int ttlSeconds, String reason) {
         try {
             WorkflowModel workflow = getWorkflowFromDatastore(workflowId, true);
 
-            removeWorkflowIndex(workflow, archiveWorkflow);
+            removeWorkflowIndex(workflow, archiveWorkflow, reason);
             // remove workflow from DAO with TTL
             try {
                 executionDAO.removeWorkflowWithExpiry(workflowId, ttlSeconds);
@@ -398,15 +399,11 @@ public class ExecutionDAOFacade {
      *
      * @param workflowId the workflow id to be reset
      */
-    public void resetWorkflow(String workflowId) {
+    public void resetWorkflow(String workflowId, String reason) {
         try {
             getWorkflowFromDatastore(workflowId, true);
             executionDAO.removeWorkflow(workflowId);
-            if (properties.isAsyncIndexingEnabled()) {
-                indexDAO.asyncRemoveWorkflow(workflowId);
-            } else {
-                indexDAO.removeWorkflow(workflowId);
-            }
+            removeWorkflowIndex(workflowId, reason);
         } catch (ApplicationException ae) {
             throw ae;
         } catch (Exception e) {
@@ -414,6 +411,14 @@ public class ExecutionDAOFacade {
                     ApplicationException.Code.BACKEND_ERROR,
                     "Error resetting workflow state: " + workflowId,
                     e);
+        }
+    }
+
+    public void removeWorkflowIndex(String workflowId, String reason) {
+        if (properties.isAsyncIndexingEnabled()) {
+            indexDAO.asyncRemoveWorkflow(workflowId, reason);
+        } else {
+            indexDAO.removeWorkflow(workflowId, reason);
         }
     }
 

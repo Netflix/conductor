@@ -140,9 +140,9 @@ public class ExecutionDAOFacadeTest {
         WorkflowModel workflow = new WorkflowModel();
         workflow.setStatus(WorkflowModel.Status.COMPLETED);
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", false);
+        executionDAOFacade.removeWorkflow("workflowId", false, "test");
         verify(indexDAO, never()).updateWorkflow(any(), any(), any());
-        verify(indexDAO, times(1)).asyncRemoveWorkflow(workflow.getWorkflowId());
+        verify(indexDAO, times(1)).asyncRemoveWorkflow(workflow.getWorkflowId(), "test");
     }
 
     @Test
@@ -151,9 +151,9 @@ public class ExecutionDAOFacadeTest {
         WorkflowModel workflow = objectMapper.readValue(stream, WorkflowModel.class);
 
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", true);
+        executionDAOFacade.removeWorkflow("workflowId", true, "test");
         verify(indexDAO, times(1)).updateWorkflow(any(), any(), any());
-        verify(indexDAO, never()).removeWorkflow(any());
+        verify(indexDAO, never()).removeWorkflow(any(), any());
     }
 
     @Test

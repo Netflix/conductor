@@ -394,8 +394,8 @@ public class ExecutionService {
         return executionDAOFacade.getRunningWorkflowIds(workflowName, version);
     }
 
-    public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
-        executionDAOFacade.removeWorkflow(workflowId, archiveWorkflow);
+    public void removeWorkflow(String workflowId, boolean archiveWorkflow, String reason) {
+        executionDAOFacade.removeWorkflow(workflowId, archiveWorkflow, reason);
     }
 
     public SearchResult<WorkflowSummary> search(

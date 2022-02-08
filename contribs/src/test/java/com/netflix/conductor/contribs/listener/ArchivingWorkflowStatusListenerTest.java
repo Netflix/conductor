@@ -48,14 +48,16 @@ public class ArchivingWorkflowStatusListenerTest {
     @Test
     public void testArchiveOnWorkflowCompleted() {
         listener.onWorkflowCompleted(workflow);
-        verify(executionDAOFacade, times(1)).removeWorkflow(workflow.getWorkflowId(), true);
+        verify(executionDAOFacade, times(1))
+                .removeWorkflow(workflow.getWorkflowId(), true, "archived");
         verifyNoMoreInteractions(executionDAOFacade);
     }
 
     @Test
     public void testArchiveOnWorkflowTerminated() {
         listener.onWorkflowTerminated(workflow);
-        verify(executionDAOFacade, times(1)).removeWorkflow(workflow.getWorkflowId(), true);
+        verify(executionDAOFacade, times(1))
+                .removeWorkflow(workflow.getWorkflowId(), true, "archived");
         verifyNoMoreInteractions(executionDAOFacade);
     }
 }

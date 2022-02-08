@@ -802,7 +802,7 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public void removeWorkflow(String workflowId) {
+    public void removeWorkflow(String workflowId, String reason) {
         long startTime = Instant.now().toEpochMilli();
         DeleteRequest request = new DeleteRequest(workflowIndexName, workflowId);
 
@@ -814,7 +814,10 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
             }
             long endTime = Instant.now().toEpochMilli();
             logger.debug(
-                    "Time taken {} for removing workflow: {}", endTime - startTime, workflowId);
+                    "Time taken {} for removing workflow: {}, reason: {}",
+                    endTime - startTime,
+                    workflowId,
+                    reason);
             Monitors.recordESIndexTime("remove_workflow", WORKFLOW_DOC_TYPE, endTime - startTime);
             Monitors.recordWorkerQueueSize(
                     "indexQueue", ((ThreadPoolExecutor) executorService).getQueue().size());
@@ -825,8 +828,9 @@ public class ElasticSearchRestDAOV7 extends ElasticSearchBaseDAO implements Inde
     }
 
     @Override
-    public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
-        return CompletableFuture.runAsync(() -> removeWorkflow(workflowId), executorService);
+    public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId, String reason) {
+        return CompletableFuture.runAsync(
+                () -> removeWorkflow(workflowId, reason), executorService);
     }
 
     @Override

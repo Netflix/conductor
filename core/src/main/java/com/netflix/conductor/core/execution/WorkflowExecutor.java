@@ -94,6 +94,10 @@ public class WorkflowExecutor {
                     pollData.getLastPollTime()
                             > System.currentTimeMillis() - activeWorkerLastPollMs;
 
+    private static final String RESTART_OPERATION = "restarted";
+    private static final String RETRY_OPERATION = "retried";
+    private static final String RERUN_OPERATION = "reran";
+
     public WorkflowExecutor(
             DeciderService deciderService,
             MetadataDAO metadataDAO,
@@ -405,7 +409,7 @@ public class WorkflowExecutor {
             // It's possible the remove workflow call hits an exception as well, in that case we
             // want to log both errors to help diagnosis.
             try {
-                executionDAOFacade.removeWorkflow(workflowId, false);
+                executionDAOFacade.removeWorkflow(workflowId, false, "start_failure");
             } catch (Exception rwe) {
                 LOGGER.error("Could not remove the workflowId: " + workflowId, rwe);
             }
@@ -564,7 +568,7 @@ public class WorkflowExecutor {
         }
 
         // Reset the workflow in the primary datastore and remove from indexer; then re-create it
-        executionDAOFacade.resetWorkflow(workflowId);
+        executionDAOFacade.resetWorkflow(workflowId, RESTART_OPERATION);
 
         workflow.getTasks().clear();
         workflow.setReasonForIncompletion(null);
@@ -588,7 +592,7 @@ public class WorkflowExecutor {
 
         decide(workflowId);
 
-        updateAndPushParents(workflow, "restarted");
+        updateAndPushParents(workflow, RESTART_OPERATION);
     }
 
     /**
@@ -614,11 +618,11 @@ public class WorkflowExecutor {
             if (taskToRetry.isPresent()) {
                 workflow = findLastFailedSubWorkflowIfAny(taskToRetry.get(), workflow);
                 retry(workflow);
-                updateAndPushParents(workflow, "retried");
+                updateAndPushParents(workflow, RETRY_OPERATION);
             }
         } else {
             retry(workflow);
-            updateAndPushParents(workflow, "retried");
+            updateAndPushParents(workflow, RETRY_OPERATION);
         }
     }
 
@@ -631,6 +635,11 @@ public class WorkflowExecutor {
             subWorkflowTask.setSubworkflowChanged(true);
             subWorkflowTask.setStatus(IN_PROGRESS);
             executionDAOFacade.updateTask(subWorkflowTask);
+
+            String parentWorkflowId = workflow.getParentWorkflowId();
+            // remove parent Workflow from indexer due to changed status, which will be re-created
+            // later
+            executionDAOFacade.removeWorkflowIndex(parentWorkflowId, operation);
 
             // add an execution log
             String currentWorkflowIdentifier = workflow.toShortString();
@@ -647,7 +656,6 @@ public class WorkflowExecutor {
             LOGGER.info("Task {} updated. {}", log.getTaskId(), log.getLog());
 
             // push the parent workflow to decider queue for asynchronous 'decide'
-            String parentWorkflowId = workflow.getParentWorkflowId();
             WorkflowModel parentWorkflow =
                     executionDAOFacade.getWorkflowModel(parentWorkflowId, true);
             parentWorkflow.setStatus(WorkflowModel.Status.RUNNING);
@@ -697,6 +705,9 @@ public class WorkflowExecutor {
                     CONFLICT,
                     "There are no retryable tasks! Use restart if you want to attempt entire workflow execution again.");
         }
+
+        // remove workflow from indexer due to changed status, which will be re-created later
+        executionDAOFacade.removeWorkflowIndex(workflow.getWorkflowId(), RETRY_OPERATION);
 
         // Update Workflow with new status.
         // This should load Workflow from archive, if archived.
@@ -897,6 +908,10 @@ public class WorkflowExecutor {
         WorkflowModel workflow = executionDAOFacade.getWorkflowModel(workflowId, true);
         if (WorkflowModel.Status.COMPLETED.equals(workflow.getStatus())) {
             throw new ApplicationException(CONFLICT, "Cannot terminate a COMPLETED workflow.");
+        }
+        if (workflow.getStatus().isTerminal()) {
+            // remove workflow from indexer due to changed status, which will be re-created later
+            executionDAOFacade.removeWorkflowIndex(workflowId, reason);
         }
         workflow.setStatus(WorkflowModel.Status.TERMINATED);
         terminateWorkflow(workflow, reason, null);
@@ -1805,13 +1820,15 @@ public class WorkflowExecutor {
             Map<String, Object> taskInput,
             Map<String, Object> workflowInput,
             String correlationId) {
-
         // Get the workflow
         WorkflowModel workflow = executionDAOFacade.getWorkflowModel(workflowId, true);
-        updateAndPushParents(workflow, "reran");
+        updateAndPushParents(workflow, RERUN_OPERATION);
 
         // If the task Id is null it implies that the entire workflow has to be rerun
         if (taskId == null) {
+            // remove workflow from indexer due to changed status, which will be re-created later
+            executionDAOFacade.removeWorkflowIndex(workflowId, RERUN_OPERATION);
+
             // remove all tasks
             workflow.getTasks().forEach(task -> executionDAOFacade.removeTask(task.getTaskId()));
             // Set workflow as RUNNING
@@ -1860,6 +1877,9 @@ public class WorkflowExecutor {
         }
 
         if (rerunFromTask != null) {
+            // remove workflow from indexer due to changed status, which will be re-created later
+            executionDAOFacade.removeWorkflowIndex(workflowId, RERUN_OPERATION);
+
             // set workflow as RUNNING
             workflow.setStatus(WorkflowModel.Status.RUNNING);
             // Reset failure reason from previous run to default

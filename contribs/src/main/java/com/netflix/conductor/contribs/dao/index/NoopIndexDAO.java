@@ -62,10 +62,10 @@ public class NoopIndexDAO implements IndexDAO {
     }
 
     @Override
-    public void removeWorkflow(String workflowId) {}
+    public void removeWorkflow(String workflowId, String reason) {}
 
     @Override
-    public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId) {
+    public CompletableFuture<Void> asyncRemoveWorkflow(String workflowId, String reason) {
         return CompletableFuture.completedFuture(null);
     }
 

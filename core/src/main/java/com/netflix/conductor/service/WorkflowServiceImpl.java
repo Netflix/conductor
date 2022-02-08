@@ -269,7 +269,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      * @param archiveWorkflow Archives the workflow.
      */
     public void deleteWorkflow(String workflowId, boolean archiveWorkflow) {
-        executionService.removeWorkflow(workflowId, archiveWorkflow);
+        executionService.removeWorkflow(workflowId, archiveWorkflow, "deleted by user");
     }
 
     /**

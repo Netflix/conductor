@@ -78,16 +78,18 @@ public interface IndexDAO {
      * Remove the workflow index
      *
      * @param workflowId workflow to be removed
+     * @param reason reason of why the workflow needs to be removed
      */
-    void removeWorkflow(String workflowId);
+    void removeWorkflow(String workflowId, String reason);
 
     /**
      * Remove the workflow index
      *
      * @param workflowId workflow to be removed
+     * @param reason reason of why the workflow needs to be removed
      * @return CompletableFuture of type void
      */
-    CompletableFuture<Void> asyncRemoveWorkflow(String workflowId);
+    CompletableFuture<Void> asyncRemoveWorkflow(String workflowId, String reason);
 
     /**
      * Updates the index
