@@ -1038,13 +1038,11 @@ public class WorkflowExecutor {
 		workflowStatusListener.onWorkflowTerminated(workflow);
 
 		int errorId = 0;
-		Boolean isRequiredInReporting = false;
 		try {
 			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflow.getWorkflowType(), reason).stream().findFirst();
 			if (errorLookupOpt.isPresent()) {
 				ErrorLookup errorLookup = errorLookupOpt.get();
 				errorId = errorLookup.getId();
-				isRequiredInReporting = errorLookup.getIsRequiredInReporting();
 			}
 		} catch (Exception ex) {
 
@@ -1075,7 +1073,7 @@ public class WorkflowExecutor {
 			e.printStackTrace();
 		}
 
-		if (((isRequiredInReporting && errorId != 0) || errorId == 0) && !workflow.isSubWorkflow()) {
+		if (!workflow.isSubWorkflow()) {
 			WorkflowErrorRegistry workflowErrorRegistry = new WorkflowErrorRegistry();
 			workflowErrorRegistry.setStatus(workflow.getStatus().name());
 			workflowErrorRegistry.setWorkflowId(workflow.getWorkflowId());

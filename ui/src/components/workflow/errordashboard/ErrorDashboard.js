@@ -83,11 +83,13 @@ const ErrorDashboard = React.createClass({
            }
            else
            {
+             if(d.isRequiredInReporting == true){
               knownErrors.push({
                         id: d.id,
                         lookup: d.lookup,
                         totalCount: d.totalCount
                        });
+                }
            }
           });
         }
