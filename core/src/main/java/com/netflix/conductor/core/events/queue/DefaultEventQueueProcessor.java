@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,12 +12,7 @@
  */
 package com.netflix.conductor.core.events.queue;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,11 +21,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.Task.Status;
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.exception.ApplicationException;
 import com.netflix.conductor.core.exception.ApplicationException.Code;
-import com.netflix.conductor.service.ExecutionService;
+import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.TaskModel.Status;
+import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -54,17 +52,19 @@ public class DefaultEventQueueProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventQueueProcessor.class);
     private final Map<Status, ObservableQueue> queues;
-    private final ExecutionService executionService;
-    private static final TypeReference<Map<String, Object>> _mapType =
-            new TypeReference<Map<String, Object>>() {};
+    private final WorkflowExecutor workflowExecutor;
+    private final ModelMapper modelMapper;
+    private static final TypeReference<Map<String, Object>> _mapType = new TypeReference<>() {};
     private final ObjectMapper objectMapper;
 
     public DefaultEventQueueProcessor(
             Map<Status, ObservableQueue> queues,
-            ExecutionService executionService,
+            WorkflowExecutor workflowExecutor,
+            ModelMapper modelMapper,
             ObjectMapper objectMapper) {
         this.queues = queues;
-        this.executionService = executionService;
+        this.workflowExecutor = workflowExecutor;
+        this.modelMapper = modelMapper;
         this.objectMapper = objectMapper;
         queues.forEach(this::startMonitor);
         LOGGER.info(
@@ -98,9 +98,9 @@ public class DefaultEventQueueProcessor {
                                     queue.ack(Collections.singletonList(msg));
                                     return;
                                 }
-                                Workflow workflow =
-                                        executionService.getExecutionStatus(workflowId, true);
-                                Optional<Task> taskOptional;
+                                WorkflowModel workflow =
+                                        workflowExecutor.getWorkflow(workflowId, true);
+                                Optional<TaskModel> taskOptional;
                                 if (StringUtils.isNotEmpty(taskId)) {
                                     taskOptional =
                                             workflow.getTasks().stream()
@@ -135,7 +135,7 @@ public class DefaultEventQueueProcessor {
                                                     .findFirst();
                                 }
 
-                                if (!taskOptional.isPresent()) {
+                                if (taskOptional.isEmpty()) {
                                     LOGGER.error(
                                             "No matching tasks found to be marked as completed for workflow {}, taskRefName {}, taskId {}",
                                             workflowId,
@@ -145,16 +145,15 @@ public class DefaultEventQueueProcessor {
                                     return;
                                 }
 
-                                Task task = taskOptional.get();
-                                task.setStatus(status);
+                                Task task = modelMapper.getTask(taskOptional.get());
+                                task.setStatus(modelMapper.mapToTaskStatus(status));
                                 task.getOutputData()
                                         .putAll(objectMapper.convertValue(payloadJSON, _mapType));
-                                executionService.updateTask(task);
+                                workflowExecutor.updateTask(new TaskResult(task));
 
                                 List<String> failures = queue.ack(Collections.singletonList(msg));
                                 if (!failures.isEmpty()) {
-                                    LOGGER.error(
-                                            "Not able to ack the messages {}", failures.toString());
+                                    LOGGER.error("Not able to ack the messages {}", failures);
                                 }
                             } catch (JsonParseException e) {
                                 LOGGER.error("Bad message? : {} ", msg, e);

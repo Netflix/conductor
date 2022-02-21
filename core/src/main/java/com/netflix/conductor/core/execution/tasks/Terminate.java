@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -17,9 +17,9 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_TERMINATE;
 import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.COMPLETED;
@@ -59,6 +59,7 @@ import static com.netflix.conductor.common.run.Workflow.WorkflowStatus.FAILED;
 public class Terminate extends WorkflowSystemTask {
 
     private static final String TERMINATION_STATUS_PARAMETER = "terminationStatus";
+    private static final String TERMINATION_REASON_PARAMETER = "terminationReason";
     private static final String TERMINATION_WORKFLOW_OUTPUT = "workflowOutput";
 
     public Terminate() {
@@ -66,21 +67,26 @@ public class Terminate extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(Workflow workflow, Task task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         String returnStatus = (String) task.getInputData().get(TERMINATION_STATUS_PARAMETER);
 
         if (validateInputStatus(returnStatus)) {
             task.setOutputData(getInputFromParam(task.getInputData()));
-            task.setStatus(Task.Status.COMPLETED);
+            task.setStatus(TaskModel.Status.COMPLETED);
             return true;
         }
         task.setReasonForIncompletion("given termination status is not valid");
-        task.setStatus(Task.Status.FAILED);
+        task.setStatus(TaskModel.Status.FAILED);
         return false;
     }
 
     public static String getTerminationStatusParameter() {
         return TERMINATION_STATUS_PARAMETER;
+    }
+
+    public static String getTerminationReasonParameter() {
+        return TERMINATION_REASON_PARAMETER;
     }
 
     public static String getTerminationWorkflowOutputParameter() {

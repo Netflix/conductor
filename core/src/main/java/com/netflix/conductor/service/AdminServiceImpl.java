@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +26,12 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.events.EventQueueManager;
-import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.reconciliation.WorkflowRepairService;
+import com.netflix.conductor.core.utils.Utils;
 import com.netflix.conductor.dao.QueueDAO;
 
 @Audit
 @Trace
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Service
 public class AdminServiceImpl implements AdminService {
 
@@ -48,13 +48,13 @@ public class AdminServiceImpl implements AdminService {
             QueueDAO queueDAO,
             Optional<WorkflowRepairService> workflowRepairService,
             Optional<EventQueueManager> eventQueueManager,
-            BuildProperties buildProperties) {
+            Optional<BuildProperties> buildProperties) {
         this.properties = properties;
         this.executionService = executionService;
         this.queueDAO = queueDAO;
         this.workflowRepairService = workflowRepairService.orElse(null);
         this.eventQueueManager = eventQueueManager.orElse(null);
-        this.buildProperties = buildProperties;
+        this.buildProperties = buildProperties.orElse(null);
     }
 
     /**
@@ -74,6 +74,7 @@ public class AdminServiceImpl implements AdminService {
      * @return all the build properties.
      */
     private Map<String, Object> getBuildProperties() {
+        if (buildProperties == null) return Collections.emptyMap();
         Map<String, Object> buildProps = new HashMap<>();
         buildProps.put("version", buildProperties.getVersion());
         buildProps.put("buildDate", buildProperties.getTime());
@@ -116,7 +117,7 @@ public class AdminServiceImpl implements AdminService {
     public String requeueSweep(String workflowId) {
         boolean pushed =
                 queueDAO.pushIfNotExists(
-                        WorkflowExecutor.DECIDER_QUEUE,
+                        Utils.DECIDER_QUEUE,
                         workflowId,
                         properties.getWorkflowOffsetTimeout().getSeconds());
         return pushed + "." + workflowId;
