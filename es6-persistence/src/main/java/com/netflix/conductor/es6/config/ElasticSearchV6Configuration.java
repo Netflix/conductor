@@ -12,10 +12,6 @@
  */
 package com.netflix.conductor.es6.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.netflix.conductor.dao.IndexDAO;
-import com.netflix.conductor.es6.dao.index.ElasticSearchDAOV6;
-import com.netflix.conductor.es6.dao.index.ElasticSearchRestDAOV6;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
@@ -23,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import org.apache.http.HttpHost;
 import org.apache.http.impl.nio.reactor.IOReactorConfig;
 import org.elasticsearch.client.Client;
@@ -38,6 +35,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+
+import com.netflix.conductor.dao.IndexDAO;
+import com.netflix.conductor.es6.dao.index.ElasticSearchDAOV6;
+import com.netflix.conductor.es6.dao.index.ElasticSearchRestDAOV6;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ElasticSearchProperties.class)
@@ -78,10 +81,10 @@ public class ElasticSearchV6Configuration {
     public RestClient restClient(ElasticSearchProperties properties) {
         RestClientBuilder restClientBuilder =
                 RestClient.builder(convertToHttpHosts(properties.toURLs()));
-        restClientBuilder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                .setDefaultIOReactorConfig(IOReactorConfig.custom()
-                        .setSoKeepAlive(true)
-                        .build()));
+        restClientBuilder.setHttpClientConfigCallback(
+                httpClientBuilder ->
+                        httpClientBuilder.setDefaultIOReactorConfig(
+                                IOReactorConfig.custom().setSoKeepAlive(true).build()));
         if (properties.getRestClientConnectionRequestTimeout() > 0) {
             restClientBuilder.setRequestConfigCallback(
                     requestConfigBuilder ->
@@ -94,11 +97,12 @@ public class ElasticSearchV6Configuration {
     @Bean
     @Conditional(IsHttpProtocol.class)
     public RestClientBuilder restClientBuilder(ElasticSearchProperties properties) {
-        final RestClientBuilder builder = RestClient.builder(convertToHttpHosts(properties.toURLs()));
-        builder.setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-                .setDefaultIOReactorConfig(IOReactorConfig.custom()
-                        .setSoKeepAlive(true)
-                        .build()));
+        final RestClientBuilder builder =
+                RestClient.builder(convertToHttpHosts(properties.toURLs()));
+        builder.setHttpClientConfigCallback(
+                httpClientBuilder ->
+                        httpClientBuilder.setDefaultIOReactorConfig(
+                                IOReactorConfig.custom().setSoKeepAlive(true).build()));
         return builder;
     }
 
