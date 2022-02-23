@@ -1,5 +1,5 @@
 {
-  "name": "test_terminate_task_failed_wf",
+  "name": "test_task_failed_sub_wf",
   "version": 1,
   "tasks": [
     {
@@ -25,7 +25,6 @@
       "taskReferenceName": "terminate0",
       "inputParameters": {
         "terminationStatus": "FAILED",
-        "terminationReason": "Early exit in terminate",
         "workflowOutput": "${lambda0.output}"
       },
       "type": "TERMINATE",
@@ -57,7 +56,6 @@
   ],
   "inputParameters": [],
   "outputParameters": {},
-  "failureWorkflow": "failure_workflow",
   "schemaVersion": 2,
   "restartable": true,
   "workflowStatusListenerEnabled": false,
