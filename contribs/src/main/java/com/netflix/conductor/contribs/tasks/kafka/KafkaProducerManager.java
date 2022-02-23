@@ -106,6 +106,12 @@ public class KafkaProducerManager {
         configProperties.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, requestTimeoutMs);
         configProperties.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, maxBlockMs);
         configProperties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, STRING_SERIALIZER);
+
+        // sasl kafka client authentication support
+        configProperties.put(SECURITY_PROTOCOL_CONFIG, input.getSecurityProtocol());
+        configProperties.put(SASL_MECHANISM, input.getSaslMechanism());
+        configProperties.put(SASL_JAAS_CONFIG, input.getSaslJaasConfig() );
+        configProperties.put(SASL_CLIENT_CALLBACK_HANDLER_CLASS, input.getSaslClientCallbackHandlerClass());
         return configProperties;
     }
 }

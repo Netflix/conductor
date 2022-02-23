@@ -220,6 +220,42 @@ public class KafkaPublishTask extends WorkflowSystemTask {
         private Integer maxBlockMs;
         private String topic;
         private String keySerializer = STRING_SERIALIZER;
+        private String securityProtocol;
+        private String saslMechanism;
+        private String saslJaasConfig;
+        private String saslClientCallbackHandlerClass;
+
+        public String getSecurityProtocol() {
+            return securityProtocol;
+        }
+
+        public void setSecurityProtocol(String securityProtocol) {
+            this.securityProtocol = securityProtocol;
+        }
+
+        public String getSaslMechanism() {
+            return saslMechanism;
+        }
+
+        public void setSaslMechanism(String saslMechanism) {
+            this.saslMechanism = saslMechanism;
+        }
+
+        public String getSaslJaasConfig() {
+            return saslJaasConfig;
+        }
+
+        public void setSaslJaasConfig(String saslJaasConfig) {
+            this.saslJaasConfig = saslJaasConfig;
+        }
+
+        public String getSaslClientCallbackHandlerClass() {
+            return saslClientCallbackHandlerClass;
+        }
+
+        public void setSaslClientCallbackHandlerClass(String saslClientCallbackHandlerClass) {
+            this.saslClientCallbackHandlerClass = saslClientCallbackHandlerClass;
+        }
 
         public Map<String, Object> getHeaders() {
             return headers;
