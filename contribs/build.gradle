@@ -19,6 +19,7 @@ dependencies {
 
     implementation "com.amazonaws:aws-java-sdk-s3:${revAwsSdk}"
     implementation "com.amazonaws:aws-java-sdk-sqs:${revAwsSdk}"
+    implementation "software.amazon.msk:aws-msk-iam-auth"
 
     implementation "org.apache.commons:commons-lang3:"
 
