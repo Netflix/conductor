@@ -69,10 +69,32 @@ const ErrorDashboard = React.createClass({
       },
   render() {
     var errorData = this.state.errorData;
+    var dayErrorCount = 0 ;
+    var weekErrorCount = 0 ;
+    var monthErrorCount = 0 ;
     var knownErrors = [];
     var unknownErrors = [];
       if (errorData !== undefined && errorData.result !== undefined ) {
           errorData.result.forEach(function (d) {
+           var dayFrom = moment().startOf('day').format("YYYY-MM-DD HH:mm:ss");
+           var dayEnd = moment().endOf('day').format("YYYY-MM-DD HH:mm:ss");
+           const start =  moment(d.startTime).format("YYYY-MM-DD HH:mm:ss");
+           const end = moment(d.endTime).format("YYYY-MM-DD HH:mm:ss");
+           if (start > dayFrom && end < dayEnd) {
+            dayErrorCount = dayErrorCount+d.totalCount;
+           }
+
+           var weekFrom = moment().startOf('week').format("YYYY-MM-DD HH:mm:ss");
+           var weekEnd = moment().endOf('week').format("YYYY-MM-DD HH:mm:ss");
+           if (start > weekFrom && end < weekEnd) {
+                       weekErrorCount = weekErrorCount+d.totalCount;
+            }
+
+           var monthFrom = moment().startOf('month').format("YYYY-MM-DD HH:mm:ss");
+           var monthEnd = moment().endOf('month').format("YYYY-MM-DD HH:mm:ss");
+           if (start > monthFrom && end < monthEnd) {
+                    monthErrorCount = monthErrorCount+d.totalCount;
+           }
            if(d.id === 0)
            {
             unknownErrors.push({
@@ -136,6 +158,11 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
+           <Panel header="Error counts">
+           <label className="small nobold">Total errors for day : {dayErrorCount}</label><br/>
+           <label className="small nobold">Total errors for Week : {weekErrorCount}</label><br/>
+           <label className="small nobold">Total errors for month : {monthErrorCount}</label><br/>
+           </Panel>
           <Panel header="Unknown Errors">
               <Table striped bordered hover>
                   <thead>

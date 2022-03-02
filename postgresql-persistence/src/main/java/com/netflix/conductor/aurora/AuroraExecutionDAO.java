@@ -802,7 +802,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	}
 
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
-		StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
+		StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors,  min(workflow_error_registry.start_time) As start_time, max(workflow_error_registry.end_time) As end_time FROM workflow_error_registry \n" +
 				"LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
 				" WHERE 1=1 ");
 		LinkedList<Object> params = new LinkedList<>();
@@ -863,6 +863,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 					workflowError.setLookup(rs.getString("lookup"));
 					workflowError.setTotalCount(rs.getString("numberoferrors"));
 					workflowError.setIsRequiredInReporting(rs.getBoolean("isRequiredInReporting"));
+					workflowError.setStartTime(rs.getString("start_time"));
+					workflowError.setEndTime(rs.getString("end_time"));
 					workflowErrors.add(workflowError);
 				}
 				return workflowErrors;
