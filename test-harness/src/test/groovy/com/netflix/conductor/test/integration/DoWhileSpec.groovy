@@ -12,13 +12,14 @@
  */
 package com.netflix.conductor.test.integration
 
+import org.springframework.beans.factory.annotation.Autowired
+
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.common.utils.TaskUtils
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
 import com.netflix.conductor.test.base.AbstractSpecification
-import org.springframework.beans.factory.annotation.Autowired
 
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
 
