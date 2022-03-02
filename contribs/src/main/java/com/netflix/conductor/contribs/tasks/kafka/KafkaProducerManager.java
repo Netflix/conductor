@@ -112,9 +112,10 @@ public class KafkaProducerManager {
             configProperties.put("security.protocol", input.getSecurityProtocol());
             configProperties.put("sasl.mechanism", input.getSaslMechanism());
             configProperties.put("sasl.jaas.config", input.getSaslJaasConfig());
-            configProperties.put("sasl.client.callback.handler.class", input.getSaslClientCallbackHandlerClass());
+            configProperties.put(
+                    "sasl.client.callback.handler.class",
+                    input.getSaslClientCallbackHandlerClass());
         }
         return configProperties;
-
     }
 }
