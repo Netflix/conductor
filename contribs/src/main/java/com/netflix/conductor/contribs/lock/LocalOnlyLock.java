@@ -118,4 +118,8 @@ public class LocalOnlyLock implements Lock {
     LoadingCache<String, Semaphore> cache() {
         return lockIdtoSemaphoreMap;
     }
+
+    ConcurrentHashMap<String, ScheduledFuture<?>> scheduledFutures() {
+        return scheduledFutures;
+    }
 }
