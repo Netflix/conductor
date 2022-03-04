@@ -12,8 +12,10 @@
  */
 package com.netflix.conductor.contribs.lock;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +41,7 @@ public class LocalOnlyLock implements Lock {
                     return new Semaphore(1, true);
                 }
             };
+    private static final ConcurrentHashMap<String, ScheduledFuture<?>> scheduledFutures = new ConcurrentHashMap<>();
     private static final LoadingCache<String, Semaphore> CACHE =
             CacheBuilder.newBuilder().build(LOADER);
     private static final ThreadGroup THREAD_GROUP = new ThreadGroup("LocalOnlyLock-scheduler");
@@ -75,10 +78,18 @@ public class LocalOnlyLock implements Lock {
                 unit);
         if (acquireLock(lockId, timeToTry, unit)) {
             LOGGER.trace("Releasing {} automatically after {} {}", lockId, leaseTime, unit);
-            SCHEDULER.schedule(() -> releaseLock(lockId), leaseTime, unit);
+            scheduledFutures.put(lockId, SCHEDULER.schedule(() -> releaseLock(lockId), leaseTime, unit));
             return true;
         }
         return false;
+    }
+
+    private void removeLeaseExpirationJob(String lockId) {
+        ScheduledFuture<?> schedFuture = scheduledFutures.get(lockId);
+        if(schedFuture != null && schedFuture.cancel(false)) {
+            scheduledFutures.remove(lockId);
+            LOGGER.info("lockId {} removed from lease expiration job", lockId);
+        }
     }
 
     @Override
@@ -90,6 +101,7 @@ public class LocalOnlyLock implements Lock {
             if (CACHE.getUnchecked(lockId).availablePermits() == 0) {
                 LOGGER.trace("Releasing {}", lockId);
                 CACHE.getUnchecked(lockId).release();
+                removeLeaseExpirationJob(lockId);
             }
         }
     }
