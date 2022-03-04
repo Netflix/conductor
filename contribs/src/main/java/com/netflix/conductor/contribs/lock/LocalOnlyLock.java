@@ -88,7 +88,7 @@ public class LocalOnlyLock implements Lock {
         ScheduledFuture<?> schedFuture = scheduledFutures.get(lockId);
         if(schedFuture != null && schedFuture.cancel(false)) {
             scheduledFutures.remove(lockId);
-            LOGGER.info("lockId {} removed from lease expiration job", lockId);
+            LOGGER.trace("lockId {} removed from lease expiration job", lockId);
         }
     }
 
