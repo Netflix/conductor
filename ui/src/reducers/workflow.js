@@ -279,6 +279,48 @@ export default function workflows(state = initialState, action) {
               fetching: false,
               refetch: false
             };
+    case 'REQUESTED_ERROR_DAY_DATA':
+                 return {
+                   ...state,
+                   fetching: true,
+                   error: false
+       };
+      case 'RECEIVED_ERROR_DAY_DATA':
+                 return {
+                   ...state,
+                   errorDataDay: action.errorDataDay,
+                   error: false,
+                   fetching: false,
+                   refetch: false
+        };
+      case 'REQUESTED_ERROR_WEEK_DATA':
+                      return {
+                        ...state,
+                        fetching: true,
+                        error: false
+            };
+       case 'RECEIVED_ERROR_WEEK_DATA':
+                      return {
+                        ...state,
+                        errorDataWeek: action.errorDataWeek,
+                        error: false,
+                        fetching: false,
+                        refetch: false
+       };
+        case 'REQUESTED_ERROR_DATA_MONTH':
+                  return {
+                    ...state,
+                    fetching: true,
+                    error: false
+                  };
+           case 'RECEIVED_ERROR_DATA_MONTH':
+                  return {
+                    ...state,
+                    errorDataMonth: action.errorDataMonth,
+                    error: false,
+                    fetching: false,
+                    refetch: false
+                  };
      case 'REQUESTED_ERRORLIST_DATA':
                 return {
                   ...state,
