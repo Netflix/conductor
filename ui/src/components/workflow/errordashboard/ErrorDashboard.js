@@ -175,10 +175,25 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
-           <Panel header="Error counts">
-           <label className="small nobold">Total errors for day : {dayErrorCount}</label><br/>
-           <label className="small nobold">Total errors for Week : {weekErrorCount}</label><br/>
-           <label className="small nobold">Total errors for month : {monthErrorCount}</label><br/>
+           <Panel header="Total Error Counts">
+            <Table striped bordered hover>
+                             <thead>
+                                 <tr>
+                                 <th>Today</th>
+                                 <th>This Week</th>
+                                 <th>This Month</th>
+                                 </tr>
+                               </thead>
+
+                            <tbody>
+                                <tr>
+                                   <td>{dayErrorCount}</td>
+                                   <td> {weekErrorCount}</td>
+                                   <td> {monthErrorCount}</td>
+                                </tr>
+                            </tbody>
+
+                          </Table>
            </Panel>
           <Panel header="Unknown Errors">
               <Table striped bordered hover>
