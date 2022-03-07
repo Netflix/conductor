@@ -184,7 +184,6 @@ router.post('/cancel/:workflowId', async (req, res, next) => {
   }
 });
 
-//fe handler
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
     const token = getToken(req);
