@@ -184,6 +184,7 @@ router.post('/cancel/:workflowId', async (req, res, next) => {
   }
 });
 
+//fe handler
 router.post('/restart/:workflowId', async (req, res, next) => {
   try {
     const token = getToken(req);
@@ -192,6 +193,19 @@ router.post('/restart/:workflowId', async (req, res, next) => {
 
     const result = await http.post(baseURL2 + req.params.workflowId + '/restart', null, token);
     res.status(200).send({result: req.params.workflowId});
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/clone/:workflowId', async (req, res, next) => {
+  try {
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
+    const result = await http.post(baseURL2 + req.params.workflowId + '/clone', null, token);
+    res.status(200).send({result: result.workflowId});
   } catch (err) {
     next(err);
   }

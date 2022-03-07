@@ -9,6 +9,7 @@ const initialState = {
   cancelling: false,
   restarting: false,
   retrying: false,
+  cloning: false,
   terminated: {},
   data: [],
   hash: ''
@@ -90,6 +91,12 @@ export default function workflows(state = initialState, action) {
         fetching: true,
         restarting: true
       };
+    case 'REQUESTED_CLONE_WORKFLOW':
+      return {
+        ...state,
+        fetching: true,
+        restarting: true
+      };
     case 'REQUESTED_RETRY_WORKFLOW':
       return {
         ...state,
@@ -116,6 +123,15 @@ export default function workflows(state = initialState, action) {
         ...state,
         error: false,
         data:[],
+        fetching: false,
+        restarting: false,
+        refetch: true
+      };
+     case 'RECEIVED_CLONE_WORKFLOW':
+      return {
+        ...state,
+        error: false,
+        cloneWorkflowId: action.data.result,
         fetching: false,
         restarting: false,
         refetch: true
