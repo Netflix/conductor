@@ -2,18 +2,22 @@ name: Publish OSS Builds to S3
 on:
   workflow_dispatch:
     inputs:
+      ref:
+        description: 'Tag or branch to checkout'
+        required: true
       version:
         description: 'Version to publish'
-        required: false
+        required: true
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    name: Gradle Build and Publish
+    name: Publish OSS Builds to S3
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: ${{ github.event.inputs.ref }}
       - name: Set up Zulu JDK 11
         uses: actions/setup-java@v2
         with:
@@ -28,12 +32,10 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Set CONDUCTOR_VERSION
-        run: export CONDUCTOR_VERSION = ${{ github.event.inputs.version }}
       - name: Publish snapshot build
         run:  |
-          ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}'
-          echo "\nCONDUCTOR_VERSION env var is '$CONDUCTOR_VERSION'\n"
+          export CONDUCTOR_VERSION='${{ github.event.inputs.version }}'
+          ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print "version:", $2}'
           ./gradlew publish -x test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

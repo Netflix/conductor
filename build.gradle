@@ -58,9 +58,10 @@ allprojects {
     targetCompatibility = JavaVersion.VERSION_11
 
     group = 'com.netflix.conductor'
-    if (System.getenv('CONDUCTOR_VERSION')) {
-        version = System.getenv('CONDUCTOR_VERSION')
-        println "Inferred version from env variable 'CONDUCTOR_VERSION': $version"
+    def conductorVersion = System.getenv('CONDUCTOR_VERSION')
+    if (conductorVersion) {
+        println "Inferred version from env variable 'CONDUCTOR_VERSION': $conductorVersion"
+        version =  conductorVersion
     }
 
     configurations.all {
