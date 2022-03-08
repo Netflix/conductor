@@ -22,7 +22,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Publish snapshot build
-        run: ./gradlew publish -x test
+        run:  |
+          CONDUCTOR_VERSION=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
+          echo "::set-output name=CONDUCTOR_VERSION::$CONDUCTOR_VERSION"
+          ./gradlew publish -x test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
