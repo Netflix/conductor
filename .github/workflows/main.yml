@@ -1,0 +1,39 @@
+name: Publish to S3
+on:
+  release:
+    types:
+      - released
+      - prereleased
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Gradle Build and Publish
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Zulu JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Publish candidate
+        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc.')
+        run: ./gradlew -x test publish
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v') && (!contains(github.ref, '-rc.'))
+        run: ./gradlew -x test publish
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
