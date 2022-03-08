@@ -21,58 +21,56 @@ package com.netflix.conductor.common.run;
 
 public class WorkflowError {
 
-	private Integer id;
+    private Integer id;
 
-	private String lookup;
+    private String lookup;
 
-	private Boolean isRequiredInReporting;
+    private Boolean isRequiredInReporting;
 
-	private String totalCount;
-
-
-	public WorkflowError() {
-
-	}
+    private String totalCount;
 
 
-	public Integer getId() {
-		return id;
-	}
+    public WorkflowError() {
+
+    }
 
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+    public Integer getId() {
+        return id;
+    }
 
 
-	public String getLookup() {
-		return lookup;
-	}
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
 
-	public void setLookup(String lookup) {
-		this.lookup = lookup;
-	}
-
-	public String getTotalCount() {
-		return totalCount;
-	}
+    public String getLookup() {
+        return lookup;
+    }
 
 
-	public void setTotalCount(String totalCount) {
-		this.totalCount = totalCount;
-	}
+    public void setLookup(String lookup) {
+        this.lookup = lookup;
+    }
+
+    public String getTotalCount() {
+        return totalCount;
+    }
 
 
-	public Boolean getIsRequiredInReporting() {
-		return isRequiredInReporting;
-	}
-
-	public void setIsRequiredInReporting(Boolean isRequiredInReporting) {
-		this.isRequiredInReporting = isRequiredInReporting;
-	}
+    public void setTotalCount(String totalCount) {
+        this.totalCount = totalCount;
+    }
 
 
+    public Boolean getIsRequiredInReporting() {
+        return isRequiredInReporting;
+    }
+
+    public void setIsRequiredInReporting(Boolean isRequiredInReporting) {
+        this.isRequiredInReporting = isRequiredInReporting;
+    }
 
 
 }

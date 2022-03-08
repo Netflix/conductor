@@ -381,6 +381,65 @@ router.post('/errorRegistrySearch/:searchString', async (req, res, next) => {
   }
 });
 
+router.post('/errorRegistrySearchDay/:searchString', async (req, res, next) => {
+  try {
+    var from = moment().startOf('day').valueOf();
+    var end = moment().endOf('day').valueOf();
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+         const inputData={
+          startTime :  from,
+          endTime : end
+         };
+         const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+         res.status(200).send({result});
+
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/errorRegistrySearchWeek/:searchString', async (req, res, next) => {
+  try {
+    var from = moment().startOf('week').valueOf();
+    var end = moment().endOf('week').valueOf();
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+         const inputData={
+          startTime :  from,
+          endTime : end
+         };
+         const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+         res.status(200).send({result});
+
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/errorRegistrySearchMonth/:searchString', async (req, res, next) => {
+  try {
+     var from = moment().startOf('month').valueOf();
+     var end = moment().endOf('month').valueOf();
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
+         const inputData={
+          startTime :  from,
+          endTime : end
+         };
+         const result = await http.post(baseURL2 + 'errorRegistrySearch', inputData, token);
+          res.status(200).send({result});
+
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) => {
   try {
     let from = null;

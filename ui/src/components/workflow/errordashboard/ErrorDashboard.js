@@ -5,7 +5,7 @@ import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton,
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
 import Typeahead from 'react-bootstrap-typeahead';
 import { connect } from 'react-redux';
-import { getErrorData } from '../../../actions/WorkflowActions';
+import { getErrorData,getErrorCountDay, getErrorCountWeek, getErrorDataMonth } from '../../../actions/WorkflowActions';
 
 const ErrorDashboard = React.createClass({
 
@@ -13,7 +13,10 @@ const ErrorDashboard = React.createClass({
     return {
       name: '',
       version: '',
-      errorData: []
+      errorData: [],
+      errorDataDay: [],
+      errorDataWeek: [],
+      errorDataMonth: []
     }
   },
 
@@ -23,11 +26,18 @@ const ErrorDashboard = React.createClass({
            frmDate :this.state.frmDate,
            toDate: this.state.toDate
           };
+
         this.props.dispatch(getErrorData(inputData));
+        this.props.dispatch(getErrorCountDay(inputData));
+        this.props.dispatch(getErrorCountWeek(inputData));
+        this.props.dispatch(getErrorDataMonth(inputData));
   },
 
   componentWillReceiveProps(nextProps){
     this.state.errorData = nextProps.errorData;
+    this.state.errorDataDay = nextProps.errorDataDay;
+    this.state.errorDataWeek = nextProps.errorDataWeek;
+    this.state.errorDataMonth = nextProps.errorDataMonth;
   },
 
   searchChange(e){
@@ -69,10 +79,39 @@ const ErrorDashboard = React.createClass({
       },
   render() {
     var errorData = this.state.errorData;
+    var errorDataDay = this.state.errorDataDay;
+    var errorDataWeek = this.state.errorDataWeek;
+    var errorDataMonth = this.state.errorDataMonth;
+
+    var dayErrorCount = 0 ;
+    var weekErrorCount = 0 ;
+    var monthErrorCount = 0 ;
+     if (errorDataDay !== undefined && errorDataDay.result !== undefined ) {
+      errorDataDay.result.forEach(function (d) {
+         if(d.isRequiredInReporting == true || (d.isRequiredInReporting == false && d.id === 0)){
+         dayErrorCount=dayErrorCount+parseInt(d.totalCount);
+         }
+        });
+      }
+      if (errorDataWeek !== undefined && errorDataWeek.result !== undefined ) {
+            errorDataWeek.result.forEach(function (d) {
+               if(d.isRequiredInReporting == true  || (d.isRequiredInReporting == false && d.id === 0)){
+               weekErrorCount=weekErrorCount+parseInt(d.totalCount);
+               }
+              });
+      }
+      if (errorDataMonth !== undefined && errorDataMonth.result !== undefined ) {
+                  errorDataMonth.result.forEach(function (d) {
+                     if(d.isRequiredInReporting == true  || (d.isRequiredInReporting == false && d.id === 0)){
+                     monthErrorCount=monthErrorCount+parseInt(d.totalCount);
+                 }
+           });
+       }
     var knownErrors = [];
     var unknownErrors = [];
       if (errorData !== undefined && errorData.result !== undefined ) {
           errorData.result.forEach(function (d) {
+
            if(d.id === 0)
            {
             unknownErrors.push({
@@ -136,6 +175,26 @@ const ErrorDashboard = React.createClass({
                       </Row>
                    </Grid>
          </Panel>
+           <Panel header="Total Error Counts">
+            <Table striped bordered hover>
+                             <thead>
+                                 <tr>
+                                 <th>Today</th>
+                                 <th>This Week</th>
+                                 <th>This Month</th>
+                                 </tr>
+                               </thead>
+
+                            <tbody>
+                                <tr>
+                                   <td>{dayErrorCount}</td>
+                                   <td> {weekErrorCount}</td>
+                                   <td> {monthErrorCount}</td>
+                                </tr>
+                            </tbody>
+
+                          </Table>
+           </Panel>
           <Panel header="Unknown Errors">
               <Table striped bordered hover>
                   <thead>

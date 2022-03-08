@@ -382,6 +382,78 @@ export function getErrorData(inputData) {
   }
 }
 
+export function getErrorCountDay(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERROR_DAY_DATA'
+    });
+    const token = authHelper.getLocalAuthToken();
+    if(inputData.searchString=="")
+    {
+    inputData.searchString=undefined;
+    }
+    return http.post('/api/wfe/errorRegistrySearchDay/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERROR_DAY_DATA',
+        errorDataDay: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function getErrorCountWeek(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERROR_WEEK_DATA'
+    });
+    const token = authHelper.getLocalAuthToken();
+    if(inputData.searchString=="")
+    {
+    inputData.searchString=undefined;
+    }
+    return http.post('/api/wfe/errorRegistrySearchWeek/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERROR_WEEK_DATA',
+        errorDataWeek: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
+export function getErrorDataMonth(inputData) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_ERROR_DATA_MONTH'
+    });
+    const token = authHelper.getLocalAuthToken();
+    if(inputData.searchString=="")
+    {
+    inputData.searchString=undefined;
+    }
+    return http.post('/api/wfe/errorRegistrySearchMonth/'+inputData.searchString+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&range=' + inputData.range, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_ERROR_DATA_MONTH',
+        errorDataMonth: data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
 export function getErrorDataList(inputData) {
   return function (dispatch) {
     dispatch({
