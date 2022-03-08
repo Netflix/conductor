@@ -25,6 +25,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Running the script to update tags
         run: |
+          git remote add upstream git@github.com:Netflix/conductor.git
           git fetch upstream
           git rebase upstream/main
           git push
