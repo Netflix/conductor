@@ -116,7 +116,10 @@ public class WorkflowModel {
     }
 
     public void setStatus(Status status) {
-        setPreviousStatus(this.status);
+        // update previous status if current status changed
+        if (this.status != status) {
+            setPreviousStatus(this.status);
+        }
         this.status = status;
     }
 
