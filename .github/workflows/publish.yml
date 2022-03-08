@@ -21,8 +21,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Publish candidate
-        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-rc.')
+      - name: Publish snapshot build
         run: ./gradlew publish -x test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
