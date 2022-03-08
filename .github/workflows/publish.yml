@@ -1,5 +1,10 @@
 name: Publish OSS Builds to S3
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        required: false
 
 jobs:
   publish:
@@ -23,10 +28,12 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+      - name: Set CONDUCTOR_VERSION
+        run: export CONDUCTOR_VERSION = ${{ github.event.inputs.version }}
       - name: Publish snapshot build
         run:  |
           ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}'
-          echo "conductor version is $CONDUCTOR_VERSION"
+          echo "\nCONDUCTOR_VERSION env var is '$CONDUCTOR_VERSION'\n"
           ./gradlew publish -x test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
