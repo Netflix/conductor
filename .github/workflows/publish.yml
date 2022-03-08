@@ -1,4 +1,4 @@
-name: Publish to NetflixOSS and Maven Central
+name: Publish OSS Builds to S3
 on: [workflow_dispatch]
 
 jobs:
