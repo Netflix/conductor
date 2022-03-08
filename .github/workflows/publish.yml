@@ -1,9 +1,5 @@
 name: Publish to NetflixOSS and Maven Central
-on:
-  release:
-    types:
-      - released
-      - prereleased
+on: [workflow_dispatch]
 
 jobs:
   publish:
