@@ -23,7 +23,7 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Publish snapshot build
         run:  |
-          CONDUCTOR_VERSION=$(./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}')
+          ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{printf $2}'
           echo "conductor version is $CONDUCTOR_VERSION"
           ./gradlew publish -x test
         env:
