@@ -41,9 +41,9 @@ public class LocalOnlyLock implements Lock {
                     return new Semaphore(1, true);
                 }
             };
-    private static final ConcurrentHashMap<String, ScheduledFuture<?>> scheduledFutures =
+    private static final ConcurrentHashMap<String, ScheduledFuture<?>> SCHEDULEDFUTURES =
             new ConcurrentHashMap<>();
-    private static final LoadingCache<String, Semaphore> lockIdtoSemaphoreMap =
+    private static final LoadingCache<String, Semaphore> LOCKIDTOSEMAPHOREMAP =
             CacheBuilder.newBuilder().build(LOADER);
     private static final ThreadGroup THREAD_GROUP = new ThreadGroup("LocalOnlyLock-scheduler");
     private static final ThreadFactory THREAD_FACTORY =
@@ -54,14 +54,14 @@ public class LocalOnlyLock implements Lock {
     @Override
     public void acquireLock(String lockId) {
         LOGGER.trace("Locking {}", lockId);
-        lockIdtoSemaphoreMap.getUnchecked(lockId).acquireUninterruptibly();
+        LOCKIDTOSEMAPHOREMAP.getUnchecked(lockId).acquireUninterruptibly();
     }
 
     @Override
     public boolean acquireLock(String lockId, long timeToTry, TimeUnit unit) {
         try {
             LOGGER.trace("Locking {} with timeout {} {}", lockId, timeToTry, unit);
-            return lockIdtoSemaphoreMap.getUnchecked(lockId).tryAcquire(timeToTry, unit);
+            return LOCKIDTOSEMAPHOREMAP.getUnchecked(lockId).tryAcquire(timeToTry, unit);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
@@ -79,7 +79,7 @@ public class LocalOnlyLock implements Lock {
                 unit);
         if (acquireLock(lockId, timeToTry, unit)) {
             LOGGER.trace("Releasing {} automatically after {} {}", lockId, leaseTime, unit);
-            scheduledFutures.put(
+            SCHEDULEDFUTURES.put(
                     lockId, SCHEDULER.schedule(() -> releaseLock(lockId), leaseTime, unit));
             return true;
         }
@@ -87,9 +87,9 @@ public class LocalOnlyLock implements Lock {
     }
 
     private void removeLeaseExpirationJob(String lockId) {
-        ScheduledFuture<?> schedFuture = scheduledFutures.get(lockId);
+        ScheduledFuture<?> schedFuture = SCHEDULEDFUTURES.get(lockId);
         if (schedFuture != null && schedFuture.cancel(false)) {
-            scheduledFutures.remove(lockId);
+            SCHEDULEDFUTURES.remove(lockId);
             LOGGER.trace("lockId {} removed from lease expiration job", lockId);
         }
     }
@@ -99,10 +99,10 @@ public class LocalOnlyLock implements Lock {
         // Synchronized to prevent race condition between semaphore check and actual release
         // The check is here to prevent semaphore getting above 1
         // e.g. in case when lease runs out but release is also called
-        synchronized (lockIdtoSemaphoreMap) {
-            if (lockIdtoSemaphoreMap.getUnchecked(lockId).availablePermits() == 0) {
+        synchronized (LOCKIDTOSEMAPHOREMAP) {
+            if (LOCKIDTOSEMAPHOREMAP.getUnchecked(lockId).availablePermits() == 0) {
                 LOGGER.trace("Releasing {}", lockId);
-                lockIdtoSemaphoreMap.getUnchecked(lockId).release();
+                LOCKIDTOSEMAPHOREMAP.getUnchecked(lockId).release();
                 removeLeaseExpirationJob(lockId);
             }
         }
@@ -111,15 +111,16 @@ public class LocalOnlyLock implements Lock {
     @Override
     public void deleteLock(String lockId) {
         LOGGER.trace("Deleting {}", lockId);
-        lockIdtoSemaphoreMap.invalidate(lockId);
+        LOCKIDTOSEMAPHOREMAP.invalidate(lockId);
     }
 
     @VisibleForTesting
     LoadingCache<String, Semaphore> cache() {
-        return lockIdtoSemaphoreMap;
+        return LOCKIDTOSEMAPHOREMAP;
     }
 
+    @VisibleForTesting
     ConcurrentHashMap<String, ScheduledFuture<?>> scheduledFutures() {
-        return scheduledFutures;
+        return SCHEDULEDFUTURES;
     }
 }
