@@ -17,6 +17,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +35,8 @@ import redis.clients.jedis.commands.JedisCommands;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "conductor.db.type", havingValue = "redis_cluster")
 public class RedisClusterConfiguration extends JedisCommandsConfigurer {
+
+    private static final Logger log = LoggerFactory.getLogger(JedisCommandsConfigurer.class);
 
     // Same as redis.clients.jedis.BinaryJedisCluster
     protected static final int DEFAULT_MAX_ATTEMPTS = 5;
@@ -51,17 +55,19 @@ public class RedisClusterConfiguration extends JedisCommandsConfigurer {
                         .collect(Collectors.toSet());
         String password = getPassword(hostSupplier.getHosts());
 
-        if (password == null) {
-            return new JedisCluster(
-                    new redis.clients.jedis.JedisCluster(hosts, genericObjectPoolConfig));
-        } else {
+        if (password != null) {
+            log.info("Connecting to Redis Cluster with AUTH");
             return new JedisCluster(
                     new redis.clients.jedis.JedisCluster(
                             hosts,
                             Protocol.DEFAULT_TIMEOUT,
                             Protocol.DEFAULT_TIMEOUT,
                             DEFAULT_MAX_ATTEMPTS,
+                            password,
                             genericObjectPoolConfig));
+        } else {
+            return new JedisCluster(
+                    new redis.clients.jedis.JedisCluster(hosts, genericObjectPoolConfig));
         }
     }
 

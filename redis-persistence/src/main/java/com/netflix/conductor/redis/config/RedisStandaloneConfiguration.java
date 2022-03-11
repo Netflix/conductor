@@ -50,6 +50,7 @@ public class RedisStandaloneConfiguration extends JedisCommandsConfigurer {
 
     private JedisPool getJedisPool(JedisPoolConfig config, Host host) {
         if (host.getPassword() != null) {
+            log.info("Connecting to Redis Standalone with AUTH");
             return new JedisPool(
                     config,
                     host.getHostName(),
