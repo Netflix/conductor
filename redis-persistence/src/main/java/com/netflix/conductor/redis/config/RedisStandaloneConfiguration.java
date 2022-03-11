@@ -50,7 +50,12 @@ public class RedisStandaloneConfiguration extends JedisCommandsConfigurer {
 
     private JedisPool getJedisPool(JedisPoolConfig config, Host host) {
         if (host.getPassword() != null) {
-            return new JedisPool(config, host.getHostName(), host.getPort(), Protocol.DEFAULT_TIMEOUT, host.getPassword());
+            return new JedisPool(
+                    config,
+                    host.getHostName(),
+                    host.getPort(),
+                    Protocol.DEFAULT_TIMEOUT,
+                    host.getPassword());
         } else {
             return new JedisPool(config, host.getHostName(), host.getPort());
         }
