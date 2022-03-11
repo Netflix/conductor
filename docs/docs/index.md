@@ -2,6 +2,9 @@
 <center><img src ="img/corner-logo-oss.png" alt = "Logo"></center>
 
 
+<center><a href="https://github.com/netflix/conductor"><img src="https://img.shields.io/github/stars/netflix/conductor?style=social"  width="200" /></a></center>
+
+
 <center><h1>Conductor is a _Workflow Orchestration engine_ that runs in the cloud. </h1></center>
 
 ## Motivation
