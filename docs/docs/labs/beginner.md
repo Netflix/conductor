@@ -3,7 +3,7 @@ Please feel free to follow along using any of these resources:
 
 - Using cURL
 - Postman or similar REST client
-- [Conductor Playground](https://play.orkes.io) hosted by Orkes.
+- [Conductor Playground](https://play.orkes.io) hosted by Orkes. [Working Example](https://play.orkes.io/workflowDef/add_netflix_identation)
 
 ## Creating a Workflow
 
