@@ -135,8 +135,7 @@ public class ParametersUtils {
                         });
 
         // In case of DO_WHILE task when the first iteration is being scheduled and any of loopover
-        // task wants to use
-        // DO_WHILE task iteration in the input.
+        // task wants to use DO_WHILE task iteration in the input.
         workflow.getWorkflowDefinition().getTasks().stream()
                 .filter(
                         t ->
