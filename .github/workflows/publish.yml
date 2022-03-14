@@ -32,17 +32,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Publish snapshot build
+      - name: Publish artifacts
         run:  |
           export CONDUCTOR_VERSION='${{ github.event.inputs.version }}'
           ./gradlew properties --no-daemon --console=plain -q | grep "^version:" | awk '{print "version:", $2}'
           ./gradlew publish -x test
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v') && (!contains(github.ref, '-rc.'))
-        run: ./gradlew publish -x test
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
