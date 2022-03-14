@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.utils.EnvUtils;
 import com.netflix.conductor.common.utils.TaskUtils;
@@ -131,6 +132,26 @@ public class ParametersUtils {
                                                     task.getReferenceTaskName())
                                             : task.getReferenceTaskName(),
                                     taskParams);
+                        });
+
+        // In case of DO_WHILE task when the first iteration is being scheduled and any of loopover
+        // task wants to use DO_WHILE task iteration in the input.
+        workflow.getWorkflowDefinition().getTasks().stream()
+                .filter(
+                        t ->
+                                TaskType.DO_WHILE.toString().equals(t.getType())
+                                        && inputMap.get(t.getTaskReferenceName()) == null)
+                .forEach(
+                        looptask -> {
+                            Map<String, Object> taskParams = new HashMap<>();
+                            taskParams.put(
+                                    "output",
+                                    new HashMap<String, Object>() {
+                                        {
+                                            put("iteration", 1);
+                                        }
+                                    });
+                            inputMap.put(looptask.getTaskReferenceName(), taskParams);
                         });
 
         Configuration option =
