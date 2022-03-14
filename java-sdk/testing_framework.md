@@ -1,4 +1,4 @@
-# Unit Testing Framework for workflows
+# Unit Testing framework for workflows
 
 The framework allows you to test the workflow definitions against a specific version of Conductor server.
 
@@ -47,7 +47,7 @@ executor.loadTaskDefs("/tasks.json");
 executor.loadWorkflowDefs("/simple_workflow.json");
 ```
 
-Sample test code that starts a workflow and verifies its execution
+## Sample test code that starts a workflow and verifies its execution
 
 ```java
 GetInsuranceQuote getQuote = new GetInsuranceQuote();
