@@ -106,7 +106,9 @@ public class DoWhile extends WorkflowSystemTask {
             shouldContinue = getEvaluatedCondition(workflow, task, workflowExecutor);
             LOGGER.debug("taskid {} condition evaluated to {}", task.getTaskId(), shouldContinue);
             if (shouldContinue) {
+                //Update the iteration value and put in output in case any of loopover task to consume.
                 task.setIteration(task.getIteration() + 1);
+                task.getOutputData().put("iteration", task.getIteration());
                 return scheduleNextIteration(task, workflow, workflowExecutor);
             } else {
                 LOGGER.debug(

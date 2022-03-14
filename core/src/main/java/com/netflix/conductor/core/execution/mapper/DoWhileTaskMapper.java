@@ -101,6 +101,9 @@ public class DoWhileTaskMapper implements TaskMapper {
         loopTask.setWorkflowTask(taskToSchedule);
         loopTask.setRateLimitPerFrequency(taskDefinition.getRateLimitPerFrequency());
         loopTask.setRateLimitFrequencyInSeconds(taskDefinition.getRateLimitFrequencyInSeconds());
+        // For the scenario where any of the loopover task wants to use iterator of parent do_while task
+        loopTask.getOutputData().put("iteration", 1);
+        workflowInstance.getTasks().add(loopTask);
 
         tasksToBeScheduled.add(loopTask);
         List<WorkflowTask> loopOverTasks = taskToSchedule.getLoopOver();
