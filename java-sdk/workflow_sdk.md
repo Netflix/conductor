@@ -17,6 +17,52 @@ ConductorWorkflow<GetInsuranceQuote> conductorWorkflow = new WorkflowBuilder<Get
     .add(new SimpleTask("send_email", "send_email"))
     .build();
 ```
+#### Working with Simple Worker Tasks
+Use [SimpleTask](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/SimpleTask.java) to add simple task to a workflow.
+
+Example:
+```java
+...
+builder.add(new SimpleTask("send_email", "send_email"))
+...
+```
+#### Wiring inputs the task
+use `input` methods to configure the inputs the task.
+
+See https://netflix.github.io/conductor/how-tos/Tasks/task-inputs/ for details on Task Inputs/Outputs
+
+Example
+```java
+builder.add(
+        new SimpleTask("send_email", "send_email")
+                .input("email", "${workflow.input.email}")
+                .input("subject", "Your insurance quote for the amount ${generate_quote.output.amount}")
+);
+```
+
+#### Working with operators
+Each of the operator - 
+
+[ForkJoin](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/ForkJoin.java), 
+[Wait](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/Wait.java), 
+[Switch](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/Switch.java),
+[DynamicFork](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/DynamicFork.java),
+[DoWhile](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/DoWhile.java),
+[Join](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/Join.java),
+[Dynamic](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/Dynamic.java),
+[Terminate](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/Terminate.java),
+[SubWorkflow](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/SubWorkflow.java),
+[SetVariable](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/SetVariable.java),
+
+have their own class that can be added to the workflow builder.
+
+**Example**
+```java
+
+```
+
+
+
 
 #### Register Workflow with Conductor Server
 ```java
@@ -69,7 +115,7 @@ See [Workflow](../common/src/main/java/com/netflix/conductor/common/run/Workflow
 Dynamic workflows are executed by specifying the workflow definition along with the execution and does not require registering the workflow on the server before executing.
 
 ##### Use cases for dynamic workflows
-1. Each workflow run is unique 
+1. Each workflow run has a unique workflow definition 
 2. Workflows are defined based on the user data and cannnot be modeled ahead of time statically 
 
 ```java

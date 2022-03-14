@@ -35,7 +35,6 @@ public class TestTaskConversions {
     @Test
     public void testSimpleTaskConversion() {
         SimpleTask simpleTask = new SimpleTask("task_name", "task_ref_name");
-        simpleTask.useGlobalTaskDef();
 
         Map<String, Object> map = new HashMap<>();
         map.put("key11", "value11");

@@ -15,45 +15,20 @@ package com.netflix.conductor.sdk.workflow.def.tasks;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.sdk.workflow.utils.ObjectMapperProvider;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /** Workflow task executed by a worker */
 public class SimpleTask extends Task<SimpleTask> {
-
-    private static final int ONE_HOUR = 60 * 60;
-
-    private final ObjectMapper objectMapper = new ObjectMapperProvider().getObjectMapper();
-
-    private boolean useGlobalTaskDef;
 
     private TaskDef taskDef;
 
     public SimpleTask(String taskDefName, String taskReferenceName) {
         super(taskReferenceName, TaskType.SIMPLE);
         super.name(taskDefName);
-        this.useGlobalTaskDef = false;
     }
 
     SimpleTask(WorkflowTask workflowTask) {
         super(workflowTask);
-        if (workflowTask.getTaskDefinition() == null) {
-            this.useGlobalTaskDef = true;
-        } else {
-            this.taskDef = workflowTask.getTaskDefinition();
-        }
-    }
-
-    /**
-     * When set workflow will use the task definition registered in conductor. Workflow registration
-     * will fail if no task definitions are found in conductor server
-     *
-     * @return current instance
-     */
-    public SimpleTask useGlobalTaskDef() {
-        this.useGlobalTaskDef = true;
-        return this;
+        this.taskDef = workflowTask.getTaskDefinition();
     }
 
     public TaskDef getTaskDef() {
@@ -61,18 +36,12 @@ public class SimpleTask extends Task<SimpleTask> {
     }
 
     public SimpleTask setTaskDef(TaskDef taskDef) {
-        this.useGlobalTaskDef = false;
         this.taskDef = taskDef;
         return this;
     }
 
     @Override
     protected void updateWorkflowTask(WorkflowTask workflowTask) {
-        if (this.taskDef != null) {
-            workflowTask.setTaskDefinition(taskDef);
-        }
-        if (useGlobalTaskDef) {
-            workflowTask.setTaskDefinition(null);
-        }
+        workflowTask.setTaskDefinition(taskDef);
     }
 }
