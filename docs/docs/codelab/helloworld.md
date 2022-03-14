@@ -149,7 +149,9 @@ The Orkes Playground is a secure workspace, so we will need to create applicatio
 
 > Note: if you already have created an application and JWT for the OrkesWorkers github repository, you can reuse that application and JWT to add the new workflow and task.
 
-Create a new application. In the 2nd table, click the ```+``` icon.
+Create a new application by pressing the ```create application``` button and naming your application. 
+
+There are two sections on the Application management page "Access Keys" and "Workflow and Tasks Permissions."  We'll go a bit out of order here, and start with "Workflow and Tasks Permissions." Click the ```+``` icon.
 
 Add your Workflow:
 1. Target Type: ```Workflow```
@@ -163,19 +165,8 @@ And repeat the process to add the task
 
 **In general, all tasks (and workflows) must be added to an application in the Playground for the application to run.**
 
-Now, create an Access Key by pressing the ```+``` button in the top table. This will generate a Key and Secret Id for the application.  Record these in a safe place. We use these values to generate a JWT Authorization token:
+Now, create an Access Key by pressing the ```+``` button in the top table. This will generate a Key and Secret Id for the application.  Record these in a safe place. 
 
-```bash
-curl -s -X "POST" "https://play.orkes.io/api/token"    -H 'Content-Type: application/json; charset=utf-8'    -d '{
- "keyId": "<key>",
- "keySecret": "<secret>"
-}'
-{"token":"<JWT Token>"}
-```
-
-Keep this token handy for the next step.
-
-> Note: Currently, playground JWT tokens do not expire.
 
 ### The Java app
 
@@ -183,9 +174,15 @@ The Java app can be found in the [orkesworkers](https://github.com/orkes-io/orke
 
 There are 2 small changes to be made to the [application.properties](https://github.com/orkes-io/orkesworkers/blob/main/src/main/resources/application.properties) file:
 
-1. Choose ```conductor.server.url=https://play.orkes.io/api/``` so that the app polls the correct Conductor server.
-2. Set ```conductor.server.auth.token=<tokenId>``` using the tokenId generated in the last section.
+```java
+conductor.server.url=https://play.orkes.io/api/
 
+conductor.security.client.key-id=
+conductor.security.client.secret=
+
+```
+
+Add in your key and secret you just generated.
 
 The worker is called ```helloworld.java```, and looks as follows:
 
