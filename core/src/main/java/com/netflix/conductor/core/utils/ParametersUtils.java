@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.netflix.conductor.common.metadata.tasks.TaskType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,6 +133,17 @@ public class ParametersUtils {
                                             : task.getReferenceTaskName(),
                                     taskParams);
                         });
+
+        // In case od DO_WHILE task when the first iteration is being scheduled and any of loopover task wants to use
+        // DO_WHILE task iteration in the input.
+        workflow.getWorkflowDefinition().getTasks().stream().
+                filter(t -> TaskType.DO_WHILE.toString().equals(t.getType())
+                        && inputMap.get(t.getTaskReferenceName()) == null).forEach( looptask -> {
+                        Map<String, Object> taskParams = new HashMap<>();
+                        taskParams.put("output", new HashMap<String, Object>(){{
+                            put("iteration",1);}});
+                        inputMap.put(looptask.getTaskReferenceName(), taskParams);
+                });
 
         Configuration option =
                 Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS);
