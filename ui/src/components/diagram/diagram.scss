@@ -97,12 +97,14 @@ $node-text-size: 12px;
     @include nodeColor(#8b5b02, #feeac5);
   }
   &.status_IN_PROGRESS {
-    @include nodeColor(#c2920d, #fff5da );
+    @include nodeColor(#c2920d, #fff5da);
   }
   &.status_SCHEDULED {
     @include nodeColor(#11497a, #cbe2f7);
-  };
-  &.status_CANCELED { @include nodeColor(#26194b, #ded5f8); }
+  }
+  &.status_CANCELED {
+    @include nodeColor(#26194b, #ded5f8);
+  }
   &.status_FAILED,
   &.status_FAILED_WITH_TERMINAL_ERROR,
   &.status_TIMED_OUT,
