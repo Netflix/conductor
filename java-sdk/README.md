@@ -1,38 +1,96 @@
 # SDK for Conductor
-Java SDK provides the ability to unit test the workflows.
+This SDK provides two main features:
+1. Ability to create and run workflows using code
+2. Ability to unit test workflows
 
-### Why unit test workflows
-Workflow definition can be quite complex with parallel flows, decisions and complex wiring of tasks.
+## Workflow SDK
+The SDK for creating and running workflows and task workers makes it easier to define your workflows using code.
+
+### Creating Task Workers
+SDK provides `@WorkflowTask` annotation that can be used with any method to convert method in to a task worker.
+
+**Examples**
+
+Create a worker named `task1` that gets Task as input and produces TaskResult as output.
+```java
+@WorkflowTask("task1")
+    public TaskResult task1(Task task) {
+        task.setStatus(Task.Status.COMPLETED);
+        return new TaskResult(task);
+    }
+```
+
+Create a worker named `task2` that takes `name` as a String input and produces a
+```java
+@WorkflowTask("task2")
+public @OutputParam("greetings") String task2(@InputParam("name") String name) {
+    return "Hello, " + name;
+}
+```
+Example Task Input/Output
+
+Input:
+```json
+{
+   "name": "conductor",
+   ...
+}
+```
+
+Output:
+```json
+{
+   "greetings": "Hello, conductor"
+}
+```
+A worker that takes complex java type as input and produces complex output:
+```java
+@WorkflowTask("get_insurance_quote")
+ public InsuranceQuote getInsuranceQuote(GetInsuranceQuote quoteInput) {
+     InsuranceQuote quote = new InsuranceQuote();
+     //Implementation
+     return quote;
+ }
+```
+
+Example Task Input/Output
+
+Input:
+```json
+{
+   "name": "personA",
+   "zipCode": "10121",
+   "amount": 1000000
+}
+```
+
+Output:
+```json
+{
+   "name": "personA",
+   "quotedPremium": 123.50,
+   "quotedAmount": 1000000
+}
+```
+
+#### Task Worker
+
+
+## Unit testing framework
+The framework allows you to test the workflow definitions against a specific version of Conductor server.
+
 The unit tests allows the following:
 1. **Input/Output Wiring**: Ensure the tasks are wired up correctly
 2. **Parameter check**: Workflow behavior with missing mandatory parameters is expected (fail if required)
 3. **Task Failure behavior**: Ensure the task definitions have right no. of retries etc.  
-e.g. If the task is not idempotent, it does not get retried. 
-4. **Branch Testing**: Given a specific input, ensure the workflow executes specific branch of the forrk/decision.
+   e.g. If the task is not idempotent, it does not get retried.
+4. **Branch Testing**: Given a specific input, ensure the workflow executes specific branch of the fork/decision.
 
-### Unit Testing framework
-The SDK provides a framework for running workflow definitions against the actual Conductor server.
-When the tests are initialized a version of Conductor server is downloaded and started on port `8080` on your local machine.
-The server is self-contained with no additional dependencies required and stores all the data 
-in memory.  Once the tests complete, the server is terminated.
+The local test server is self-contained with no additional dependencies required and stores all the data
+in memory.  Once the tests complete, the server is terminated and all the data is wiped out.
 
-The location of the binary and version is controlled via following system properties - and defaults to maven repository using the latest conductor release.
-* `conductorServerURL`: Full URL pointing to the server boot jar file. e.g. https://repo1.maven.org/maven2/com/netflix/conductor/conductor-server/3.3.4/conductor-server-3.3.4-boot.jar
-* `conductorVersion`: If using the default maven repo, use this to override the version of Conductor you want to test against.
-* `conductorServerPort`: Port on which to listen.  Defaults to 8080 if not specified.
+See [Testing Framework](testing_framework.md) for details on how to do unit testing with examples.
 
-[WorkflowExecutor](src/main/java/com/netflix/conductor/sdk/executor/WorkflowExecutor.java)  provides all the necessary APIs to load the metadata and run the tests.
-#### Unit Testing APIs
-##### startServerAndPolling(String basePackages)
-Downloads the conductor server in a temporary directory and starts the local server.
 
-#### loadTaskDefs(String resourcePath)
-Loads all the task definitions from the given resource path.
 
-#### loadWorkflowDefs(String resourcePath)
-Loads all the workflow definitions from the given resource path.
 
-#### executeWorkflow(String name, int version, Map<String, Object> input)
-Executes the workflow and waits for it to complete.  Returns the completed execution which can be validated.
-
-See [Test](src/test/java/com/netflix/conductor/testing/workflows/KitchenSinkTest.java) for an example.

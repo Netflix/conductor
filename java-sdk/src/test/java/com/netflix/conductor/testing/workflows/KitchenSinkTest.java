@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.netflix.conductor.tests.GetInsuranceQuote;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -63,6 +64,11 @@ public class KitchenSinkTest {
         input.put("mod", "1");
         input.put("oddEven", "12");
         input.put("number", 0);
+
+        GetInsuranceQuote getQuote = new GetInsuranceQuote();
+        getQuote.setName("personA");
+        getQuote.setAmount(1000000.0);
+        getQuote.setZipCode("10121");
 
         // Start the workflow and wait for it to complete
         Workflow workflow = executor.executeWorkflow("Decision_TaskExample", 1, input).get();

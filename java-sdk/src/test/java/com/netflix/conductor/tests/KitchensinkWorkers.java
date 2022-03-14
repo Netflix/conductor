@@ -19,6 +19,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.sdk.task.InputParam;
 import com.netflix.conductor.sdk.task.OutputParam;
 import com.netflix.conductor.sdk.task.WorkflowTask;
+import com.netflix.conductor.testing.workflows.Task1Input;
 
 public class KitchensinkWorkers {
 
@@ -36,5 +37,13 @@ public class KitchensinkWorkers {
     @WorkflowTask("task3")
     public @OutputParam("luckyNumber") int task3() {
         return new Random().nextInt(43);
+    }
+
+
+    @WorkflowTask("get_insurance_quote")
+    public InsuranceQuote getInsuranceQuote(GetInsuranceQuote quoteInput) {
+        InsuranceQuote quote = new InsuranceQuote();
+
+        return quote;
     }
 }
