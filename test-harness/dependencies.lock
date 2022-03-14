@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "compileClasspath": {
@@ -40,10 +40,10 @@
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -97,7 +97,7 @@
             "locked": "5.14.0"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -130,13 +130,13 @@
             "locked": "1.3-groovy-2.5"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework:spring-web": {
-            "locked": "5.2.15.RELEASE"
+            "locked": "5.3.16"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"
@@ -180,7 +180,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
@@ -189,7 +189,7 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
@@ -198,19 +198,19 @@
                 "com.netflix.conductor:conductor-mysql-persistence",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.github.rholder:guava-retrying": {
             "firstLevelTransitive": [
@@ -243,7 +243,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.4.0"
+            "locked": "2.6.0"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -443,39 +443,39 @@
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.44.1"
+            "locked": "1.45.0"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client"
             ],
-            "locked": "1.44.1"
+            "locked": "1.45.0"
         },
         "io.grpc:grpc-services": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.44.1"
+            "locked": "1.45.0"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client"
             ],
-            "locked": "1.44.1"
+            "locked": "1.45.0"
         },
         "io.micrometer:micrometer-registry-datadog": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "1.5.14"
+            "locked": "1.8.3"
         },
         "io.micrometer:micrometer-registry-prometheus": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.5.14"
+            "locked": "1.8.3"
         },
         "io.nats:java-nats-streaming": {
             "firstLevelTransitive": [
@@ -487,7 +487,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "0.9.0"
+            "locked": "0.12.0"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -524,7 +524,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-mysql-persistence"
             ],
-            "locked": "8.0.25"
+            "locked": "8.0.28"
         },
         "net.thisptr:jackson-jq": {
             "firstLevelTransitive": [
@@ -553,13 +553,13 @@
                 "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.conductor:conductor-redis-lock"
             ],
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.kafka:kafka-clients": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "2.5.1"
+            "locked": "3.0.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -698,20 +698,20 @@
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "6.4.4"
+            "locked": "8.0.5"
         },
         "org.glassfish.jaxb:jaxb-runtime": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.4"
+            "locked": "2.3.6"
         },
         "org.postgresql:postgresql": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "42.2.20"
+            "locked": "42.3.3"
         },
         "org.rarefiedredis.redis:redis-java": {
             "firstLevelTransitive": [
@@ -730,7 +730,7 @@
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-grpc-client"
             ],
-            "locked": "1.7.30"
+            "locked": "1.7.36"
         },
         "org.spockframework:spock-core": {
             "locked": "1.3-groovy-2.5"
@@ -751,13 +751,13 @@
                 "com.netflix.conductor:conductor-es7-persistence",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-actuator": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-jdbc": {
             "firstLevelTransitive": [
@@ -765,32 +765,32 @@
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-postgres-persistence"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-web": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework:spring-web": {
-            "locked": "5.2.15.RELEASE"
+            "locked": "5.3.16"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"

@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "compileClasspath": {
@@ -18,7 +18,7 @@
             "locked": "2.7"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -45,7 +45,7 @@
             "locked": "6.8.12"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "runtimeClasspath": {
@@ -53,21 +53,21 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.github.rholder:guava-retrying": {
             "firstLevelTransitive": [
@@ -92,7 +92,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.4.0"
+            "locked": "2.6.0"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -157,7 +157,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -223,7 +223,7 @@
             "locked": "2.7"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -253,10 +253,10 @@
             "locked": "6.8.12"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"
@@ -267,21 +267,21 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.github.rholder:guava-retrying": {
             "firstLevelTransitive": [
@@ -306,7 +306,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.4.0"
+            "locked": "2.6.0"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -371,7 +371,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -426,10 +426,10 @@
             "locked": "6.8.12"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"

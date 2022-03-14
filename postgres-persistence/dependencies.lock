@@ -1,15 +1,15 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "compileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -21,7 +21,7 @@
             "project": true
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -39,16 +39,16 @@
             "locked": "2.17.1"
         },
         "org.flywaydb:flyway-core": {
-            "locked": "6.4.4"
+            "locked": "8.0.5"
         },
         "org.postgresql:postgresql": {
-            "locked": "42.2.20"
+            "locked": "42.3.3"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-jdbc": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "runtimeClasspath": {
@@ -56,21 +56,21 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.github.rholder:guava-retrying": {
             "firstLevelTransitive": [
@@ -95,7 +95,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.4.0"
+            "locked": "2.6.0"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -160,7 +160,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -203,21 +203,21 @@
             "locked": "2.17.1"
         },
         "org.flywaydb:flyway-core": {
-            "locked": "6.4.4"
+            "locked": "8.0.5"
         },
         "org.postgresql:postgresql": {
-            "locked": "42.2.20"
+            "locked": "42.3.3"
         },
         "org.springframework.boot:spring-boot-starter-jdbc": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         }
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -229,7 +229,7 @@
             "project": true
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -247,19 +247,19 @@
             "locked": "2.17.1"
         },
         "org.flywaydb:flyway-core": {
-            "locked": "6.4.4"
+            "locked": "8.0.5"
         },
         "org.postgresql:postgresql": {
-            "locked": "42.2.20"
+            "locked": "42.3.3"
         },
         "org.springframework.boot:spring-boot-starter-jdbc": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.testcontainers:postgresql": {
             "locked": "1.15.3"
@@ -270,21 +270,21 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.11.4"
+            "locked": "2.13.1"
         },
         "com.github.rholder:guava-retrying": {
             "firstLevelTransitive": [
@@ -309,7 +309,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.4.0"
+            "locked": "2.6.0"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -374,7 +374,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -417,19 +417,19 @@
             "locked": "2.17.1"
         },
         "org.flywaydb:flyway-core": {
-            "locked": "6.4.4"
+            "locked": "8.0.5"
         },
         "org.postgresql:postgresql": {
-            "locked": "42.2.20"
+            "locked": "42.3.3"
         },
         "org.springframework.boot:spring-boot-starter-jdbc": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.4"
         },
         "org.testcontainers:postgresql": {
             "locked": "1.15.3"
