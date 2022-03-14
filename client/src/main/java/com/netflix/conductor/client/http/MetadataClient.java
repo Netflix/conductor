@@ -23,6 +23,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.client.ClientHandler;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.ClientFilter;
@@ -113,6 +114,15 @@ public class MetadataClient extends ClientBase {
                 new Object[] {"version", version},
                 WorkflowDef.class,
                 name);
+    }
+
+    public List<WorkflowDef> getWorkflowDefs() {
+        List<WorkflowDef> workflowDefs =
+                getForEntity(
+                        "metadata/workflow",
+                        new Object[0],
+                        new GenericType<List<WorkflowDef>>() {});
+        return workflowDefs;
     }
 
     /**

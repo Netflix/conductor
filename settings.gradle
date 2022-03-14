@@ -38,6 +38,7 @@ include 'core'
 include 'contribs'
 include 'client'
 include 'client-spring'
+include 'java-sdk'
 
 include 'cassandra-persistence'
 include 'redis-persistence'
