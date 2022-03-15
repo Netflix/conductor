@@ -192,6 +192,7 @@ public abstract class Task<T> {
 
     public final List<WorkflowTask> getWorkflowDefTasks() {
         List<WorkflowTask> workflowTasks = new ArrayList<>();
+        workflowTasks.addAll(getParentTasks());
         workflowTasks.add(toWorkflowTask());
         workflowTasks.addAll(getChildrenTasks());
         return workflowTasks;
@@ -226,6 +227,10 @@ public abstract class Task<T> {
      * @return
      */
     protected List<WorkflowTask> getChildrenTasks() {
+        return List.of();
+    }
+
+    protected List<WorkflowTask> getParentTasks() {
         return List.of();
     }
 }

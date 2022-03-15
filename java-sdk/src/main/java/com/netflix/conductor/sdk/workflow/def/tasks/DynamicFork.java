@@ -20,20 +20,54 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 
 public class DynamicFork extends Task<DynamicFork> {
 
+    public static final String FORK_TASK_PARAM = "forkedTasks";
+
+    public static final String FORK_TASK_INPUT_PARAM = "forkedTasksInputs";
+
     private String forkTasksParameter;
 
     private String forkTasksInputsParameter;
 
     private Join join;
 
+    private SimpleTask forkPrepareTask;
+
+    /**
+     * Dynamic fork task that executes a set of tasks in parallel which are determined at run time.
+     * Use cases: Based on the input, you want to fork N number of processes in parallel to be
+     * executed. The number N is not pre-determined at the definition time and so a regular ForkJoin
+     * cannot be used.
+     *
+     * @param taskReferenceName
+     */
     public DynamicFork(
             String taskReferenceName, String forkTasksParameter, String forkTasksInputsParameter) {
         super(taskReferenceName, TaskType.FORK_JOIN_DYNAMIC);
         this.join = new Join(taskReferenceName + "_join");
         this.forkTasksParameter = forkTasksParameter;
         this.forkTasksInputsParameter = forkTasksInputsParameter;
-        super.input("forkedTasks", forkTasksParameter);
-        super.input("forkedTasksInputs", forkTasksInputsParameter);
+        super.input(FORK_TASK_PARAM, forkTasksParameter);
+        super.input(FORK_TASK_INPUT_PARAM, forkTasksInputsParameter);
+    }
+
+    /**
+     * Dynamic fork task that executes a set of tasks in parallel which are determined at run time.
+     * Use cases: Based on the input, you want to fork N number of processes in parallel to be
+     * executed. The number N is not pre-determined at the definition time and so a regular ForkJoin
+     * cannot be used.
+     *
+     * @param taskReferenceName
+     * @param forkPrepareTask A Task that produces the output as {@link DynamicForkInput} to specify
+     *     which tasks to fork.
+     */
+    public DynamicFork(String taskReferenceName, SimpleTask forkPrepareTask) {
+        super(taskReferenceName, TaskType.FORK_JOIN_DYNAMIC);
+        this.forkPrepareTask = forkPrepareTask;
+        this.join = new Join(taskReferenceName + "_join");
+        this.forkTasksParameter = forkPrepareTask.taskOutput.get(FORK_TASK_PARAM);
+        this.forkTasksInputsParameter = forkPrepareTask.taskOutput.get(FORK_TASK_INPUT_PARAM);
+        super.input(FORK_TASK_PARAM, forkTasksParameter);
+        super.input(FORK_TASK_INPUT_PARAM, forkTasksInputsParameter);
     }
 
     DynamicFork(WorkflowTask workflowTask) {
@@ -69,5 +103,13 @@ public class DynamicFork extends Task<DynamicFork> {
         List<WorkflowTask> tasks = new ArrayList<>();
         tasks.addAll(join.getWorkflowDefTasks());
         return tasks;
+    }
+
+    @Override
+    protected List<WorkflowTask> getParentTasks() {
+        if (forkPrepareTask != null) {
+            return List.of(forkPrepareTask.toWorkflowTask());
+        }
+        return List.of();
     }
 }

@@ -23,7 +23,7 @@ public class SubWorkflow extends Task<SubWorkflow> {
 
     private String workflowName;
 
-    private int workflowVersion;
+    private Integer workflowVersion;
 
     /**
      * Start a workflow as a sub-workflow
@@ -32,7 +32,7 @@ public class SubWorkflow extends Task<SubWorkflow> {
      * @param workflowName
      * @param workflowVersion
      */
-    public SubWorkflow(String taskReferenceName, String workflowName, int workflowVersion) {
+    public SubWorkflow(String taskReferenceName, String workflowName, Integer workflowVersion) {
         super(taskReferenceName, TaskType.SUB_WORKFLOW);
         this.workflowName = workflowName;
         this.workflowVersion = workflowVersion;

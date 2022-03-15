@@ -13,15 +13,19 @@
 package com.netflix.conductor.sdk.workflow.executor.task;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.netflix.conductor.client.worker.Worker;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.sdk.task.InputParam;
 import com.netflix.conductor.sdk.task.OutputParam;
+import com.netflix.conductor.sdk.workflow.def.tasks.DynamicFork;
+import com.netflix.conductor.sdk.workflow.def.tasks.DynamicForkInput;
 import com.netflix.conductor.sdk.workflow.utils.ObjectMapperProvider;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -59,16 +63,15 @@ public class AnnotatedWorker implements Worker {
             Object invocationResult = workerMethod.invoke(obj, parameters);
             result = setValue(invocationResult, task);
         } catch (Exception e) {
-            e.printStackTrace();
-            Throwable rootCause = e.getCause();
-            result.setStatus(TaskResult.Status.FAILED);
-            result.setReasonForIncompletion(rootCause.getMessage());
+            throw new RuntimeException(e);
         }
         return result;
     }
 
     private Object[] getInvocationParameters(Task task) {
+
         Class<?>[] parameterTypes = workerMethod.getParameterTypes();
+        Parameter[] parameters = workerMethod.getParameters();
 
         if (parameterTypes.length == 1 && parameterTypes[0].equals(Task.class)) {
             return new Object[] {task};
@@ -86,11 +89,26 @@ public class AnnotatedWorker implements Worker {
                         InputParam ip = (InputParam) ann;
                         String name = ip.value();
                         Object value = task.getInputData().get(name);
-                        values[i] = om.convertValue(value, parameterTypes[0]);
+                        if (List.class.isAssignableFrom(parameterTypes[i])) {
+                            Type type = parameters[i].getParameterizedType();
+                            if (type instanceof ParameterizedType) {
+                                ParameterizedType parameterizedType = (ParameterizedType) type;
+                                Class typeOfParameter =
+                                        (Class) parameterizedType.getActualTypeArguments()[0];
+                                List<?> list = om.convertValue(value, List.class);
+                                List parameterizedList = new ArrayList<>();
+                                for (Object item : list) {
+                                    parameterizedList.add(om.convertValue(item, typeOfParameter));
+                                }
+                                values[i] = parameterizedList;
+                            }
+                        } else {
+                            values[i] = om.convertValue(value, parameterTypes[i]);
+                        }
                     }
                 }
             } else {
-                Object input = om.convertValue(task.getInputData(), parameterTypes[0]);
+                Object input = om.convertValue(task.getInputData(), parameterTypes[i]);
                 values[i] = input;
             }
         }
@@ -132,6 +150,18 @@ public class AnnotatedWorker implements Worker {
 
             List resultAsList = om.convertValue(invocationResult, List.class);
             task.getOutputData().put("result", resultAsList);
+            task.setStatus(Task.Status.COMPLETED);
+            return new TaskResult(task);
+
+        } else if (invocationResult instanceof DynamicForkInput) {
+            DynamicForkInput forkInput = (DynamicForkInput) invocationResult;
+            List<com.netflix.conductor.sdk.workflow.def.tasks.Task<?>> tasks = forkInput.getTasks();
+            List<WorkflowTask> workflowTasks = new ArrayList<>();
+            for (com.netflix.conductor.sdk.workflow.def.tasks.Task<?> sdkTask : tasks) {
+                workflowTasks.addAll(sdkTask.getWorkflowDefTasks());
+            }
+            task.getOutputData().put(DynamicFork.FORK_TASK_PARAM, workflowTasks);
+            task.getOutputData().put(DynamicFork.FORK_TASK_INPUT_PARAM, forkInput.getInputs());
             task.setStatus(Task.Status.COMPLETED);
             return new TaskResult(task);
 

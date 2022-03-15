@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.sdk.workflow.utils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class InputOutputGetter {
 
     public enum Field {
@@ -26,12 +28,51 @@ public class InputOutputGetter {
             this.parent = parent;
         }
 
-        public Map getMap(String key) {
+        public String get(String key) {
+            return parent + "." + key + "}";
+        }
+
+        public Map map(String key) {
             return new Map(parent + "." + key);
         }
 
-        public String get(String key) {
-            return parent + "." + key + "}";
+        public List list(String key) {
+            return new List(parent + "." + key);
+        }
+
+        @Override
+        public String toString() {
+            return parent + "}";
+        }
+    }
+
+    public static final class List {
+
+        private String parent;
+
+        public List(String parent) {
+            this.parent = parent;
+        }
+
+        public List list(String key) {
+            return new List(parent + "." + key);
+        }
+
+        public Map map(String key) {
+            return new Map(parent + "." + key);
+        }
+
+        public String get(String key, int index) {
+            return parent + "." + key + "[" + index + "]}";
+        }
+
+        public String get(int index) {
+            return parent + "[" + index + "]}";
+        }
+
+        @Override
+        public String toString() {
+            return parent + "}";
         }
     }
 
@@ -52,15 +93,13 @@ public class InputOutputGetter {
         return "${" + name + "." + field + "}";
     }
 
-    public Map getMap(String key) {
+    @JsonIgnore
+    public Map map(String key) {
         return new Map("${" + name + "." + field + "." + key);
     }
 
-    public static void main(String[] args) {
-        InputOutputGetter input = new InputOutputGetter("task2", Field.output);
-        System.out.println(input.get("code"));
-        System.out.println(input.getMap("users").get("id"));
-        System.out.println(input.getMap("users").getMap("address").get("city"));
-        System.out.println(input.getMap("users").getMap("address").getMap("zip").get("code"));
+    @JsonIgnore
+    public List list(String key) {
+        return new List("${" + name + "." + field + "." + key);
     }
 }

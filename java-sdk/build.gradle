@@ -26,3 +26,5 @@ test {
         exceptionFormat = 'full'
     }
 }
+sourceSets.main.java.srcDirs += ['example/java', 'example/resources']
+

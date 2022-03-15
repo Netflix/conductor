@@ -57,7 +57,7 @@ public class ForkJoin extends Task<ForkJoin> {
      * @param taskReferenceName unique task reference name
      * @param forkedTasks List of tasks to be executed in parallel
      */
-    public ForkJoin(String taskReferenceName, Task[]... forkedTasks) {
+    public ForkJoin(String taskReferenceName, Task<?>[]... forkedTasks) {
         super(taskReferenceName, TaskType.FORK_JOIN);
         this.forkedTasks = forkedTasks;
     }
