@@ -16,7 +16,7 @@ plugins {
 }
 
 dependencies {
-
+    implementation "com.amazonaws:aws-java-sdk-core:1.12.80"
     implementation project(':conductor-rest')
     implementation project(':conductor-core')
     implementation project(':conductor-contribs')
