@@ -3,7 +3,7 @@ Worker SDK makes it easy to write conductor workers which are strongly typed wit
 
 Annotations for the worker methods:
 
-* `@WorkflowTask` When annotated converts a method to a conductor worker
+* `@WorkerTask` When annotated converts a method to a conductor worker
 * `@InputParam` name of the input parameter to bind to from the task's input
 * `@OutputParam` name of the output key of the task's output.
 
@@ -14,7 +14,7 @@ Please note, inputs and outputs to a task in Conductor are JSON documents.
 
 Create a worker named `task1` that gets Task as input and produces TaskResult as output.
 ```java
-@WorkflowTask("task1")
+@WorkerTask("task1")
     public TaskResult task1(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         return new TaskResult(task);
@@ -23,7 +23,7 @@ Create a worker named `task1` that gets Task as input and produces TaskResult as
 
 Create a worker named `task2` that takes `name` as a String input and produces a
 ```java
-@WorkflowTask("task2")
+@WorkerTask("task2")
 public @OutputParam("greetings") String task2(@InputParam("name") String name) {
     return "Hello, " + name;
 }
@@ -45,7 +45,7 @@ Output:
 ```
 A worker that takes complex java type as input and produces complex output:
 ```java
-@WorkflowTask("get_insurance_quote")
+@WorkerTask("get_insurance_quote")
  public InsuranceQuote getInsuranceQuote(GetInsuranceQuote quoteInput) {
      InsuranceQuote quote = new InsuranceQuote();
      //Implementation
