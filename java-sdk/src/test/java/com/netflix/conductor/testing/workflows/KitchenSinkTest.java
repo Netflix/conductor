@@ -19,18 +19,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.sdk.task.InputParam;
-import com.netflix.conductor.sdk.task.OutputParam;
-import com.netflix.conductor.sdk.task.WorkflowTask;
 import com.netflix.conductor.sdk.testing.WorkflowTestRunner;
 import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
+import com.netflix.conductor.sdk.workflow.task.InputParam;
+import com.netflix.conductor.sdk.workflow.task.OutputParam;
+import com.netflix.conductor.sdk.workflow.task.WorkerTask;
 import com.netflix.conductor.tests.GetInsuranceQuote;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,7 +41,7 @@ public class KitchenSinkTest {
 
     private static WorkflowExecutor executor;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() throws IOException {
         testRunner = new WorkflowTestRunner(8096, "3.5.2");
         testRunner.init("com.netflix.conductor.testing.workflows");
@@ -51,7 +51,7 @@ public class KitchenSinkTest {
         executor.loadWorkflowDefs("/simple_workflow.json");
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanUp() {
         testRunner.shutdown();
     }
@@ -122,14 +122,14 @@ public class KitchenSinkTest {
         assertNotNull(workflow.getReasonForIncompletion());
     }
 
-    @WorkflowTask("task_1")
+    @WorkerTask("task_1")
     public Map<String, Object> task1(Task1Input input) {
         Map<String, Object> result = new HashMap<>();
         result.put("input", input);
         return result;
     }
 
-    @WorkflowTask("task_2")
+    @WorkerTask("task_2")
     public TaskResult task2(Task task) {
         if (task.getRetryCount() < 1) {
             task.setStatus(Task.Status.FAILED);
@@ -141,13 +141,13 @@ public class KitchenSinkTest {
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task_6")
+    @WorkerTask("task_6")
     public TaskResult task6(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task_10")
+    @WorkerTask("task_10")
     public TaskResult task10(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         task.getOutputData().put("a", "b");
@@ -156,24 +156,24 @@ public class KitchenSinkTest {
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task_8")
+    @WorkerTask("task_8")
     public TaskResult task8(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task_5")
+    @WorkerTask("task_5")
     public TaskResult task5(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task_3")
+    @WorkerTask("task_3")
     public @OutputParam("z1") String task3(@InputParam("taskToExecute") String p1) {
         return "output of task3, p1=" + p1;
     }
 
-    @WorkflowTask("task_30")
+    @WorkerTask("task_30")
     public Map<String, Object> task30(Task task) {
         Map<String, Object> output = new HashMap<>();
         output.put("v1", "b");
@@ -182,7 +182,7 @@ public class KitchenSinkTest {
         return output;
     }
 
-    @WorkflowTask("task_31")
+    @WorkerTask("task_31")
     public Map<String, Object> task31(Task task) {
         Map<String, Object> output = new HashMap<>();
         output.put("a1", "b");
@@ -191,7 +191,7 @@ public class KitchenSinkTest {
         return output;
     }
 
-    @WorkflowTask("HTTP")
+    @WorkerTask("HTTP")
     public Map<String, Object> http(Task task) {
         Map<String, Object> output = new HashMap<>();
         output.put("a1", "b");
@@ -200,7 +200,7 @@ public class KitchenSinkTest {
         return output;
     }
 
-    @WorkflowTask("EVENT")
+    @WorkerTask("EVENT")
     public Map<String, Object> event(Task task) {
         Map<String, Object> output = new HashMap<>();
         output.put("a1", "b");

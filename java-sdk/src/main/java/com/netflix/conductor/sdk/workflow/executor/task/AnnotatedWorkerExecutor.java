@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.netflix.conductor.client.automator.TaskRunnerConfigurer;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.worker.Worker;
-import com.netflix.conductor.sdk.task.WorkflowTask;
+import com.netflix.conductor.sdk.workflow.task.WorkerTask;
 
 import com.google.common.reflect.ClassPath;
 
@@ -126,7 +126,7 @@ public class AnnotatedWorkerExecutor {
 
     private void scanClass(Class<?> clazz, Object obj) {
         for (Method method : clazz.getMethods()) {
-            WorkflowTask annotation = method.getAnnotation(WorkflowTask.class);
+            WorkerTask annotation = method.getAnnotation(WorkerTask.class);
             if (annotation == null) {
                 continue;
             }

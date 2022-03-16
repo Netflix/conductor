@@ -15,16 +15,16 @@ package com.netflix.conductor.sdk.example.shipment;
 import java.math.BigDecimal;
 import java.util.*;
 
-import com.netflix.conductor.sdk.task.InputParam;
-import com.netflix.conductor.sdk.task.OutputParam;
-import com.netflix.conductor.sdk.task.WorkflowTask;
 import com.netflix.conductor.sdk.workflow.def.tasks.DynamicForkInput;
 import com.netflix.conductor.sdk.workflow.def.tasks.SubWorkflow;
 import com.netflix.conductor.sdk.workflow.def.tasks.Task;
+import com.netflix.conductor.sdk.workflow.task.InputParam;
+import com.netflix.conductor.sdk.workflow.task.OutputParam;
+import com.netflix.conductor.sdk.workflow.task.WorkerTask;
 
 public class ShipmentWorkers {
 
-    @WorkflowTask("generateDynamicFork")
+    @WorkerTask("generateDynamicFork")
     public DynamicForkInput generateDynamicFork(
             @InputParam("orderDetails") List<Order> orderDetails,
             @InputParam("userDetails") User userDetails) {
@@ -46,13 +46,12 @@ public class ShipmentWorkers {
         return input;
     }
 
-    @WorkflowTask("get_order_details")
+    @WorkerTask("get_order_details")
     public List<Order> getOrderDetails(@InputParam("orderNo") String orderNo) {
         int lineItemCount = new Random().nextInt(10);
         List<Order> orderDetails = new ArrayList<>();
         for (int i = 0; i < lineItemCount; i++) {
-            Order orderDetail =
-                    new Order(orderNo, "sku_" + i, 2, BigDecimal.valueOf(20.5));
+            Order orderDetail = new Order(orderNo, "sku_" + i, 2, BigDecimal.valueOf(20.5));
             orderDetail.setOrderNumber(UUID.randomUUID().toString());
             orderDetail.setCountryCode(i % 2 == 0 ? "US" : "CA");
             if (i % 3 == 0) {
@@ -70,7 +69,7 @@ public class ShipmentWorkers {
         return orderDetails;
     }
 
-    @WorkflowTask("get_user_details")
+    @WorkerTask("get_user_details")
     public User getUserDetails(@InputParam("userId") String userId) {
         User user =
                 new User(
@@ -86,7 +85,7 @@ public class ShipmentWorkers {
         return user;
     }
 
-    @WorkflowTask("calculate_tax_and_total")
+    @WorkerTask("calculate_tax_and_total")
     public @OutputParam("total_amount") BigDecimal calculateTax(
             @InputParam("orderDetail") Order orderDetails) {
         BigDecimal preTaxAmount =
@@ -98,7 +97,7 @@ public class ShipmentWorkers {
         return preTaxAmount.add(tax);
     }
 
-    @WorkflowTask("ground_shipping_label")
+    @WorkerTask("ground_shipping_label")
     public @OutputParam("reference_number") String prepareGroundShipping(
             @InputParam("name") String name,
             @InputParam("address") String address,
@@ -107,7 +106,7 @@ public class ShipmentWorkers {
         return "Ground_" + orderNo;
     }
 
-    @WorkflowTask("air_shipping_label")
+    @WorkerTask("air_shipping_label")
     public @OutputParam("reference_number") String prepareAirShipping(
             @InputParam("name") String name,
             @InputParam("address") String address,
@@ -116,7 +115,7 @@ public class ShipmentWorkers {
         return "Air_" + orderNo;
     }
 
-    @WorkflowTask("same_day_shipping_label")
+    @WorkerTask("same_day_shipping_label")
     public @OutputParam("reference_number") String prepareSameDayShipping(
             @InputParam("name") String name,
             @InputParam("address") String address,
@@ -125,7 +124,7 @@ public class ShipmentWorkers {
         return "SameDay_" + orderNo;
     }
 
-    @WorkflowTask("charge_payment")
+    @WorkerTask("charge_payment")
     public @OutputParam("reference") String chargePayment(
             @InputParam("amount") BigDecimal amount,
             @InputParam("billingId") String billingId,
@@ -134,7 +133,7 @@ public class ShipmentWorkers {
         return UUID.randomUUID().toString();
     }
 
-    @WorkflowTask("send_email")
+    @WorkerTask("send_email")
     public void sendEmail(
             @InputParam("name") String name,
             @InputParam("email") String email,

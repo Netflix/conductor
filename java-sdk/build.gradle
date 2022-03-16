@@ -14,7 +14,6 @@ dependencies {
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"
 
-
     testImplementation "com.fasterxml.jackson.core:jackson-core"
     testImplementation "org.apache.commons:commons-lang3"
 

@@ -12,15 +12,15 @@
  */
 package com.netflix.conductor.sdk.example.shipment;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
 import com.netflix.conductor.sdk.workflow.def.WorkflowBuilder;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class ShipmentWorkflow {
 
@@ -132,7 +132,6 @@ public class ShipmentWorkflow {
         return conductorWorkflow;
     }
 
-
     public ConductorWorkflow<Shipment> createShipmentWorkflow() {
 
         WorkflowBuilder<Shipment> builder = new WorkflowBuilder<>(executor);
@@ -181,27 +180,28 @@ public class ShipmentWorkflow {
 
     public static void main(String[] args) {
 
-        String conductorServerURL = "http://localhost:8080/api/";       //Change this to your Conductor server
+        String conductorServerURL =
+                "http://localhost:8080/api/"; // Change this to your Conductor server
         WorkflowExecutor executor = new WorkflowExecutor(conductorServerURL);
 
-        //Create the new shipment workflow
+        // Create the new shipment workflow
         ShipmentWorkflow shipmentWorkflow = new ShipmentWorkflow(executor);
 
-        //Create two workflows
+        // Create two workflows
 
-        //1. Order flow that ships an individual order
-        //2. Shipment Workflow that tracks multiple orders in a shipment
+        // 1. Order flow that ships an individual order
+        // 2. Shipment Workflow that tracks multiple orders in a shipment
         shipmentWorkflow.createOrderFlow();
         ConductorWorkflow<Shipment> workflow = shipmentWorkflow.createShipmentWorkflow();
 
-        //Execute the workflow and wait for it to complete
+        // Execute the workflow and wait for it to complete
         try {
             Shipment workflowInput = new Shipment("userA", "order123");
 
-            //Execute returns a completable future.
+            // Execute returns a completable future.
             CompletableFuture<Workflow> executionFuture = workflow.execute(workflowInput);
 
-            //Wait for a maximum of a minute for the workflow to complete.
+            // Wait for a maximum of a minute for the workflow to complete.
             Workflow run = executionFuture.get(1, TimeUnit.MINUTES);
 
             System.out.println("Workflow Id: " + run);

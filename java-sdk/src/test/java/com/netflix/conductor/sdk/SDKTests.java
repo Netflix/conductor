@@ -18,24 +18,24 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.sdk.task.InputParam;
-import com.netflix.conductor.sdk.task.OutputParam;
-import com.netflix.conductor.sdk.task.WorkflowTask;
 import com.netflix.conductor.sdk.testing.WorkflowTestRunner;
 import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
 import com.netflix.conductor.sdk.workflow.def.ValidationError;
 import com.netflix.conductor.sdk.workflow.def.WorkflowBuilder;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
+import com.netflix.conductor.sdk.workflow.task.InputParam;
+import com.netflix.conductor.sdk.workflow.task.OutputParam;
+import com.netflix.conductor.sdk.workflow.task.WorkerTask;
 import com.netflix.conductor.tests.TestWorkflowInput;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SDKTests {
 
@@ -45,29 +45,29 @@ public class SDKTests {
 
     private static WorkflowTestRunner runner;
 
-    @BeforeClass
+    @BeforeAll
     public static void init() throws IOException {
         runner = new WorkflowTestRunner(8080, "3.5.3");
         runner.init("com.netflix.conductor.sdk");
         executor = runner.getWorkflowExecutor();
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanUp() {
         runner.shutdown();
     }
 
-    @WorkflowTask("get_user_info")
+    @WorkerTask("get_user_info")
     public @OutputParam("zipCode") String getZipCode(@InputParam("name") String userName) {
         return "95014";
     }
 
-    @WorkflowTask("task2")
+    @WorkerTask("task2")
     public @OutputParam("greetings") String task2() {
         return "Hello World";
     }
 
-    @WorkflowTask("task3")
+    @WorkerTask("task3")
     public @OutputParam("greetings") String task3() {
         return "Hello World-3";
     }
@@ -121,9 +121,9 @@ public class SDKTests {
         try {
             Workflow run = registerTestWorkflow().execute(workflowInput).get(10, TimeUnit.SECONDS);
             assertEquals(
-                    run.getReasonForIncompletion(),
                     Workflow.WorkflowStatus.COMPLETED,
-                    run.getStatus());
+                    run.getStatus(),
+                    run.getReasonForIncompletion());
         } catch (Exception e) {
             fail(e.getMessage());
         }

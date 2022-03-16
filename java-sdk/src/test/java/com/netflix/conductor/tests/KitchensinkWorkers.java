@@ -16,29 +16,29 @@ import java.util.Random;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.sdk.task.InputParam;
-import com.netflix.conductor.sdk.task.OutputParam;
-import com.netflix.conductor.sdk.task.WorkflowTask;
+import com.netflix.conductor.sdk.workflow.task.InputParam;
+import com.netflix.conductor.sdk.workflow.task.OutputParam;
+import com.netflix.conductor.sdk.workflow.task.WorkerTask;
 
 public class KitchensinkWorkers {
 
-    @WorkflowTask("task1")
+    @WorkerTask("task1")
     public TaskResult task1(Task task) {
         task.setStatus(Task.Status.COMPLETED);
         return new TaskResult(task);
     }
 
-    @WorkflowTask("task2")
+    @WorkerTask("task2")
     public @OutputParam("greetings") String task2(@InputParam("name") String name) {
         return "Hello, " + name;
     }
 
-    @WorkflowTask("task3")
+    @WorkerTask("task3")
     public @OutputParam("luckyNumber") int task3() {
         return new Random().nextInt(43);
     }
 
-    @WorkflowTask("get_insurance_quote")
+    @WorkerTask("get_insurance_quote")
     public InsuranceQuote getInsuranceQuote(GetInsuranceQuote quoteInput) {
         InsuranceQuote quote = new InsuranceQuote();
 
