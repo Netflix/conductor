@@ -595,7 +595,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     },
     "runtimeClasspath": {
@@ -1109,7 +1109,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     },
     "testCompileClasspath": {
@@ -1727,7 +1727,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     }
 }

@@ -812,7 +812,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-contribs"
             ],
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     }
 }

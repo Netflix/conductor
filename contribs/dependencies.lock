@@ -75,7 +75,7 @@
             "locked": "2.3.12.RELEASE"
         },
         "software.amazon.msk:aws-msk-iam-auth": {
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     },
     "runtimeClasspath": {
@@ -263,7 +263,7 @@
             "locked": "2.17.1"
         },
         "software.amazon.msk:aws-msk-iam-auth": {
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     },
     "testCompileClasspath": {
@@ -346,7 +346,7 @@
             "locked": "1.15.3"
         },
         "software.amazon.msk:aws-msk-iam-auth": {
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     },
     "testRuntimeClasspath": {
@@ -549,7 +549,7 @@
             "locked": "1.15.3"
         },
         "software.amazon.msk:aws-msk-iam-auth": {
-            "locked": "1.1.1"
+            "locked": "1.1.3"
         }
     }
 }
