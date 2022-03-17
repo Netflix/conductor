@@ -15,6 +15,7 @@ package com.netflix.conductor.sdk.workflow.def.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -117,4 +118,34 @@ public class Javascript extends Task<Javascript> {
         }
         return this;
     }
+
+    /**
+     * Helper method to unit test your javascripts
+     * Test the Javascript task with the input.
+     * The method is not used for creating or executing workflow but is meant for testing only.
+     *
+     * @param input Input that against which the script will be executed
+     * @return Output of the script
+     */
+    public Object test(Map<String, Object> input) {
+
+        ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(ENGINE);
+        if (scriptEngine == null) {
+            LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running support JVM");
+            return this;
+        }
+
+        try {
+
+            Bindings bindings = scriptEngine.createBindings();
+            bindings.put("$", input);
+            return scriptEngine.eval(getExpression(), bindings);
+
+        } catch (ScriptException e) {
+            String message = e.getMessage();
+            throw new ValidationError(message);
+        }
+    }
+
+
 }
