@@ -22,11 +22,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.netflix.conductor.common.metadata.tasks.TaskType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.sdk.testing.WorkflowTestRunner;
@@ -80,7 +80,7 @@ public class WorkflowCreationTests {
         List<Task<?>> tasks = new ArrayList<>();
         forks.setTasks(tasks);
 
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             SimpleTask task = new SimpleTask("task2", "fork_task_" + i);
             tasks.add(task);
             HashMap<String, Object> taskInput = new HashMap<>();
@@ -126,8 +126,7 @@ public class WorkflowCreationTests {
                                 .switchCase("10121", sendToNYC))
                 // .add(new SubWorkflow("subflow", "sub_workflow_example", 5))
                 .add(new SimpleTask("task2", "task222"))
-                .add(new DynamicFork("dynamic_fork",
-                        new SimpleTask("fork_gen", "fork_gen")));
+                .add(new DynamicFork("dynamic_fork", new SimpleTask("fork_gen", "fork_gen")));
 
         ConductorWorkflow<TestWorkflowInput> workflow = builder.build();
         boolean registered = workflow.registerWorkflow(true, true);
@@ -141,9 +140,18 @@ public class WorkflowCreationTests {
         ConductorWorkflow<TestWorkflowInput> conductorWorkflow = registerTestWorkflow();
         WorkflowDef def = conductorWorkflow.toWorkflowDef();
         assertNotNull(def);
-        assertTrue(def.getTasks().get(def.getTasks().size()-2).getType().equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC));
-        assertTrue(def.getTasks().get(def.getTasks().size()-1).getType().equals(TaskType.TASK_TYPE_JOIN));
+        assertTrue(
+                def.getTasks()
+                        .get(def.getTasks().size() - 2)
+                        .getType()
+                        .equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC));
+        assertTrue(
+                def.getTasks()
+                        .get(def.getTasks().size() - 1)
+                        .getType()
+                        .equals(TaskType.TASK_TYPE_JOIN));
     }
+
     @Test
     public void verifyInlineWorkflowExecution() throws ValidationError {
         TestWorkflowInput workflowInput = new TestWorkflowInput("username", "10121", "US");
