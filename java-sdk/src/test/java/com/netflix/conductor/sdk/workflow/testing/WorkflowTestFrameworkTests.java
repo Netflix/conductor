@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.testing.workflows;
+package com.netflix.conductor.sdk.workflow.testing;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -31,11 +31,10 @@ import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
 import com.netflix.conductor.sdk.workflow.task.InputParam;
 import com.netflix.conductor.sdk.workflow.task.OutputParam;
 import com.netflix.conductor.sdk.workflow.task.WorkerTask;
-import com.netflix.conductor.tests.GetInsuranceQuote;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class KitchenSinkTest {
+public class WorkflowTestFrameworkTests {
 
     private static WorkflowTestRunner testRunner;
 
@@ -44,7 +43,7 @@ public class KitchenSinkTest {
     @BeforeAll
     public static void init() throws IOException {
         testRunner = new WorkflowTestRunner(8096, "3.5.2");
-        testRunner.init("com.netflix.conductor.testing.workflows");
+        testRunner.init("com.netflix.conductor.sdk.workflow.testing");
 
         executor = testRunner.getWorkflowExecutor();
         executor.loadTaskDefs("/tasks.json");
@@ -64,11 +63,6 @@ public class KitchenSinkTest {
         input.put("mod", "1");
         input.put("oddEven", "12");
         input.put("number", 0);
-
-        GetInsuranceQuote getQuote = new GetInsuranceQuote();
-        getQuote.setName("personA");
-        getQuote.setAmount(1000000.0);
-        getQuote.setZipCode("10121");
 
         // Start the workflow and wait for it to complete
         Workflow workflow = executor.executeWorkflow("Decision_TaskExample", 1, input).get();

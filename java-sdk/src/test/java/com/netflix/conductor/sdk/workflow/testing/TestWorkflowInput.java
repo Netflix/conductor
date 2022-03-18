@@ -10,15 +10,23 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.tests;
+package com.netflix.conductor.sdk.workflow.testing;
 
-public class InsuranceQuote {
+public class TestWorkflowInput {
 
     private String name;
 
-    private double quotedAmount;
+    private String zipCode;
 
-    private double quotedPremium;
+    private String countryCode;
+
+    public TestWorkflowInput(String name, String zipCode, String countryCode) {
+        this.name = name;
+        this.zipCode = zipCode;
+        this.countryCode = countryCode;
+    }
+
+    public TestWorkflowInput() {}
 
     public String getName() {
         return name;
@@ -28,19 +36,19 @@ public class InsuranceQuote {
         this.name = name;
     }
 
-    public double getQuotedAmount() {
-        return quotedAmount;
+    public String getZipCode() {
+        return zipCode;
     }
 
-    public void setQuotedAmount(double quotedAmount) {
-        this.quotedAmount = quotedAmount;
+    public void setZipCode(String zipCode) {
+        this.zipCode = zipCode;
     }
 
-    public double getQuotedPremium() {
-        return quotedPremium;
+    public String getCountryCode() {
+        return countryCode;
     }
 
-    public void setQuotedPremium(double quotedPremium) {
-        this.quotedPremium = quotedPremium;
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 }

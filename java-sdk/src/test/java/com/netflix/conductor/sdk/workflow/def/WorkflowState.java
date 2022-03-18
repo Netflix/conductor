@@ -10,17 +10,27 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.tests;
+package com.netflix.conductor.sdk.workflow.def;
 
-public class TestWorkflowOutput {
+public class WorkflowState {
 
-    private String greetings;
+    private boolean paymentCompleted;
 
-    public String getGreetings() {
-        return greetings;
+    private int timeTaken;
+
+    public boolean isPaymentCompleted() {
+        return paymentCompleted;
     }
 
-    public void setGreetings(String greetings) {
-        this.greetings = greetings;
+    public void setPaymentCompleted(boolean paymentCompleted) {
+        this.paymentCompleted = paymentCompleted;
+    }
+
+    public int getTimeTaken() {
+        return timeTaken;
+    }
+
+    public void setTimeTaken(int timeTaken) {
+        this.timeTaken = timeTaken;
     }
 }

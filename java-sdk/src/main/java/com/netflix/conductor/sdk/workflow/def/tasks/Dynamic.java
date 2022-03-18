@@ -20,7 +20,7 @@ import com.google.common.base.Strings;
 /** Wait task */
 public class Dynamic extends Task<Dynamic> {
 
-    protected static final String TASK_NAME_INPUT_PARAM = "taskToExecute";
+    public static final String TASK_NAME_INPUT_PARAM = "taskToExecute";
 
     public Dynamic(String taskReferenceName, String dynamicTaskNameValue) {
         super(taskReferenceName, TaskType.DYNAMIC);

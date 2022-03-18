@@ -10,7 +10,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package com.netflix.conductor.sdk;
+package com.netflix.conductor.sdk.workflow.def;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,21 +25,16 @@ import org.junit.jupiter.api.Test;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.sdk.testing.WorkflowTestRunner;
-import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
-import com.netflix.conductor.sdk.workflow.def.ValidationError;
-import com.netflix.conductor.sdk.workflow.def.WorkflowBuilder;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
 import com.netflix.conductor.sdk.workflow.task.InputParam;
 import com.netflix.conductor.sdk.workflow.task.OutputParam;
 import com.netflix.conductor.sdk.workflow.task.WorkerTask;
-import com.netflix.conductor.tests.TestWorkflowInput;
+import com.netflix.conductor.sdk.workflow.testing.TestWorkflowInput;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SDKTests {
-
-    private static final String AUTHORIZATION_HEADER = "X-Authorization";
+public class WorkflowCreationTests {
 
     private static WorkflowExecutor executor;
 
@@ -95,7 +90,7 @@ public class SDKTests {
                 .ownerEmail("hello@example.com")
                 .description("Example Workflow")
                 .restartable(true)
-                .variables(new MyWorkflowState())
+                .variables(new WorkflowState())
                 .timeoutPolicy(WorkflowDef.TimeoutPolicy.TIME_OUT_WF, 100)
                 .defaultInput(defaultInput)
                 .add(new Javascript("js", script))
@@ -116,8 +111,8 @@ public class SDKTests {
     }
 
     @Test
-    public void test() throws ValidationError {
-        TestWorkflowInput workflowInput = new TestWorkflowInput("viren", "10121", "CA");
+    public void verifyInlineWorkflowExecution() throws ValidationError {
+        TestWorkflowInput workflowInput = new TestWorkflowInput("username", "10121", "US");
         try {
             Workflow run = registerTestWorkflow().execute(workflowInput).get(10, TimeUnit.SECONDS);
             assertEquals(
@@ -130,10 +125,12 @@ public class SDKTests {
     }
 
     @Test
-    public void test2() throws ExecutionException, InterruptedException {
+    public void testWorkflowExecutionByName() throws ExecutionException, InterruptedException {
+
+        // Register the workflow first
         registerTestWorkflow();
 
-        TestWorkflowInput input = new TestWorkflowInput("Viren", "10121", "US");
+        TestWorkflowInput input = new TestWorkflowInput("username", "10121", "US");
 
         ConductorWorkflow<TestWorkflowInput> conductorWorkflow =
                 new ConductorWorkflow<TestWorkflowInput>(executor)
@@ -144,6 +141,25 @@ public class SDKTests {
             execution.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void verifyWorkflowExecutionFailsIfNotExists()
+            throws ExecutionException, InterruptedException {
+
+        // Register the workflow first
+        registerTestWorkflow();
+
+        TestWorkflowInput input = new TestWorkflowInput("username", "10121", "US");
+
+        try {
+            ConductorWorkflow<TestWorkflowInput> conductorWorkflow =
+                    new ConductorWorkflow<TestWorkflowInput>(executor)
+                            .from("non_existent_workflow", null);
+            conductorWorkflow.execute(input);
+            fail("execution should have failed");
+        } catch (Exception e) {
         }
     }
 }
