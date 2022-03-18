@@ -102,7 +102,7 @@ public class Javascript extends Task<Javascript> {
     public Javascript validate() {
         ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(ENGINE);
         if (scriptEngine == null) {
-            LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running support JVM");
+            LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running supported JVM");
             return this;
         }
 
@@ -120,9 +120,8 @@ public class Javascript extends Task<Javascript> {
     }
 
     /**
-     * Helper method to unit test your javascripts
-     * Test the Javascript task with the input.
-     * The method is not used for creating or executing workflow but is meant for testing only.
+     * Helper method to unit test your javascript. The method is not used for creating or executing
+     * workflow but is meant for testing only.
      *
      * @param input Input that against which the script will be executed
      * @return Output of the script
@@ -131,7 +130,7 @@ public class Javascript extends Task<Javascript> {
 
         ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(ENGINE);
         if (scriptEngine == null) {
-            LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running support JVM");
+            LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running supported JVM");
             return this;
         }
 
@@ -146,6 +145,4 @@ public class Javascript extends Task<Javascript> {
             throw new ValidationError(message);
         }
     }
-
-
 }
