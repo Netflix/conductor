@@ -17,7 +17,7 @@ ConductorWorkflow<GetInsuranceQuote> conductorWorkflow = new WorkflowBuilder<Get
     .add(new SimpleTask("send_email", "send_email"))
     .build();
 ```
-#### Working with Simple Worker Tasks
+### Working with Simple Worker Tasks
 Use [SimpleTask](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/SimpleTask.java) to add simple task to a workflow.
 
 Example:
@@ -26,7 +26,7 @@ Example:
 builder.add(new SimpleTask("send_email", "send_email"))
 ...
 ```
-#### Wiring inputs the task
+### Wiring inputs the task
 use `input` methods to configure the inputs the task.
 
 See https://netflix.github.io/conductor/how-tos/Tasks/task-inputs/ for details on Task Inputs/Outputs
@@ -40,7 +40,7 @@ builder.add(
 );
 ```
 
-#### Working with operators
+### Working with operators
 Each of the operator - 
 
 [ForkJoin](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/ForkJoin.java), 
@@ -55,13 +55,6 @@ Each of the operator -
 [SetVariable](src/main/java/com/netflix/conductor/sdk/workflow/def/tasks/SetVariable.java),
 
 have their own class that can be added to the workflow builder.
-
-**Example**
-```java
-
-```
-
-
 
 
 #### Register Workflow with Conductor Server
