@@ -14,10 +14,15 @@ package com.netflix.conductor.sdk.workflow.def;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.netflix.conductor.common.metadata.tasks.TaskType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -67,6 +72,25 @@ public class WorkflowCreationTests {
         return "Hello World-3";
     }
 
+    @WorkerTask("fork_gen")
+    public DynamicForkInput generateDynamicFork() {
+        DynamicForkInput forks = new DynamicForkInput();
+        Map<String, Object> inputs = new HashMap<>();
+        forks.setInputs(inputs);
+        List<Task<?>> tasks = new ArrayList<>();
+        forks.setTasks(tasks);
+
+        for(int i = 0; i < 3; i++) {
+            SimpleTask task = new SimpleTask("task2", "fork_task_" + i);
+            tasks.add(task);
+            HashMap<String, Object> taskInput = new HashMap<>();
+            taskInput.put("key", "value");
+            taskInput.put("key2", 101);
+            inputs.put(task.getTaskReferenceName(), taskInput);
+        }
+        return forks;
+    }
+
     private ConductorWorkflow<TestWorkflowInput> registerTestWorkflow() {
         InputStream script = getClass().getResourceAsStream("/script.js");
         SimpleTask getUserInfo = new SimpleTask("get_user_info", "get_user_info");
@@ -101,7 +125,9 @@ public class WorkflowCreationTests {
                                 .switchCase("95014", sendToCupertino)
                                 .switchCase("10121", sendToNYC))
                 // .add(new SubWorkflow("subflow", "sub_workflow_example", 5))
-                .add(new SimpleTask("task2", "task222"));
+                .add(new SimpleTask("task2", "task222"))
+                .add(new DynamicFork("dynamic_fork",
+                        new SimpleTask("fork_gen", "fork_gen")));
 
         ConductorWorkflow<TestWorkflowInput> workflow = builder.build();
         boolean registered = workflow.registerWorkflow(true, true);
@@ -110,6 +136,14 @@ public class WorkflowCreationTests {
         return workflow;
     }
 
+    @Test
+    public void verifyCreatedWorkflow() {
+        ConductorWorkflow<TestWorkflowInput> conductorWorkflow = registerTestWorkflow();
+        WorkflowDef def = conductorWorkflow.toWorkflowDef();
+        assertNotNull(def);
+        assertTrue(def.getTasks().get(def.getTasks().size()-2).getType().equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC));
+        assertTrue(def.getTasks().get(def.getTasks().size()-1).getType().equals(TaskType.TASK_TYPE_JOIN));
+    }
     @Test
     public void verifyInlineWorkflowExecution() throws ValidationError {
         TestWorkflowInput workflowInput = new TestWorkflowInput("username", "10121", "US");
