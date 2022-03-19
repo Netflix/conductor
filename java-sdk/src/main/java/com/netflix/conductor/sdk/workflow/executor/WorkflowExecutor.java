@@ -84,6 +84,7 @@ public class WorkflowExecutor {
         TaskRegistry.register(TaskType.SWITCH.name(), Switch.class);
         TaskRegistry.register(TaskType.TERMINATE.name(), Terminate.class);
         TaskRegistry.register(TaskType.WAIT.name(), Wait.class);
+        TaskRegistry.register(TaskType.EVENT.name(), Event.class);
     }
 
     public WorkflowExecutor(String apiServerURL) {

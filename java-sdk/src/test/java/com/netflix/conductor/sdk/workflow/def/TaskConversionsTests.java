@@ -213,6 +213,29 @@ public class TaskConversionsTests {
     }
 
     @Test
+    public void testEvent() {
+
+        Event eventTask = new Event("task_ref_name", "sqs:queue11");
+
+        WorkflowTask workflowTask = eventTask.getWorkflowDefTasks().get(0);
+        assertNotNull(workflowTask.getInputParameters());
+
+        Task fromWorkflowTask = TaskRegistry.getTask(workflowTask);
+        assertTrue(
+                fromWorkflowTask instanceof Event,
+                "task is not of type Event, but of type " + fromWorkflowTask.getClass().getName());
+        Event taskFromWorkflowTask = (Event) fromWorkflowTask;
+
+        assertNotNull(fromWorkflowTask);
+        assertEquals(eventTask.getName(), fromWorkflowTask.getName());
+        assertEquals(eventTask.getTaskReferenceName(), fromWorkflowTask.getTaskReferenceName());
+        assertEquals(eventTask.getType(), taskFromWorkflowTask.getType());
+        assertEquals(eventTask.getStartDelay(), taskFromWorkflowTask.getStartDelay());
+        assertEquals(eventTask.getInput(), taskFromWorkflowTask.getInput());
+        assertEquals(eventTask.getSink(), taskFromWorkflowTask.getSink());
+    }
+
+    @Test
     public void testSetVariableConversion() {
 
         SetVariable setVariableTask = new SetVariable("task_ref_name");
