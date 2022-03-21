@@ -33,7 +33,6 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.task.AnnotatedWorkerExecutor;
-import com.netflix.conductor.sdk.workflow.utils.MapBuilder;
 import com.netflix.conductor.sdk.workflow.utils.ObjectMapperProvider;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -166,11 +165,6 @@ public class WorkflowExecutor {
         String workflowId = workflowClient.startWorkflow(request);
         runningWorkflowFutures.put(workflowId, future);
         return future;
-    }
-
-    public CompletableFuture<Workflow> executeWorkflow(
-            ConductorWorkflow conductorWorkflow, MapBuilder mapBuilder) {
-        return executeWorkflow(conductorWorkflow, mapBuilder.build());
     }
 
     public CompletableFuture<Workflow> executeWorkflow(
