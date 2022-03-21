@@ -22,7 +22,6 @@ import java.util.concurrent.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.netflix.conductor.client.exception.ConductorClientException;
 import com.netflix.conductor.client.http.MetadataClient;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.http.WorkflowClient;
@@ -164,15 +163,9 @@ public class WorkflowExecutor {
         request.setName(name);
         request.setVersion(version);
 
-        try {
-            String workflowId = workflowClient.startWorkflow(request);
-            runningWorkflowFutures.put(workflowId, future);
-            return future;
-        } catch (ConductorClientException cce) {
-            cce.printStackTrace();
-            System.out.println("code: " + cce.getStatus());
-        }
-        return new CompletableFuture<>();
+        String workflowId = workflowClient.startWorkflow(request);
+        runningWorkflowFutures.put(workflowId, future);
+        return future;
     }
 
     public CompletableFuture<Workflow> executeWorkflow(
