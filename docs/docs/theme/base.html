@@ -66,7 +66,7 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
       <div class="wy-side-nav-search" style="background-color:#fcfcfc">
 	{%- block site_name %}
-        <a href="{{ nav.homepage.url }}" style="border:0;padding:0"> <img style="border-radius:0;width:238px;height:87px;margin:0 0 0 0;background-color:#fcfcfc;border:0;padding:0" class="cornerlogo" src="{{ base_url }}/img/conductor-vector-x.png"/>
+        <a href="{{ nav.homepage.url }}" style="border:0;padding:0"> <img style="border-radius:0;width:238px;height:87px;margin:0 0 0 0;border:0;padding:0" class="cornerlogo" src="{{ base_url }}/img/cornerlogo.png"/>
         </a>
 	{%- endblock %}
 	{%- block search_button %}
@@ -95,7 +95,10 @@
       </nav>
 
       {# PAGE CONTENT #}
+   
       <div class="wy-nav-content">
+        
+        {% block rstcontent %}
         <div class="rst-content">
           {% include "breadcrumbs.html" %}
           <div role="main">
@@ -105,12 +108,14 @@
               {% endblock %}
             </div>
           </div>
+    
+
 	  {%- block footer %}
           {% include "footer.html" %}
 	  {% endblock %}
         </div>
       </div>
-
+   
     </section>
 
   </div>

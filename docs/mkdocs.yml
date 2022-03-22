@@ -1,4 +1,5 @@
 site_name: Conductor
+
 repo_url: https://github.com/Netflix/conductor
 edit_uri: edit/main/docs/docs/
 strict: true
@@ -64,6 +65,7 @@ nav:
             - Task Inputs: how-tos/Tasks/task-inputs.md
             - Task Timeouts: how-tos/Tasks/task-timeouts.md
             - Updating Task Definitions: how-tos/Tasks/updating-tasks.md
+            - Extending System Tasks: how-tos/Tasks/extending-system-tasks.md
         - Workers: 
             -Build a Go Task Worker: how-tos/Workers/build-a-golang-task-worker.md
             -Build a Java Task Worker: how-tos/Workers/build-a-java-task-worker.md
@@ -72,6 +74,7 @@ nav:
             - Conductor Log Level: how-tos/Monitoring/Conductor-LogLevel.md
     - Code Labs:
         - Hello World: codelab/helloworld.md
+        - Sequential HTTP Tasks:  codelab/sequentialHTTPtasks.md
     - Developer Labs:
         - Beginner: labs/beginner.md
         - A First Workflow: labs/running-first-workflow.md
@@ -82,7 +85,9 @@ nav:
     - FAQ: faq.md
     - Technical Details: technicaldetails.md
     - License: license.md
-theme: readthedocs
+theme: 
+  name: readthedocs
+  custom_dir: custom_theme/
 extra_css:
     - css/custom.css
 markdown_extensions:
