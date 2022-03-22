@@ -35,7 +35,7 @@
     "react-vis-timeline": "^2.0.3",
     "rison": "^0.1.1",
     "styled-components": "^5.3.0",
-    "url-parse": "^1.5.1",
+    "url-parse": "^1.5.9",
     "use-local-storage-state": "^10.0.0",
     "xss": "^1.0.8",
     "yup": "^0.32.11"
