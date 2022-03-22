@@ -118,6 +118,28 @@ export function restartWorfklow(workflowId) {
   }
 }
 
+export function cloneWorkflow(workflowId) {
+  return function (dispatch) {
+    dispatch({
+      type: 'REQUESTED_CLONE_WORKFLOW',
+      workflowId
+    });
+
+    const token = authHelper.getLocalAuthToken();
+    return http.post('/api/wfe/clone/' + workflowId, null, token).then((data) => {
+      dispatch({
+        type: 'RECEIVED_CLONE_WORKFLOW',
+        data
+      });
+    }).catch((e) => {
+      dispatch({
+        type: 'REQUEST_ERROR',
+        e
+      });
+    });
+  }
+}
+
 export function retryWorfklow(workflowId) {
   return function (dispatch) {
     dispatch({

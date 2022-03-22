@@ -8,7 +8,8 @@ import {
     retryWorfklow,
     pauseWorfklow,
     resumeWorfklow,
-    getWorkflowDetails
+    getWorkflowDetails,
+    cloneWorkflow
 } from '../../../actions/WorkflowActions';
 
 const WorkflowAction = React.createClass({
@@ -21,7 +22,8 @@ const WorkflowAction = React.createClass({
             restarting: false,
             retrying: false,
             pausing: false,
-            resuming: false
+            resuming: false,
+            cloning: false
         };
     },
 
@@ -39,6 +41,11 @@ const WorkflowAction = React.createClass({
         const tt_restart = (
             <Popover id="popover-trigger-hover-focus" title="Restart Workflow">
                 Restart the workflow from the begining (First Task)
+            </Popover>
+        );
+        const tt_clone = (
+            <Popover id="popover-trigger-hover-focus" title="Clone Workflow">
+                Clone the workflow from the begining (First Task)
             </Popover>
         );
         const tt_retry = (
@@ -66,6 +73,7 @@ const WorkflowAction = React.createClass({
         let retrying = this.props.retrying;
         let pausing = this.props.pausing;
         let resuming = this.props.resuming;
+        let cloning = this.props.cloning;
 
         if (this.props.workflowStatus == 'RUNNING') {
             if (is_admin_role) {
@@ -105,13 +113,23 @@ const WorkflowAction = React.createClass({
         if (this.props.workflowStatus == 'COMPLETED' || this.props.workflowStatus == 'CANCELLED') {
             if (is_admin_role) {
                 return (
+                <ButtonGroup>
                     <OverlayTrigger placement="bottom" overlay={tt_restart}>
                         <Button
                             bsStyle="default" bsSize="xsmall" disabled={restarting}
+                            style={{marginRight:"25px"}}
                             onClick={!restarting ? this.restart : null}> {restarting ? (
                             <i className="fa fa-spinner fa-spin"></i>) : 'Restart'}
                         </Button>
                     </OverlayTrigger>
+                     <OverlayTrigger placement="bottom" overlay={tt_clone}>
+                      <Button
+                          bsStyle="default" bsSize="xsmall" disabled={cloning}
+                          onClick={!cloning ? this.clone : null}> {cloning ? (
+                          <i className="fa fa-spinner fa-spin"></i>) : 'Clone'}
+                      </Button>
+                    </OverlayTrigger>
+                   </ButtonGroup>
                 );
             } else {
                 return (
@@ -193,6 +211,10 @@ const WorkflowAction = React.createClass({
     restart() {
         this.setState({restarting: true});
         this.props.dispatch(restartWorfklow(this.props.workflowId));
+    },
+    clone() {
+        this.setState({cloning: true});
+        this.props.dispatch(cloneWorkflow(this.props.workflowId));
     },
     retry() {
         this.setState({retrying: true});

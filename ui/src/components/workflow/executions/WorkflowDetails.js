@@ -43,6 +43,7 @@ class WorkflowDetails extends Component {
 
   render() {
     var wf = this.props.data;
+    let cloneWorkflowId = this.props.cloneWorkflowId;
     let sys = this.state.sys;
     if(wf == null) {
       wf = {};
@@ -136,6 +137,12 @@ class WorkflowDetails extends Component {
       });
       return <tbody>{trs}</tbody>
     }
+    function showClonedWorkflowId(cloneWorkflowId){
+     if (cloneWorkflowId) {
+       return <span> Success! Cloned Workflow Id:  {cloneWorkflowId} </span>
+    }
+        return cloneWorkflowId;
+    }
     function getFailureReason(){
       return wf.reasonForIncompletion;
     }
@@ -145,19 +152,20 @@ class WorkflowDetails extends Component {
       }
       return 'none';
     }
-    return (
-      <div className="ui-content">
-      <h4>
-        {wf.workflowType}/{wf.version}
-        <span className={(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY') ? "red":"green"}>
-          {wf.status}
-        </span>
-        <span>
-          <WorkflowAction workflowStatus={wf.status} workflowId={wf.workflowId}/>
-        </span>
-      </h4>
-      <br/><br/>
-      <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
+   return (
+        <div className="ui-content">
+        <h4>
+          {wf.workflowType}/{wf.version}
+          <span className={(wf.status == 'FAILED' || wf.status == 'CANCELLED' || wf.status == 'TERMINATED' || wf.status == 'TIMED_OUT' || wf.status == 'RESET' || wf.status == 'FAILED_NO_RETRY') ? "red":"green"}>
+            {wf.status}
+          </span>
+          <span>
+            <WorkflowAction workflowStatus={wf.status} workflowId={wf.workflowId}/>
+          </span>
+          {showClonedWorkflowId(cloneWorkflowId)}
+        </h4>
+        <br/><br/>
+        <Table responsive={true} striped={false} hover={false} condensed={false} bordered={true}>
         <thead>
           <tr>
             <th>Workflow ID</th><th>Owner App</th><th>Total Time (sec)</th><th>Start/End Time</th><th>Correlation ID</th><th>Context User</th>

@@ -197,6 +197,19 @@ router.post('/restart/:workflowId', async (req, res, next) => {
   }
 });
 
+router.post('/clone/:workflowId', async (req, res, next) => {
+  try {
+    const token = getToken(req);
+    const baseURL = await lookup.lookup();
+    const baseURL2 = baseURL + 'workflow/';
+
+    const result = await http.post(baseURL2 + req.params.workflowId + '/clone', null, token);
+    res.status(200).send({result: result.workflowId});
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/retry/:workflowId', async (req, res, next) => {
   try {
     const token = getToken(req);
