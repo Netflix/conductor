@@ -83,6 +83,9 @@ public class WorkflowSummary {
     @ProtoField(id = 17)
     private int priority;
 
+    @ProtoField(id = 18)
+    private String createdBy;
+
     public WorkflowSummary() {}
 
     public WorkflowSummary(Workflow workflow) {
@@ -124,6 +127,8 @@ public class WorkflowSummary {
         if (StringUtils.isNotBlank(workflow.getExternalOutputPayloadStoragePath())) {
             this.externalOutputPayloadStoragePath = workflow.getExternalOutputPayloadStoragePath();
         }
+
+        this.createdBy = workflow.getCreatedBy();
     }
 
     /** @return the workflowType */
@@ -296,6 +301,14 @@ public class WorkflowSummary {
         this.priority = priority;
     }
 
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -316,7 +329,8 @@ public class WorkflowSummary {
                 && StringUtils.equals(getEndTime(), that.getEndTime())
                 && getStatus() == that.getStatus()
                 && Objects.equals(getReasonForIncompletion(), that.getReasonForIncompletion())
-                && Objects.equals(getEvent(), that.getEvent());
+                && Objects.equals(getEvent(), that.getEvent())
+                && Objects.equals(getCreatedBy(), that.getCreatedBy());
     }
 
     @Override
@@ -333,6 +347,7 @@ public class WorkflowSummary {
                 getReasonForIncompletion(),
                 getExecutionTime(),
                 getEvent(),
-                getPriority());
+                getPriority(),
+                getCreatedBy());
     }
 }
