@@ -47,7 +47,6 @@ nav:
     - Task Lifecycle: tasklifecycle.md
     - External Payload Storage: externalpayloadstorage.md
     - How-Tos:
-   
         - Workflows:
             - Debugging Workflows: how-tos/Workflows/debugging-workflows.md
             - Handliing Errors: how-tos/Workflows/handling-errors.md
@@ -83,6 +82,7 @@ nav:
         - Kitchensink: labs/kitchensink.md
     - Best Practices: bestpractices.md
     - FAQ: faq.md
+    - Directed Acyclic Graph: reference-docs/directed-acyclic-graph.md
     - Technical Details: technicaldetails.md
     - License: license.md
 theme: 
