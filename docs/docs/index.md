@@ -13,7 +13,7 @@
 
 * A distributed server ecosystem, which stores workflow state information efficiently.
 * Allow creation of process / business flows in which each individual task can be implemented by the same / different microservices.
-* A DAG (Directed Acyclic Graph) based workflow definition.
+* A [DAG (Directed Acyclic Graph)](reference-docs/directed-acyclic-graph.md) based workflow definition.
 * Workflow definitions are decoupled from the service implementations.
 * Provide visibility and traceability into these process flows.
 * Simple interface to connect workers, which execute the tasks in workflows.
