@@ -32,32 +32,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
       - name: Build with Gradle
-        if: github.ref != 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./gradlew build -x :conductor-contribs:test --scan
-      - name: Build and Publish snapshot
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        run: |
-          echo "Running build for commit ${{ github.sha }}"
-          ./gradlew build -x :conductor-contribs:test snapshot --scan
-        env:
-          NETFLIX_OSS_SIGNING_KEY: ${{ secrets.ORG_SIGNING_KEY }}
-          NETFLIX_OSS_SIGNING_PASSWORD: ${{ secrets.ORG_SIGNING_PASSWORD }}
-          NETFLIX_OSS_REPO_USERNAME: ${{ secrets.ORG_NETFLIXOSS_USERNAME }}
-          NETFLIX_OSS_REPO_PASSWORD: ${{ secrets.ORG_NETFLIXOSS_PASSWORD }}
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-artifacts
-          path: '**/build/reports'
-      - name: Store Buildscan URL
-        uses: actions/upload-artifact@v2
-        with:
-          name: build-scan
-          path: 'buildscan.log'
   build-ui:
     runs-on: ubuntu-latest
     defaults:
