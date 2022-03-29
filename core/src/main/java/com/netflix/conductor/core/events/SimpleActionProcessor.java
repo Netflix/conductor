@@ -12,10 +12,14 @@
  */
 package com.netflix.conductor.core.events;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import com.netflix.conductor.common.utils.TaskUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,6 +127,13 @@ public class SimpleActionProcessor implements ActionProcessor {
                 return replaced;
             }
             taskModel = workflow.getTaskByRefName(taskRefName);
+            // Task can be loopover task.In such case find corresponding task and update
+            List<TaskModel> loopOverTaskList = workflow.getTasks().stream().filter(t ->
+                    TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName()).equals(taskRefName)).collect(Collectors.toList());
+            if (!loopOverTaskList.isEmpty()) {
+                // Find loopover task with the highest iteration value
+                taskModel = loopOverTaskList.stream().sorted(Comparator.comparingInt(TaskModel::getIteration).reversed()).findFirst().get();
+            }
         }
 
         if (taskModel == null) {
