@@ -19,6 +19,8 @@
 package com.netflix.conductor.server.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
@@ -73,6 +75,8 @@ public class WorkflowResource {
     private boolean auth_referer_bypass;
 
     private int maxSearchSize;
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Inject
     public WorkflowResource(WorkflowExecutor executor, ExecutionService service,
@@ -150,6 +154,17 @@ public class WorkflowResource {
         if (isNotEmpty(correlationId)) {
             request.setCorrelationId(correlationId);
         }
+        if (correlationId == null && request.getCorrelationId() != null) {
+            Map<String, Object> correlationMap = mapper.readValue(request.getCorrelationId(), new TypeReference<Map<String, Object>>() {
+            });
+            ArrayList<String> urns = (ArrayList<String>) correlationMap.get("urns");
+            urns.removeIf(name -> name.contains("urn:deluxe:conductor:workflow:"));
+            urns.add("urn:deluxe:conductor:workflow:" + workflowId);
+            correlationMap.put("urns", urns);
+            String clonedCorrelationId = correlationMap.toString();
+            request.setCorrelationId(clonedCorrelationId);
+        }
+
         String userInvoked = executor.decodeAuthorizationUser(headers);
         if (!bypassAuth(headers)) {
             String primarRole = executor.checkUserRoles(headers);
@@ -544,7 +559,6 @@ public class WorkflowResource {
     @Consumes(MediaType.WILDCARD)
     public Response clone(@Context HttpHeaders headers, @PathParam("workflowId") String workflowId) throws Exception {
         Response.ResponseBuilder builder = Response.noContent();
-        String correlationId = handleCorrelationId(workflowId, headers, builder);
         String userInvoked = executor.decodeAuthorizationUser(headers);
         Workflow cloneWorkflow = executor.getWorkflow(workflowId, false);
         Map<String, String> responseMap = new HashMap<>();
@@ -557,7 +571,7 @@ public class WorkflowResource {
             NDC.push("rest-clone-" + UUID.randomUUID());
             try {
                 logger.info("About to clone workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/clone");
-                Response responseWithNewWorkflow = startWorkflow(headers, cloneWorkflow, correlationId);
+                Response responseWithNewWorkflow = startWorkflow(headers, cloneWorkflow, cloneWorkflow.getCorrelationId());
                 responseMap.put("workflowId", responseWithNewWorkflow.getEntity().toString());
                 return builder.entity(responseMap).build();
             } finally {
@@ -567,7 +581,7 @@ public class WorkflowResource {
             NDC.push("rest-clone-" + UUID.randomUUID());
             try {
                 logger.info("About to clone workflowId " + workflowId + ",userInvoked=" + userInvoked + ",path=/{workflowId}/restart");
-                Response responseWithNewWorkflow = startWorkflow(headers, cloneWorkflow, correlationId);
+                Response responseWithNewWorkflow = startWorkflow(headers, cloneWorkflow, cloneWorkflow.getCorrelationId());
                 responseMap.put("workflowId", responseWithNewWorkflow.getEntity().toString());
                 return builder.entity(responseMap).build();
             } finally {
