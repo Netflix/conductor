@@ -161,7 +161,7 @@ public class WorkflowResource {
             urns.removeIf(name -> name.contains("urn:deluxe:conductor:workflow:"));
             urns.add("urn:deluxe:conductor:workflow:" + workflowId);
             correlationMap.put("urns", urns);
-            String clonedCorrelationId = correlationMap.toString();
+            String clonedCorrelationId =  mapper.writeValueAsString(correlationMap);;
             request.setCorrelationId(clonedCorrelationId);
         }
 
