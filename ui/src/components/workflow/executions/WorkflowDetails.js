@@ -138,10 +138,11 @@ class WorkflowDetails extends Component {
       return <tbody>{trs}</tbody>
     }
     function showClonedWorkflowId(cloneWorkflowId){
-     if (cloneWorkflowId) {
+      const cloneEnabledEnvs = ['owf-dev', 'owf-int'];
+      if (sys['env'] && cloneWorkflowId && cloneEnabledEnvs.includes(sys['env']['TLD'])) {
        return <span> Success! Cloned Workflow Id:  {cloneWorkflowId} </span>
-    }
-        return cloneWorkflowId;
+      }
+        return '';
     }
     function getFailureReason(){
       return wf.reasonForIncompletion;
