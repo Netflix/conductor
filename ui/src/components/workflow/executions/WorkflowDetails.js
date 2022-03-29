@@ -140,7 +140,7 @@ class WorkflowDetails extends Component {
     function showClonedWorkflowId(cloneWorkflowId){
       const cloneEnabledEnvs = ['owf-dev', 'owf-int'];
       if (sys['env'] && cloneWorkflowId && cloneEnabledEnvs.includes(sys['env']['TLD'])) {
-       return <span> Success! Cloned Workflow Id:  {cloneWorkflowId} </span>
+       return <span> Success! Cloned Workflow Id: <Link to={`/workflow/id/${cloneWorkflowId}`}>{cloneWorkflowId}</Link> </span>
       }
         return '';
     }
