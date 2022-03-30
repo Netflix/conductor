@@ -197,6 +197,10 @@ public class ExternalPayloadStorageUtils {
         ExternalStorageLocation location =
                 externalPayloadStorage.getLocation(
                         ExternalPayloadStorage.Operation.WRITE, payloadType, "");
+
+        LOGGER.error("JD - location: {}", location);
+
+
         externalPayloadStorage.upload(
                 location.getPath(), new ByteArrayInputStream(payloadBytes), payloadSize);
         return location.getPath();

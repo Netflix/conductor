@@ -88,6 +88,7 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
             } else {
                 objectKey = getObjectKey(payloadType);
             }
+            LOGGER.error("JD - objectKey: {}", objectKey);
             externalStorageLocation.setPath(objectKey);
 
             GeneratePresignedUrlRequest generatePresignedUrlRequest =
@@ -95,10 +96,14 @@ public class S3PayloadStorage implements ExternalPayloadStorage {
                             .withMethod(httpMethod)
                             .withExpiration(expiration);
 
+            LOGGER.error("JD - presigned: {}", generatePresignedUrlRequest);
+
             externalStorageLocation.setUri(
                     s3Client.generatePresignedUrl(generatePresignedUrlRequest)
                             .toURI()
                             .toASCIIString());
+
+            LOGGER.error("JD - externalStorage: {}", externalStorageLocation);
             return externalStorageLocation;
         } catch (SdkClientException e) {
             String msg = "Error communicating with S3";
