@@ -23,14 +23,14 @@ As we complete this code lab, we'll be familiar with these aspects of Netflix Co
     * Switch
     * Set Variable
 
-ON completion of the codelab, the final Hello World workflow looks a lot more complicated:
+On completion of the codelab, the final Hello World workflow looks a lot more complicated:
 
 
 <p align="center"><img src="../img/hw5_workflow.png" alt="part 5 workflow diagram" width="800" style={{paddingBottom: 40, paddingTop: 40}} /></p>
 
 ## Requirements
 
-This demo will use the Orkes [Conductor playground](https://play.orkes.io) to run the workflow.  Create  an account for free by signing up with an email address or Google account.  Alternatively, the open source Conductor [installed locally](/docs/getting-started/install/running-locally) can also be used, using the API to add Tasks and Workflows.  The UI in the Playground screenshots will be otherwise similar.
+[Install Conductor](/docs/getting-started/install/running-locally).  The UI in this codelab uses [Orkes Playground](https://play.orkes.io) so the screenshots may vary slightly.
 
 To run the Java worker, Java must be installed on yur local computer.
 

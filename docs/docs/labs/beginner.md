@@ -3,15 +3,13 @@ Please feel free to follow along using any of these resources:
 
 - Using cURL
 - Postman or similar REST client
-- [Conductor Playground](https://play.orkes.io) hosted by Orkes. [Working Example](https://play.orkes.io/workflowDef/add_netflix_identation)
 
 ## Creating a Workflow
 
 Let's create a simple workflow that adds Netflix Idents to videos. We'll be mocking the adding Idents part and focusing on actually executing this process flow.
 
 !!!info "What are Netflix Idents?" 
-    Netflix Idents are those 4 second videos with Netflix logo, which appears at the beginning and end of shows.
-    Learn more about them [here](https://partnerhelp.netflixstudios.com/hc/en-us/articles/115004750187-Master-QC-Identifying-and-Implementing-the-Netflix-Ident-). You might have also noticed they're different for Animation and several other genres.
+    Netflix Idents are those 4 second videos with Netflix logo, which appears at the beginning and end of shows.  You might have also noticed they're different for Animation and several other genres.
 
 !!!warning "Disclaimer"
     Obviously, this is not how Netflix adds Idents. Those Workflows are indeed very complex. But, it should give you an idea about how Conductor can be used to implement similar features.
