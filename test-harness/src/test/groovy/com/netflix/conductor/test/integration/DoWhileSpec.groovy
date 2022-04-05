@@ -125,7 +125,7 @@ class DoWhileSpec extends AbstractSpecification {
         }
     }
 
-    def "Test workflow with a iteration fix Do While task"() {
+    def "Test workflow with Do While task contains loop over task that use iteration in script expression"() {
         given: "Number of iterations of the loop is set to 2"
         def workflowInput = new HashMap()
         workflowInput['loop'] = 2
@@ -133,7 +133,7 @@ class DoWhileSpec extends AbstractSpecification {
         when: "A do_while workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow("Do_While_Workflow_Iteration_Fix", 1, "looptest", workflowInput, null, null)
 
-        then: "Verify that the workflow has started"
+        then: "Verify that the workflow has competed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 3
