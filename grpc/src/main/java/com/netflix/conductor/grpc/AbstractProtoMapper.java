@@ -437,6 +437,9 @@ public abstract class AbstractProtoMapper {
         if (from.getPriority() != null) {
             to.setPriority( from.getPriority() );
         }
+        if (from.getCreatedBy() != null) {
+            to.setCreatedBy( from.getCreatedBy() );
+        }
         return to.build();
     }
 
@@ -456,6 +459,7 @@ public abstract class AbstractProtoMapper {
         }
         to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
         to.setPriority( from.getPriority() );
+        to.setCreatedBy( from.getCreatedBy() );
         return to;
     }
 
@@ -1218,6 +1222,9 @@ public abstract class AbstractProtoMapper {
             to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         }
         to.setPriority( from.getPriority() );
+        if (from.getCreatedBy() != null) {
+            to.setCreatedBy( from.getCreatedBy() );
+        }
         return to.build();
     }
 
@@ -1240,6 +1247,7 @@ public abstract class AbstractProtoMapper {
         to.setExternalInputPayloadStoragePath( from.getExternalInputPayloadStoragePath() );
         to.setExternalOutputPayloadStoragePath( from.getExternalOutputPayloadStoragePath() );
         to.setPriority( from.getPriority() );
+        to.setCreatedBy( from.getCreatedBy() );
         return to;
     }
 

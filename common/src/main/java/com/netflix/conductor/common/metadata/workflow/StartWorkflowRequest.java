@@ -54,6 +54,9 @@ public class StartWorkflowRequest {
     @Max(value = 99, message = "priority: ${validatedValue} should be maximum {value}")
     private Integer priority = 0;
 
+    @ProtoField(id = 9)
+    private String createdBy;
+
     public String getName() {
         return name;
     }
@@ -156,6 +159,19 @@ public class StartWorkflowRequest {
 
     public StartWorkflowRequest withWorkflowDef(WorkflowDef workflowDef) {
         this.workflowDef = workflowDef;
+        return this;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public StartWorkflowRequest withCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
         return this;
     }
 }

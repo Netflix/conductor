@@ -231,6 +231,30 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
+    public String startWorkflow(
+            String name,
+            Integer version,
+            String correlationId,
+            Integer priority,
+            Map<String, Object> input,
+            String externalInputPayloadStoragePath,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        return startWorkflow(
+                name,
+                version,
+                input,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                null,
+                null,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
     /** @throws ApplicationException */
     public String startWorkflow(
             String name,
@@ -294,6 +318,29 @@ public class WorkflowExecutor {
 
     /** @throws ApplicationException */
     public String startWorkflow(
+            WorkflowDef workflowDefinition,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                null,
+                null,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
+    /** @throws ApplicationException */
+    public String startWorkflow(
             String name,
             Integer version,
             Map<String, Object> workflowInput,
@@ -343,6 +390,35 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
+    /** @throws ApplicationException */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        WorkflowDef workflowDefinition =
+                metadataMapperService.lookupForWorkflowDefinition(name, version);
+
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
     /** @throws ApplicationException if validation fails */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
@@ -354,6 +430,31 @@ public class WorkflowExecutor {
             String parentWorkflowTaskId,
             String event,
             Map<String, String> taskToDomain) {
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain,
+                null);
+    }
+
+    /** @throws ApplicationException if validation fails */
+    public String startWorkflow(
+            WorkflowDef workflowDefinition,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
 
         workflowDefinition = metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
@@ -374,6 +475,7 @@ public class WorkflowExecutor {
         workflow.setParentWorkflowTaskId(parentWorkflowTaskId);
         workflow.setOwnerApp(WorkflowContext.get().getClientApp());
         workflow.setCreateTime(System.currentTimeMillis());
+        workflow.setCreatedBy(createdBy);
         workflow.setUpdatedBy(null);
         workflow.setUpdatedTime(null);
         workflow.setEvent(event);
