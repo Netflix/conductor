@@ -23,11 +23,11 @@ public class HealthCheckClient {
 
     private final String healthCheckURL;
 
-    private final ObjectMapper om;
+    private final ObjectMapper objectMapper;
 
     public HealthCheckClient(String healthCheckURL) {
         this.healthCheckURL = healthCheckURL;
-        this.om =
+        this.objectMapper =
                 new ObjectMapper()
                         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
@@ -44,7 +44,7 @@ public class HealthCheckClient {
             }
             in.close();
             HealthCheckResults healthCheckResults =
-                    om.readValue(response.toString(), HealthCheckResults.class);
+                    objectMapper.readValue(response.toString(), HealthCheckResults.class);
             return healthCheckResults.healthy;
         } catch (Throwable t) {
             return false;

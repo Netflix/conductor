@@ -20,9 +20,9 @@ public class WorkflowTestRunner {
 
     private LocalServerRunner localServerRunner;
 
-    private AnnotatedWorkerExecutor annotatedWorkerExecutor;
+    private final AnnotatedWorkerExecutor annotatedWorkerExecutor;
 
-    private WorkflowExecutor workflowExecutor;
+    private final WorkflowExecutor workflowExecutor;
 
     public WorkflowTestRunner(String serverApiUrl) {
 

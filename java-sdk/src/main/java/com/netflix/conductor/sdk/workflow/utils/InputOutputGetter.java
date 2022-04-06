@@ -22,7 +22,7 @@ public class InputOutputGetter {
     }
 
     public static final class Map {
-        private String parent;
+        private final String parent;
 
         public Map(String parent) {
             this.parent = parent;
@@ -48,7 +48,7 @@ public class InputOutputGetter {
 
     public static final class List {
 
-        private String parent;
+        private final String parent;
 
         public List(String parent) {
             this.parent = parent;
@@ -76,9 +76,9 @@ public class InputOutputGetter {
         }
     }
 
-    private String name;
+    private final String name;
 
-    private Field field;
+    private final Field field;
 
     public InputOutputGetter(String name, Field field) {
         this.name = name;

@@ -38,7 +38,7 @@ public class LocalServerRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LocalServerRunner.class);
 
-    private HealthCheckClient healthCheck;
+    private final HealthCheckClient healthCheck;
 
     private Process serverProcess;
 
@@ -47,11 +47,11 @@ public class LocalServerRunner {
 
     private final CountDownLatch serverProcessLatch = new CountDownLatch(1);
 
-    private int port;
+    private final int port;
 
-    private String conductorVersion;
+    private final String conductorVersion;
 
-    private String serverURL;
+    private final String serverURL;
 
     private static Map<Integer, LocalServerRunner> serverInstances = new HashMap<>();
 
