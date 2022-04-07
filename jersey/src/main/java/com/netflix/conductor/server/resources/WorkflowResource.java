@@ -227,6 +227,78 @@ public class WorkflowResource {
         return startWorkflow(request, headers);
     }
 
+    @POST
+    @Path("/ops/{name}")
+    @Produces({MediaType.TEXT_PLAIN})
+    @ApiOperation("Start a new workflow without auth token for Ops.  Returns the ID of the workflow instance that can be later used for tracking")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+            @ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+            @ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+            @ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+            @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+            @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+            @ApiResponse(code = 200, message = "SUCCESS", response = String.class)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Authorization-Context", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
+    public Response startWorkflowOps(@Context HttpHeaders headers,
+                                  @PathParam("name") String name, @QueryParam("username") String username,  @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
+                                  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
+
+        if (username == null) {
+            throw new ApplicationException(Code.INVALID_INPUT, "Username is mandatory");
+        }
+        WorkflowDef def = metadata.getWorkflowDef(name, version);
+        if (def == null) {
+            throw new ApplicationException(Code.NOT_FOUND, "No such workflow found by name=" + name + ", version=" + version);
+        }
+        String workflowId = null;
+        if (headers.getRequestHeader(CommonParams.WORKFLOW_ID) != null) {
+            workflowId = headers.getRequestHeader(CommonParams.WORKFLOW_ID).get(0);
+        }
+        // Generate id on this layer as we need to have it before starting workflow
+        if (isEmpty(workflowId)) {
+            workflowId = IDGenerator.generate();
+        }
+        Response.ResponseBuilder builder = Response.ok(workflowId);
+
+        String contextToken = null;
+        String contextUser = null;
+        String traceId = null;
+        if (headers.getRequestHeader(CommonParams.AUTH_CONTEXT) != null) {
+            contextToken = headers.getRequestHeader(CommonParams.AUTH_CONTEXT).get(0);
+            contextUser = executor.validateContextUser(contextToken);
+        } else {
+            contextUser = username;
+        }
+
+        if (headers.getRequestHeader(CommonParams.PLATFORM_TRACE_ID) != null) {
+            traceId = headers.getRequestHeader(CommonParams.PLATFORM_TRACE_ID).get(0);
+        }
+
+        boolean asyncStart = false;
+        if (headers.getRequestHeader(CommonParams.ASYNC_START) != null) {
+            asyncStart = Boolean.parseBoolean(headers.getRequestHeader(CommonParams.ASYNC_START).get(0));
+        }
+
+        String correlationIdToPass = "";
+        correlationIdToPass = handleCorrelationId(workflowId, headers, builder);
+        NDC.push("rest-start-" + UUID.randomUUID().toString());
+        try {
+            logger.info("About to start workflow " + workflowId + ",userInvoked=" + username + ",path=/ops/{name}");
+            executor.startWorkflow(workflowId, def.getName(), def.getVersion(), correlationIdToPass,
+                    input, null, null,
+                    null, contextToken, contextUser, traceId, asyncStart, jobPriority, true);
+        } finally {
+            NDC.remove();
+        }
+
+        return builder.build();
+    }
+
     @GET
     @Path("/{name}/correlated/{correlationId}")
     @ApiOperation("Lists workflows for the given correlation id")
