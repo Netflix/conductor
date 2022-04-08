@@ -98,7 +98,7 @@ Further, all of the (non-Java) SDKs have a new GitHub home: the Conductor SDK re
 * [Golang](https://github.com/conductor-sdk/conductor-go)
 * [Python](https://github.com/conductor-sdk/conductor-python)
 * [C#](https://github.com/conductor-sdk/conductor-csharp)
-* [Clojure}(https://github.com/conductor-sdk/conductor-clojure)
+* [Clojure](https://github.com/conductor-sdk/conductor-clojure)
 
 All contributions on the above client sdks can be me made on [Conductor SDK](https://github.com/conductor-sdk) repository.
 
