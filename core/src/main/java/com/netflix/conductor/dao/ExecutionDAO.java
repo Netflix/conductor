@@ -24,11 +24,12 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
+import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowError;
-import com.netflix.conductor.common.run.TaskDetails;
-import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.common.run.WorkflowErrorRegistry;
+import com.netflix.conductor.core.events.queue.Message;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -336,4 +337,14 @@ public interface ExecutionDAO {
 	}
 
 	public abstract List<TaskDetails> searchTaskDetails(String jobId, String workflowId, String workflowType, String taskName, Boolean includeOutput);
+
+	default List<WorkflowErrorRegistry> getUnknownServiceErrors(){
+		return Collections.emptyList();
+	}
+	default List<WorkflowErrorRegistry> getUnknownInternalErrors(){
+		return Collections.emptyList();
+	}
+	default List<WorkflowErrorRegistry> getKnownUnregisteredErrors(){
+		return Collections.emptyList();
+	}
 }

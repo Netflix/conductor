@@ -29,7 +29,7 @@ const routeConfig = [
       { path: 'logout', component: Logout},
       { path: 'help', component: Help },
       { path: '/workflow/errorDashboard', component: ErrorDashboard },
-      { path: '/workflow/errorDashboard/details/:errorLookupId/:searchString/:fromDate/:toDate/:range/:lookup', component: ErrorDashboardDetails },
+      { path: '/workflow/errorDashboard/details/:errorLookupId/:searchString/:fromDate/:toDate/:range/:lookup/:errorType', component: ErrorDashboardDetails },
     ]
   }
 ];

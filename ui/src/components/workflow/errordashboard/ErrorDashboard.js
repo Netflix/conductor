@@ -1,11 +1,9 @@
-import React, { Component } from 'react';
-import moment from 'moment';
-import { Link, browserHistory } from 'react-router';
-import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton, Grid, ButtonToolbar, MenuItem, Popover, OverlayTrigger, ButtonGroup, Row, Col, Table } from 'react-bootstrap';
-import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
+import React from 'react';
+import {Link} from 'react-router';
+import {Button, Col, Grid, Input, Panel, Row, Table} from 'react-bootstrap';
 import Typeahead from 'react-bootstrap-typeahead';
-import { connect } from 'react-redux';
-import { getErrorData,getErrorCountDay, getErrorCountWeek, getErrorDataMonth } from '../../../actions/WorkflowActions';
+import {connect} from 'react-redux';
+import {getErrorCountDay, getErrorCountWeek, getErrorData, getErrorDataMonth} from '../../../actions/WorkflowActions';
 
 const ErrorDashboard = React.createClass({
 
@@ -206,8 +204,8 @@ const ErrorDashboard = React.createClass({
                   {unknownErrors !== undefined && unknownErrors.map(item=>(
                  <tbody>
                      <tr>
-                        <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>Unknown Error</Link></td>
-                        <td><label className="small nobold">{item.totalCount} </label><br/></td>
+                        <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup + '/DEFAULT' }>Unknown Error</Link></td>
+                            <td><label className="small nobold">{item.totalCount} </label><br/></td>
                      </tr>
                  </tbody>
                 ))}
@@ -224,14 +222,40 @@ const ErrorDashboard = React.createClass({
                {knownErrors !== undefined && knownErrors.map(item=>(
                 <tbody>
                  <tr>
-                 <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup }>{item.lookup}</Link></td>
+                 <td> <Link to={'/workflow/errorDashboard/details/'+item.id+'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+item.lookup + '/DEFAULT'}>{item.lookup}</Link></td>
                  <td><label className="small nobold">{item.totalCount} </label><br/></td>
                  </tr>
                  </tbody>
                 ))}
                  </Table>
             </Panel>
-
+          <Panel header="Known Unregistered Errors">
+           <Table striped bordered hover>
+                <tbody>
+                 <tr>
+                 <td> <Link to={'/workflow/errorDashboard/details/'+ 1 +'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+'Known Unregistered Errors' +'/KUE'}>{'Show Errors'}</Link></td>
+                 </tr>
+                 </tbody>
+                 </Table>
+            </Panel>
+          <Panel header="Unknown Internal Errors">
+           <Table striped bordered hover>
+                <tbody>
+                 <tr>
+                 <td> <Link to={'/workflow/errorDashboard/details/'+ 1 +'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+'Unknown Internal Errors' + '/UIE'}>{'Show Errors'}</Link></td>
+                 </tr>
+                 </tbody>
+                 </Table>
+            </Panel>
+          <Panel header="Unknown Service errors">
+           <Table striped bordered hover>
+                <tbody>
+                 <tr>
+                 <td> <Link to={'/workflow/errorDashboard/details/'+ 1 +'/'+this.state.search+'/'+this.state.datefrm+'/'+this.state.dateto+'/'+this.state.range+'/'+ 'Unknown Service Errors' +'/USE'}>{'Show Errors'}</Link></td>
+                 </tr>
+                 </tbody>
+                 </Table>
+            </Panel>
       </div>
     );
   }

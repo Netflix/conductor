@@ -9,10 +9,7 @@ import com.netflix.conductor.common.metadata.tasks.PollData;
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.common.run.WorkflowError;
-import com.netflix.conductor.common.run.WorkflowErrorRegistry;
-import com.netflix.conductor.common.run.TaskDetails;
+import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
@@ -21,10 +18,14 @@ import com.netflix.conductor.dao.MetadataDAO;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.sql.Timestamp;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.netflix.conductor.aurora.ErrorDeciderUtils.isKnownError;
+import static com.netflix.conductor.aurora.ErrorDeciderUtils.isUnknownError;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 	private final MetadataDAO metadata;
@@ -801,6 +802,8 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 				.executeUpdate());
 	}
 
+
+	//		List<String> items = getWorkflowRegistryErrors();
 	public List<WorkflowError> searchWorkflowErrorRegistry(WorkflowErrorRegistry  workflowErrorRegistryEntry){
 		StringBuilder SQL = new StringBuilder("SELECT meta_error_registry.isRequiredInReporting, meta_error_registry.id, meta_error_registry.lookup,COUNT(workflow_error_registry.id) AS numberOfErrors FROM workflow_error_registry \n" +
 				"LEFT JOIN meta_error_registry ON workflow_error_registry.error_lookup_id = meta_error_registry.id  \n" +
@@ -869,6 +872,107 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 			});
 		});
 
+	}
+
+	private List<WorkflowErrorRegistry> getWorkflowErrors() {
+		StringBuilder SQL = new StringBuilder("select workflow_id, json_data::json->>'reasonForIncompletion' as error from workflow\n" +
+				"where json_data::json->>'status' = 'FAILED'");
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			return q.executeAndFetch(rs -> {
+				List<WorkflowErrorRegistry> errors = new LinkedList<>();
+				while (rs.next()) {
+					errors.add(new WorkflowErrorRegistry(rs.getString("workflow_id"), rs.getString("error")));
+				}
+
+				return errors;
+			});
+		});
+	}
+
+	private List<WorkflowErrorRegistry> getWorkflowRegistryErrors() {
+		StringBuilder SQL = new StringBuilder("select workflow_id, complete_error from workflow_error_registry where error_lookup_id = 0");
+
+		List<WorkflowErrorRegistry> errorsList = queryWithTransaction(SQL.toString(), q -> q.executeAndFetch(rs -> {
+			List<WorkflowErrorRegistry> errors = new LinkedList<>();
+			while (rs.next()) {
+				errors.add(new WorkflowErrorRegistry(rs.getString("workflow_id"), rs.getString("complete_error")));
+			}
+
+
+			return errors;
+		}));
+
+
+		 return Stream.of(errorsList, getWorkflowErrors()).flatMap(Collection::stream).distinct()
+				 .collect(Collectors.toList());
+	}
+
+	private List<String> getMetaErrors() {
+		StringBuilder SQL = new StringBuilder("select lookup from meta_error_registry");
+
+		return queryWithTransaction(SQL.toString(), q -> {
+			return q.executeAndFetch(rs -> {
+				List<String> errors = new LinkedList<>();
+				while (rs.next()) {
+					errors.add(rs.getString("lookup"));
+				}
+
+				return errors;
+			});
+		});
+	}
+
+	private List<String> getLogErrors(Boolean isService) {
+		String query = isService? "SELECT message FROM log4j_logs where level like 'error' and message like '%Called service%'" :
+				"SELECT message FROM log4j_logs where level like 'error' and message not like '%Called service%'";
+
+		StringBuilder SQL = new StringBuilder(query);
+
+		return queryWithTransaction(SQL.toString(), q -> q.executeAndFetch(rs -> {
+			List<String> errors = new LinkedList<>();
+			while (rs.next()) {
+				errors.add(rs.getString("message"));
+			}
+
+			return errors;
+		}));
+	}
+
+	public List<WorkflowErrorRegistry> getUnknownServiceErrors(){
+		List<WorkflowErrorRegistry> unknownServiceErrors = new ArrayList<>();
+		List<String> logServiceErrors = getLogErrors(true);
+		List<WorkflowErrorRegistry> workflowErrors = getWorkflowRegistryErrors();
+		workflowErrors.forEach(error -> logServiceErrors.stream().filter(logServiceError ->
+				isUnknownError(error.getCompleteError(), logServiceError))
+				.forEach(unknownServiceError -> unknownServiceErrors.add(new WorkflowErrorRegistry(error.getWorkflowId(),unknownServiceError, ErrorType.USE))));
+
+		return unknownServiceErrors;
+	}
+
+	public List<WorkflowErrorRegistry> getUnknownInternalErrors(){
+		List<WorkflowErrorRegistry> unknownInternalErrors = new ArrayList<>();
+		List<String> logServiceErrors = getLogErrors(true);
+		List<WorkflowErrorRegistry> workflowErrors = getWorkflowRegistryErrors();
+		workflowErrors.forEach(error -> logServiceErrors.stream().filter(logServiceError ->
+				isUnknownError(error.getCompleteError(), logServiceError))
+				.forEach(unknownInternalError -> unknownInternalErrors.add( new WorkflowErrorRegistry(error.getWorkflowId(),unknownInternalError, ErrorType.UIE))));
+
+		return unknownInternalErrors;
+	}
+
+	public List<WorkflowErrorRegistry> getKnownUnregisteredErrors(){
+		List<WorkflowErrorRegistry> knownErrors = new ArrayList<>();
+		List<String> metaErrors = getMetaErrors();
+		List<WorkflowErrorRegistry> workflowErrors = getWorkflowRegistryErrors();
+		workflowErrors.forEach(
+				error -> metaErrors.stream().filter(metaError ->
+				isKnownError(error.getCompleteError(), metaError))
+						.forEach(knownError ->
+								knownErrors.add(new WorkflowErrorRegistry(error.getWorkflowId(), knownError, ErrorType.KUE)))
+		);
+
+		return knownErrors;
 	}
 
 	public List<WorkflowErrorRegistry> searchWorkflowErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistryEntry) {

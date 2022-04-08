@@ -91,7 +91,7 @@ router.get('/', async (req, res, next) => {
 
     let query = req.query.q;
 
-    const url = baseURL2 + 'search?size='+ size +'&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
+    const url =     baseURL2 + 'search?size='+ size +'&sort=startTime:DESC&freeText=' + freeText.join(' AND ') + '&start=' + start + '&query=' + query;
     const result = await http.get(url);
     const hits = result.results;
     res.status(200).send({result: {hits: hits, totalHits: result.totalHits}});
@@ -179,7 +179,6 @@ router.post('/cancel/:workflowId', async (req, res, next) => {
     const result = await http.postPlain(baseURL2 + req.params.workflowId + '/cancel', null, token);
     res.status(200).send({result: req.params.workflowId});
   } catch (err) {
-    console.log("err", err);
     next(err);
   }
 });
@@ -495,7 +494,6 @@ router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) =>
             end = moment().endOf('day').valueOf();
           }
         }
-
     const token = getToken(req);
     const baseURL = await lookup.lookup();
     const baseURL2 = baseURL + 'workflow/';
@@ -509,7 +507,8 @@ router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) =>
                    orderId : req.query.searchString,
                    completeError : req.query.searchString,
                    startTime :  from,
-                   endTime : end
+                   endTime : end,
+                   errorType : req.query.errorType
                   };
          const result = await http.post(baseURL2 + 'errorRegistryList', inputData, token);
          res.status(200).send({result});
@@ -519,8 +518,10 @@ router.post('/errorRegistrySearchList/getlist/:range', async (req, res, next) =>
          const inputData={
           errorLookUpId : req.query.errorLookupId,
           startTime :  from,
-          endTime : end
+          endTime : end,
+          errorType : req.query.errorType
          };
+
          const result = await http.post(baseURL2 + 'errorRegistryList', inputData, token);
           res.status(200).send({result});
        }
