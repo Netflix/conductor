@@ -91,6 +91,17 @@ Binaries are available from [Netflix OSS Maven](https://artifacts.netflix.net/ne
 
 [Access here other Conductor related projects made by the community!](/RELATED.md) - Backup tool, Cron like workflow starter, Docker containers...
 
+## Client SDKs
+
+Further, all of the (non-Java) SDKs have a new GitHub home: the Conductor SDK repository is your new source for Conductor SDKs:
+
+* [Golang](https://github.com/conductor-sdk/conductor-go)
+* [Python](https://github.com/conductor-sdk/conductor-python)
+* [C#](https://github.com/conductor-sdk/conductor-csharp)
+* [Clojure}(https://github.com/conductor-sdk/conductor-clojure)
+
+All contributions on the above client sdks can be me made on [Conductor SDK](https://github.com/conductor-sdk) repository.
+
 ## Get Support
 Conductor is maintained by Media Workflow Infrastructure team at Netflix.  Use github issue tracking for filing issues and [Discussion Forum](https://github.com/Netflix/conductor/discussions) for any other questions, ideas or support requests. 
 
