@@ -38,11 +38,11 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:${revProtoBuf}"
+        artifact = "com.google.protobuf:protoc:${revProtoBuf}:osx-x86_64"
     }
     plugins {
         grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:${revGrpc}"
+            artifact = "io.grpc:protoc-gen-grpc-java:${revGrpc}:osx-x86_64"
         }
     }
     generateProtoTasks {

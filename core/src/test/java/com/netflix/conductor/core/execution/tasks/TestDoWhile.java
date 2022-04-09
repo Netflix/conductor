@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -100,7 +101,7 @@ public class TestDoWhile {
                                 properties,
                                 executionLockService,
                                 systemTaskRegistry,
-                                parametersUtils));
+                                parametersUtils, new IDGenerator()));
         WorkflowTask loopWorkflowTask1 = new WorkflowTask();
         loopWorkflowTask1.setTaskReferenceName("task1");
         loopWorkflowTask1.setName("task1");

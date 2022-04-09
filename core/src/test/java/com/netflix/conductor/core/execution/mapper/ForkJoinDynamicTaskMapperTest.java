@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.netflix.spectator.api.Id;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,6 +56,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 public class ForkJoinDynamicTaskMapperTest {
 
+    private IDGenerator idGenerator;
     private ParametersUtils parametersUtils;
     private ObjectMapper objectMapper;
     private DeciderService deciderService;
@@ -65,12 +67,13 @@ public class ForkJoinDynamicTaskMapperTest {
     @Before
     public void setUp() {
         MetadataDAO metadataDAO = Mockito.mock(MetadataDAO.class);
+        idGenerator = new IDGenerator();
         parametersUtils = Mockito.mock(ParametersUtils.class);
         objectMapper = Mockito.mock(ObjectMapper.class);
         deciderService = Mockito.mock(DeciderService.class);
 
         forkJoinDynamicTaskMapper =
-                new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO);
+                new ForkJoinDynamicTaskMapper(idGenerator, parametersUtils, objectMapper, metadataDAO);
     }
 
     @Test
@@ -140,7 +143,7 @@ public class ForkJoinDynamicTaskMapperTest {
         when(deciderService.getTasksToBeScheduled(workflowModel, wt3, 0))
                 .thenReturn(Collections.singletonList(simpleTask2));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
@@ -223,7 +226,7 @@ public class ForkJoinDynamicTaskMapperTest {
         when(deciderService.getTasksToBeScheduled(workflowModel, wt3, 0))
                 .thenReturn(Collections.singletonList(simpleTask2));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
                         .withWorkflowModel(workflowModel)
@@ -486,7 +489,7 @@ public class ForkJoinDynamicTaskMapperTest {
         when(deciderService.getTasksToBeScheduled(workflowModel, wt2, 0))
                 .thenReturn(Lists.newArrayList());
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
                         .withWorkflowModel(workflowModel)

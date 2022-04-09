@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -113,6 +114,11 @@ public class TestDeciderService {
         public ParametersUtils parametersUtils(ObjectMapper mapper) {
             return new ParametersUtils(mapper);
         }
+
+        @Bean
+        public IDGenerator idGenerator() {
+            return new IDGenerator();
+        }
     }
 
     private DeciderService deciderService;
@@ -153,6 +159,7 @@ public class TestDeciderService {
 
         deciderService =
                 new DeciderService(
+                        new IDGenerator(),
                         parametersUtils,
                         metadataDAO,
                         externalPayloadStorageUtils,

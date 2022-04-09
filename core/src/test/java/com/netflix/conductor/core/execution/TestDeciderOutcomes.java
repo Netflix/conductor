@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -160,7 +161,7 @@ public class TestDeciderOutcomes {
         taskMappers.put(JOIN, new JoinTaskMapper());
         taskMappers.put(
                 FORK_JOIN_DYNAMIC,
-                new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO));
+                new ForkJoinDynamicTaskMapper(new IDGenerator(), parametersUtils, objectMapper, metadataDAO));
         taskMappers.put(USER_DEFINED, new UserDefinedTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(SIMPLE, new SimpleTaskMapper(parametersUtils));
         taskMappers.put(SUB_WORKFLOW, new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
@@ -170,6 +171,7 @@ public class TestDeciderOutcomes {
 
         this.deciderService =
                 new DeciderService(
+                        new IDGenerator(),
                         parametersUtils,
                         metadataDAO,
                         externalPayloadStorageUtils,

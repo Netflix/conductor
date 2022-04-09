@@ -14,9 +14,19 @@ package com.netflix.conductor.core.utils;
 
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+
+@Component
 public class IDGenerator {
 
-    public static String generate() {
+    public IDGenerator() {
+
+    }
+
+    public String generate() {
         return UUID.randomUUID().toString();
     }
 }
