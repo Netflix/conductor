@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.*;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.model.MediaType;
@@ -356,6 +357,7 @@ public class HttpTaskTest {
         SystemTaskRegistry systemTaskRegistry = mock(SystemTaskRegistry.class);
 
         new DeciderService(
+                        new IDGenerator(),
                         parametersUtils,
                         metadataDAO,
                         externalPayloadStorageUtils,
