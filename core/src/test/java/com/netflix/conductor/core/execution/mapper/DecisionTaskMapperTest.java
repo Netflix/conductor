@@ -18,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.netflix.spectator.api.Id;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

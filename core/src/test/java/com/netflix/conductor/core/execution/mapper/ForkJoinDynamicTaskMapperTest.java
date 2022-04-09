@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.netflix.spectator.api.Id;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
@@ -73,7 +72,8 @@ public class ForkJoinDynamicTaskMapperTest {
         deciderService = Mockito.mock(DeciderService.class);
 
         forkJoinDynamicTaskMapper =
-                new ForkJoinDynamicTaskMapper(idGenerator, parametersUtils, objectMapper, metadataDAO);
+                new ForkJoinDynamicTaskMapper(
+                        idGenerator, parametersUtils, objectMapper, metadataDAO);
     }
 
     @Test

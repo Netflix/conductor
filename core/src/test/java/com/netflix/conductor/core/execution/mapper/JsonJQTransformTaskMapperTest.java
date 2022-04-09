@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.netflix.spectator.api.Id;
 import org.junit.Before;
 import org.junit.Test;
 

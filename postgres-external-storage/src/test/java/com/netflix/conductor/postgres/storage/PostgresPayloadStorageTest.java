@@ -20,7 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import com.netflix.conductor.core.utils.IDGenerator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,6 +30,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+import com.netflix.conductor.core.utils.IDGenerator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -63,7 +63,8 @@ public class PostgresPayloadStorageTest {
         executionPostgres =
                 new PostgresPayloadStorage(
                         new IDGenerator(),
-                        testPostgres.getTestProperties(), testPostgres.getDataSource());
+                        testPostgres.getTestProperties(),
+                        testPostgres.getDataSource());
     }
 
     @Test
