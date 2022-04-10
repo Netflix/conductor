@@ -15,11 +15,13 @@ package com.netflix.conductor.core.utils;
 import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "conductor.id.generator", havingValue = "default", matchIfMissing = true)
+@ConditionalOnProperty(
+        name = "conductor.id.generator",
+        havingValue = "default",
+        matchIfMissing = true)
 public class IDGenerator {
 
     public IDGenerator() {}
