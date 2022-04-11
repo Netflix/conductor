@@ -61,6 +61,10 @@
         "index": true,
         "doc_values": true
       },
+      "parentWorkflowId": {
+        "type": "text",
+        "index": true
+      },
       "rawJSON": {
         "type": "text",
         "index": false
