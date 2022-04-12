@@ -1,20 +1,16 @@
-.hljs {
-	font-size: 13px;
-	background-color: #f3f6f6;
+@font-face {
+  font-family: "Inter", sans-serif;
+  src: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap";
 }
-.hljs-attribute {
-	color: #000000
+
+.bg-primary {
+  background: #242A36 !important;
 }
-.hljs-string {
-	color: green
-}
-code {
-	color: green;
-	font-size: 13px
-}
-.wy-side-nav-search {
-	margin-bottom: 0;
-}
-body {
-	font-family: "Arial","proxima-nova","Helvetica Neue","Arial","sans-serif";
+
+.navbar-brand {
+  background-image: url(/img/logo_dark_background.png);
+  background-size: cover;
+  color: transparent !important;
+  padding: 0;
+  width: 140px;
 }
