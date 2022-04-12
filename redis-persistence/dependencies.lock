@@ -160,7 +160,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18"
+            "locked": "1.4.19"
         },
         "commons-cli:commons-cli": {
             "locked": "1.4",
@@ -697,7 +697,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
             ]
@@ -1154,7 +1154,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18"
+            "locked": "1.4.19"
         },
         "com.vaadin.external.google:android-json": {
             "locked": "0.0.20131108.vaadin1",
@@ -1897,7 +1897,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.eureka:eureka-client"
             ]

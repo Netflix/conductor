@@ -20,9 +20,10 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.3.4",
+            "locked": "2.10.0",
             "transitive": [
-                "com.google.guava:guava"
+                "com.google.guava:guava",
+                "io.grpc:grpc-api"
             ]
         },
         "com.google.guava:failureaccess": {
@@ -63,7 +64,7 @@
             "project": true
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -72,31 +73,31 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.netty:netty-buffer": {
             "locked": "4.1.65.Final",
@@ -258,7 +259,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "io.grpc:grpc-api",
@@ -322,7 +323,7 @@
             "project": true
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -331,34 +332,34 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc"
             ]
@@ -555,9 +556,10 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.3.4",
+            "locked": "2.10.0",
             "transitive": [
-                "com.google.guava:guava"
+                "com.google.guava:guava",
+                "io.grpc:grpc-api"
             ]
         },
         "com.google.guava:failureaccess": {
@@ -610,7 +612,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -619,31 +621,31 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.netty:netty-buffer": {
             "locked": "4.1.65.Final",
@@ -1087,7 +1089,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "io.grpc:grpc-api",
@@ -1163,7 +1165,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -1172,34 +1174,34 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc"
             ]
