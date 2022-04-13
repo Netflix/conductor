@@ -10,7 +10,15 @@ import ReplayIcon from "@material-ui/icons/Replay";
 import ResumeIcon from "@material-ui/icons/PlayArrow";
 import FlareIcon from "@material-ui/icons/Flare";
 
-import { useAction } from "../../utils/query";
+import {
+  useRestartAction,
+  useRestartLatestAction,
+  useResumeAction,
+  useRetryResumeSubworkflowTasksAction,
+  useRetryAction,
+  useTerminateAction,
+  usePauseAction,
+} from "../../data/actions";
 
 const useStyles = makeStyles({
   menuIcon: {
@@ -22,37 +30,18 @@ export default function ActionModule({ execution, triggerReload }) {
   const classes = useStyles();
   const { workflowId, workflowDefinition } = execution;
 
-  const restartAction = useAction(`/workflow/${workflowId}/restart`, "post", {
-    onSuccess,
-  });
-  const restartLatestAction = useAction(
-    `/workflow/${workflowId}/restart?useLatestDefinitions=true`,
-    "post",
-    { onSuccess }
-  );
-  const retryAction = useAction(
-    `/workflow/${workflowId}/retry?resumeSubworkflowTasks=false`,
-    "post",
-    { onSuccess }
-  );
-  const retryResumeSubworkflowTasksAction = useAction(
-    `/workflow/${workflowId}/retry?resumeSubworkflowTasks=true`,
-    "post",
-    { onSuccess }
-  );
-  const terminateAction = useAction(`/workflow/${workflowId}`, "delete", {
-    onSuccess,
-  });
-  const resumeAction = useAction(`/workflow/${workflowId}/resume`, "put", {
-    onSuccess,
-  });
-  const pauseAction = useAction(`/workflow/${workflowId}/pause`, "put", {
-    onSuccess,
-  });
+  const restartAction = useRestartAction({ workflowId, onSuccess });
+  const restartLatestAction = useRestartLatestAction({ workflowId, onSuccess });
+  const retryAction = useRetryAction({ workflowId, onSuccess });
+  const retryResumeSubworkflowTasksAction =
+    useRetryResumeSubworkflowTasksAction({ workflowId, onSuccess });
+  const terminateAction = useTerminateAction({ workflowId, onSuccess });
+  const resumeAction = useResumeAction({ workflowId, onSuccess });
+  const pauseAction = usePauseAction({ workflowId, onSuccess });
 
   const { restartable } = workflowDefinition;
 
-  function onSuccess(data, variables, context) {
+  function onSuccess() {
     triggerReload();
   }
 
@@ -62,7 +51,7 @@ export default function ActionModule({ execution, triggerReload }) {
       options.push({
         label: (
           <>
-            <RestartIcon className={classes.menuIcon} fontSize="small" />
+            <RestartIcon className={classes.menuIcon} />
             Restart with Current Definitions
           </>
         ),
@@ -72,7 +61,7 @@ export default function ActionModule({ execution, triggerReload }) {
       options.push({
         label: (
           <>
-            <FlareIcon className={classes.menuIcon} fontSize="small" />
+            <FlareIcon className={classes.menuIcon} />
             Restart with Latest Definitions
           </>
         ),
@@ -89,7 +78,6 @@ export default function ActionModule({ execution, triggerReload }) {
             label: (
               <>
                 <StopIcon
-                  fontSize="small"
                   style={{ color: "red" }}
                   className={classes.menuIcon}
                 />
@@ -101,7 +89,7 @@ export default function ActionModule({ execution, triggerReload }) {
           {
             label: (
               <>
-                <PauseIcon fontSize="small" className={classes.menuIcon} />
+                <PauseIcon className={classes.menuIcon} />
                 Pause
               </>
             ),
@@ -115,7 +103,7 @@ export default function ActionModule({ execution, triggerReload }) {
   } else if (execution.status === "PAUSED") {
     return (
       <PrimaryButton onClick={() => resumeAction.mutate()}>
-        <ResumeIcon fontSize="small" />
+        <ResumeIcon />
         Resume
       </PrimaryButton>
     );
@@ -126,7 +114,7 @@ export default function ActionModule({ execution, triggerReload }) {
       options.push({
         label: (
           <>
-            <RestartIcon className={classes.menuIcon} fontSize="small" />
+            <RestartIcon className={classes.menuIcon} />
             Restart with Current Definitions
           </>
         ),
@@ -136,7 +124,7 @@ export default function ActionModule({ execution, triggerReload }) {
       options.push({
         label: (
           <>
-            <FlareIcon className={classes.menuIcon} fontSize="small" />
+            <FlareIcon className={classes.menuIcon} />
             Restart with Latest Definitions
           </>
         ),
@@ -147,7 +135,7 @@ export default function ActionModule({ execution, triggerReload }) {
     options.push({
       label: (
         <>
-          <ReplayIcon className={classes.menuIcon} fontSize="small" />
+          <ReplayIcon className={classes.menuIcon} />
           Retry - From failed task
         </>
       ),
@@ -164,7 +152,7 @@ export default function ActionModule({ execution, triggerReload }) {
       options.push({
         label: (
           <>
-            <ReplayIcon className={classes.menuIcon} fontSize="small" />
+            <ReplayIcon className={classes.menuIcon} />
             Retry - Resume subworkflow
           </>
         ),

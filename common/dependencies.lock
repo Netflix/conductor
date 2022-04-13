@@ -6,7 +6,7 @@
     },
     "annotationsProcessorCodegen": {
         "com.github.jknack:handlebars": {
-            "locked": "4.0.7",
+            "locked": "4.3.0",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ]
@@ -18,25 +18,37 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.1.3",
+            "locked": "2.11.0",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
+        "com.google.guava:failureaccess": {
+            "locked": "1.0.1",
             "transitive": [
                 "com.google.guava:guava"
             ]
         },
         "com.google.guava:guava": {
-            "locked": "25.1-jre",
+            "locked": "31.1-jre",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ]
         },
+        "com.google.guava:listenablefuture": {
+            "locked": "9999.0-empty-to-avoid-conflict-with-guava",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
         "com.google.j2objc:j2objc-annotations": {
-            "locked": "1.1",
+            "locked": "1.3",
             "transitive": [
                 "com.google.guava:guava"
             ]
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.5.1",
+            "locked": "3.20.0",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ]
@@ -51,7 +63,7 @@
             "project": true
         },
         "com.squareup:javapoet": {
-            "locked": "1.11.1",
+            "locked": "1.13.0",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ]
@@ -60,18 +72,6 @@
             "locked": "1.3.2",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
-            ]
-        },
-        "org.antlr:antlr4-runtime": {
-            "locked": "4.7.1",
-            "transitive": [
-                "com.github.jknack:handlebars"
-            ]
-        },
-        "org.apache.commons:commons-lang3": {
-            "locked": "3.10",
-            "transitive": [
-                "com.github.jknack:handlebars"
             ]
         },
         "org.apache.logging.log4j:log4j-api": {
@@ -116,21 +116,9 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "2.0.0",
+            "locked": "3.12.0",
             "transitive": [
                 "com.google.guava:guava"
-            ]
-        },
-        "org.codehaus.mojo:animal-sniffer-annotations": {
-            "locked": "1.14",
-            "transitive": [
-                "com.google.guava:guava"
-            ]
-        },
-        "org.mozilla:rhino": {
-            "locked": "1.7.7",
-            "transitive": [
-                "com.github.jknack:handlebars"
             ]
         },
         "org.slf4j:slf4j-api": {
@@ -233,25 +221,25 @@
             "project": true
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -354,16 +342,16 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6"
+            "locked": "1.6.7"
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -460,7 +448,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]

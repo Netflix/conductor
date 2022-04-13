@@ -797,10 +797,10 @@
     },
     "spotbugs": {
         "com.github.spotbugs:spotbugs": {
-            "locked": "4.2.1"
+            "locked": "4.4.1"
         },
         "com.github.spotbugs:spotbugs-annotations": {
-            "locked": "4.2.1",
+            "locked": "4.4.1",
             "transitive": [
                 "com.github.spotbugs:spotbugs"
             ]
@@ -809,6 +809,12 @@
             "locked": "3.0.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs-annotations"
+            ]
+        },
+        "com.google.code.gson:gson": {
+            "locked": "2.8.7",
+            "transitive": [
+                "com.github.spotbugs:spotbugs"
             ]
         },
         "jaxen:jaxen": {
@@ -824,7 +830,7 @@
             ]
         },
         "net.sf.saxon:Saxon-HE": {
-            "locked": "10.3",
+            "locked": "10.5",
             "transitive": [
                 "com.github.spotbugs:spotbugs"
             ]
@@ -854,14 +860,15 @@
                 "com.github.spotbugs:spotbugs"
             ]
         },
-        "org.json:json": {
-            "locked": "20201115",
+        "org.junit:junit-bom": {
+            "locked": "5.7.2",
             "transitive": [
-                "com.github.spotbugs:spotbugs"
+                "com.github.spotbugs:spotbugs",
+                "com.github.spotbugs:spotbugs-annotations"
             ]
         },
         "org.ow2.asm:asm": {
-            "locked": "9.0",
+            "locked": "9.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs",
                 "org.ow2.asm:asm-commons",
@@ -870,7 +877,7 @@
             ]
         },
         "org.ow2.asm:asm-analysis": {
-            "locked": "9.0",
+            "locked": "9.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs",
                 "org.ow2.asm:asm-commons",
@@ -878,13 +885,13 @@
             ]
         },
         "org.ow2.asm:asm-commons": {
-            "locked": "9.0",
+            "locked": "9.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs"
             ]
         },
         "org.ow2.asm:asm-tree": {
-            "locked": "9.0",
+            "locked": "9.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs",
                 "org.ow2.asm:asm-analysis",
@@ -893,7 +900,7 @@
             ]
         },
         "org.ow2.asm:asm-util": {
-            "locked": "9.0",
+            "locked": "9.2",
             "transitive": [
                 "com.github.spotbugs:spotbugs"
             ]

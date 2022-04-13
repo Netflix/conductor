@@ -33,11 +33,6 @@ const spacingFn = (factor) => {
 const colorFn = (color) => colors[color];
 
 const baseThemeOptions = {
-  mixins: {
-    toolbar: {
-      minHeight: 80,
-    },
-  },
   palette: {
     type: "light",
     primary: {
@@ -135,6 +130,7 @@ const baseThemeOptions = {
     caption: {
       fontSize: fontSizes.fontSize2,
       lineHeight: lineHeights.lineHeight1,
+      fontWeight: fontWeights.fontWeight1,
     },
     button: {
       fontSize: fontSizes.fontSize2,
@@ -173,14 +169,11 @@ const baseThemeOptions = {
       variant: "outlined",
       InputProps: {
         labelWidth: 0,
-        notched: false,
-      },
-      InputLabelProps: {
-        shrink: true,
       },
     },
     MuiInputLabel: {
       shrink: true,
+      disableAnimation: true,
     },
     MuiOutlinedInput: {
       notched: false,
@@ -203,6 +196,9 @@ const overrides = {
       root: {
         fontSize: fontSizes.fontSize6,
       },
+      fontSizeSmall: {
+        fontSize: fontSizes.fontSize1,
+      },
     },
     MuiAvatar: {
       root: {
@@ -211,6 +207,7 @@ const overrides = {
     },
     MuiButton: {
       root: {
+        textDecoration: "none !important",
         textTransform: "none",
         paddingTop: baseTheme.spacing("space1"),
         paddingBottom: baseTheme.spacing("space1"),
@@ -273,6 +270,9 @@ const overrides = {
           boxShadow: "none !important",
         },
       },
+      containedPrimary: {
+        color: `${colors.white} !important`,
+      },
     },
     MuiCheckbox: {
       root: {
@@ -299,6 +299,10 @@ const overrides = {
       label: {
         paddingLeft: baseTheme.spacing("space1"),
         paddingRight: baseTheme.spacing("space1"),
+      },
+      sizeSmall: {
+        fontSize: fontSizes.fontSize0,
+        height: 20,
       },
       deleteIcon: {
         height: "100%",
@@ -365,17 +369,20 @@ const overrides = {
       },
     },
     MuiFormControlLabel: {
-      root: {
-        marginLeft: -8,
+      label: {
+        fontSize: fontSizes.fontSize3,
+        lineHeight: lineHeights.lineHeight1,
       },
     },
     MuiInputLabel: {
       root: {
+        display: "none",
         pointerEvents: "none",
         color: baseTheme.palette.text.primary,
       },
       outlined: {
         "&$shrink": {
+          display: "block",
           transform: "none",
           position: "relative",
           fontWeight: fontWeights.fontWeight1,
@@ -505,6 +512,9 @@ const overrides = {
       indicator: {
         height: 4,
       },
+      root: {
+        minHeight: 0,
+      },
     },
     MuiListItemText: {
       secondary: {
@@ -570,17 +580,22 @@ const overrides = {
         },
       },
     },
+    MuiToolbar: {
+      root: {
+        gap: 8,
+      },
+    },
     MuiAppBar: {
       colorPrimary: {
         backgroundColor: colors.white,
         color: colors.gray00,
       },
       root: {
-        zIndex: 0,
+        zIndex: 999,
         paddingLeft: 20,
         paddingRight: 20,
         boxShadow: "0 4px 8px 0 rgb(0 0 0 / 10%), 0 0 2px 0 rgb(0 0 0 / 10%)",
-
+        height: 80,
         "& .MuiButton-label": {
           color: colors.black,
         },
@@ -602,7 +617,6 @@ const overrides = {
       },
       clearIndicator: {
         fontSize: fontSizes.fontSize5,
-        color: baseTheme.palette.text.primary,
       },
       inputRoot: {
         padding: "0px !important",

@@ -20,9 +20,10 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.5.1",
+            "locked": "2.10.0",
             "transitive": [
-                "com.google.guava:guava"
+                "com.google.guava:guava",
+                "io.grpc:grpc-api"
             ]
         },
         "com.google.guava:failureaccess": {
@@ -32,7 +33,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "io.grpc:grpc-stub"
             ]
@@ -66,7 +67,7 @@
             "project": true
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -75,38 +76,38 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-services"
             ]
@@ -211,6 +212,12 @@
         },
         "org.checkerframework:checker-compat-qual": {
             "locked": "2.5.5",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
+        "org.checkerframework:checker-qual": {
+            "locked": "3.12.0",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -359,7 +366,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -377,7 +384,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "com.github.rholder:guava-retrying",
                 "com.google.protobuf:protobuf-java-util",
@@ -465,7 +472,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -474,39 +481,39 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
@@ -713,6 +720,12 @@
                 "com.google.guava:guava"
             ]
         },
+        "org.checkerframework:checker-qual": {
+            "locked": "3.12.0",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
         "org.codehaus.mojo:animal-sniffer-annotations": {
             "locked": "1.19",
             "transitive": [
@@ -756,9 +769,10 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.5.1",
+            "locked": "2.10.0",
             "transitive": [
-                "com.google.guava:guava"
+                "com.google.guava:guava",
+                "io.grpc:grpc-api"
             ]
         },
         "com.google.guava:failureaccess": {
@@ -768,7 +782,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "io.grpc:grpc-stub"
             ]
@@ -814,7 +828,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -823,13 +837,13 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services",
@@ -837,32 +851,32 @@
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-services",
                 "io.grpc:grpc-testing"
             ]
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.netty:netty-buffer": {
             "locked": "4.1.65.Final",
@@ -1042,6 +1056,12 @@
         },
         "org.checkerframework:checker-compat-qual": {
             "locked": "2.5.5",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
+        "org.checkerframework:checker-qual": {
+            "locked": "3.12.0",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -1394,7 +1414,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -1412,7 +1432,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "com.github.rholder:guava-retrying",
                 "com.google.protobuf:protobuf-java-util",
@@ -1507,7 +1527,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -1516,15 +1536,14 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api",
-                "io.grpc:grpc-testing",
-                "io.opencensus:opencensus-api"
+                "io.grpc:grpc-testing"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services",
@@ -1532,26 +1551,26 @@
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services",
@@ -1559,7 +1578,7 @@
             ]
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.netty:netty-buffer": {
             "locked": "4.1.65.Final",
@@ -1645,12 +1664,6 @@
                 "io.netty:netty-codec-socks",
                 "io.netty:netty-handler",
                 "io.netty:netty-handler-proxy"
-            ]
-        },
-        "io.opencensus:opencensus-api": {
-            "locked": "0.28.0",
-            "transitive": [
-                "io.grpc:grpc-testing"
             ]
         },
         "io.perfmark:perfmark-api": {
@@ -1822,6 +1835,12 @@
         },
         "org.checkerframework:checker-compat-qual": {
             "locked": "2.5.5",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
+        "org.checkerframework:checker-qual": {
+            "locked": "3.12.0",
             "transitive": [
                 "com.google.guava:guava"
             ]

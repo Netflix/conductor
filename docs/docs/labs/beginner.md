@@ -21,12 +21,17 @@ The workflow in this lab will look like this:
 This workflow contains the following:
 
 * Worker Task `verify_if_idents_are_added` to verify if Idents are already added.
+
 * [Switch Task](../../reference-docs/switch-task/) that takes output from the previous task, and decides whether to schedule the `add_idents` task.
+
 * `add_idents` task which is another worker Task.
 
 ### Creating Task definitions
 
+
 Let's create the [task definition](../../configuration/taskdef) for `verify_if_idents_are_added` in JSON. This task will be a *SIMPLE* task which is supposed to be executed by an Idents microservice. We'll be mocking the Idents microservice part.
+
+
 
 **Note** that at this point, we don't have to specify whether it is a System task or Worker task. We are only specifying the required configurations for the task, like number of times it should be retried, timeouts etc. We shall start by using `name` parameter for task name.
 ```json
@@ -74,7 +79,9 @@ And a [responseTimeout](../../tasklifecycle/#response-timeout-seconds) of 180 se
 }
 ```
 
+
 We can define several other fields defined [here](../../configuration/taskdef), but this is a good place to start with.
+
 
 Similarly, create another task definition: `add_idents`.
 
@@ -169,9 +176,11 @@ Add the first task that this workflow has to execute. All the tasks must be adde
 Notice how we were using `${workflow.input.contentId}` to pass inputs to this task. Conductor can wire inputs between workflow and tasks, and between tasks.  
 i.e The task `verify_if_idents_are_added` is wired to accept inputs from the workflow input using JSONPath expression `${workflow.input.param}`.
 
+
 Learn more about wiring inputs and outputs [here](../../configuration/workflowdef/#wiring-inputs-and-outputs).
 
 Let's define `decisionCases` now. 
+
 
 >Note: in earlier versions of this tutorial, the "decision" task was used. This has been deprecated.
 
@@ -350,7 +359,7 @@ Feel free to explore the various functionalities that the UI exposes. To elabora
 
 Now that `verify_if_idents_are_added` task is in `SCHEDULED` state, it is the worker's turn to fetch the task, execute it and update Conductor with final status of the task.
 
-Ideally, the workers implementing the [Client](/gettingstarted/client/#worker) interface would do this process, executing the tasks on real microservices. But, let's mock this part.
+Ideally, the workers implementing the [Client](../gettingstarted/client#worker) interface would do this process, executing the tasks on real microservices. But, let's mock this part.
 
 Send a `GET` request to `/poll` endpoint with your task type.
 

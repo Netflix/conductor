@@ -30,8 +30,9 @@ nav:
         -  Fork: reference-docs/fork-task.md
         -  Join:    reference-docs/join-task.md
         -  Set Variable:  reference-docs/set-variable-task.md
+        -  Start Workflow: reference-docs/start-workflow-task.md
         -  Sub Workflow: reference-docs/sub-workflow-task.md
-        -  Switch: reference-docs/switch-task.md 
+        -  Switch: reference-docs/switch-task.md
         -  Terminate: reference-docs/terminate-task.md
         -  Wait: reference-docs/wait-task.md
     - System Tasks:

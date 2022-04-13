@@ -67,6 +67,7 @@ tasks. (dynamicTasks and dynamicTasksInput)
 
 ## Input Configuration
 
+
 | Attribute      | Description |
 | ----------- | ----------- |
 | name      | Task Name. A unique name that is descriptive of the task function      |
@@ -75,6 +76,7 @@ tasks. (dynamicTasks and dynamicTasksInput)
 | inputParameters   | The input parameters that will be supplied to this task.         |
 | dynamicForkTasksParam | This is a JSON array of tasks or sub-workflow objects that needs to be forked and run in parallel (Note: This has a different format for ```SUB_WORKFLOW``` compared to ```SIMPLE``` tasks.) |
 | dynamicForkTasksInputParamName | A JSON map, where the keys are task or sub-workflow names, and the values are its corresponding inputParameters | 
+
 
 ## Example
 
@@ -213,7 +215,7 @@ In this case, our Dynamic fork is running a SUB_WORKFLOW task: ```image_convert_
 
 
 * `dynamicForkTasksInputParamName` This is a JSON map of task or
-sub-workflow objects and all of the input parameters that these tasks will need to run.
+sub-workflow objects and all the input parameters that these tasks will need to run.
 
 ```
 "dynamicTasksInput":{
