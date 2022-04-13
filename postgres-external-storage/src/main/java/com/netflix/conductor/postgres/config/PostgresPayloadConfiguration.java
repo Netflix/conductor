@@ -12,30 +12,33 @@
  */
 package com.netflix.conductor.postgres.config;
 
-import java.util.Map;
-
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
-
-import org.flywaydb.core.Flyway;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.postgres.storage.PostgresPayloadStorage;
+import java.util.Map;
+import javax.annotation.PostConstruct;
+import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PostgresPayloadProperties.class)
 @ConditionalOnProperty(name = "conductor.external-payload-storage.type", havingValue = "postgres")
+@Import(DataSourceAutoConfiguration.class)
 public class PostgresPayloadConfiguration {
 
     PostgresPayloadProperties properties;
+    DataSource dataSource;
 
-    public PostgresPayloadConfiguration(PostgresPayloadProperties properties) {
+    public PostgresPayloadConfiguration(PostgresPayloadProperties properties,
+                                        DataSource dataSource) {
         this.properties = properties;
+        this.dataSource = dataSource;
     }
 
     @Bean(initMethod = "migrate")
@@ -58,26 +61,14 @@ public class PostgresPayloadConfiguration {
                                 "'" + properties.getMaxDataMonths() + "'",
                                 "maxDataYears",
                                 "'" + properties.getMaxDataYears() + "'"))
-                .dataSource(
-                        DataSourceBuilder.create()
-                                .driverClassName("org.postgresql.Driver")
-                                .url(properties.getUrl())
-                                .username(properties.getUsername())
-                                .password(properties.getPassword())
-                                .build())
+                .dataSource(dataSource)
                 .load();
     }
 
     @Bean
+    @DependsOn({"flywayForExternalDb"})
     public ExternalPayloadStorage postgresExternalPayloadStorage(
             PostgresPayloadProperties properties) {
-        DataSource dataSource =
-                DataSourceBuilder.create()
-                        .driverClassName("org.postgresql.Driver")
-                        .url(properties.getUrl())
-                        .username(properties.getUsername())
-                        .password(properties.getPassword())
-                        .build();
         return new PostgresPayloadStorage(properties, dataSource);
     }
 }
