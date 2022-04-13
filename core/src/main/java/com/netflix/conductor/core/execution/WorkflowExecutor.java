@@ -1059,7 +1059,7 @@ public class WorkflowExecutor {
 
 		int errorId = 0;
 		try {
-			String workflowName = workflow.getWorkflowType().replaceAll(".[0-9]+(\\.[0-9]+)*"," ");
+			String workflowName = workflow.getWorkflowType().replaceAll(".[0-9]+(\\.[0-9]+)*","");
 			Optional<ErrorLookup> errorLookupOpt = errorLookupDAO.getErrorMatching(workflowName, reason).stream().findFirst();
 			if (errorLookupOpt.isPresent()) {
 				ErrorLookup errorLookup = errorLookupOpt.get();
