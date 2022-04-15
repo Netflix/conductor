@@ -192,22 +192,16 @@ public class WorkflowExecutor {
 				throw new ApplicationException(Code.INVALID_INPUT, "NULL input passed when starting workflow");
 			}
 
-			WorkflowDef exists = metadata.get(name, version);
-			if (isOps != null && isOps) {
-				String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
+			WorkflowDef workflowDef = metadata.get(name, version);
+			String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
+			if (isOps != null && isOps && validWorkflowsOps != null) {
 				String[] strSplit = validWorkflowsOps.split(",");
-				Boolean found = false;
-				for (String workflowName :  Arrays.asList(strSplit)) {
-					if (exists.getName().contains(workflowName)) {
-						found = true;
-					}
-				}
-				if (!found) {
+				if (Arrays.stream(strSplit).anyMatch(x->name.startsWith(x))) {
 					throw new ApplicationException(Code.UNAUTHORIZED, "Unauthorized workflow name. name=" + name + ", version=" + version);
 				}
 			}
 
-			if (exists == null) {
+			if (workflowDef == null) {
 				throw new ApplicationException(Code.NOT_FOUND, "No such workflow defined. name=" + name + ", version=" + version);
 			}
 			String clientId = null;
@@ -226,11 +220,11 @@ public class WorkflowExecutor {
 			}
 
 			// Input validation required
-			if (exists.getInputValidation() != null && !exists.getInputValidation().isEmpty()) {
-				validateWorkflowInput(exists, input);
+			if (workflowDef.getInputValidation() != null && !workflowDef.getInputValidation().isEmpty()) {
+				validateWorkflowInput(workflowDef, input);
 			}
 
-			Set<String> missingTaskDefs = exists.all().stream()
+			Set<String> missingTaskDefs = workflowDef.all().stream()
 					.filter(wft -> wft.getType().equals(WorkflowTask.Type.SIMPLE.name()))
 					.map(wft2 -> wft2.getName()).filter(task -> metadata.getTaskDef(task) == null)
 					.collect(Collectors.toSet());
@@ -293,11 +287,11 @@ public class WorkflowExecutor {
 			wf.setUpdateTime(null);
 			wf.setEvent(event);
 			wf.setTaskToDomain(taskToDomain);
-			wf.setAttributes(exists.getAttributes());
+			wf.setAttributes(workflowDef.getAttributes());
 
-			if (StringUtils.isNotEmpty(exists.getTags())) {
+			if (StringUtils.isNotEmpty(workflowDef.getTags())) {
 				Map<String, Map<String, Object>> inputMap = pu.getInputMap(null, wf, null, null);
-				List<Object> candidates = ScriptEvaluator.evalJqAsList(exists.getTags(), inputMap);
+				List<Object> candidates = ScriptEvaluator.evalJqAsList(workflowDef.getTags(), inputMap);
 				Set<String> tags = candidates.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toSet());
 				wf.setTags(tags);
 			}
