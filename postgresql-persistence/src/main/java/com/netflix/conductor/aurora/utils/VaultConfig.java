@@ -6,14 +6,12 @@ import java.util.Map;
 import java.util.Properties;
 
 public class VaultConfig {
-
-    private static String SECRETS = "SECRETS";
+    private static final String SECRETS = "SECRETS";
     private static VaultConfig INSTANCE;
     private Properties properties;
 
     private VaultConfig() throws IOException {
         properties = new Properties();
-
         properties.load(new FileInputStream(get(System.getenv(), SECRETS, "secrets.env")));
     }
 
