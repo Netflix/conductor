@@ -193,11 +193,11 @@ public class WorkflowExecutor {
 			}
 
 			WorkflowDef exists = metadata.get(name, version);
-			if (isOps != null && isOps) {
-				String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
+			String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
+			if (isOps != null && isOps && validWorkflowsOps != null) {
 				String[] strSplit = validWorkflowsOps.split(",");
 				Boolean found = false;
-				for (String workflowName :  Arrays.asList(strSplit)) {
+				for (String workflowName : Arrays.asList(strSplit)) {
 					if (exists.getName().contains(workflowName)) {
 						found = true;
 					}
