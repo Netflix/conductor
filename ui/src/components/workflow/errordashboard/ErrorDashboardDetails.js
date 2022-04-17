@@ -69,7 +69,7 @@ class ErrorDashboardDetails extends Component {
 
                 {(this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>))}
                 {errorData && errorData.result.length ?
-                    <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={true}
+                    <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={false}
                                     pagination={true}>
                         <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left"
                                            dataSort={true}>Workflow ID</TableHeaderColumn>
