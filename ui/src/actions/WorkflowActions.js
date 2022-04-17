@@ -482,7 +482,7 @@ export function getErrorDataList(inputData) {
       type: 'REQUESTED_ERRORLIST_DATA'
     });
     const token = authHelper.getLocalAuthToken();
-    return http.post('/api/wfe/errorRegistrySearchList/getlist/'+inputData.range+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&searchString=' + inputData.searchString + '&errorLookupId=' + inputData.errorLookupId + '&errorType=' + inputData.errorType,null, token).then((data) => {
+    return http.post('/api/wfe/errorRegistrySearchList/getlist/'+inputData.range+ '?frmDate=' + inputData.frmDate + '&toDate=' + inputData.toDate+ '&searchString=' + inputData.searchString+ '&errorLookupId=' + inputData.errorLookupId, null, token).then((data) => {
       dispatch({
         type: 'RECEIVED_ERRORLIST_DATA',
         errorData: data

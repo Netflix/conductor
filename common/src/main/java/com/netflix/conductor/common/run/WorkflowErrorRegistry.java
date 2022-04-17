@@ -15,7 +15,9 @@
  */
 package com.netflix.conductor.common.run;
 
-import java.util.Objects;
+import com.netflix.conductor.common.metadata.tasks.Task;
+
+import java.util.*;
 
 public class WorkflowErrorRegistry {
 
@@ -41,20 +43,8 @@ public class WorkflowErrorRegistry {
 
     private int errorLookUpId;
 
-    private ErrorType errorType;
-
     public WorkflowErrorRegistry() {
-    }
 
-    public WorkflowErrorRegistry(String workflowId, String completeError) {
-        this.workflowId = workflowId;
-        this.completeError = completeError;
-    }
-
-    public WorkflowErrorRegistry(String workflowId, String completeError, ErrorType errorType) {
-        this.workflowId = workflowId;
-        this.completeError = completeError;
-        this.errorType = errorType;
     }
 
     /**
@@ -202,24 +192,4 @@ public class WorkflowErrorRegistry {
         return parentId != null ? !parentId.isEmpty() : false;
     }
 
-    public ErrorType getErrorType() {
-        return errorType;
-    }
-
-    public void setErrorType(ErrorType errorType) {
-        this.errorType = errorType;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        WorkflowErrorRegistry that = (WorkflowErrorRegistry) o;
-        return Objects.equals(completeError, that.completeError);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(completeError);
-    }
 }
