@@ -63,7 +63,7 @@ public class Event extends WorkflowSystemTask {
 
         try {
             String payloadJson = objectMapper.writeValueAsString(payload);
-            Message message = new Message(task.getTaskId(), payloadJson, task.getTaskId());
+            Message message = new Message(task.getTaskId(), payloadJson, Integer.toString(task.getTaskId().hashCode()));
             ObservableQueue queue = getQueue(workflow, task);
             queue.publish(List.of(message));
             LOGGER.debug("Published message:{} to queue:{}", message.getId(), queue.getName());
@@ -106,7 +106,7 @@ public class Event extends WorkflowSystemTask {
 
     @Override
     public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
-        Message message = new Message(task.getTaskId(), null, task.getTaskId());
+        Message message = new Message(task.getTaskId(), null, Integer.toString(task.getTaskId().hashCode()));
         ObservableQueue queue = getQueue(workflow, task);
         queue.ack(List.of(message));
     }

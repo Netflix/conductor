@@ -294,7 +294,7 @@ class EventSpec extends Specification {
     private void verifyMessage(Message expectedMessage, TaskModel task) {
         assert expectedMessage != null
         assert expectedMessage.id == task.taskId
-        assert expectedMessage.receipt == task.taskId
+        assert expectedMessage.receipt == Integer.toString(task.taskId.hashCode())
         assert expectedMessage.payload == payloadJSON
     }
 }
