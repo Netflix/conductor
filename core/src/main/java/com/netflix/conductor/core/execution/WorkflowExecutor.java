@@ -196,7 +196,7 @@ public class WorkflowExecutor {
 			String validWorkflowsOps = config.getProperty("workflow.ops.auth.bypass", null);
 			if (isOps != null && isOps && validWorkflowsOps != null) {
 				String[] strSplit = validWorkflowsOps.split(",");
-				if (Arrays.stream(strSplit).anyMatch(x->name.startsWith(x))) {
+				if (Arrays.stream(strSplit).noneMatch(x->name.startsWith(x))) {
 					throw new ApplicationException(Code.UNAUTHORIZED, "Unauthorized workflow name. name=" + name + ", version=" + version);
 				}
 			}
