@@ -1,6 +1,17 @@
 # Community projects related to Conductor
 
 
+## Client SDKs
+
+Further, all of the (non-Java) SDKs have a new GitHub home: the Conductor SDK repository is your new source for Conductor SDKs:
+
+* [Golang](https://github.com/conductor-sdk/conductor-go)
+* [Python](https://github.com/conductor-sdk/conductor-python)
+* [C#](https://github.com/conductor-sdk/conductor-csharp)
+* [Clojure](https://github.com/conductor-sdk/conductor-clojure)
+
+All contributions on the above client sdks can be made on [Conductor SDK](https://github.com/conductor-sdk) repository.
+
 ## Microservices operations
 
 * https://github.com/flaviostutz/schellar - Schellar is a scheduler tool for instantiating Conductor workflows from time to time, mostly like a cron job, but with transport of input/output variables between calls.
