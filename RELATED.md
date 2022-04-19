@@ -1,6 +1,5 @@
 # Community projects related to Conductor
 
-
 ## Client SDKs
 
 Further, all of the (non-Java) SDKs have a new GitHub home: the Conductor SDK repository is your new source for Conductor SDKs:
