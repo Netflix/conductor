@@ -12,11 +12,11 @@
  */
 package com.netflix.conductor.postgres.config;
 
-import com.netflix.conductor.common.utils.ExternalPayloadStorage;
-import com.netflix.conductor.postgres.storage.PostgresPayloadStorage;
 import java.util.Map;
+
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+
 import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -25,6 +25,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Import;
+
+import com.netflix.conductor.common.utils.ExternalPayloadStorage;
+import com.netflix.conductor.postgres.storage.PostgresPayloadStorage;
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PostgresPayloadProperties.class)
@@ -35,8 +38,8 @@ public class PostgresPayloadConfiguration {
     PostgresPayloadProperties properties;
     DataSource dataSource;
 
-    public PostgresPayloadConfiguration(PostgresPayloadProperties properties,
-                                        DataSource dataSource) {
+    public PostgresPayloadConfiguration(
+            PostgresPayloadProperties properties, DataSource dataSource) {
         this.properties = properties;
         this.dataSource = dataSource;
     }
