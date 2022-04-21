@@ -23,14 +23,12 @@ import org.springframework.stereotype.Component;
         havingValue = "default",
         matchIfMissing = true)
 /**
- * ID Generator used by Conductor
- * Note on overriding the ID Generator:
- * The default ID generator uses UUID v4 as the ID format.
- * By overriding this class it is possible to use different scheme for ID generation.  However, this is not normal and
- * should only be done after very careful consideration.
+ * ID Generator used by Conductor Note on overriding the ID Generator: The default ID generator uses
+ * UUID v4 as the ID format. By overriding this class it is possible to use different scheme for ID
+ * generation. However, this is not normal and should only be done after very careful consideration.
  *
- * Please note, if you use Cassandra persistence, the schema uses UUID as the column type and the IDs have to be valid
- * UUIDs supported by Cassandra.
+ * <p>Please note, if you use Cassandra persistence, the schema uses UUID as the column type and the
+ * IDs have to be valid UUIDs supported by Cassandra.
  */
 public class IDGenerator {
 
