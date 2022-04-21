@@ -55,7 +55,7 @@ server $ ../gradlew bootRun
 Navigate to the swagger API docs:
 [http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config](http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config)
 
-![Conductor Swagger](img/tutorial/swagger.png)
+<img src="/img/tutorial/swagger.png" style="width: 100%"/>
 
 ## Build and Run UI
 
@@ -72,7 +72,7 @@ ui $ yarn run start
 
 Launch UI [http://localhost:5000](http://localhost:5000)
 
-![Conductor Server Home Page](img/tutorial/conductorUI.png)
+<img src="/img/tutorial/conductorUI.png" style="width: 100%" />
 
 ## Summary
 1. All the data is stored in memory, so any workflows created or excuted will be wiped out once the server is terminated.

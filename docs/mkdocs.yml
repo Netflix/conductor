@@ -1,13 +1,12 @@
 site_name: Conductor
 repo_url: https://github.com/Netflix/conductor
-edit_uri: edit/main/docs/docs/
+edit_uri: ''
 strict: true
 
 nav:
-  - Introduction: intro.md
   - Getting Started:
-    - Installing Conductor Locally: server.md
-    - Installing via Docker Compose: running-locally-docker.md
+    - Running Conductor Locally: gettingstarted/server.md
+    - Installing via Docker Compose: gettingstarted/running-locally-docker.md
     - Basic Concepts: gettingstarted/basicconcepts.md
     - Using the Client: gettingstarted/client.md
     - Start a Workflow: gettingstarted/startworkflow.md
@@ -80,11 +79,15 @@ nav:
     - FAQ: faq.md
     - Technical Details: technicaldetails.md
     - License: license.md
-theme: mkdocs
+  - Resources:
+    - Contributing: resources/contributing.md
+    - Code of Conduct: resources/code-of-conduct.md
+    - Related Projects: resources/related.md
+theme: 
+  name: mkdocs
+  custom_dir: theme/
 extra_css:
-    - css/custom.css
+  - css/custom.css
 markdown_extensions:
-- toc:
-    permalink: true
 - admonition
 - codehilite

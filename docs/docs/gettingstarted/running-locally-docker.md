@@ -51,11 +51,11 @@ You can access all three on your browser to verify that it is running correctly:
 
 Conductor Server URL: [http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config](http://localhost:8080/swagger-ui/index.html?configUrl=/api-docs/swagger-config)
 
-![Conductor Server Home Page](img/tutorial/swagger.png)
+<img src="/img/tutorial/swagger.png" style="width: 100%"/>
 
 Conductor UI URL: [http://localhost:5000/](http://localhost:5000/)
 
-![Conductor Server Home Page](img/tutorial/conductorUIHome.png)
+<img src="/img/tutorial/conductorUI.png" style="width: 100%" />
 
 ### Potential problems
 
