@@ -357,20 +357,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
 
     @Override
     public List<Workflow> getWorkflowsByType(String workflowName, Long startTime, Long endTime) {
-        String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = :workflowName AND date_str BETWEEN ? AND ?";
+        Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
+        Preconditions.checkNotNull(startTime, "startTime cannot be null");
+        Preconditions.checkNotNull(endTime, "endTime cannot be null");
+
+        String SQL = "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND date_str BETWEEN ? AND ?";
         List<String> workflowIds = queryWithTransaction(SQL, q -> q.addParameter(workflowName)
                 .addParameter(dateStr(startTime))
                 .addParameter(dateStr(endTime))
                 .executeScalarList(String.class));
 
-        return getWorkflows(workflowName, workflowIds);
-    }
-
-    private List<Workflow> getWorkflows(String workflowName, List<String> workflowIds) {
         List<Workflow> workflows = new LinkedList<>();
         workflowIds.forEach(workflowId -> {
             try {
-                workflows.add(getWorkflow(workflowId));
+                Workflow wf = getWorkflow(workflowId);
+                if (wf.getCreateTime() >= startTime && wf.getCreateTime() <= endTime) {
+                    workflows.add(wf);
+                }
             } catch (Exception e) {
                 logger.error("Unable to load workflow id {} with name {}", workflowId, workflowName, e);
             }
@@ -513,7 +516,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         List<String> workflowIds = query(tx, SQL, q ->
                 q.addParameter(workflowName).executeScalarList(String.class));
 
-        return getWorkflows(workflowName, workflowIds);
+        return loadWorkflows(workflowName, workflowIds);
     }
 
     private List<String> getRunningWorkflowIdsWithFilters(Connection tx, String workflowName, String startDate, String endDate) {
@@ -1050,5 +1053,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         });
     }
 
-
+    private List<Workflow> loadWorkflows(String workflowName, List<String> workflowIds) {
+        List<Workflow> workflows = new LinkedList<>();
+        workflowIds.forEach(workflowId -> {
+            try {
+                workflows.add(getWorkflow(workflowId));
+            } catch (Exception e) {
+                logger.error("Unable to load workflow id {} with name {}", workflowId, workflowName, e);
+            }
+        });
+        return workflows;
+    }
 }
