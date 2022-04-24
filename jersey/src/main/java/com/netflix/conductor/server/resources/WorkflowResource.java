@@ -163,7 +163,6 @@ public class WorkflowResource {
             urns.add("urn:deluxe:conductor:workflow:" + workflowId);
             correlationMap.put("urns", urns);
             String clonedCorrelationId = mapper.writeValueAsString(correlationMap);
-            ;
             request.setCorrelationId(clonedCorrelationId);
         }
 
