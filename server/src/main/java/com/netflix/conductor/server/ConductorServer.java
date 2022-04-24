@@ -176,7 +176,7 @@ public class ConductorServer {
 					if (cc.getProperty("workflow.elasticsearch.url", null) == null) {
 						System.setProperty("workflow.elasticsearch.url", "http://localhost:9200");
 					}
-					if (cc.getProperty("workflow.elasticsearch.indexvcc .name", null) == null) {
+					if (cc.getProperty("workflow.elasticsearch.index.name", null) == null) {
 						System.setProperty("workflow.elasticsearch.index.name", "conductor");
 					}
 				} catch (Exception e) {
