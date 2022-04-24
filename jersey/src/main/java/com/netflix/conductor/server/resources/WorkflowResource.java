@@ -26,7 +26,6 @@ import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.Error;
-import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.contribs.correlation.Correlator;
 import com.netflix.conductor.core.config.Configuration;
@@ -50,6 +49,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.sql.Timestamp;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -161,7 +162,8 @@ public class WorkflowResource {
             urns.removeIf(name -> name.contains("urn:deluxe:conductor:workflow:"));
             urns.add("urn:deluxe:conductor:workflow:" + workflowId);
             correlationMap.put("urns", urns);
-            String clonedCorrelationId =  mapper.writeValueAsString(correlationMap);;
+            String clonedCorrelationId = mapper.writeValueAsString(correlationMap);
+            ;
             request.setCorrelationId(clonedCorrelationId);
         }
 
@@ -245,8 +247,8 @@ public class WorkflowResource {
             @ApiImplicitParam(name = "WorkflowId", dataType = "string", paramType = "header"),
             @ApiImplicitParam(name = "AsyncStart", dataType = "boolean", paramType = "header")})
     public Response startWorkflowOps(@Context HttpHeaders headers,
-                                  @PathParam("name") String name, @QueryParam("username") String username,  @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
-                                  @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
+                                     @PathParam("name") String name, @QueryParam("username") String username, @QueryParam("version") Integer version, @QueryParam("jobPriority") Integer jobPriority,
+                                     @QueryParam("correlationId") String correlationId, Map<String, Object> input) throws Exception {
 
         if (username == null) {
             throw new ApplicationException(Code.INVALID_INPUT, "Username is mandatory");
@@ -378,13 +380,9 @@ public class WorkflowResource {
     @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
             @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public List<String> getRunningWorkflow(@PathParam("name") String workflowName, @QueryParam("version") @DefaultValue("1") Integer version,
-                                           @QueryParam("startTime") Long startTime, @QueryParam("endTime") Long endTime) throws Exception {
-        if (startTime != null && endTime != null) {
-            return executor.getWorkflows(workflowName, version, startTime, endTime);
-        } else {
-            return executor.getRunningWorkflowIds(workflowName);
-        }
+    public List<String> getRunningWorkflows(@PathParam("name") String workflowName, @QueryParam("version") Integer version,
+                                           @QueryParam("startTime") String startTime, @QueryParam("endTime") String endTime) {
+        return executor.getRunningWorkflowIds(workflowName, version, toTimestamp(startTime), toTimestamp(endTime));
     }
 
     @PUT
@@ -1073,5 +1071,14 @@ public class WorkflowResource {
         request.setInput(workflow.getInput());
 
         return startWorkflow(request, headers);
+    }
+
+    private static String toTimestamp(String dateTime) {
+        try {
+            return dateTime == null ? null : Timestamp.valueOf(ZonedDateTime.parse(dateTime).toLocalDateTime()).toString();
+        }catch (Exception exception){
+            throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Invaid dateTime format. Format should be ZonedDateTime").build());
+        }
     }
 }

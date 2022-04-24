@@ -34,11 +34,8 @@ import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.run.*;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
-import com.netflix.conductor.common.run.WorkflowError;
-import com.netflix.conductor.common.run.WorkflowErrorRegistry;
-import com.netflix.conductor.common.run.TaskDetails;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.Configuration;
 import com.netflix.conductor.core.events.ScriptEvaluator;
@@ -50,16 +47,16 @@ import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
-import com.netflix.conductor.common.run.ErrorLookup;
-import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.service.MetricService;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +66,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.text.MessageFormat;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * @author Viren Workflow services provider interface
@@ -1271,7 +1266,7 @@ public class WorkflowExecutor {
 		return edao.getTasks(taskType, startKey, count);
 	}
 
-	public List<Task> getPendingSystemTasks(String taskType) throws Exception {
+	public List<Task> getPendingSystemTasks(String taskType) {
 		return edao.getPendingSystemTasks(taskType);
 	}
 
@@ -1286,12 +1281,13 @@ public class WorkflowExecutor {
 
 	public List<String> getWorkflows(String name, Integer version, Long startTime, Long endTime) {
 		List<Workflow> allwf = edao.getWorkflowsByType(name, startTime, endTime);
-		List<String> workflows = allwf.stream().filter(wf -> wf.getVersion() == version).map(wf -> wf.getWorkflowId()).collect(Collectors.toList());
-		return workflows;
+		return allwf.stream().filter(wf -> wf.getVersion() == version).map(Workflow::getWorkflowId).collect(Collectors.toList());
 	}
 
-	public List<String> getRunningWorkflowIds(String workflowName) throws Exception {
-		return edao.getRunningWorkflowIds(workflowName);
+	public List<String> getRunningWorkflowIds(String workflowName, Integer version, String startTime, String endTime) {
+		return  version == null ? edao.getRunningWorkflowIds(workflowName, startTime, endTime) :
+				edao.getRunningWorkflowIds(workflowName, version, startTime, endTime)
+						.stream().filter(wf -> wf.getVersion() == version).map(Workflow::getWorkflowId).collect(Collectors.toList());
 	}
 
 	/**
