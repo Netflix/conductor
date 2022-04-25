@@ -1284,10 +1284,8 @@ public class WorkflowExecutor {
 		return allwf.stream().filter(wf -> wf.getVersion() == version).map(Workflow::getWorkflowId).collect(Collectors.toList());
 	}
 
-	public List<String> getRunningWorkflowIds(String workflowName, Integer version, String startTime, String endTime) {
-		return  version == null ? edao.getRunningWorkflowIds(workflowName, startTime, endTime) :
-				edao.getRunningWorkflowIds(workflowName, version, startTime, endTime)
-						.stream().filter(wf -> wf.getVersion() == version).map(Workflow::getWorkflowId).collect(Collectors.toList());
+	public List<String> getRunningWorkflowIds(String workflowName, String startTime, String endTime) {
+		return  edao.getRunningWorkflowIds(workflowName, startTime, endTime);
 	}
 
 	/**

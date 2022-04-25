@@ -379,9 +379,9 @@ public class WorkflowResource {
     @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
             @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
     @Consumes(MediaType.WILDCARD)
-    public List<String> getRunningWorkflows(@PathParam("name") String workflowName, @QueryParam("version") Integer version,
-                                           @QueryParam("startTime") String startTime, @QueryParam("endTime") String endTime) {
-        return executor.getRunningWorkflowIds(workflowName, version, toTimestamp(startTime), toTimestamp(endTime));
+    public List<String> getRunningWorkflows(@PathParam("name") String workflowName, @QueryParam("startTime") String startTime,
+                                            @QueryParam("endTime") String endTime) {
+        return executor.getRunningWorkflowIds(workflowName, toTimestamp(startTime), toTimestamp(endTime));
     }
 
     @PUT

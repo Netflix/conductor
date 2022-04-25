@@ -520,10 +520,10 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     private List<String> getRunningWorkflowIdsWithFilters(Connection tx, String workflowName, String startDate, String endDate) {
-        String SQL = String.join("", "SELECT workflow_id FROM workflow WHERE workflow_type = ? AND workflow_status IN ('RUNNING','PAUSED') ",
+        String SQL = String.join("", "SELECT workflow_id FROM workflow WHERE workflow_type like ? AND workflow_status IN ('RUNNING','PAUSED') ",
                 buildQuery(startDate, endDate));
         return query(tx, SQL, q ->
-                q.addParameter(workflowName)
+                q.addParameter(workflowName + "%")
                         .executeScalarList(String.class));
     }
 
