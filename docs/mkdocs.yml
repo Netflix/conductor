@@ -2,6 +2,7 @@ site_name: Conductor
 repo_url: https://github.com/Netflix/conductor
 edit_uri: ''
 strict: true
+use_directory_urls: false
 
 nav:
   - Getting Started:

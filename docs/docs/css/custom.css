@@ -307,3 +307,12 @@ footer {
 .compare {
   background-color: var(--brand-lt-blue);
 }
+.compare .bubble {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+}
+.compare .caption {
+  font-size: 15px;
+  line-height:22px;
+}

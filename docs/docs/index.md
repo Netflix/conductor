@@ -41,7 +41,7 @@
         <img src="/img/icons/shield.svg" class="icon"/> Proven
       </div>
       <div class="caption">        
-        Enterprise ready, Java Spring based platform that has been battle tested by production systems at Netflix and elsewhere.
+        Enterprise ready, Java Spring based platform that has been battle tested in production systems at Netflix and elsewhere.
       </div>
     </div>
   </div>
@@ -75,40 +75,6 @@
   </div>
 </div>
 
-<!--
-<div class="module compare">
-  <div class="container">
-    <div class="row align-items-center">
-    <h1>Why Conductor?</h1>
-    </div>
-    <div class="row align-items-center">
-      <div class="col-6">
-        <div class="heading">
-          Workflow Orchestration
-        </div>
-        <div class="caption">        
-          <ul>
-            <li>Workflow definitions are decoupled from the service implementations</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="heading">
-          Peer-to-peer Choreography
-        </div>
-        <div class="caption">        
-          <ul>
-            <li>Process flows are embedded within the code of multiple application.</li>
-            <li>Tight coupling and assumptions around input/output and 
-            <li>Limited observability around progress "Where are we in this process?"</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
--->
-
 <div class="container module">
   <div class="row align-items-center">
     <div class="col-6">
@@ -131,7 +97,7 @@
 </div>
 
 <div class="container module">
-  <div class="row align-items-center">
+  <div class="row">
     <div class="col-6">
       <div class="heading">
         Observability
@@ -149,3 +115,34 @@
   </div>
 </div>
 
+
+<div class="module compare">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-6">
+      <div class="bubble">
+        <div class="heading">
+          Service Orchestration
+        </div>
+        <div class="caption">        
+          <p>Workflow definitions are decoupled from task implementations. This allows the creation of process flows in which each individual task can be implemented 
+          by an encapsulated microservice.</p>
+          <p>Desiging a workflow orchestrator that is resilient and horizontally scalable is not a simple problem. At Netflix we have developed a battle-tested solution in  <b>Conductor</b>.</p>
+        </div>
+        </div>
+      </div>
+      <div class="col-6">
+      <div class="bubble">
+        <div class="heading">
+          Service Choreography
+        </div>
+        <div class="caption">        
+          Process flows are implicitly defined across multiple service implementations, often with
+          tight peer-to-peer coupling between services. Multiple event buses and complex
+          pub/sub models limit observability around process progress and capacity. 
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
