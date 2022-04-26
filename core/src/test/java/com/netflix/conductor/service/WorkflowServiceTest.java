@@ -47,6 +47,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -128,6 +129,7 @@ public class WorkflowServiceTest {
         StartWorkflowRequest startWorkflowRequest = new StartWorkflowRequest();
         startWorkflowRequest.setName("test");
         startWorkflowRequest.setVersion(1);
+        startWorkflowRequest.setCreatedBy("junit@test.org");
 
         Map<String, Object> input = new HashMap<>();
         input.put("1", "abc");
@@ -136,14 +138,15 @@ public class WorkflowServiceTest {
 
         when(metadataService.getWorkflowDef("test", 1)).thenReturn(workflowDef);
         when(workflowExecutor.startWorkflow(
-                        anyString(),
-                        anyInt(),
+                        eq("test"),
+                        eq(1),
                         isNull(),
                         anyInt(),
                         anyMap(),
                         isNull(),
                         isNull(),
-                        anyMap()))
+                        anyMap(),
+                        eq("junit@test.org")))
                 .thenReturn(workflowID);
         assertEquals("w112", workflowService.startWorkflow(startWorkflowRequest));
     }
