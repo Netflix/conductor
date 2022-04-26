@@ -12,7 +12,13 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
-import com.netflix.conductor.dao.QueueDAO;
+import java.text.ParseException;
+import java.time.Duration;
+import java.util.Date;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
@@ -21,68 +27,87 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
-import java.text.ParseException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.model.TaskModel.Status.*;
 
 @Component(TASK_TYPE_WAIT)
 public class Wait extends WorkflowSystemTask {
 
+    public static final String DURATION_INPUT = "duration";
+    public static final String UNTIL_INPUT = "until";
+    public static final String TIMEOUT = "timeout";
     private static final int SECONDS_IN_A_DAY = 86400;
-
-    private static final String[] patterns = new String[]{
-            "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"
-    };
-
-    private static final String DURATION_INPUT = "duration";
-
-    private static final String UNTIL_INPUT = "until";
+    private static final String[] patterns =
+            new String[] {
+                "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"
+            };
 
     public Wait() {
         super(TASK_TYPE_WAIT);
     }
 
+    private static Duration parseDuration(String text) {
+        Matcher m =
+                Pattern.compile(
+                                "\\s*(?:(\\d+)\\s*(?:days?|d))?"
+                                        + "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?"
+                                        + "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?"
+                                        + "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?"
+                                        + "\\s*",
+                                Pattern.CASE_INSENSITIVE)
+                        .matcher(text);
+        if (!m.matches()) throw new IllegalArgumentException("Not valid duration: " + text);
+
+        int days = (m.start(1) == -1 ? 0 : Integer.parseInt(m.group(1)));
+        int hours = (m.start(2) == -1 ? 0 : Integer.parseInt(m.group(2)));
+        int mins = (m.start(3) == -1 ? 0 : Integer.parseInt(m.group(3)));
+        int secs = (m.start(4) == -1 ? 0 : Integer.parseInt(m.group(4)));
+        return Duration.ofSeconds((days * 86400) + (hours * 60L + mins) * 60L + secs);
+    }
+
+    private static Date parseDate(String date) throws ParseException {
+        return DateUtils.parseDate(date, patterns);
+    }
+
     @Override
     public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
 
-        String duration = Optional.ofNullable(task.getInputData().get(DURATION_INPUT)).orElse("").toString();
-        String until = Optional.ofNullable(task.getInputData().get(UNTIL_INPUT)).orElse("").toString();
+        String duration =
+                Optional.ofNullable(task.getInputData().get(DURATION_INPUT)).orElse("").toString();
+        String until =
+                Optional.ofNullable(task.getInputData().get(UNTIL_INPUT)).orElse("").toString();
 
-        if(Strings.isNotBlank(duration) && Strings.isNotBlank(until)) {
-            task.setReasonForIncompletion("Both 'duration' and 'until' specified. Please provide only one input");
+        if (Strings.isNotBlank(duration) && Strings.isNotBlank(until)) {
+            task.setReasonForIncompletion(
+                    "Both 'duration' and 'until' specified. Please provide only one input");
             task.setStatus(FAILED);
             return;
         }
 
-        if(Strings.isNotBlank(duration)) {
+        if (Strings.isNotBlank(duration)) {
 
-            Duration timeDuration = parse(duration);
-            task.getOutputData().put("timeout", System.currentTimeMillis() + (timeDuration.getSeconds() * 1000));
+            Duration timeDuration = parseDuration(duration);
+            task.getOutputData()
+                    .put(TIMEOUT, System.currentTimeMillis() + (timeDuration.getSeconds() * 1000));
             long seconds = timeDuration.getSeconds();
             task.setCallbackAfterSeconds(seconds);
-        }else if(Strings.isNotBlank(until)) {
+        } else if (Strings.isNotBlank(until)) {
             try {
                 Date expiryDate = parseDate(until);
+                System.out.println("expiryDate: " + expiryDate);
                 long timeInMS = expiryDate.getTime();
                 long now = System.currentTimeMillis();
-                long seconds = (timeInMS - now)/1000;
-                task.getOutputData().put("timeout", timeInMS);
+                long seconds = (timeInMS - now) / 1000;
+                task.getOutputData().put(TIMEOUT, timeInMS);
                 task.setCallbackAfterSeconds(seconds);
 
-            }catch(ParseException parseException) {
-                task.setReasonForIncompletion("Invalid/Unsupported Wait Until format.  Provided: " + until);
+            } catch (ParseException parseException) {
+                task.setReasonForIncompletion(
+                        "Invalid/Unsupported Wait Until format.  Provided: " + until);
                 task.setStatus(FAILED);
             }
         }
         task.setStatus(IN_PROGRESS);
-
     }
 
     @Override
@@ -91,44 +116,18 @@ public class Wait extends WorkflowSystemTask {
     }
 
     @Override
-    public boolean execute(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
+    public boolean execute(
+            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Object timeoutValue = task.getOutputData().get("timeout");
-        if(timeoutValue == null) {
+        if (timeoutValue == null) {
             return false;
         }
         long timeOut = Long.parseLong(timeoutValue.toString());
-        if(System.currentTimeMillis() > timeOut) {
+        if (System.currentTimeMillis() > timeOut) {
             task.setStatus(COMPLETED);
             return true;
         }
 
         return false;
     }
-
-    private Duration parse(String formatted) {
-        return null;
-    }
-
-    private static Duration parseDuration(String text) {
-        Matcher m = Pattern.compile(
-                        "\\s*(?:(\\d+)\\s*(?:days?|d))?" +
-                        "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?" +
-                        "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?" +
-                        "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?" +
-                        "\\s*", Pattern.CASE_INSENSITIVE)
-                .matcher(text);
-        if (! m.matches())
-            throw new IllegalArgumentException("Not valid duration: " + text);
-
-        int days  = (m.start(1) == -1 ? 0 : Integer.parseInt(m.group(1)));
-        int hours = (m.start(2) == -1 ? 0 : Integer.parseInt(m.group(2)));
-        int mins  = (m.start(3) == -1 ? 0 : Integer.parseInt(m.group(3)));
-        int secs  = (m.start(4) == -1 ? 0 : Integer.parseInt(m.group(4)));
-        return Duration.ofSeconds((days * 86400) + (hours * 60L + mins) * 60L + secs);
-    }
-
-    private static Date parseDate(String date) throws ParseException {
-        return DateUtils.parseDate(date, patterns);
-    }
-
 }
