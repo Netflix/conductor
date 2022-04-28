@@ -1,11 +1,9 @@
-import React, { Component } from 'react';
-import moment from 'moment';
-import { Link, browserHistory } from 'react-router';
-import { Breadcrumb, BreadcrumbItem, Input, Well, Button, Panel, DropdownButton, Grid, ButtonToolbar, MenuItem, Popover, OverlayTrigger, ButtonGroup, Row, Col, Table } from 'react-bootstrap';
-import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
+import React from 'react';
+import {Link} from 'react-router';
+import {Button, Col, Grid, Input, Panel, Row, Table} from 'react-bootstrap';
 import Typeahead from 'react-bootstrap-typeahead';
-import { connect } from 'react-redux';
-import { getErrorData,getErrorCountDay, getErrorCountWeek, getErrorDataMonth } from '../../../actions/WorkflowActions';
+import {connect} from 'react-redux';
+import {getErrorCountDay, getErrorCountWeek, getErrorData, getErrorDataMonth} from '../../../actions/WorkflowActions';
 
 const ErrorDashboard = React.createClass({
 
@@ -195,7 +193,8 @@ const ErrorDashboard = React.createClass({
 
                           </Table>
            </Panel>
-          <Panel header="Unknown Errors">
+              <Panel header={<div><i className="fa fa-question-circle" aria-hidden="true" style={{fontSize: "20px"}}></i>
+                  <span>Unknown Errors</span></div>}>
               <Table striped bordered hover>
                   <thead>
                       <tr>
@@ -213,9 +212,10 @@ const ErrorDashboard = React.createClass({
                 ))}
                </Table>
             </Panel>
-           <Panel header="Known Errors">
+          <Panel header={<div><i className="fa fa-book" aria-hidden="true" style={{fontSize: "20px"}}></i> <span>Known Errors</span></div>}>
            <Table striped bordered hover>
               <thead>
+
                 <tr>
                   <th>Error Type</th>
                    <th>Total Count</th>

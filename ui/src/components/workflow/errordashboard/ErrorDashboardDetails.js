@@ -73,16 +73,14 @@ class ErrorDashboardDetails extends Component {
                                     pagination={true}>
                         <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left"
                                            dataSort={true}>Workflow ID</TableHeaderColumn>
+                        <TableHeaderColumn dataField="subWorkflow" dataFormat={linkMaker} dataSort={true}>Sub Workflow</TableHeaderColumn>
                         <TableHeaderColumn dataField="orderId" dataSort={true}>Order ID</TableHeaderColumn>
                         <TableHeaderColumn dataField="jobId" dataSort={true}>Job ID</TableHeaderColumn>
                         <TableHeaderColumn dataField="rankingId" dataSort={true}>Ranking ID</TableHeaderColumn>
-                        <TableHeaderColumn dataField="startTime" dataSort={true} dataFormat={formatDate}>Failure
-                            Time</TableHeaderColumn>
-                        <TableHeaderColumn dataField="completeError" dataSort={true}>Complete Error
-                            Message</TableHeaderColumn>
+                        <TableHeaderColumn dataField="startTime" dataSort={true} dataFormat={formatDate}>Failure Time</TableHeaderColumn>
+                        <TableHeaderColumn dataField="completeError" dataSort={true}>Complete Error Message</TableHeaderColumn>
                     </BootstrapTable> :
-                    <i className="fa fa-spinner fa-spin"
-                       style={{fontSize: "100px", marginLeft: "50%", marginTop: "15%"}}></i>
+                    <i className="fa fa-spinner fa-spin" astyle={{fontSize: "100px", marginLeft: "50%", marginTop: "15%"}}></i>
                 }
             </div>
         );
