@@ -34,17 +34,17 @@ func NewConductorHttpClient(baseUrl string) *ConductorHttpClient {
 }
 
 type ConductorHttpClientConfig struct {
-	baseUrl     string
-	bearerToken *string
+	BaseUrl     string
+	BearerToken *string
 }
 
 func NewConductorHttpClientWithConfig(config ConductorHttpClientConfig) *ConductorHttpClient {
 	conductorClient := new(ConductorHttpClient)
 	headers := map[string]string{"Content-Type": "application/json", "Accept": "application/json"}
-	if config.bearerToken != nil {
-		headers["Authorization"] = fmt.Sprintf("Bearer %s", *config.bearerToken)
+	if config.BearerToken != nil {
+		headers["Authorization"] = fmt.Sprintf("Bearer %s", *config.BearerToken)
 	}
-	httpClient := httpclient.NewHttpClient(config.baseUrl, headers, true)
+	httpClient := httpclient.NewHttpClient(config.BaseUrl, headers, true)
 	conductorClient.httpClient = httpClient
 	return conductorClient
 }

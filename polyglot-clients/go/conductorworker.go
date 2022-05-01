@@ -47,6 +47,16 @@ func NewConductorWorker(baseUrl string, threadCount int, pollingInterval int) *C
 	return conductorWorker
 }
 
+// NewConductorWorkerWithConfig Create a new Conductor worker with configuration
+func NewConductorWorkerWithConfig(cfg ConductorHttpClientConfig, threadCount int, pollingInterval int) *ConductorWorker {
+	conductorWorker := new(ConductorWorker)
+	conductorWorker.ThreadCount = threadCount
+	conductorWorker.PollingInterval = pollingInterval
+	conductorHttpClient := NewConductorHttpClientWithConfig(cfg)
+	conductorWorker.ConductorHttpClient = conductorHttpClient
+	return conductorWorker
+}
+
 func (c *ConductorWorker) Execute(t *task.Task, executeFunction func(t *task.Task) (*task.TaskResult, error)) {
 	taskResult, err := executeFunction(t)
 	if taskResult == nil {
