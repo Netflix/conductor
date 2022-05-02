@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Tabs, Tab, Paper, ReactJson, Dropdown } from "../../components";
+import { Tabs, Tab, ReactJson, Dropdown, Banner } from "../../components";
 
 import TaskSummary from "./TaskSummary";
 import TaskLogs from "./TaskLogs";
@@ -7,22 +7,21 @@ import TaskLogs from "./TaskLogs";
 import { makeStyles } from "@material-ui/styles";
 import _ from "lodash";
 
-const useStyles = makeStyles((theme) => ({
-  json: {
+const useStyles = makeStyles({
+  banner: {
     margin: 15,
   },
   dfSelect: {
     padding: 15,
     backgroundColor: "#efefef",
   },
-}));
+  tabContent: {
+    flex: 1,
+    overflowY: "auto",
+  },
+});
 
-export default function RightPanel({
-  selectedTask,
-  dag,
-  onTaskChange,
-  className,
-}) {
+export default function RightPanel({ selectedTask, dag, onTaskChange }) {
   const [tabIndex, setTabIndex] = useState(0);
 
   const classes = useStyles();
@@ -31,28 +30,28 @@ export default function RightPanel({
     setTabIndex(0); // Reset to Status Tab on ref change
   }, [selectedTask]);
 
-  let dfOptions = selectedTask ? dag.dfChildInfo(selectedTask.ref) : null;
+  if (!selectedTask) {
+    return null;
+  }
+
+  const dfOptions = selectedTask ? dag.dfChildInfo(selectedTask.ref) : null;
+  const { ref, taskId } = selectedTask;
 
   let taskResult,
     retryOptions = null;
-  if (!selectedTask) {
-    return null;
-  } else {
-    const { ref, taskId } = selectedTask;
-    const node = dag.graph.node(ref);
-    if (node.taskResults.length > 1) {
-      retryOptions = node.taskResults;
-    }
+  const node = dag.graph.node(ref);
+  if (node.taskResults.length > 1) {
+    retryOptions = node.taskResults;
+  }
 
-    if (taskId) {
-      taskResult = node.taskResults.find((task) => task.taskId === taskId);
-    } else {
-      taskResult = _.last(node.taskResults);
-    }
+  if (taskId) {
+    taskResult = node.taskResults.find((task) => task.taskId === taskId);
+  } else {
+    taskResult = _.last(node.taskResults);
   }
 
   return (
-    <Paper className={className}>
+    <>
       {dfOptions && (
         <div className={classes.dfSelect}>
           <Dropdown
@@ -113,39 +112,38 @@ export default function RightPanel({
         />
         <Tab label="Definition" onClick={() => setTabIndex(5)} />
       </Tabs>
-      <div className={classes.wrapper}>
+      <div className={classes.tabContent}>
         {tabIndex === 0 && <TaskSummary taskResult={taskResult} />}
         {tabIndex === 1 && (
-          <ReactJson
-            className={classes.json}
-            src={taskResult.inputData}
-            title="Task Input"
-          />
+          <ReactJson src={taskResult.inputData} label="Task Input" />
         )}
         {tabIndex === 2 && (
-          <ReactJson
-            className={classes.json}
-            src={taskResult.outputData}
-            title="Task Output"
-          />
+          <>
+            {taskResult.externalOutputPayloadStoragePath && (
+              <Banner className={classes.banner}>
+                This task has externalized output. Please reference{" "}
+                <code>externalOutputPayloadStoragePath</code> for the storage
+                location.
+              </Banner>
+            )}
+            <ReactJson src={taskResult.outputData} label="Task Output" />
+          </>
         )}
         {tabIndex === 3 && <TaskLogs task={taskResult} />}
         {tabIndex === 4 && (
           <ReactJson
-            className={classes.json}
             src={taskResult}
-            title="Task Execution JSON"
+            label="Unabridged Task Execution Result"
           />
         )}
         {tabIndex === 5 && (
           <ReactJson
-            className={classes.json}
             src={taskResult.workflowTask}
-            title="Task Definition/Runtime Config"
+            label="Task Definition at Runtime"
           />
         )}
       </div>
-    </Paper>
+    </>
   );
 }
 
@@ -162,7 +160,7 @@ function dropdownIcon(status) {
       icon = "\uD83D\uDED1";
       break; // stopsign
     case "IN_PROGRESS":
-    case "SCHUEDULED":
+    case "SCHEDULED":
       icon = "\u231B";
       break; // hourglass
     default:

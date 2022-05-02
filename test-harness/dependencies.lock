@@ -1603,7 +1603,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -2015,7 +2015,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.eureka:eureka-client"
@@ -2098,7 +2098,7 @@
             ]
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -2110,7 +2110,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -2119,27 +2119,27 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
@@ -2147,19 +2147,19 @@
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
@@ -2354,19 +2354,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -3539,13 +3539,13 @@
             "locked": "1.3-groovy-2.5"
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-rest",
@@ -3553,7 +3553,7 @@
             ]
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -3795,7 +3795,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]

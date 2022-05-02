@@ -107,7 +107,7 @@
             "locked": "5.14.0"
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -119,19 +119,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -255,16 +255,16 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6"
+            "locked": "1.6.7"
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -404,7 +404,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -691,7 +691,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -709,7 +709,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.github.rholder:guava-retrying",
@@ -1042,7 +1042,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.eureka:eureka-client"
@@ -1109,7 +1109,7 @@
             ]
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -1121,7 +1121,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -1130,45 +1130,45 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
@@ -1359,19 +1359,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -1791,8 +1791,9 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.12.0",
             "transitive": [
+                "com.google.guava:guava",
                 "org.postgresql:postgresql"
             ]
         },
@@ -2122,20 +2123,20 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-rest"
             ]
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -2303,7 +2304,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -2624,7 +2625,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -2642,7 +2643,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.github.rholder:guava-retrying",
@@ -2975,7 +2976,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.eureka:eureka-client"
@@ -3042,7 +3043,7 @@
             ]
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -3054,7 +3055,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -3063,45 +3064,45 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
@@ -3292,19 +3293,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -3724,8 +3725,9 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.12.0",
             "transitive": [
+                "com.google.guava:guava",
                 "org.postgresql:postgresql"
             ]
         },
@@ -4055,20 +4057,20 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-rest"
             ]
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -4236,7 +4238,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -4367,9 +4369,10 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.5.1",
+            "locked": "2.10.0",
             "transitive": [
-                "com.google.guava:guava"
+                "com.google.guava:guava",
+                "io.grpc:grpc-api"
             ]
         },
         "com.google.guava:failureaccess": {
@@ -4379,7 +4382,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "io.grpc:grpc-stub"
             ]
@@ -4458,13 +4461,13 @@
             ]
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -4473,34 +4476,34 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-testing"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-testing"
             ]
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.micrometer:micrometer-core": {
             "locked": "1.5.14",
@@ -4509,19 +4512,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -4652,6 +4655,12 @@
         },
         "org.checkerframework:checker-compat-qual": {
             "locked": "2.5.5",
+            "transitive": [
+                "com.google.guava:guava"
+            ]
+        },
+        "org.checkerframework:checker-qual": {
+            "locked": "3.12.0",
             "transitive": [
                 "com.google.guava:guava"
             ]
@@ -4800,16 +4809,16 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6"
+            "locked": "1.6.7"
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -4977,7 +4986,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -5270,7 +5279,7 @@
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.9.0",
+            "locked": "2.10.0",
             "transitive": [
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
@@ -5288,7 +5297,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.1.1-android",
+            "locked": "31.0.1-android",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
                 "com.github.rholder:guava-retrying",
@@ -5622,7 +5631,7 @@
             ]
         },
         "com.thoughtworks.xstream:xstream": {
-            "locked": "1.4.18",
+            "locked": "1.4.19",
             "transitive": [
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.eureka:eureka-client"
@@ -5695,7 +5704,7 @@
             ]
         },
         "io.github.classgraph:classgraph": {
-            "locked": "4.8.138",
+            "locked": "4.8.143",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -5707,7 +5716,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -5716,15 +5725,14 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-api",
-                "io.grpc:grpc-testing",
-                "io.opencensus:opencensus-api"
+                "io.grpc:grpc-testing"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services",
@@ -5732,32 +5740,32 @@
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.44.1",
+            "locked": "1.45.1",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "io.grpc:grpc-services",
@@ -5765,7 +5773,7 @@
             ]
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.44.1"
+            "locked": "1.45.1"
         },
         "io.micrometer:micrometer-core": {
             "locked": "1.5.14",
@@ -5912,12 +5920,6 @@
                 "org.redisson:redisson"
             ]
         },
-        "io.opencensus:opencensus-api": {
-            "locked": "0.28.0",
-            "transitive": [
-                "io.grpc:grpc-testing"
-            ]
-        },
         "io.perfmark:perfmark-api": {
             "locked": "0.23.0",
             "transitive": [
@@ -5958,19 +5960,19 @@
             ]
         },
         "io.swagger.core.v3:swagger-annotations": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
         },
         "io.swagger.core.v3:swagger-core": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "org.springdoc:springdoc-openapi-common"
             ]
         },
         "io.swagger.core.v3:swagger-models": {
-            "locked": "2.1.12",
+            "locked": "2.2.0",
             "transitive": [
                 "io.swagger.core.v3:swagger-core"
             ]
@@ -6422,8 +6424,9 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.12.0",
             "transitive": [
+                "com.google.guava:guava",
                 "org.postgresql:postgresql"
             ]
         },
@@ -6857,20 +6860,20 @@
             ]
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-rest"
             ]
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.6",
+            "locked": "1.6.7",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -7066,7 +7069,7 @@
             ]
         },
         "org.webjars:swagger-ui": {
-            "locked": "4.5.0",
+            "locked": "4.10.3",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
