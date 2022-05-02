@@ -5,7 +5,7 @@ sidebar_position: 1
 # JSON JQ Transform Task
 
 ```json
-"type" : "JSON_JQ_TRANSFORM_TASK"
+"type" : "JSON_JQ_TRANSFORM"
 ```
 ### Introduction
 
