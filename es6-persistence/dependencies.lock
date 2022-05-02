@@ -463,6 +463,9 @@
                 "org.springframework.boot:spring-boot-starter"
             ]
         },
+        "org.springframework.retry:spring-retry": {
+            "locked": "1.2.5.RELEASE"
+        },
         "org.springframework:spring-aop": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
@@ -487,6 +490,7 @@
             "transitive": [
                 "org.springframework.boot:spring-boot",
                 "org.springframework.boot:spring-boot-starter",
+                "org.springframework.retry:spring-retry",
                 "org.springframework:spring-aop",
                 "org.springframework:spring-beans",
                 "org.springframework:spring-context",
@@ -564,10 +568,10 @@
                 "org.elasticsearch:elasticsearch-x-content"
             ]
         },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0",
+        "com.github.ben-manes.caffeine:caffeine": {
+            "locked": "2.8.8",
             "transitive": [
-                "com.netflix.conductor:conductor-common"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.github.spullara.mustache.java:compiler": {
@@ -579,13 +583,13 @@
         "com.google.code.findbugs:jsr305": {
             "locked": "3.0.2",
             "transitive": [
-                "com.github.rholder:guava-retrying",
                 "com.google.guava:guava"
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.3.4",
+            "locked": "2.4.0",
             "transitive": [
+                "com.github.ben-manes.caffeine:caffeine",
                 "com.google.guava:guava"
             ]
         },
@@ -596,11 +600,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.0-jre",
-            "transitive": [
-                "com.github.rholder:guava-retrying",
-                "com.netflix.conductor:conductor-core"
-            ]
+            "locked": "30.0-jre"
         },
         "com.google.guava:listenablefuture": {
             "locked": "9999.0-empty-to-avoid-conflict-with-guava",
@@ -934,8 +934,9 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.8.0",
             "transitive": [
+                "com.github.ben-manes.caffeine:caffeine",
                 "com.google.guava:guava"
             ]
         },
@@ -1793,6 +1794,9 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "org.springframework.retry:spring-retry": {
+            "locked": "1.2.5.RELEASE"
+        },
         "org.springframework:spring-aop": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
@@ -1818,6 +1822,7 @@
                 "org.springframework.boot:spring-boot",
                 "org.springframework.boot:spring-boot-starter",
                 "org.springframework.boot:spring-boot-starter-test",
+                "org.springframework.retry:spring-retry",
                 "org.springframework:spring-aop",
                 "org.springframework:spring-beans",
                 "org.springframework:spring-context",
@@ -1918,6 +1923,12 @@
                 "org.elasticsearch:elasticsearch-x-content"
             ]
         },
+        "com.github.ben-manes.caffeine:caffeine": {
+            "locked": "2.8.8",
+            "transitive": [
+                "com.netflix.conductor:conductor-core"
+            ]
+        },
         "com.github.docker-java:docker-java-api": {
             "locked": "3.2.8",
             "transitive": [
@@ -1936,12 +1947,6 @@
                 "org.testcontainers:testcontainers"
             ]
         },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common"
-            ]
-        },
         "com.github.spullara.mustache.java:compiler": {
             "locked": "0.9.3",
             "transitive": [
@@ -1951,13 +1956,13 @@
         "com.google.code.findbugs:jsr305": {
             "locked": "3.0.2",
             "transitive": [
-                "com.github.rholder:guava-retrying",
                 "com.google.guava:guava"
             ]
         },
         "com.google.errorprone:error_prone_annotations": {
-            "locked": "2.3.4",
+            "locked": "2.4.0",
             "transitive": [
+                "com.github.ben-manes.caffeine:caffeine",
                 "com.google.guava:guava"
             ]
         },
@@ -1968,11 +1973,7 @@
             ]
         },
         "com.google.guava:guava": {
-            "locked": "30.0-jre",
-            "transitive": [
-                "com.github.rholder:guava-retrying",
-                "com.netflix.conductor:conductor-core"
-            ]
+            "locked": "30.0-jre"
         },
         "com.google.guava:listenablefuture": {
             "locked": "9999.0-empty-to-avoid-conflict-with-guava",
@@ -2375,8 +2376,9 @@
             "locked": "3.1.6"
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.8.0",
             "transitive": [
+                "com.github.ben-manes.caffeine:caffeine",
                 "com.google.guava:guava"
             ]
         },
@@ -2687,6 +2689,9 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "org.springframework.retry:spring-retry": {
+            "locked": "1.2.5.RELEASE"
+        },
         "org.springframework:spring-aop": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
@@ -2712,6 +2717,7 @@
                 "org.springframework.boot:spring-boot",
                 "org.springframework.boot:spring-boot-starter",
                 "org.springframework.boot:spring-boot-starter-test",
+                "org.springframework.retry:spring-retry",
                 "org.springframework:spring-aop",
                 "org.springframework:spring-beans",
                 "org.springframework:spring-context",

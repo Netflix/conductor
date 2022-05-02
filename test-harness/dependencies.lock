@@ -239,9 +239,6 @@
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
-        "com.netflix.conductor:conductor-contribs": {
-            "project": true
-        },
         "com.netflix.conductor:conductor-core": {
             "project": true
         },
@@ -254,10 +251,10 @@
         "com.netflix.conductor:conductor-grpc-server": {
             "project": true
         },
-        "com.netflix.conductor:conductor-mysql-persistence": {
+        "com.netflix.conductor:conductor-http-task": {
             "project": true
         },
-        "com.netflix.conductor:conductor-postgres-persistence": {
+        "com.netflix.conductor:conductor-json-jq-task": {
             "project": true
         },
         "com.netflix.conductor:conductor-redis-persistence": {
@@ -337,9 +334,6 @@
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.dyno:dyno-contrib"
             ]
-        },
-        "com.rabbitmq:amqp-client": {
-            "locked": "5.14.0"
         },
         "com.sun.jersey:jersey-core": {
             "locked": "1.19.1",
@@ -1117,7 +1111,6 @@
                 "com.netflix.dyno:dyno-jedis",
                 "com.netflix.dyno:dyno-memcache",
                 "com.netflix.dyno:dyno-recipes",
-                "com.rabbitmq:amqp-client",
                 "org.apache.logging.log4j:log4j-slf4j-impl",
                 "org.slf4j:jul-to-slf4j",
                 "org.testcontainers:testcontainers",
@@ -1180,6 +1173,9 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "org.springframework.retry:spring-retry": {
+            "locked": "1.2.5.RELEASE"
+        },
         "org.springframework:spring-aop": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
@@ -1206,6 +1202,7 @@
                 "org.springframework.boot:spring-boot",
                 "org.springframework.boot:spring-boot-starter",
                 "org.springframework.boot:spring-boot-starter-test",
+                "org.springframework.retry:spring-retry",
                 "org.springframework:spring-aop",
                 "org.springframework:spring-beans",
                 "org.springframework:spring-context",
@@ -1235,32 +1232,12 @@
         "org.springframework:spring-web": {
             "locked": "5.2.15.RELEASE"
         },
-        "org.testcontainers:database-commons": {
-            "locked": "1.15.3",
-            "transitive": [
-                "org.testcontainers:jdbc"
-            ]
-        },
         "org.testcontainers:elasticsearch": {
-            "locked": "1.15.3"
-        },
-        "org.testcontainers:jdbc": {
-            "locked": "1.15.3",
-            "transitive": [
-                "org.testcontainers:mysql",
-                "org.testcontainers:postgresql"
-            ]
-        },
-        "org.testcontainers:mysql": {
-            "locked": "1.15.3"
-        },
-        "org.testcontainers:postgresql": {
             "locked": "1.15.3"
         },
         "org.testcontainers:testcontainers": {
             "locked": "1.15.3",
             "transitive": [
-                "org.testcontainers:database-commons",
                 "org.testcontainers:elasticsearch"
             ]
         },
@@ -1316,13 +1293,13 @@
         "com.amazonaws:aws-java-sdk-s3": {
             "locked": "1.11.86",
             "transitive": [
-                "com.netflix.conductor:conductor-contribs"
+                "com.netflix.conductor:conductor-awss3-storage"
             ]
         },
         "com.amazonaws:aws-java-sdk-sqs": {
             "locked": "1.11.86",
             "transitive": [
-                "com.netflix.conductor:conductor-contribs"
+                "com.netflix.conductor:conductor-awssqs-event-queue"
             ]
         },
         "com.amazonaws:jmespath-java": {
@@ -1385,8 +1362,6 @@
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.eureka:eureka-client",
                 "org.elasticsearch:elasticsearch-x-content",
                 "org.redisson:redisson",
@@ -1410,8 +1385,6 @@
                 "com.netflix.archaius:archaius-core",
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.dyno-queues:dyno-queues-redis",
                 "com.netflix.eureka:eureka-client",
                 "io.swagger.core.v3:swagger-core",
@@ -1493,6 +1466,13 @@
                 "com.github.vlsi.compactmap:compactmap"
             ]
         },
+        "com.github.ben-manes.caffeine:caffeine": {
+            "locked": "2.8.8",
+            "transitive": [
+                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-json-jq-task"
+            ]
+        },
         "com.github.docker-java:docker-java-api": {
             "locked": "3.2.8",
             "transitive": [
@@ -1542,18 +1522,6 @@
                 "com.github.jnr:jnr-ffi"
             ]
         },
-        "com.github.luben:zstd-jni": {
-            "locked": "1.4.4-7",
-            "transitive": [
-                "org.apache.kafka:kafka-clients"
-            ]
-        },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-common"
-            ]
-        },
         "com.github.spullara.mustache.java:compiler": {
             "locked": "0.9.3",
             "transitive": [
@@ -1581,7 +1549,6 @@
         "com.google.code.findbugs:jsr305": {
             "locked": "3.0.2",
             "transitive": [
-                "com.github.rholder:guava-retrying",
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
                 "com.netflix.archaius:archaius-core",
@@ -1605,6 +1572,7 @@
         "com.google.errorprone:error_prone_annotations": {
             "locked": "2.10.0",
             "transitive": [
+                "com.github.ben-manes.caffeine:caffeine",
                 "com.google.guava:guava",
                 "com.google.protobuf:protobuf-java-util",
                 "io.grpc:grpc-api",
@@ -1624,17 +1592,12 @@
             "locked": "30.0-jre",
             "transitive": [
                 "com.datastax.cassandra:cassandra-driver-core",
-                "com.github.rholder:guava-retrying",
                 "com.google.inject:guice",
                 "com.google.protobuf:protobuf-java-util",
                 "com.netflix.archaius:archaius-core",
-                "com.netflix.conductor:conductor-client",
-                "com.netflix.conductor:conductor-contribs",
-                "com.netflix.conductor:conductor-core",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc-client",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-persistence",
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "io.grpc:grpc-api",
@@ -1676,8 +1639,7 @@
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
-                "io.grpc:grpc-protobuf",
-                "mysql:mysql-connector-java"
+                "io.grpc:grpc-protobuf"
             ]
         },
         "com.google.protobuf:protobuf-java-util": {
@@ -1719,6 +1681,18 @@
                 "com.netflix.conductor:conductor-common"
             ]
         },
+        "com.netflix.conductor:conductor-awss3-storage": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
+        "com.netflix.conductor:conductor-awssqs-event-queue": {
+            "project": true,
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "com.netflix.conductor:conductor-cassandra-persistence": {
             "project": true,
             "transitive": [
@@ -1731,37 +1705,33 @@
         "com.netflix.conductor:conductor-common": {
             "project": true,
             "transitive": [
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest"
-            ]
-        },
-        "com.netflix.conductor:conductor-contribs": {
-            "project": true,
-            "transitive": [
-                "com.netflix.conductor:conductor-server"
             ]
         },
         "com.netflix.conductor:conductor-core": {
             "project": true,
             "transitive": [
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -1769,12 +1739,6 @@
             ]
         },
         "com.netflix.conductor:conductor-es6-persistence": {
-            "project": true,
-            "transitive": [
-                "com.netflix.conductor:conductor-server"
-            ]
-        },
-        "com.netflix.conductor:conductor-es7-persistence": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -1796,19 +1760,19 @@
                 "com.netflix.conductor:conductor-server"
             ]
         },
-        "com.netflix.conductor:conductor-mysql-persistence": {
+        "com.netflix.conductor:conductor-http-task": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
-        "com.netflix.conductor:conductor-postgres-external-storage": {
+        "com.netflix.conductor:conductor-json-jq-task": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
             ]
         },
-        "com.netflix.conductor:conductor-postgres-persistence": {
+        "com.netflix.conductor:conductor-redis-concurrency-limit": {
             "project": true,
             "transitive": [
                 "com.netflix.conductor:conductor-server"
@@ -1932,29 +1896,7 @@
             "locked": "0.122.0",
             "transitive": [
                 "com.netflix.conductor:conductor-client",
-                "com.netflix.conductor:conductor-core",
-                "com.netflix.spectator:spectator-reg-metrics3",
-                "com.netflix.spectator:spectator-reg-micrometer"
-            ]
-        },
-        "com.netflix.spectator:spectator-reg-metrics3": {
-            "locked": "0.122.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs"
-            ]
-        },
-        "com.netflix.spectator:spectator-reg-micrometer": {
-            "locked": "0.122.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs",
-                "com.netflix.conductor:conductor-server"
-            ]
-        },
-        "com.rabbitmq:amqp-client": {
-            "locked": "5.14.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs",
-                "com.netflix.conductor:conductor-server"
+                "com.netflix.conductor:conductor-core"
             ]
         },
         "com.spotify:completable-futures": {
@@ -2027,12 +1969,6 @@
                 "org.skyscreamer:jsonassert"
             ]
         },
-        "com.zaxxer:HikariCP": {
-            "locked": "3.4.5",
-            "transitive": [
-                "org.springframework.boot:spring-boot-starter-jdbc"
-            ]
-        },
         "commons-cli:commons-cli": {
             "locked": "1.4",
             "transitive": [
@@ -2093,8 +2029,7 @@
         "io.dropwizard.metrics:metrics-core": {
             "locked": "4.1.22",
             "transitive": [
-                "com.datastax.cassandra:cassandra-driver-core",
-                "com.netflix.spectator:spectator-reg-metrics3"
+                "com.datastax.cassandra:cassandra-driver-core"
             ]
         },
         "io.github.classgraph:classgraph": {
@@ -2110,7 +2045,7 @@
             ]
         },
         "io.grpc:grpc-api": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-protobuf",
@@ -2119,27 +2054,27 @@
             ]
         },
         "io.grpc:grpc-context": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "io.grpc:grpc-api"
             ]
         },
         "io.grpc:grpc-core": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "io.grpc:grpc-netty",
                 "io.grpc:grpc-services"
             ]
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
@@ -2147,19 +2082,19 @@
             ]
         },
         "io.grpc:grpc-protobuf-lite": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "io.grpc:grpc-protobuf"
             ]
         },
         "io.grpc:grpc-services": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ]
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.45.1",
+            "locked": "1.46.0",
             "transitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
@@ -2169,28 +2104,7 @@
         "io.micrometer:micrometer-core": {
             "locked": "1.5.14",
             "transitive": [
-                "com.netflix.spectator:spectator-reg-micrometer",
-                "io.micrometer:micrometer-registry-datadog",
-                "io.micrometer:micrometer-registry-prometheus",
                 "org.springframework.boot:spring-boot-starter-actuator"
-            ]
-        },
-        "io.micrometer:micrometer-registry-datadog": {
-            "locked": "1.5.14",
-            "transitive": [
-                "com.netflix.conductor:conductor-server"
-            ]
-        },
-        "io.micrometer:micrometer-registry-prometheus": {
-            "locked": "1.5.14",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs"
-            ]
-        },
-        "io.nats:java-nats-streaming": {
-            "locked": "0.5.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs"
             ]
         },
         "io.netty:netty-buffer": {
@@ -2315,7 +2229,7 @@
             ]
         },
         "io.perfmark:perfmark-api": {
-            "locked": "0.23.0",
+            "locked": "0.25.0",
             "transitive": [
                 "io.grpc:grpc-core",
                 "io.grpc:grpc-netty"
@@ -2327,19 +2241,6 @@
                 "org.redisson:redisson"
             ]
         },
-        "io.prometheus:simpleclient": {
-            "locked": "0.9.0",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs",
-                "io.prometheus:simpleclient_common"
-            ]
-        },
-        "io.prometheus:simpleclient_common": {
-            "locked": "0.8.1",
-            "transitive": [
-                "io.micrometer:micrometer-registry-prometheus"
-            ]
-        },
         "io.reactivex.rxjava2:rxjava": {
             "locked": "2.2.21",
             "transitive": [
@@ -2349,7 +2250,7 @@
         "io.reactivex:rxjava": {
             "locked": "1.3.8",
             "transitive": [
-                "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-core"
             ]
         },
@@ -2430,7 +2331,7 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1",
             "transitive": [
-                "com.netflix.conductor:conductor-contribs",
+                "com.netflix.conductor:conductor-http-task",
                 "com.netflix.eureka:eureka-client",
                 "com.sun.jersey:jersey-core"
             ]
@@ -2462,12 +2363,6 @@
                 "org.junit.vintage:junit-vintage-engine",
                 "org.spockframework:spock-core",
                 "org.testcontainers:testcontainers"
-            ]
-        },
-        "mysql:mysql-connector-java": {
-            "locked": "8.0.25",
-            "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence"
             ]
         },
         "net.bytebuddy:byte-buddy": {
@@ -2511,7 +2406,7 @@
         "net.thisptr:jackson-jq": {
             "locked": "0.0.13",
             "transitive": [
-                "com.netflix.conductor:conductor-contribs"
+                "com.netflix.conductor:conductor-json-jq-task"
             ]
         },
         "org.antlr:antlr-runtime": {
@@ -2568,16 +2463,16 @@
         "org.apache.commons:commons-lang3": {
             "locked": "3.10",
             "transitive": [
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.dyno:dyno-contrib",
                 "com.netflix.dyno:dyno-core",
@@ -2631,28 +2526,23 @@
                 "org.elasticsearch.client:elasticsearch-rest-client"
             ]
         },
-        "org.apache.kafka:kafka-clients": {
-            "locked": "2.5.1",
-            "transitive": [
-                "com.netflix.conductor:conductor-contribs"
-            ]
-        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations",
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -2668,18 +2558,19 @@
             "locked": "2.17.1",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations",
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -2693,18 +2584,19 @@
             "locked": "2.17.1",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations",
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -2716,18 +2608,19 @@
             "locked": "2.17.1",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations",
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -2739,18 +2632,19 @@
             "locked": "2.17.1",
             "transitive": [
                 "com.netflix.conductor:conductor-annotations",
+                "com.netflix.conductor:conductor-awss3-storage",
+                "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-cassandra-persistence",
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-contribs",
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-es6-persistence",
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server",
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence",
+                "com.netflix.conductor:conductor-http-task",
+                "com.netflix.conductor:conductor-json-jq-task",
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-lock",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.conductor:conductor-rest",
@@ -2878,10 +2772,10 @@
             ]
         },
         "org.checkerframework:checker-qual": {
-            "locked": "3.5.0",
+            "locked": "3.8.0",
             "transitive": [
-                "com.google.guava:guava",
-                "org.postgresql:postgresql"
+                "com.github.ben-manes.caffeine:caffeine",
+                "com.google.guava:guava"
             ]
         },
         "org.codehaus.groovy:groovy": {
@@ -3193,14 +3087,6 @@
                 "org.elasticsearch:elasticsearch"
             ]
         },
-        "org.flywaydb:flyway-core": {
-            "locked": "6.4.4",
-            "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence"
-            ]
-        },
         "org.glassfish.jaxb:jaxb-runtime": {
             "locked": "2.3.4",
             "transitive": [
@@ -3369,12 +3255,6 @@
                 "org.rarefiedredis.redis:redis-java"
             ]
         },
-        "org.lz4:lz4-java": {
-            "locked": "1.7.1",
-            "transitive": [
-                "org.apache.kafka:kafka-clients"
-            ]
-        },
         "org.mockito:mockito-core": {
             "locked": "3.3.3",
             "transitive": [
@@ -3434,13 +3314,6 @@
             "locked": "5.0.3",
             "transitive": [
                 "com.github.jnr:jnr-ffi"
-            ]
-        },
-        "org.postgresql:postgresql": {
-            "locked": "42.2.20",
-            "transitive": [
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.projectlombok:lombok": {
@@ -3513,14 +3386,8 @@
                 "com.netflix.netflix-commons:netflix-infix",
                 "com.netflix.servo:servo-core",
                 "com.netflix.spectator:spectator-api",
-                "com.netflix.spectator:spectator-reg-metrics3",
-                "com.netflix.spectator:spectator-reg-micrometer",
-                "com.rabbitmq:amqp-client",
-                "com.zaxxer:HikariCP",
                 "io.dropwizard.metrics:metrics-core",
-                "io.micrometer:micrometer-registry-datadog",
                 "io.swagger.core.v3:swagger-core",
-                "org.apache.kafka:kafka-clients",
                 "org.apache.logging.log4j:log4j-slf4j-impl",
                 "org.redisson:redisson",
                 "org.slf4j:jul-to-slf4j",
@@ -3539,21 +3406,20 @@
             "locked": "1.3-groovy-2.5"
         },
         "org.springdoc:springdoc-openapi-common": {
-            "locked": "1.6.7",
+            "locked": "1.6.8",
             "transitive": [
                 "org.springdoc:springdoc-openapi-webmvc-core"
             ]
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.7",
+            "locked": "1.6.8",
             "transitive": [
-                "com.netflix.conductor:conductor-postgres-external-storage",
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ]
         },
         "org.springdoc:springdoc-openapi-webmvc-core": {
-            "locked": "1.6.7",
+            "locked": "1.6.8",
             "transitive": [
                 "org.springdoc:springdoc-openapi-ui"
             ]
@@ -3593,10 +3459,8 @@
         "org.springframework.boot:spring-boot-starter": {
             "locked": "2.3.12.RELEASE",
             "transitive": [
-                "com.netflix.conductor:conductor-es7-persistence",
                 "com.netflix.conductor:conductor-server",
                 "org.springframework.boot:spring-boot-starter-actuator",
-                "org.springframework.boot:spring-boot-starter-jdbc",
                 "org.springframework.boot:spring-boot-starter-json",
                 "org.springframework.boot:spring-boot-starter-test",
                 "org.springframework.boot:spring-boot-starter-validation",
@@ -3607,14 +3471,6 @@
             "locked": "2.3.12.RELEASE",
             "transitive": [
                 "com.netflix.conductor:conductor-server"
-            ]
-        },
-        "org.springframework.boot:spring-boot-starter-jdbc": {
-            "locked": "2.3.12.RELEASE",
-            "transitive": [
-                "com.netflix.conductor:conductor-mysql-persistence",
-                "com.netflix.conductor:conductor-postgres-external-storage",
-                "com.netflix.conductor:conductor-postgres-persistence"
             ]
         },
         "org.springframework.boot:spring-boot-starter-json": {
@@ -3670,6 +3526,12 @@
                 "org.springframework.boot:spring-boot-starter-test"
             ]
         },
+        "org.springframework.retry:spring-retry": {
+            "locked": "1.2.5.RELEASE",
+            "transitive": [
+                "com.netflix.conductor:conductor-server"
+            ]
+        },
         "org.springframework:spring-aop": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
@@ -3682,8 +3544,6 @@
             "transitive": [
                 "org.springframework:spring-aop",
                 "org.springframework:spring-context",
-                "org.springframework:spring-jdbc",
-                "org.springframework:spring-tx",
                 "org.springframework:spring-web",
                 "org.springframework:spring-webmvc"
             ]
@@ -3701,13 +3561,12 @@
                 "org.springframework.boot:spring-boot",
                 "org.springframework.boot:spring-boot-starter",
                 "org.springframework.boot:spring-boot-starter-test",
+                "org.springframework.retry:spring-retry",
                 "org.springframework:spring-aop",
                 "org.springframework:spring-beans",
                 "org.springframework:spring-context",
                 "org.springframework:spring-expression",
-                "org.springframework:spring-jdbc",
                 "org.springframework:spring-test",
-                "org.springframework:spring-tx",
                 "org.springframework:spring-web",
                 "org.springframework:spring-webmvc"
             ]
@@ -3725,22 +3584,10 @@
                 "org.springframework:spring-core"
             ]
         },
-        "org.springframework:spring-jdbc": {
-            "locked": "5.2.15.RELEASE",
-            "transitive": [
-                "org.springframework.boot:spring-boot-starter-jdbc"
-            ]
-        },
         "org.springframework:spring-test": {
             "locked": "5.2.15.RELEASE",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-test"
-            ]
-        },
-        "org.springframework:spring-tx": {
-            "locked": "5.2.15.RELEASE",
-            "transitive": [
-                "org.springframework:spring-jdbc"
             ]
         },
         "org.springframework:spring-web": {
@@ -3759,32 +3606,12 @@
                 "org.springframework.boot:spring-boot-starter-web"
             ]
         },
-        "org.testcontainers:database-commons": {
-            "locked": "1.15.3",
-            "transitive": [
-                "org.testcontainers:jdbc"
-            ]
-        },
         "org.testcontainers:elasticsearch": {
-            "locked": "1.15.3"
-        },
-        "org.testcontainers:jdbc": {
-            "locked": "1.15.3",
-            "transitive": [
-                "org.testcontainers:mysql",
-                "org.testcontainers:postgresql"
-            ]
-        },
-        "org.testcontainers:mysql": {
-            "locked": "1.15.3"
-        },
-        "org.testcontainers:postgresql": {
             "locked": "1.15.3"
         },
         "org.testcontainers:testcontainers": {
             "locked": "1.15.3",
             "transitive": [
-                "org.testcontainers:database-commons",
                 "org.testcontainers:elasticsearch"
             ]
         },
@@ -3806,12 +3633,6 @@
                 "org.springdoc:springdoc-openapi-ui"
             ]
         },
-        "org.xerial.snappy:snappy-java": {
-            "locked": "1.1.7.3",
-            "transitive": [
-                "org.apache.kafka:kafka-clients"
-            ]
-        },
         "org.xmlunit:xmlunit-core": {
             "locked": "2.7.0",
             "transitive": [
@@ -3830,6 +3651,7 @@
         "redis.clients:jedis": {
             "locked": "3.3.0",
             "transitive": [
+                "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence",
                 "com.netflix.dyno:dyno-jedis",
                 "org.rarefiedredis.redis:redis-java"
