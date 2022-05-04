@@ -22,13 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.annotations.Trace;
-import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.*;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.common.utils.RetryUtil;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.ConductorProperties;
@@ -44,13 +44,15 @@ import com.netflix.conductor.core.metadata.MetadataMapperService;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.core.utils.QueueUtils;
-import com.netflix.conductor.core.utils.Utils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 import com.netflix.conductor.service.ExecutionLockService;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 
 import static com.netflix.conductor.core.exception.ApplicationException.Code.*;
 import static com.netflix.conductor.core.utils.Utils.DECIDER_QUEUE;
@@ -119,9 +121,7 @@ public class WorkflowExecutor {
         this.systemTaskRegistry = systemTaskRegistry;
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -132,9 +132,7 @@ public class WorkflowExecutor {
                 name, version, correlationId, input, externalInputPayloadStoragePath, null);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -152,9 +150,7 @@ public class WorkflowExecutor {
                 null);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -173,9 +169,7 @@ public class WorkflowExecutor {
                 event);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -197,9 +191,7 @@ public class WorkflowExecutor {
                 null);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -219,9 +211,7 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -244,9 +234,31 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            String correlationId,
+            Integer priority,
+            Map<String, Object> input,
+            String externalInputPayloadStoragePath,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        return startWorkflow(
+                name,
+                version,
+                input,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                null,
+                null,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -268,9 +280,7 @@ public class WorkflowExecutor {
                 null);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
             Map<String, Object> workflowInput,
@@ -288,9 +298,7 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
             Map<String, Object> workflowInput,
@@ -311,9 +319,30 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
+    public String startWorkflow(
+            WorkflowDef workflowDefinition,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                null,
+                null,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -337,9 +366,7 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException
-     */
+    /** @throws ApplicationException */
     public String startWorkflow(
             String name,
             Integer version,
@@ -366,9 +393,36 @@ public class WorkflowExecutor {
                 taskToDomain);
     }
 
-    /**
-     * @throws ApplicationException if validation fails
-     */
+    /** @throws ApplicationException */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
+        WorkflowDef workflowDefinition =
+                metadataMapperService.lookupForWorkflowDefinition(name, version);
+
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain,
+                createdBy);
+    }
+
+    /** @throws ApplicationException if validation fails */
     public String startWorkflow(
             WorkflowDef workflowDefinition,
             Map<String, Object> workflowInput,
@@ -379,6 +433,31 @@ public class WorkflowExecutor {
             String parentWorkflowTaskId,
             String event,
             Map<String, String> taskToDomain) {
+        return startWorkflow(
+                workflowDefinition,
+                workflowInput,
+                externalInputPayloadStoragePath,
+                correlationId,
+                priority,
+                parentWorkflowId,
+                parentWorkflowTaskId,
+                event,
+                taskToDomain,
+                null);
+    }
+
+    /** @throws ApplicationException if validation fails */
+    public String startWorkflow(
+            WorkflowDef workflowDefinition,
+            Map<String, Object> workflowInput,
+            String externalInputPayloadStoragePath,
+            String correlationId,
+            Integer priority,
+            String parentWorkflowId,
+            String parentWorkflowTaskId,
+            String event,
+            Map<String, String> taskToDomain,
+            String createdBy) {
 
         workflowDefinition = metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
@@ -399,6 +478,7 @@ public class WorkflowExecutor {
         workflow.setParentWorkflowTaskId(parentWorkflowTaskId);
         workflow.setOwnerApp(WorkflowContext.get().getClientApp());
         workflow.setCreateTime(System.currentTimeMillis());
+        workflow.setCreatedBy(createdBy);
         workflow.setUpdatedBy(null);
         workflow.setUpdatedTime(null);
         workflow.setEvent(event);
@@ -512,7 +592,8 @@ public class WorkflowExecutor {
     }
 
     public String rerun(RerunWorkflowRequest request) {
-        Utils.checkNotNull(request.getReRunFromWorkflowId(), "reRunFromWorkflowId is missing");
+        Preconditions.checkNotNull(
+                request.getReRunFromWorkflowId(), "reRunFromWorkflowId is missing");
         if (!rerunWF(
                 request.getReRunFromWorkflowId(),
                 request.getReRunFromTaskId(),
@@ -1184,15 +1265,33 @@ public class WorkflowExecutor {
             case IN_PROGRESS:
             case SCHEDULED:
                 try {
-                    long callBack = taskResult.getCallbackAfterSeconds();
-                    queueDAO.postpone(
-                            taskQueueName, task.getTaskId(), task.getWorkflowPriority(), callBack);
-                    LOGGER.debug(
-                            "Task: {} postponed in taskQueue: {} since the task status is {} with callbackAfterSeconds: {}",
-                            task,
-                            taskQueueName,
-                            task.getStatus().name(),
-                            callBack);
+                    String postponeTaskMessageDesc =
+                            "Postponing Task message in queue for taskId: " + task.getTaskId();
+                    String postponeTaskMessageOperation = "postponeTaskMessage";
+
+                    new RetryUtil<>()
+                            .retryOnException(
+                                    () -> {
+                                        // postpone based on callbackAfterSeconds
+                                        long callBack = taskResult.getCallbackAfterSeconds();
+                                        queueDAO.postpone(
+                                                taskQueueName,
+                                                task.getTaskId(),
+                                                task.getWorkflowPriority(),
+                                                callBack);
+                                        LOGGER.debug(
+                                                "Task: {} postponed in taskQueue: {} since the task status is {} with callbackAfterSeconds: {}",
+                                                task,
+                                                taskQueueName,
+                                                task.getStatus().name(),
+                                                callBack);
+                                        return null;
+                                    },
+                                    null,
+                                    null,
+                                    2,
+                                    postponeTaskMessageDesc,
+                                    postponeTaskMessageOperation);
                 } catch (Exception e) {
                     // Throw exceptions on queue postpone, this would impact task execution
                     String errorMsg =
@@ -1211,7 +1310,20 @@ public class WorkflowExecutor {
 
         // Throw an ApplicationException if below operations fail to avoid workflow inconsistencies.
         try {
-            executionDAOFacade.updateTask(task);
+            String updateTaskDesc = "Updating Task with taskId: " + task.getTaskId();
+            String updateTaskOperation = "updateTask";
+
+            new RetryUtil<>()
+                    .retryOnException(
+                            () -> {
+                                executionDAOFacade.updateTask(task);
+                                return null;
+                            },
+                            null,
+                            null,
+                            2,
+                            updateTaskDesc,
+                            updateTaskOperation);
         } catch (Exception e) {
             String errorMsg =
                     String.format(
@@ -1460,9 +1572,7 @@ public class WorkflowExecutor {
         return dedupedTasks;
     }
 
-    /**
-     * @throws ApplicationException if the workflow cannot be paused
-     */
+    /** @throws ApplicationException if the workflow cannot be paused */
     public void pauseWorkflow(String workflowId) {
         try {
             executionLockService.acquireLock(workflowId, 60000);

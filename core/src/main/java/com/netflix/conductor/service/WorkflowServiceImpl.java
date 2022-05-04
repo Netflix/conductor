@@ -71,7 +71,8 @@ public class WorkflowServiceImpl implements WorkflowService {
                 startWorkflowRequest.getInput(),
                 startWorkflowRequest.getExternalInputPayloadStoragePath(),
                 startWorkflowRequest.getTaskToDomain(),
-                startWorkflowRequest.getWorkflowDef());
+                startWorkflowRequest.getWorkflowDef(),
+                startWorkflowRequest.getCreatedBy());
     }
 
     /**
@@ -149,6 +150,63 @@ public class WorkflowServiceImpl implements WorkflowService {
                     priority,
                     null,
                     taskToDomain);
+        }
+    }
+
+    /**
+     * Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain.
+     *
+     * @param name Name of the workflow you want to start.
+     * @param version Version of the workflow you want to start.
+     * @param correlationId CorrelationID of the workflow you want to start.
+     * @param priority Priority of the workflow you want to start.
+     * @param input Input to the workflow you want to start.
+     * @param externalInputPayloadStoragePath the relative path in external storage where input *
+     *     payload is located
+     * @param taskToDomain the task to domain mapping
+     * @param workflowDef - workflow definition
+     * @param createdBy Id or email of the user that started the Workflow.
+     * @return the id of the workflow instance that can be use for tracking.
+     */
+    public String startWorkflow(
+            String name,
+            Integer version,
+            String correlationId,
+            Integer priority,
+            Map<String, Object> input,
+            String externalInputPayloadStoragePath,
+            Map<String, String> taskToDomain,
+            WorkflowDef workflowDef,
+            String createdBy) {
+        if (workflowDef == null) {
+            workflowDef = metadataService.getWorkflowDef(name, version);
+            if (workflowDef == null) {
+                throw new ApplicationException(
+                        ApplicationException.Code.NOT_FOUND,
+                        String.format(
+                                "No such workflow found by name: %s, version: %d", name, version));
+            }
+
+            return workflowExecutor.startWorkflow(
+                    name,
+                    version,
+                    correlationId,
+                    priority,
+                    input,
+                    externalInputPayloadStoragePath,
+                    null,
+                    taskToDomain,
+                    createdBy);
+        } else {
+            return workflowExecutor.startWorkflow(
+                    workflowDef,
+                    input,
+                    externalInputPayloadStoragePath,
+                    correlationId,
+                    priority,
+                    null,
+                    taskToDomain,
+                    createdBy);
         }
     }
 

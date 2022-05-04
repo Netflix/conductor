@@ -31,9 +31,10 @@ class DoWhileSpec extends AbstractSpecification {
     def setup() {
         workflowTestUtil.registerWorkflows("do_while_integration_test.json",
                 "do_while_multiple_integration_test.json",
+                "do_while_iteration_fix_test.json",
                 "do_while_as_subtask_integration_test.json",
-                'simple_one_task_sub_workflow_integration_test.json',
-                "do_while_sub_workflow_integration_test.json")
+                "simple_one_task_sub_workflow_integration_test.json",
+                "do_while_sub_workflow_integration_test.json");
     }
 
     def "Test workflow with a single iteration Do While task"() {
@@ -122,6 +123,30 @@ class DoWhileSpec extends AbstractSpecification {
             tasks[5].taskType == 'JOIN'
             tasks[5].status == Task.Status.COMPLETED
         }
+    }
+
+
+    def "Test workflow with a iteration fix Do While task"() {
+        given: "Number of iterations of the loop is set to 2"
+            def workflowInput = new HashMap()
+            workflowInput['loop'] = 2
+
+        when: "A do_while workflow is started"
+            def workflowInstanceId = workflowExecutor.startWorkflow("Do_While_Workflow_Iteration_Fix", 1, "looptest", workflowInput, null, null)
+
+        then: "Verify that the workflow has started"
+            with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+                status == Workflow.WorkflowStatus.COMPLETED
+                tasks.size() == 3
+                tasks[0].taskType == 'DO_WHILE'
+                tasks[0].status == Task.Status.COMPLETED
+                tasks[1].taskType == 'LAMBDA'
+                tasks[1].status == Task.Status.COMPLETED
+                tasks[1].outputData.get("result") == 0
+                tasks[2].taskType == 'LAMBDA'
+                tasks[2].status == Task.Status.COMPLETED
+                tasks[2].outputData.get("result") == 1
+            }
     }
 
     def "Test workflow with a single iteration Do While task with Sub workflow"() {

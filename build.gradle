@@ -52,11 +52,17 @@ allprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'java-library'
     apply plugin: 'project-report'
+    apply plugin: 'maven-publish'
 
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 
     group = 'com.netflix.conductor'
+    def conductorVersion = System.getenv('CONDUCTOR_VERSION')
+    if (conductorVersion) {
+        println "Inferred version from env variable 'CONDUCTOR_VERSION': $conductorVersion"
+        version =  conductorVersion
+    }
 
     configurations.all {
         exclude group: 'ch.qos.logback', module: 'logback-classic'
@@ -85,6 +91,24 @@ allprojects {
             }
             filter {
                 includeGroupByRegex "com\\.github\\.vmg.*"
+            }
+        }
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+            }
+        }
+
+        repositories {
+            maven {
+                url "s3://orkes-artifacts-repo/releases"
+                credentials(AwsCredentials) {
+                    accessKey = System.env.AWS_ACCESS_KEY_ID ?: findProperty('aws_access_key_id')
+                    secretKey = System.env.AWS_SECRET_ACCESS_KEY ?: findProperty('aws_secret_access_key')
+                }
             }
         }
     }
