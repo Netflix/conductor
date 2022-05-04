@@ -18,8 +18,8 @@ The DO_WHILE task is set to `FAILED` as soon as one of the loopTask fails. In su
 
 #### Limitations 
 - Domain or isolation group execution is unsupported; - Nested DO_WHILE is unsupported; 
-- SUB_WORKFLOW is unsupported; 
-- Since loopover tasks will be executed in loop inside scope of parent do while task, crossing branching outside of DO_WHILE task is not respected. 
+- Since loopover tasks will be executed in loop inside scope of parent do while task, crossing branching outside of DO_WHILE task is not respected.
+- Nested DO_WHILE tasks are not supported. However, DO_WHILE task supports SUB_WORKFLOW as task, so we can achieve similar functionality.
 
 Branching inside loopover task is supported.
 
