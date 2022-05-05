@@ -2145,6 +2145,10 @@ public class WorkflowExecutor {
 
 	public List<WorkflowErrorRegistry> searchErrorRegistryList(WorkflowErrorRegistry workflowErrorRegistry) throws Exception {
 		List<WorkflowErrorRegistry> workflowErrorRegistries = edao.searchWorkflowErrorRegistryList(workflowErrorRegistry);
+		workflowErrorRegistries.forEach(wer -> {
+			Optional<WorkflowErrorRegistry> subWorkflow = findSubWorkflow(wer.getWorkflowId(), workflowErrorRegistries);
+			subWorkflow.ifPresent(errorRegistry -> wer.setSubWorkflow(errorRegistry.getWorkflowId()));});
+
 		return workflowErrorRegistries;
 	}
 
@@ -2157,5 +2161,11 @@ public class WorkflowExecutor {
 		}
 		List<TaskDetails> taskDetails = edao.searchTaskDetails(jobId, workflowId, workflowType, taskName, includeOutput);
 		return taskDetails;
+	}
+
+	private Optional<WorkflowErrorRegistry> findSubWorkflow(String workflowId, List<WorkflowErrorRegistry> workflowErrorRegistries){
+		return workflowErrorRegistries.stream()
+				.filter(workflowErrorRegistry -> workflowId.equals(workflowErrorRegistry.getParentWorkflowId()))
+				.max(Comparator.comparing(WorkflowErrorRegistry::getEndTime));
 	}
 }

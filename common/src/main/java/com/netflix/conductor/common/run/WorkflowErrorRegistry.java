@@ -15,10 +15,6 @@
  */
 package com.netflix.conductor.common.run;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-
-import java.util.*;
-
 public class WorkflowErrorRegistry {
 
     private String status;
@@ -40,6 +36,8 @@ public class WorkflowErrorRegistry {
     private String rankingId;
 
     private String orderId;
+
+    private String subWorkflow = " ";
 
     private int errorLookUpId;
 
@@ -181,6 +179,14 @@ public class WorkflowErrorRegistry {
 
     public void setErrorLookUpId(int errorLookUpId) {
         this.errorLookUpId = errorLookUpId;
+    }
+
+    public String getSubWorkflow() {
+        return subWorkflow;
+    }
+
+    public void setSubWorkflow(String subWorkflow) {
+        this.subWorkflow = subWorkflow;
     }
 
     /**
