@@ -1,7 +1,7 @@
 buildscript {
 	
 	repositories {
-        jcenter()
+        mavenCentral()
     }
     
     dependencies {
@@ -33,7 +33,7 @@ subprojects {
     targetCompatibility = 1.8
 
     repositories {
-        jcenter()
+        mavenCentral()
     }
 
     configurations.all {
@@ -47,7 +47,7 @@ subprojects {
 
     dependencies {
     	testCompile 'junit:junit-dep:4.10'
-    	testCompile 'org.mockito:mockito-all:1.10.0'
+    	testCompile 'org.mockito:mockito-all:1.10.19'
     }
 
     group = "com.netflix.${githubProjectName}"
