@@ -277,21 +277,27 @@ class TaskPollExecutor {
 
     private void updateTaskResult(int count, Task task, TaskResult result, Worker worker) {
         try {
-            TaskResult finalResult =
+            // upload if necessary
+            Optional<String> optionalExternalStorageLocation =
                     retryOperation(
-                            (TaskResult taskResult) ->
-                                    taskClient.evaluateAndUploadLargePayload(
-                                            taskResult.getOutputData(), task.getTaskType()),
+                            (TaskResult taskResult) -> upload(taskResult, task.getTaskType()),
                             count,
-                            result);
+                            result,
+                            "evaluateAndUploadLargePayload");
+
+            if (optionalExternalStorageLocation.isPresent()) {
+                result.setExternalOutputPayloadStoragePath(optionalExternalStorageLocation.get());
+                result.setOutputData(null);
+            }
 
             retryOperation(
                     (TaskResult taskResult) -> {
                         taskClient.updateTask(taskResult);
-                        return Optional.empty();
+                        return null;
                     },
                     count,
-                    finalResult);
+                    result,
+                    "updateTask");
         } catch (Exception e) {
             worker.onErrorUpdate(task);
             MetricsContainer.incrementTaskUpdateErrorCount(worker.getTaskDefName(), e);
@@ -303,23 +309,22 @@ class TaskPollExecutor {
         }
     }
 
-    private TaskResult retryOperation(
-            Function<TaskResult, Optional<String>> operation, int count, TaskResult result) {
+    private Optional<String> upload(TaskResult result, String taskType) {
+        try {
+            return taskClient.evaluateAndUploadLargePayload(result.getOutputData(), taskType);
+        } catch (IllegalArgumentException iae) {
+            result.setReasonForIncompletion(iae.getMessage());
+            result.setOutputData(null);
+            result.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
+            return Optional.empty();
+        }
+    }
+
+    private <T, R> R retryOperation(Function<T, R> operation, int count, T input, String opName) {
         int index = 0;
         while (index < count) {
             try {
-                Optional<String> optionalExternalStorageLocation = operation.apply(result);
-                if (optionalExternalStorageLocation.isPresent()) {
-                    result.setExternalOutputPayloadStoragePath(
-                            optionalExternalStorageLocation.get());
-                    result.setOutputData(null);
-                }
-                return result;
-            } catch (IllegalArgumentException iae) {
-                result.setReasonForIncompletion(iae.getMessage());
-                result.setOutputData(null);
-                result.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
-                return result;
+                return operation.apply(input);
             } catch (Exception e) {
                 index++;
                 try {
@@ -329,8 +334,7 @@ class TaskPollExecutor {
                 }
             }
         }
-        throw new RuntimeException(
-                String.format("Exhausted retries for updating task: %s", result.getTaskId()));
+        throw new RuntimeException("Exhausted retries performing " + opName);
     }
 
     private void handleException(Throwable t, TaskResult result, Worker worker, Task task) {
