@@ -279,18 +279,16 @@ class TaskPollExecutor {
         try {
             TaskResult finalResult =
                     retryOperation(
-                            (TaskResult taskResult) -> {
-                                taskClient.evaluateAndUploadLargePayload(
-                                        taskResult, task.getTaskType());
-                                return null;
-                            },
+                            (TaskResult taskResult) ->
+                                    taskClient.evaluateAndUploadLargePayload(
+                                            taskResult.getOutputData(), task.getTaskType()),
                             count,
                             result);
 
             retryOperation(
                     (TaskResult taskResult) -> {
                         taskClient.updateTask(taskResult);
-                        return null;
+                        return Optional.empty();
                     },
                     count,
                     finalResult);
@@ -306,13 +304,22 @@ class TaskPollExecutor {
     }
 
     private TaskResult retryOperation(
-            Function<TaskResult, Void> operation, int count, TaskResult result) {
+            Function<TaskResult, Optional<String>> operation, int count, TaskResult result) {
         int index = 0;
         while (index < count) {
             try {
-                TaskResult taskResult = result.copy();
-                operation.apply(taskResult);
-                return taskResult;
+                Optional<String> optionalExternalStorageLocation = operation.apply(result);
+                if (optionalExternalStorageLocation.isPresent()) {
+                    result.setExternalOutputPayloadStoragePath(
+                            optionalExternalStorageLocation.get());
+                    result.setOutputData(null);
+                }
+                return result;
+            } catch (IllegalArgumentException iae) {
+                result.setReasonForIncompletion(iae.getMessage());
+                result.setOutputData(null);
+                result.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
+                return result;
             } catch (Exception e) {
                 index++;
                 try {
