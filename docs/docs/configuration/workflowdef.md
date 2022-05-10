@@ -70,7 +70,7 @@ First we would build these two task definitions. Let's assume that ```shipping i
   "failureWorkflow": "shipping_issues",
   "restartable": true,
   "workflowStatusListenerEnabled": true,
-  "ownerEmail": "devrel@orkes.io",
+  "ownerEmail": "conductor@example.com",
   "timeoutPolicy": "ALERT_ONLY",
   "timeoutSeconds": 0,
   "variables": {},

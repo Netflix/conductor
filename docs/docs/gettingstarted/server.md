@@ -45,6 +45,12 @@ protobuf {
 ...
 } 
 ```
+You may also need to install rosetta:  
+
+  ```bash
+  softwareupdate --install-rosetta
+  ``` 
+
 
 ```shell
 $ cd conductor

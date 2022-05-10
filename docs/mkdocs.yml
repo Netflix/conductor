@@ -1,4 +1,5 @@
 site_name: Conductor
+
 repo_url: https://github.com/Netflix/conductor
 edit_uri: ''
 strict: true
@@ -55,6 +56,7 @@ nav:
         - Starting a Workflow: how-tos/Workflows/starting-workflows.md
         - Updating Workflows: how-tos/Workflows/updating-workflows.md
         - View Workflow Execution: how-tos/Workflows/view-workflow-executions.md
+        - Versioning Workflows: how-tos/Workflows/versioning-workflows.md
       - Tasks:
         - Creating Task Definitions: how-tos/Tasks/creating-tasks.md
         - Dynamic vs Switch Tasks: how-tos/Tasks/dynamic-vs-switch-tasks.md
@@ -64,6 +66,7 @@ nav:
         - Task Inputs: how-tos/Tasks/task-inputs.md
         - Task Timeouts: how-tos/Tasks/task-timeouts.md
         - Updating Task Definitions: how-tos/Tasks/updating-tasks.md
+        - Extending System Tasks: how-tos/Tasks/extending-system-tasks.md
       - Workers:
         - Build a Go Task Worker: how-tos/Workers/build-a-golang-task-worker.md
         - Build a Java Task Worker: how-tos/Workers/build-a-java-task-worker.md
@@ -78,6 +81,7 @@ nav:
       - Kitchensink: labs/kitchensink.md
     - Best Practices: bestpractices.md
     - FAQ: faq.md
+    - Directed Acyclic Graph: reference-docs/directed-acyclic-graph.md
     - Technical Details: technicaldetails.md
     - License: license.md
   - Resources:
