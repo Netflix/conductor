@@ -36,10 +36,10 @@ public class Wait extends WorkflowSystemTask {
     public static final String DURATION_INPUT = "duration";
     public static final String UNTIL_INPUT = "until";
     public static final String TIMEOUT = "timeout";
-    private static final int SECONDS_IN_A_DAY = 86400;
+
     private static final String[] patterns =
             new String[] {
-                "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"
+                "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"
             };
 
     public Wait() {
