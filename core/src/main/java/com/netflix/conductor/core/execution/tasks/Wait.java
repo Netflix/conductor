@@ -38,9 +38,7 @@ public class Wait extends WorkflowSystemTask {
     public static final String TIMEOUT = "timeout";
 
     private static final String[] patterns =
-            new String[] {
-                "yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"
-            };
+            new String[] {"yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"};
 
     public Wait() {
         super(TASK_TYPE_WAIT);

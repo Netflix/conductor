@@ -12,12 +12,6 @@
  */
 package com.netflix.conductor.sdk.workflow.def;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
-import com.netflix.conductor.sdk.workflow.def.tasks.*;
-import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +19,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.Test;
+
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.sdk.workflow.def.tasks.*;
+import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -382,21 +383,19 @@ public class TaskConversionsTests {
         assertEquals(waitTask.getStartDelay(), taskFromWorkflowTask.getStartDelay());
         assertEquals(waitTask.getInput(), taskFromWorkflowTask.getInput());
 
-
-        //Wait for 10 seconds
+        // Wait for 10 seconds
         waitTask = new Wait("wait_for_10_seconds", Duration.of(10, ChronoUnit.SECONDS));
         workflowTask = waitTask.getWorkflowDefTasks().get(0);
         assertNotNull(workflowTask.getInputParameters());
         assertEquals("10s", workflowTask.getInputParameters().get(Wait.DURATION_INPUT));
 
-        //Wait for 10 minutes
+        // Wait for 10 minutes
         waitTask = new Wait("wait_for_10_seconds", Duration.of(10, ChronoUnit.MINUTES));
         workflowTask = waitTask.getWorkflowDefTasks().get(0);
         assertNotNull(workflowTask.getInputParameters());
         assertEquals("600s", workflowTask.getInputParameters().get(Wait.DURATION_INPUT));
 
-
-        //Wait till next week some time
+        // Wait till next week some time
         ZonedDateTime nextWeek = ZonedDateTime.now().plusDays(7);
         String formattedDateTime = Wait.dateTimeFormatter.format(nextWeek);
         waitTask = new Wait("wait_till_next_week", nextWeek);

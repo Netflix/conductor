@@ -12,15 +12,14 @@
  */
 package com.netflix.conductor.sdk.workflow.def.tasks;
 
-import com.netflix.conductor.common.metadata.tasks.TaskType;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-
-import javax.swing.*;
 import java.time.Duration;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
+
+import javax.swing.*;
+
+import com.netflix.conductor.common.metadata.tasks.TaskType;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 
 /** Wait task */
 public class Wait extends Task<Wait> {
@@ -28,7 +27,8 @@ public class Wait extends Task<Wait> {
     public static final String DURATION_INPUT = "duration";
     public static final String UNTIL_INPUT = "until";
 
-    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z");
+    public static final DateTimeFormatter dateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm z");
 
     /**
      * Wait until and external signal completes the task. The external signal can be either an API
@@ -60,5 +60,4 @@ public class Wait extends Task<Wait> {
     Wait(WorkflowTask workflowTask) {
         super(workflowTask);
     }
-
 }
