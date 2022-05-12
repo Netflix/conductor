@@ -12,19 +12,16 @@
  */
 package com.netflix.conductor.core.execution.tasks;
 
+import com.netflix.conductor.model.TaskModel;
+import com.netflix.conductor.model.WorkflowModel;
+import org.apache.commons.lang3.time.DateUtils;
+import org.junit.Test;
+
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.time.DateUtils;
-import org.junit.Test;
-
-import com.netflix.conductor.model.TaskModel;
-import com.netflix.conductor.model.WorkflowModel;
-
-import com.google.common.util.concurrent.Uninterruptibles;
 
 import static org.junit.Assert.*;
 
@@ -87,7 +84,9 @@ public class TestWait {
         assertTrue(task.getOutputData().containsKey(Wait.TIMEOUT));
         assertEquals(now + 1000, task.getOutputData().get(Wait.TIMEOUT));
 
-        Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+        try {
+            Thread.sleep(2_000);
+        } catch (InterruptedException e) {}
 
         // Execute runs when checking if the task has completed
         boolean updated = wait.execute(model, task, null);
