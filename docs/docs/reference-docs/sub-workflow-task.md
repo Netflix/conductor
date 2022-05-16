@@ -176,4 +176,4 @@ If the sub-workflow is terminated or fails the task is marked as failure and ret
 
 ### Optional Sub Workflow Task
 If the Sub Workflow task is defined as optional in the parent workflow task definition, the parent workflow task will not be retried if sub-workflow is terminated or failed.
-In additional, even if the sub-workflow is retried/rerun/restarted after reaching to a terminal status, the parent workflow task status will remain as it is.
+In addition, even if the sub-workflow is retried/rerun/restarted after reaching to a terminal status, the parent workflow task status will remain as it is.
