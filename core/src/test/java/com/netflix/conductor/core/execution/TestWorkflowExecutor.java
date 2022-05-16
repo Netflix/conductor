@@ -1356,6 +1356,7 @@ public class TestWorkflowExecutor {
         task.setOutputData(new HashMap<>());
         task.setSubWorkflowId(subWorkflowId);
         task.setTaskType(TaskType.SUB_WORKFLOW.name());
+        task.setWorkflowTask(new WorkflowTask());
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowId(parentWorkflowId);
@@ -1565,6 +1566,7 @@ public class TestWorkflowExecutor {
         task.setOutputData(new HashMap<>());
         task.setSubWorkflowId(subWorkflowId);
         task.setTaskType(TaskType.SUB_WORKFLOW.name());
+        task.setWorkflowTask(new WorkflowTask());
 
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowId(parentWorkflowId);
