@@ -12,14 +12,11 @@
  */
 package com.netflix.conductor.cassandra.dao
 
-import org.junit.Ignore
-
 import com.netflix.conductor.common.metadata.events.EventExecution
 import com.netflix.conductor.common.metadata.events.EventHandler
 
 import spock.lang.Subject
 
-@Ignore
 class CassandraEventHandlerDAOSpec extends CassandraSpec {
 
     @Subject

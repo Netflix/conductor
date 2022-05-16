@@ -12,8 +12,6 @@
  */
 package com.netflix.conductor.cassandra.dao
 
-import org.junit.Ignore
-
 import com.netflix.conductor.common.metadata.events.EventExecution
 import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef
@@ -28,7 +26,6 @@ import spock.lang.Subject
 import static com.netflix.conductor.common.metadata.events.EventExecution.Status.COMPLETED
 import static com.netflix.conductor.core.exception.ApplicationException.Code.INVALID_INPUT
 
-@Ignore
 class CassandraExecutionDAOSpec extends CassandraSpec {
 
     @Subject
