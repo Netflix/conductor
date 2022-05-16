@@ -1,4 +1,4 @@
-# Redis Configuration
+# Redis
 
 By default conductor runs with an in-memory Redis mock. However, you
 can change the configuration by setting the properties `conductor.db.type` and `conductor.redis.hosts`.

@@ -1,12 +1,8 @@
----
-sidebar_position: 1
----
-
-# Workflow Failure
+# Handling Errors
 
 When a workflow fails, there are 2 ways to handle the exception.
 
-## ```failureWorkflow```
+## Set ```failureWorkflow``` in Workflow Definition
 
 In your main workflow definition, you can configure a workflow to run upon failure, by adding the following parameter to the workflow:
 
@@ -24,7 +20,7 @@ When there is an issue with your workflow, Conductor will start the failure work
 
 Here is a sample failure workflow that sends a message to Slack when the workflow fails. It posts the reason and the workflowId into a slack message - to allow for quick debugging:
 
-```JSON
+```json
 {
   "name": "shipping_failure",
   "description": "workflow for failures with Bobs widget workflow",
@@ -57,10 +53,6 @@ Here is a sample failure workflow that sends a message to Slack when the workflo
   "timeoutPolicy": "ALERT_ONLY",
 }
 ```
-
-
-
-
 
 ##  Set ```workfowStatusListenerEnabled``` 
 

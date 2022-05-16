@@ -5,10 +5,10 @@
         Scalable Workflow Orchestration
       </div>
       <div class="caption pt-3">
-        Conductor is a platform created by Netflix to orchestrate workflows that span across microservices.
+        Conductor is a platform created by <b>Netflix</b> to orchestrate workflows that span across microservices.
       </div>
       <div class="mt-5"> 
-      <button type="button" class="btn btn-primary">Get Started</button>
+      <a type="button" class="btn btn-primary" href="/gettingstarted/local.html">Get Started</a>
       </div>
     </div>
     <div class="col-6">
@@ -116,26 +116,31 @@
 </div>
 
 
-<div class="module compare">
+<div class="compare">
   <div class="container">
-    <div class="row align-items-center">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="heading">Why Conductor?</h2>
+      </div>
+    </div>
+    <div class="row align-items-stretch">
       <div class="col-6">
       <div class="bubble">
-        <div class="heading">
-          Service Orchestration
-        </div>
+        <h3 class="heading">
+           <img src="/img/favicon.svg" class="icon"/> Service Orchestration
+        </h3>
         <div class="caption">        
           <p>Workflow definitions are decoupled from task implementations. This allows the creation of process flows in which each individual task can be implemented 
           by an encapsulated microservice.</p>
-          <p>Desiging a workflow orchestrator that is resilient and horizontally scalable is not a simple problem. At Netflix we have developed a battle-tested solution in  <b>Conductor</b>.</p>
+          <p>Desiging a workflow orchestrator that is resilient and horizontally scalable is not a simple problem. At Netflix we have developed a solution in  <b>Conductor</b>.</p>
         </div>
         </div>
       </div>
       <div class="col-6">
       <div class="bubble">
-        <div class="heading">
-          Service Choreography
-        </div>
+        <h3 class="heading">
+          <img src="/img/icons/network.svg" class="icon"/> Service Choreography
+        </h3>
         <div class="caption">        
           Process flows are implicitly defined across multiple service implementations, often with
           tight peer-to-peer coupling between services. Multiple event buses and complex

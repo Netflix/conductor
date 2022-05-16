@@ -1,4 +1,4 @@
-# Azure Blob External Storage Module 
+# Azure Blob Storage
 
 The [AzureBlob storage](https://github.com/Netflix/conductor/tree/main/azureblob-storage) module uses azure blob to store and retrieve workflows/tasks input/output payload that
 went over the thresholds defined in properties named `conductor.[workflow|task].[input|output].payload.threshold.kb`.

@@ -1,9 +1,3 @@
----
-sidebar_position: 1
-id: archival-of-workflows
-title: Archival of Workflows
----
-
 # Archival Of Workflows
 
 Conductor has support for archiving workflow upon termination or completion. Enabling this will delete the workflow from the configured database, but leave the associated data in Elasticsearch so it is still searchable. 

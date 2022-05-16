@@ -1,14 +1,14 @@
 ## Task state transitions
 The figure below depicts the state transitions that a task can go through within a workflow execution.
 
-![Task_States](img/task_states.png)
+![Task_States](/img/task_states.png)
 
 ## Retries and Failure Scenarios
 
 ### Task failure and retries
 Retries for failed task executions of each task can be configured independently. retryCount, retryDelaySeconds and retryLogic can be used to configure the retry mechanism.
 
-![Task Failure](img/TaskFailure.png)
+![Task Failure](/img/TaskFailure.png)
 
 1. Worker (W1) polls for task T1 from the Conductor server and receives the task.
 2. Upon processing this task, the worker determines that the task execution is a failure and reports this to the server with FAILED status after 10 seconds.
@@ -18,7 +18,7 @@ Retries for failed task executions of each task can be configured independently.
 ### Timeout seconds
 Timeout is the maximum amount of time that the task must reach a terminal state in, else the task will be marked as TIMED_OUT.
 
-![Task Timeout](img/TimeoutSeconds.png)
+![Task Timeout](/img/TimeoutSeconds.png)
 
 **0 seconds** -> Worker polls for task T1 fom the Conductor server and receives the task. T1 is put into IN_PROGRESS status by the server.  
 Worker starts processing the task but is unable to process the task at this time. Worker updates the server with T1 set to IN_PROGRESS status and a callback of 9 seconds.  
@@ -36,7 +36,7 @@ Server puts T1 back in the queue but makes it invisible and the worker continues
 ### Response timeout seconds
 Response timeout is the time within which the worker must respond to the server with an update for the task, else the task will be marked as TIMED_OUT.
 
-![Response Timeout](img/ResponseTimeoutSeconds.png)
+![Response Timeout](/img/ResponseTimeoutSeconds.png)
 
 **0 seconds** -> Worker polls for the task T1 from the Conductor server and receives the task. T1 is put into IN_PROGRESS status by the server.
 

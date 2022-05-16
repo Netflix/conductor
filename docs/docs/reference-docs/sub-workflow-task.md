@@ -31,8 +31,8 @@ Sub Workflow task is defined directly inside the workflow with type `SUB_WORKFLO
 |--------------------|-------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name               | String                                                | Name of the workflow to execute                                                                                                                                     |
 | version            | Integer                                               | Version of the workflow to execute                                                                                                                                  |
-| taskToDomain       | Map[String, String]                                   | Allows scheduling the sub workflow's tasks per given mappings. <br/> See [Task Domains](../../configuration/taskdomains) for instructions to configure taskDomains. |
-| workflowDefinition | [WorkflowDefinition](../../configuration/workflowdef) | Allows starting a subworkflow with a dynamic workflow definition.                                                                                                   |
+| taskToDomain       | Map[String, String]                                   | Allows scheduling the sub workflow's tasks per given mappings. <br/> See [Task Domains](/configuration/taskdomains.html) for instructions to configure taskDomains. |
+| workflowDefinition | [WorkflowDefinition](/configuration/workflowdef.html) | Allows starting a subworkflow with a dynamic workflow definition.                                                                                                   |
 
 #### Output
 
@@ -47,7 +47,7 @@ Sub Workflow task is defined directly inside the workflow with type `SUB_WORKFLO
 Imagine we have a workflow that has a fork in it. In the example below, we input one image, but using a fork to create 2 images simultaneously:
 
 
-![workflow with fork](../img/workflow_fork.png)
+![workflow with fork](/img/workflow_fork.png)
 
 The left fork will create a JPG, and the right fork a WEBP image. Maintaining this workflow might be difficult, as changes made to one side of the fork do not automatically propagate the other.  Rather than using 2 tasks, we can define a ```image_convert_resize``` workflow that we can call for both forks as a sub-workflow:
 
@@ -144,7 +144,7 @@ The left fork will create a JPG, and the right fork a WEBP image. Maintaining th
 ```
 
 Now our diagram will appear as:
-![workflow with 2 subworkflows](../img/subworkflow_diagram.png)
+![workflow with 2 subworkflows](/img/subworkflow_diagram.png)
 
 
 

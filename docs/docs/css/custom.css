@@ -95,13 +95,6 @@ body > .container {
   background-color: transparent;
 }
 
-
-
-.module {
-  padding-top: 50px;
-  padding-bottom: 50px;
-}
-
 .brand-darkblue {
   background: #242A36 !important;
 }
@@ -120,52 +113,44 @@ body > .container {
 }
 
 /* Fonts */
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+h1, h2, h3, h4, h5, h6 {
   color: var(--brand-dark-blue);
-
+  margin-bottom: 20px;
+}
+h1:first-child {
+  margin-top: 0;
 }
 
-.h1 {
-  font-family: "Inter";
-  font-size: 40px;
-  font-weight: 700
-}
-
-h1, .h2 {
-  font-family: "Inter";
+h1 {
+  font-family: "Inter", sans-serif;
   font-size: 32px;
   font-weight: 700;
-  margin-bottom: 20px;
-  margin-top: 20px;
+  margin-top: 50px;
 }
 
-h2, .h3 {
-  font-family: "Roboto", sans-serif;
-  font-size: 26px;
-  font-weight: 500;
-  margin-bottom: 20px;
-  margin-top: 30px;
+h2 {
+  font-family: "Inter", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 40px;
 }
 
-h3, .h4 {
+h3 {
   font-family: "Roboto", sans-serif;
   font-size: 20px;
   font-weight: 500;
-  margin-bottom: 20px;
   margin-top: 30px;
-
 }
 
-h4, .h5 {
+h4 {
   font-family: "Roboto", sans-serif;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 400;
   margin-top: 20px;
-  margin-bottom: 15px;
 }
 
-li {
-  margin-bottom: 5px;
+.main li {
+  margin-bottom: 15px;
 }
 
 
@@ -200,8 +185,9 @@ li {
 
 
 .bullets .heading, .module .heading {
+  font-family: "Inter", sans-serif;
+  font-size: 26px;
   font-weight: 700;
-  font-size: 30px;
 }
 .bullets .row {
   margin-bottom: 60px;
@@ -210,22 +196,24 @@ li {
   padding-top: 10px;
   padding-right: 30px;
 }
-.bullets .icon {
+.icon {
   height: 25px;
   margin-right: 5px;
-  vertical-align: -1px;
+  vertical-align: -3px;
 }
 
 .caption {
   font-weight: 400;
-  font-size: 19px;
+  font-size: 17px;
+  line-height: 24px;
   color: var(--caption-color);
-  line-height: 23px;
 }
 
 .module {
   margin-top: 80px;
   margin-bottom: 80px;
+  padding-top: 50px;
+  padding-bottom: 50px;
 }
 
 .module .caption {
@@ -242,7 +230,7 @@ li {
 
 /* Footer */
 footer {
-  margin: 50px 0 0 0;
+  margin: 0px;
   padding: 0px !important;
   text-align: left;
   font-weight: 400;
@@ -252,6 +240,7 @@ footer {
   padding: 50px 0px;
   color: #fff;
   font-size: 14px;
+  margin-top: 50px;
 }
 .footer a {
   color: var(--brand-lt-gray);
@@ -303,13 +292,22 @@ footer {
 /* Comparison block */
 .compare {
   background-color: var(--brand-lt-blue);
+  padding-top: 80px;
+  padding-bottom: 80px;
+  margin: 0px -15px;
+}
+.compare .heading {
+  margin-bottom: 30px;
+  margin-top: 0px;
 }
 .compare .bubble {
   background: #fff;
   border-radius: 10px;
-  padding: 15px;
+  padding: 30px;
+  height: 100%;
 }
+
 .compare .caption {
   font-size: 15px;
-  line-height:22px;
+  line-height: 22px;
 }

@@ -1,6 +1,6 @@
 # Extending System Tasks
 
-[System tasks](content/docs/reference-docs) allow Conductor to run simple tasks on the server - removing the need to build (and deploy) workers for basic tasks.  This allows for automating more mundane tasks without building specific microservices for them.
+[System tasks](/configuration/systask.html) allow Conductor to run simple tasks on the server - removing the need to build (and deploy) workers for basic tasks.  This allows for automating more mundane tasks without building specific microservices for them.
 
 However, sometimes it might be necessary to add additional parameters to a System Task to gain the behavior that is desired.
 
@@ -56,11 +56,9 @@ This very simple workflow has a single HTTP Task inside.  No parameters need to 
 
 When this workflow is run - it fails, as expected.
 
-![exponential backoff](/img/http_task_fail.png)
-
 Now, sometimes an API call might fail due to an issue on the remote server, and retrying the call will result in a response.  With many Conductor tasks,  ```retryCount```, ```retryDelaySeconds``` and ```retryLogic``` fields can be applied to retry the worker (with the desired parameters).
 
-By default, the [HTTP Task](/content/docs/reference-docs/http-task) does not have ```retryCount```, ```retryDelaySeconds``` or ```retryLogic``` built in.  Attempting to add these parameters to a HTTP Task results in an error.
+By default, the [HTTP Task](/reference-docs/http-task.html) does not have ```retryCount```, ```retryDelaySeconds``` or ```retryLogic``` built in.  Attempting to add these parameters to a HTTP Task results in an error.
 
 ## The Solution
 
@@ -93,14 +91,8 @@ The ```get_weather_90210``` task will now run 4 times (it will fail once, and th
 
 Re-running the task (and looking at the timeline view) shows that this is what occurs.  There are 4 attempts, with a 5 second delay between them.
 
-![fixed backoff failure](/img/http_task_retry_fixed.png)
-
-
 If we change the ```retryLogic``` to EXPONENTIAL_BACKOFF, the delay between attempts grows exponentially:
 
 1. 5*2^0 = 5 seconds
 2. 5*2^1 = 10 seconds
 3. 5*2^2 = 20 seconds
-
-![exponential backoff](/img/http_task_retry_backoff.png)
-

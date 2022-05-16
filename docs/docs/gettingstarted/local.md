@@ -83,4 +83,4 @@ Launch UI [http://localhost:5000](http://localhost:5000)
 ## Summary
 1. All the data is stored in memory, so any workflows created or excuted will be wiped out once the server is terminated.
 2. Indexing is disabled, so search functionality in UI will not work and will result an empty set.
-3. See how to install Conductor using [Docker](running-locally-docker.md) with persistence and indexing.
+3. See how to install Conductor using [Docker](docker.md) with persistence and indexing.

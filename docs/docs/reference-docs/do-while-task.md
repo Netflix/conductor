@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Do While
+# Do-While
 ```json
 "type" : "DO_WHILE"
 ```
