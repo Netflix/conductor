@@ -46,9 +46,11 @@ Sub Workflow task is defined directly inside the workflow with type `SUB_WORKFLO
 
 Imagine we have a workflow that has a fork in it. In the example below, we input one image, but using a fork to create 2 images simultaneously:
 
+
 ![workflow with fork](../img/workflow_fork.png)
 
 The left fork will create a JPG, and the right fork a WEBP image. Maintaining this workflow might be difficult, as changes made to one side of the fork do not automatically propagate the other.  Rather than using 2 tasks, we can define a ```image_convert_resize``` workflow that we can call for both forks as a sub-workflow:
+
 
 ```json
 
@@ -145,7 +147,9 @@ Now our diagram will appear as:
 ![workflow with 2 subworkflows](../img/subworkflow_diagram.png)
 
 
+
 The inputs to both sides of the workflow are identical before and after - but we've abstracted the tasks into the sub-workflow. Any change to the sub-workflow will automatically occur in bth sides of the fork.
+
 
 Looking at the subworkflow (the WEBP version):
 

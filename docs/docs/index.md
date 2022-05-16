@@ -2,6 +2,9 @@
 <center><img src ="img/corner-logo-oss.png" alt = "Logo"></center>
 
 
+<center><a href="https://github.com/netflix/conductor"><img src="https://img.shields.io/github/stars/netflix/conductor?style=social"  width="200" /></a></center>
+
+
 <center><h1>Conductor is a _Workflow Orchestration engine_ that runs in the cloud. </h1></center>
 
 ## Motivation
@@ -10,7 +13,7 @@
 
 * A distributed server ecosystem, which stores workflow state information efficiently.
 * Allow creation of process / business flows in which each individual task can be implemented by the same / different microservices.
-* A DAG (Directed Acyclic Graph) based workflow definition.
+* A [DAG (Directed Acyclic Graph)](reference-docs/directed-acyclic-graph.md) based workflow definition.
 * Workflow definitions are decoupled from the service implementations.
 * Provide visibility and traceability into these process flows.
 * Simple interface to connect workers, which execute the tasks in workflows.
