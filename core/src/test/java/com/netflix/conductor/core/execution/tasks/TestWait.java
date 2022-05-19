@@ -53,14 +53,14 @@ public class TestWait {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
         LocalDateTime now = LocalDateTime.now();
         String formatted = formatter.format(now);
+        System.out.println(formatted);
+
         task.getInputData().put(Wait.UNTIL_INPUT, formatted);
         Date parsed = DateUtils.parseDate(formatted, dateFormat);
 
         wait.start(model, task, null);
         assertEquals(TaskModel.Status.IN_PROGRESS, task.getStatus());
-        assertFalse(task.getOutputData().isEmpty());
-        assertTrue(task.getOutputData().containsKey(Wait.TIMEOUT));
-        assertEquals(parsed.getTime(), task.getOutputData().get(Wait.TIMEOUT));
+        assertEquals(parsed.getTime(), task.getWaitTimeout());
 
         // Execute runs when checking if the task has completed
         boolean updated = wait.execute(model, task, null);
@@ -80,9 +80,7 @@ public class TestWait {
         long now = System.currentTimeMillis();
 
         assertEquals(TaskModel.Status.IN_PROGRESS, task.getStatus());
-        assertFalse(task.getOutputData().isEmpty());
-        assertTrue(task.getOutputData().containsKey(Wait.TIMEOUT));
-        assertEquals(now + 1000, task.getOutputData().get(Wait.TIMEOUT));
+        assertEquals(now + 1000, task.getWaitTimeout());
 
         try {
             Thread.sleep(2_000);
@@ -105,7 +103,7 @@ public class TestWait {
         task.getInputData().put(Wait.DURATION_INPUT, "1s");
         task.getInputData().put(Wait.UNTIL_INPUT, "2022-12-12");
         wait.start(model, task, null);
-        assertEquals(TaskModel.Status.FAILED, task.getStatus());
+        assertEquals(TaskModel.Status.FAILED_WITH_TERMINAL_ERROR, task.getStatus());
         assertTrue(!task.getReasonForIncompletion().isEmpty());
     }
 }

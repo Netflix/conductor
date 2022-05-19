@@ -19,8 +19,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -35,7 +35,7 @@ public class Wait extends WorkflowSystemTask {
 
     public static final String DURATION_INPUT = "duration";
     public static final String UNTIL_INPUT = "until";
-    public static final String TIMEOUT = "timeout";
+    // public static final String TIMEOUT = "timeout";
 
     private static final String[] patterns =
             new String[] {"yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"};
@@ -44,7 +44,7 @@ public class Wait extends WorkflowSystemTask {
         super(TASK_TYPE_WAIT);
     }
 
-    private static Duration parseDuration(String text) {
+    public static Duration parseDuration(String text) {
         Matcher m =
                 Pattern.compile(
                                 "\\s*(?:(\\d+)\\s*(?:days?|d))?"
@@ -63,7 +63,7 @@ public class Wait extends WorkflowSystemTask {
         return Duration.ofSeconds((days * 86400) + (hours * 60L + mins) * 60L + secs);
     }
 
-    private static Date parseDate(String date) throws ParseException {
+    public static Date parseDate(String date) throws ParseException {
         return DateUtils.parseDate(date, patterns);
     }
 
@@ -75,34 +75,34 @@ public class Wait extends WorkflowSystemTask {
         String until =
                 Optional.ofNullable(task.getInputData().get(UNTIL_INPUT)).orElse("").toString();
 
-        if (Strings.isNotBlank(duration) && Strings.isNotBlank(until)) {
+        if (StringUtils.isNotBlank(duration) && StringUtils.isNotBlank(until)) {
             task.setReasonForIncompletion(
                     "Both 'duration' and 'until' specified. Please provide only one input");
-            task.setStatus(FAILED);
+            task.setStatus(FAILED_WITH_TERMINAL_ERROR);
             return;
         }
 
-        if (Strings.isNotBlank(duration)) {
+        if (StringUtils.isNotBlank(duration)) {
 
             Duration timeDuration = parseDuration(duration);
-            task.getOutputData()
-                    .put(TIMEOUT, System.currentTimeMillis() + (timeDuration.getSeconds() * 1000));
+            long waitTimeout = System.currentTimeMillis() + (timeDuration.getSeconds() * 1000);
+            task.setWaitTimeout(waitTimeout);
+
             long seconds = timeDuration.getSeconds();
             task.setCallbackAfterSeconds(seconds);
-        } else if (Strings.isNotBlank(until)) {
+        } else if (StringUtils.isNotBlank(until)) {
             try {
                 Date expiryDate = parseDate(until);
-                System.out.println("expiryDate: " + expiryDate);
                 long timeInMS = expiryDate.getTime();
                 long now = System.currentTimeMillis();
                 long seconds = (timeInMS - now) / 1000;
-                task.getOutputData().put(TIMEOUT, timeInMS);
+                task.setWaitTimeout(timeInMS);
                 task.setCallbackAfterSeconds(seconds);
 
             } catch (ParseException parseException) {
                 task.setReasonForIncompletion(
                         "Invalid/Unsupported Wait Until format.  Provided: " + until);
-                task.setStatus(FAILED);
+                task.setStatus(FAILED_WITH_TERMINAL_ERROR);
             }
         }
         task.setStatus(IN_PROGRESS);
@@ -116,11 +116,10 @@ public class Wait extends WorkflowSystemTask {
     @Override
     public boolean execute(
             WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
-        Object timeoutValue = task.getOutputData().get("timeout");
-        if (timeoutValue == null) {
+        long timeOut = task.getWaitTimeout();
+        if (timeOut == 0) {
             return false;
         }
-        long timeOut = Long.parseLong(timeoutValue.toString());
         if (System.currentTimeMillis() > timeOut) {
             task.setStatus(COMPLETED);
             return true;
