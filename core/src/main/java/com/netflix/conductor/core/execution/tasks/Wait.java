@@ -97,7 +97,6 @@ public class Wait extends WorkflowSystemTask {
                 long now = System.currentTimeMillis();
                 long seconds = (timeInMS - now) / 1000;
                 task.setWaitTimeout(timeInMS);
-                task.setCallbackAfterSeconds(seconds);
 
             } catch (ParseException parseException) {
                 task.setReasonForIncompletion(
