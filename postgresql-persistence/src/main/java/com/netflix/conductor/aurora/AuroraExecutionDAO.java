@@ -528,14 +528,20 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     private static String buildQuery(String startTime, String endTime) {
-        String afterFilter = String.join(">", " and start_time", String.format("'%s'", startTime));
-        String beforeFilter = String.join("<", " and end_time", String.format("'%s'", endTime));
-        String betweenFilter = String.join("", afterFilter, beforeFilter);
+        String beforeStartTimeFilter = String.join("<", " and start_time ", String.format("'%s'", startTime));
+        StringBuilder queryBetweenBuilder = new StringBuilder();
+        String betweenFilter =  queryBetweenBuilder
+                .append(" and start_time > ")
+                .append(String.format("'%s'", startTime))
+                .append(" and end_time < ")
+                .append(String.format("'%s'", endTime))
+                .append(" or end_time is null ")
+                .toString();
 
         int beforeNum = startTime == null ? 0 : 1;
         int afterNum = endTime == null ? 0 : 2;
 
-        return Arrays.asList("", afterFilter, beforeFilter, betweenFilter).get(beforeNum + afterNum);
+        return Arrays.asList("", beforeStartTimeFilter, "", betweenFilter).get(beforeNum + afterNum);
     }
 
     private Task getTask(Connection tx, String taskId) {
