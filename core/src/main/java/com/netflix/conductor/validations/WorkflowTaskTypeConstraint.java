@@ -106,6 +106,7 @@ public @interface WorkflowTaskTypeConstraint {
                     break;
                 case TaskType.TASK_TYPE_JSON_JQ_TRANSFORM:
                     valid = isJSONJQTransformTaskValid(workflowTask, context);
+                    break;
                 case TaskType.TASK_TYPE_WAIT:
                     valid = isWaitTaskValid(workflowTask, context);
                     break;
