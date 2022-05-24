@@ -625,16 +625,15 @@ public class DeciderService {
 
         String reason =
                 String.format(
-                        "Workflow %s timed out after %d seconds. Timeout configured as %d seconds. "
+                        "Workflow timed out after %d seconds. Timeout configured as %d seconds. "
                                 + "Timeout policy configured to %s",
-                        workflow.getWorkflowId(),
                         elapsedTime / 1000L,
                         workflowDef.getTimeoutSeconds(),
                         workflowDef.getTimeoutPolicy().name());
 
         switch (workflowDef.getTimeoutPolicy()) {
             case ALERT_ONLY:
-                LOGGER.info(reason);
+                LOGGER.info("{} {}", workflow.getWorkflowId(), reason);
                 Monitors.recordWorkflowTermination(
                         workflow.getWorkflowName(),
                         WorkflowModel.Status.TIMED_OUT,
