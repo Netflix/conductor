@@ -1285,7 +1285,11 @@ public class WorkflowExecutor {
 	}
 
 	public List<String> getRunningWorkflowIds(String workflowName, String startTime, String endTime) {
-		return  edao.getRunningWorkflowIds(workflowName, startTime, endTime);
+		return edao.getRunningWorkflowIds(workflowName, startTime, endTime);
+	}
+
+	public List<String> getWorkflowIds(String state, String workflowName, String startedBefore, String startedAfter) {
+		return edao.getWorkflowIds(state, workflowName, startedBefore, startedAfter);
 	}
 
 	/**

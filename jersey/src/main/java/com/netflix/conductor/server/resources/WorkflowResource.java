@@ -998,6 +998,25 @@ public class WorkflowResource {
         return service.search(query, freeText, start, size, convert(sort), from, end);
     }
 
+    @GET
+    @Path("/search/{name}")
+    @ApiOperation("Retrieve all the running workflows")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
+            @ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
+            @ApiResponse(code = 409, message = "CONFLICT", response = Error.class),
+            @ApiResponse(code = 500, message = "INTERNAL_ERROR", response = Error.class),
+            @ApiResponse(code = 401, message = "UNAUTHORIZED", response = Error.class),
+            @ApiResponse(code = 501, message = "NOT_IMPLEMENTED", response = Error.class),
+            @ApiResponse(code = 200, message = "SUCCESS", responseContainer = "List", response = String.class)})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Deluxe-Owf-Context", dataType = "string", paramType = "header"),
+            @ApiImplicitParam(name = "Platform-Trace-Id", dataType = "string", paramType = "header")})
+    @Consumes(MediaType.WILDCARD)
+    public List<String> getWorkflowIds(@PathParam("name") String workflowName, @QueryParam("state") @DefaultValue("RUNNING,PAUSED") String state,
+                                     @QueryParam("startedBefore") String startedBefore, @QueryParam("startedAfter") String startedAfter) {
+        return executor.getWorkflowIds(state, workflowName, toTimestamp(startedBefore), toTimestamp(startedAfter));
+    }
+
     @POST
     @Path("/errorRegistrySearch")
     @ApiOperation("Search error registry")

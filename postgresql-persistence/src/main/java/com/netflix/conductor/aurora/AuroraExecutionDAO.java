@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     private final MetadataDAO metadata;
@@ -333,6 +334,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     @Override
+    public List<String> getWorkflowIds(String state, String workflowName, String startedBefore, String startedAfter) {
+        return getWithTransaction(tx -> getWorkflowsWithFilters(tx, state, workflowName, startedBefore, startedAfter));
+    }
+
+    @Override
     public List<Workflow> getPendingWorkflowsByType(String workflowName) {
         Preconditions.checkNotNull(workflowName, "workflowName cannot be null");
         List<String> workflowIds = getWithTransaction(tx -> getRunningWorkflowIds(tx, workflowName));
@@ -527,10 +533,25 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                         .executeScalarList(String.class));
     }
 
+    private List<String> getWorkflowsWithFilters(Connection tx, String state, String workflowName, String startedBefore, String startedAfter) {
+        String baseSql = String.format("SELECT workflow_id FROM workflow WHERE workflow_type like ? AND workflow_status in (%s) ",
+                Stream.of(state.split(","))
+                        .map(v -> String.format("'%s'", v))
+                        .collect(Collectors.joining(", ")));
+
+        String SQL = String.join("", baseSql,
+                buildQueryForSearchWorkflows(startedBefore, startedAfter));
+
+        return query(tx, SQL, q ->
+                q.addParameter(workflowName + "%")
+                        .executeScalarList(String.class));
+    }
+
+
     private static String buildQuery(String startTime, String endTime) {
         String beforeStartTimeFilter = String.join("<", " and start_time ", String.format("'%s'", startTime));
         StringBuilder queryBetweenBuilder = new StringBuilder();
-        String betweenFilter =  queryBetweenBuilder
+        String betweenFilter = queryBetweenBuilder
                 .append(" and start_time > ")
                 .append(String.format("'%s'", startTime))
                 .append(" and end_time < ")
@@ -542,6 +563,23 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         int afterNum = endTime == null ? 0 : 2;
 
         return Arrays.asList("", beforeStartTimeFilter, "", betweenFilter).get(beforeNum + afterNum);
+    }
+
+    private static String buildQueryForSearchWorkflows(String startedBefore, String startedAfter) {
+        String beforeStartTimeFilter = String.join("<", " and start_time ", String.format("'%s'", startedBefore));
+        String afterStartTimeFilter = String.join(">", " and start_time ", String.format("'%s'", startedAfter));
+        StringBuilder queryBetweenBuilder = new StringBuilder();
+        String betweenFilter = queryBetweenBuilder
+                .append(" and start_time < ")
+                .append(String.format("'%s'", startedBefore))
+                .append(" and start_time > ")
+                .append(String.format("'%s'", startedAfter))
+                .toString();
+
+        int beforeNum = startedBefore == null ? 0 : 1;
+        int afterNum = startedAfter == null ? 0 : 2;
+
+        return Arrays.asList("", beforeStartTimeFilter, afterStartTimeFilter, betweenFilter).get(beforeNum + afterNum);
     }
 
     private Task getTask(Connection tx, String taskId) {
