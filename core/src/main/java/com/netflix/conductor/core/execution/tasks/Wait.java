@@ -16,11 +16,8 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -29,42 +26,17 @@ import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
 import static com.netflix.conductor.model.TaskModel.Status.*;
+import static com.netflix.conductor.utils.DateTimeUtils.parseDate;
+import static com.netflix.conductor.utils.DateTimeUtils.parseDuration;
 
 @Component(TASK_TYPE_WAIT)
 public class Wait extends WorkflowSystemTask {
 
     public static final String DURATION_INPUT = "duration";
     public static final String UNTIL_INPUT = "until";
-    // public static final String TIMEOUT = "timeout";
-
-    private static final String[] patterns =
-            new String[] {"yyyy-MM-dd HH:mm", "yyyy-MM-dd HH:mm z", "yyyy-MM-dd"};
 
     public Wait() {
         super(TASK_TYPE_WAIT);
-    }
-
-    public static Duration parseDuration(String text) {
-        Matcher m =
-                Pattern.compile(
-                                "\\s*(?:(\\d+)\\s*(?:days?|d))?"
-                                        + "\\s*(?:(\\d+)\\s*(?:hours?|hrs?|h))?"
-                                        + "\\s*(?:(\\d+)\\s*(?:minutes?|mins?|m))?"
-                                        + "\\s*(?:(\\d+)\\s*(?:seconds?|secs?|s))?"
-                                        + "\\s*",
-                                Pattern.CASE_INSENSITIVE)
-                        .matcher(text);
-        if (!m.matches()) throw new IllegalArgumentException("Not valid duration: " + text);
-
-        int days = (m.start(1) == -1 ? 0 : Integer.parseInt(m.group(1)));
-        int hours = (m.start(2) == -1 ? 0 : Integer.parseInt(m.group(2)));
-        int mins = (m.start(3) == -1 ? 0 : Integer.parseInt(m.group(3)));
-        int secs = (m.start(4) == -1 ? 0 : Integer.parseInt(m.group(4)));
-        return Duration.ofSeconds((days * 86400) + (hours * 60L + mins) * 60L + secs);
-    }
-
-    public static Date parseDate(String date) throws ParseException {
-        return DateUtils.parseDate(date, patterns);
     }
 
     @Override
