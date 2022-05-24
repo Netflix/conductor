@@ -65,26 +65,34 @@ public @interface WorkflowTaskValidConstraint {
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
             }
 
-            boolean valid = true;
-
             // avoid task type definition check in case of non-simple task
             if (!workflowTask.getType().equals(TASK_TYPE_SIMPLE)) {
-                return valid;
+                return true;
             }
 
             if (ValidationContext.getMetadataDAO().getTaskDef(workflowTask.getName()) == null) {
                 // check if task type is ephemeral
                 TaskDef task = workflowTask.getTaskDefinition();
                 if (task == null) {
-                    valid = false;
-                    String message =
-                            String.format(
-                                    "workflowTask: %s task definition is not defined",
-                                    workflowTask.getName());
-                    context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                    try {
+                        createTaskDef(workflowTask.getName());
+                    } catch (Exception e) {
+                        String message =
+                                String.format(
+                                        "workflowTask: %s task definition cannot be created",
+                                        workflowTask.getName());
+                        context.buildConstraintViolationWithTemplate(message)
+                                .addConstraintViolation();
+                        return false;
+                    }
                 }
             }
-            return valid;
+            return true;
+        }
+
+        private void createTaskDef(String name) {
+            TaskDef taskDef = new TaskDef(name);
+            ValidationContext.getMetadataDAO().createTaskDef(taskDef);
         }
     }
 }
