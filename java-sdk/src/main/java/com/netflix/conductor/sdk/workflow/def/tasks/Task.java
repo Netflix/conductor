@@ -206,7 +206,7 @@ public abstract class Task<T> {
         workflowTask.setDescription(description);
         workflowTask.setInputParameters(input);
         workflowTask.setStartDelay(startDelay);
-        workflowTask.setOptional(optional)
+        workflowTask.setOptional(optional);
 
         // Let the sub-classes enrich the workflow task before returning back
         updateWorkflowTask(workflowTask);
