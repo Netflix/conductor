@@ -172,6 +172,8 @@ public class DeciderService {
 			outcome.isComplete = true;
 		}
 
+		logger.debug("tasksToBeScheduled =" + tasksToBeScheduled.toString() + ",workflowId=" + workflow.getWorkflowId() + ",correlationId=" + workflow.getCorrelationId() + ",contextUser=" + workflow.getContextUser());
+
 		return outcome;
 	
 	}
@@ -355,6 +357,11 @@ public class DeciderService {
 				startDelay = taskDef.getRetryDelaySeconds() * (1 + task.getRetryCount());
 				break;
 		}
+		logger.debug("Task retry. workflowId=" + workflow.getWorkflowId()
+				+ ",taskId=" + task.getTaskId() + ",correlationId=" + workflow.getCorrelationId()
+				+ ",reason=" + task.getReasonForIncompletion()
+				+ ",contextUser=" + workflow.getContextUser()
+				+ ",startDelay=" + startDelay);
 
 		task.setRetried(true);
 		
