@@ -57,8 +57,6 @@ public class DeciderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeciderService.class);
 
-    @VisibleForTesting static final String MAX_TASK_LIMIT = "conductor.app.max-task-limit";
-
     private final IDGenerator idGenerator;
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
@@ -635,7 +633,7 @@ public class DeciderService {
 
         switch (workflowDef.getTimeoutPolicy()) {
             case ALERT_ONLY:
-                LOGGER.info(reason);
+                LOGGER.info("{} {}", workflow.getWorkflowId(), reason);
                 Monitors.recordWorkflowTermination(
                         workflow.getWorkflowName(),
                         WorkflowModel.Status.TIMED_OUT,
