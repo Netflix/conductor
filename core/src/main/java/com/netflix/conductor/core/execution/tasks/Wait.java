@@ -25,9 +25,9 @@ import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
+import static com.netflix.conductor.core.utils.DateTimeUtils.parseDate;
+import static com.netflix.conductor.core.utils.DateTimeUtils.parseDuration;
 import static com.netflix.conductor.model.TaskModel.Status.*;
-import static com.netflix.conductor.utils.DateTimeUtils.parseDate;
-import static com.netflix.conductor.utils.DateTimeUtils.parseDuration;
 
 @Component(TASK_TYPE_WAIT)
 public class Wait extends WorkflowSystemTask {
