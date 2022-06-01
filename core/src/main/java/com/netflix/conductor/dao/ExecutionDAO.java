@@ -233,6 +233,10 @@ public interface ExecutionDAO {
         return Collections.emptyList();
     }
 
+    default List<String> getWorkflowIdsByStartDate(String state, String workflowName, String startedBefore, String startedAfter) {
+        return Collections.emptyList();
+    }
+
     /**
      *
      * @param workflowName Name of the workflow
