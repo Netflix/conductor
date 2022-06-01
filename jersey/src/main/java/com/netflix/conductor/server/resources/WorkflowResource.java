@@ -50,6 +50,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.util.*;
 
@@ -1000,7 +1002,7 @@ public class WorkflowResource {
 
     @GET
     @Path("/search/{name}")
-    @ApiOperation("Retrieve all the running workflows")
+    @ApiOperation("Retrieve workflows by start date")
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "NOT_FOUND", response = Error.class),
             @ApiResponse(code = 400, message = "INVALID_INPUT", response = Error.class),
@@ -1014,7 +1016,21 @@ public class WorkflowResource {
     @Consumes(MediaType.WILDCARD)
     public List<String> getWorkflowIds(@PathParam("name") String workflowName, @QueryParam("state") @DefaultValue("RUNNING,PAUSED") String state,
                                      @QueryParam("startedBefore") String startedBefore, @QueryParam("startedAfter") String startedAfter) {
-        return executor.getWorkflowIds(state, workflowName, toTimestamp(startedBefore), toTimestamp(startedAfter));
+        if ( StringUtils.isEmpty(startedBefore) && StringUtils.isEmpty(startedAfter)){
+            throw new ApplicationException(Code.INVALID_INPUT, "One of startedBefore or StartedAfter is required  ");
+        }
+
+        String startedBeforeTimestamp = null;
+        String startedAfterTimestamp = null;
+
+        try{
+            startedBeforeTimestamp = parseDate(startedBefore);
+            startedAfterTimestamp = parseDate(startedAfter);
+        }catch( Exception ex){
+            throw new ApplicationException(Code.INVALID_INPUT, "Invalid date format. Please use YYYY-MM-DD or YYYY-MM-DD'T'hh:mm:ss'Z'  ");
+        }
+
+        return executor.getWorkflowIdsByStartDate(state, workflowName, startedBeforeTimestamp, startedAfterTimestamp);
     }
 
     @POST
@@ -1098,5 +1114,18 @@ public class WorkflowResource {
             throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
                     .entity("Invaid dateTime format. Format should be ZonedDateTime").build());
         }
+    }
+
+    private static String parseDate(String dateTime) throws Exception{
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat tsFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        if ( dateTime != null){
+            if ( dateTime.length() > 10){
+                return tsFormat.parse(dateTime).toString();
+            }else{
+                return dateFormat.parse(dateTime).toString();
+            }
+        }
+        return null;
     }
 }

@@ -17,6 +17,7 @@ import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -334,7 +335,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     }
 
     @Override
-    public List<String> getWorkflowIds(String state, String workflowName, String startedBefore, String startedAfter) {
+    public List<String> getWorkflowIdsByStartDate(String state, String workflowName, String startedBefore, String startedAfter) {
         return getWithTransaction(tx -> getWorkflowsWithFilters(tx, state, workflowName, startedBefore, startedAfter));
     }
 
@@ -540,7 +541,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                         .collect(Collectors.joining(", ")));
 
         String SQL = String.join("", baseSql,
-                buildQueryForSearchWorkflows(startedBefore, startedAfter));
+                buildQueryForSearchByStartDate(startedBefore, startedAfter));
 
         return query(tx, SQL, q ->
                 q.addParameter(workflowName + "%")
@@ -565,21 +566,18 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         return Arrays.asList("", beforeStartTimeFilter, "", betweenFilter).get(beforeNum + afterNum);
     }
 
-    private static String buildQueryForSearchWorkflows(String startedBefore, String startedAfter) {
-        String beforeStartTimeFilter = String.join("<", " and start_time ", String.format("'%s'", startedBefore));
-        String afterStartTimeFilter = String.join(">", " and start_time ", String.format("'%s'", startedAfter));
-        StringBuilder queryBetweenBuilder = new StringBuilder();
-        String betweenFilter = queryBetweenBuilder
-                .append(" and start_time < ")
-                .append(String.format("'%s'", startedBefore))
-                .append(" and start_time > ")
-                .append(String.format("'%s'", startedAfter))
-                .toString();
+    private String buildQueryForSearchByStartDate(String startedBefore, String startedAfter) {
+        StringBuilder query = new StringBuilder();
 
-        int beforeNum = startedBefore == null ? 0 : 1;
-        int afterNum = startedAfter == null ? 0 : 2;
+        if (StringUtils.isNotEmpty(startedAfter)){
+            query.append(String.format(" and start_time > '%s' ", startedAfter));
+        }
 
-        return Arrays.asList("", beforeStartTimeFilter, afterStartTimeFilter, betweenFilter).get(beforeNum + afterNum);
+        if (StringUtils.isNotEmpty(startedBefore)){
+            query.append(String.format(" and start_time < '%s' ", startedBefore));
+        }
+
+        return query.toString();
     }
 
     private Task getTask(Connection tx, String taskId) {

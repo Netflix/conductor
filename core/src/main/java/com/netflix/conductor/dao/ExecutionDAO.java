@@ -233,7 +233,7 @@ public interface ExecutionDAO {
         return Collections.emptyList();
     }
 
-    default List<String> getWorkflowIds(String state, String workflowName, String startedBefore, String startedAfter) {
+    default List<String> getWorkflowIdsByStartDate(String state, String workflowName, String startedBefore, String startedAfter) {
         return Collections.emptyList();
     }
 
