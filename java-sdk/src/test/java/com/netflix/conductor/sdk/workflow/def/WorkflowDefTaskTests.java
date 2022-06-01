@@ -12,15 +12,9 @@
  */
 package com.netflix.conductor.sdk.workflow.def;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.junit.jupiter.api.Test;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.WorkflowExecutor;
 
