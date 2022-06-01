@@ -4,7 +4,7 @@ job "conductor" {
   datacenters = ["us-west-2"]
 
   spread {
-    attribute = "${unique.network.ip-address}"
+    attribute = "${attr.unique.network.ip-address}"
   }
 
   meta {
