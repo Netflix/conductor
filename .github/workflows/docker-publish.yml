@@ -6,9 +6,9 @@ on:
     branches:
       - master
 
-    # Publish `frinx-v1.2.3` tags as releases.
+    # Publish `v1.2.3` tags as releases.
     tags:
-      - frinx-v*
+      - v*
 
   # Run tests for any PRs.
   pull_request:
@@ -46,7 +46,7 @@ jobs:
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
           # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^frinx-v//')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
           # Use Docker `latest` tag convention
           [ "$VERSION" == "master" ] && VERSION=latest
