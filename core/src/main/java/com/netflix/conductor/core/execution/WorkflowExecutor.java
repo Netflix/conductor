@@ -1070,9 +1070,9 @@ public class WorkflowExecutor {
 				});
 				List<String> urns = (List<String>) map.get("urns");
 				for (String urn : urns) {
-					if (urn.contains("orderid:")) {
+					if (urn.contains("orderid:") || urn.contains("order:")) {
 						orderId = urn.substring(urn.lastIndexOf(':') + 1);
-					} else if (urn.contains("jobid:")) {
+					} else if (urn.contains("jobid:") || urn.contains("deliveryjob:")) {
 						jobId = urn.substring(urn.lastIndexOf(':') + 1);
 					} else if (urn.contains("rankingid:")) {
 						rankingId = urn.substring(urn.lastIndexOf(':') + 1);
