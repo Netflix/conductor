@@ -51,6 +51,7 @@ class ErrorDashboardDetails extends Component {
     }
 
     render() {
+        let dateTime = moment().format(moment.HTML5_FMT.DATETIME_LOCAL_SECONDS);
         function formatDate(cell, row) {
             let dt = moment(cell).toDate()
             if (dt == null || dt == '') {
@@ -69,8 +70,8 @@ class ErrorDashboardDetails extends Component {
 
                 {(this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>))}
                 {errorData && errorData.result.length ?
-                    <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={false}
-                                    pagination={true}>
+                    <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={true}
+                                   csvFileName={"conductorErrorReport_"+dateTime+".csv"}  pagination={true} >
                         <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left"
                                            dataSort={true}>Workflow ID</TableHeaderColumn>
                         <TableHeaderColumn dataField="subWorkflow" dataFormat={linkMaker} dataSort={true}>Sub Workflow</TableHeaderColumn>
