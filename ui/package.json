@@ -43,7 +43,7 @@
     "react": "^0.14.7",
     "react-addons-update": "^0.14.7",
     "react-bootstrap": "^0.28.2",
-    "react-bootstrap-table": "^1.5.3",
+    "react-bootstrap-table": "^3.4.6",
     "react-bootstrap-typeahead": "^0.9.2",
     "react-burger-menu": "^1.5.2",
     "react-d3-basic": "^1.5.2",

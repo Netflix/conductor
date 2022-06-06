@@ -51,6 +51,24 @@ class ErrorDashboardDetails extends Component {
     }
 
     render() {
+
+     const options = {
+             sizePerPageList: [ {
+               text: '5', value: 5
+             }, {
+               text: '10', value: 10
+             },
+              {
+                  text: '100', value: 100
+              } ], // you can change the dropdown list for size per page
+             sizePerPage: 100 , // which size per page you want to locate as default
+             alwaysShowAllBtns: true,
+             prePage: 'Prev', // Previous page button text
+             nextPage: 'Next', // Next page button text
+             firstPage: 'First', // First page button text
+             lastPage: 'Last' // Last page button text
+        };
+
         let dateTime = moment().format(moment.HTML5_FMT.DATETIME_LOCAL_SECONDS);
         function formatDate(cell, row) {
             let dt = moment(cell).toDate()
@@ -71,7 +89,7 @@ class ErrorDashboardDetails extends Component {
                 {(this.props.params.lookup !== 'undefined' && (<h1>{this.props.params.lookup}</h1>))}
                 {errorData && errorData.result.length ?
                     <BootstrapTable data={errorData.result} striped={true} search={true} hover={true} exportCSV={true}
-                                   csvFileName={"conductorErrorReport_"+dateTime+".csv"}  pagination={true} >
+                                   csvFileName={"conductorErrorReport_"+dateTime+".csv"}  pagination={true}  options={ options }>
                         <TableHeaderColumn dataField="workflowId" isKey={true} dataFormat={linkMaker} dataAlign="left"
                                            dataSort={true}>Workflow ID</TableHeaderColumn>
                         <TableHeaderColumn dataField="subWorkflow" dataFormat={linkMaker} dataSort={true}>Sub Workflow</TableHeaderColumn>
