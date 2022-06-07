@@ -49,6 +49,8 @@ public class DecisionTaskMapper implements TaskMapper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DecisionTaskMapper.class);
 
+    private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(null);
+
     @Override
     public TaskType getTaskType() {
         return TaskType.DECISION;
@@ -137,7 +139,7 @@ public class DecisionTaskMapper implements TaskMapper {
             LOGGER.debug("Case being evaluated using decision expression: {}", expression);
             try {
                 // Evaluate the expression by using the Nashhorn based script evaluator
-                Object returnValue = ScriptEvaluator.eval(expression, taskInput);
+                Object returnValue = scriptEvaluator.eval(expression, taskInput);
                 caseValue = (returnValue == null) ? "null" : returnValue.toString();
             } catch (ScriptException e) {
                 String errorMsg = String.format("Error while evaluating script: %s", expression);

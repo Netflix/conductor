@@ -67,6 +67,7 @@ public class DefaultEventProcessor {
     private final MetadataService metadataService;
     private final ExecutionService executionService;
     private final ActionProcessor actionProcessor;
+    private ScriptEvaluator scriptEvaluator;
 
     private final ExecutorService eventActionExecutorService;
     private final ObjectMapper objectMapper;
@@ -90,6 +91,7 @@ public class DefaultEventProcessor {
         this.objectMapper = objectMapper;
         this.jsonUtils = jsonUtils;
         this.evaluators = evaluators;
+        this.scriptEvaluator = new ScriptEvaluator(null);
 
         if (properties.getEventProcessorThreadCount() <= 0) {
             throw new IllegalStateException(
@@ -161,10 +163,10 @@ public class DefaultEventProcessor {
                         evaluators
                                 .get(evaluatorType)
                                 .evaluate(condition, jsonUtils.expand(payloadObject));
-                success = ScriptEvaluator.toBoolean(result);
+                success = scriptEvaluator.toBoolean(result);
             } else if (StringUtils.isNotEmpty(condition)) {
                 LOGGER.debug("Checking condition: {} for event: {}", condition, event);
-                success = ScriptEvaluator.evalBool(condition, jsonUtils.expand(payloadObject));
+                success = scriptEvaluator.evalBool(condition, jsonUtils.expand(payloadObject));
             }
 
             if (!success) {

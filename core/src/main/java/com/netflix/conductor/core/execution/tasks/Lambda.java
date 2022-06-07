@@ -57,6 +57,7 @@ public class Lambda extends WorkflowSystemTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(Lambda.class);
     private static final String QUERY_EXPRESSION_PARAMETER = "scriptExpression";
     public static final String NAME = "LAMBDA";
+    private static final ScriptEvaluator scriptEvaluator = new ScriptEvaluator(null);
 
     public Lambda() {
         super(TASK_TYPE_LAMBDA);
@@ -78,7 +79,7 @@ public class Lambda extends WorkflowSystemTask {
                         "scriptExpressionBuilder: {}, task: {}",
                         scriptExpressionBuilder,
                         task.getTaskId());
-                Object returnValue = ScriptEvaluator.eval(scriptExpressionBuilder, taskInput);
+                Object returnValue = scriptEvaluator.eval(scriptExpressionBuilder, taskInput);
                 taskOutput.put("result", returnValue);
                 task.setStatus(TaskModel.Status.COMPLETED);
             } else {

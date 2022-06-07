@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TestScriptEval {
 
+    ScriptEvaluator scriptEvaluator = new ScriptEvaluator(null);
+
     @Test
     public void testScript() throws Exception {
         Map<String, Object> payload = new HashMap<>();
@@ -39,9 +41,9 @@ public class TestScriptEval {
         String script3 = "$.oss"; // true
         String script4 = "$.author == 'me'"; // false
 
-        assertTrue(ScriptEvaluator.evalBool(script1, payload));
-        assertFalse(ScriptEvaluator.evalBool(script2, payload));
-        assertTrue(ScriptEvaluator.evalBool(script3, payload));
-        assertFalse(ScriptEvaluator.evalBool(script4, payload));
+        assertTrue(scriptEvaluator.evalBool(script1, payload));
+        assertFalse(scriptEvaluator.evalBool(script2, payload));
+        assertTrue(scriptEvaluator.evalBool(script3, payload));
+        assertFalse(scriptEvaluator.evalBool(script4, payload));
     }
 }

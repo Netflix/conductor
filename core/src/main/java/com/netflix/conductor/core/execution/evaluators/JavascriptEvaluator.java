@@ -26,13 +26,18 @@ public class JavascriptEvaluator implements Evaluator {
 
     public static final String NAME = "javascript";
     private static final Logger LOGGER = LoggerFactory.getLogger(JavascriptEvaluator.class);
+    private final ScriptEvaluator scriptEvaluator;
+
+    public JavascriptEvaluator() {
+        this.scriptEvaluator = new ScriptEvaluator(null);
+    }
 
     @Override
     public Object evaluate(String expression, Object input) {
         LOGGER.debug("Javascript evaluator -- expression: {}", expression);
         try {
             // Evaluate the expression by using the Javascript evaluation engine.
-            Object result = ScriptEvaluator.eval(expression, input);
+            Object result = scriptEvaluator.eval(expression, input);
             LOGGER.debug("Javascript evaluator -- result: {}", result);
             return result;
         } catch (ScriptException e) {

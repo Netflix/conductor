@@ -39,10 +39,12 @@ public class DoWhile extends WorkflowSystemTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(DoWhile.class);
 
     private final ParametersUtils parametersUtils;
+    private final ScriptEvaluator scriptEvaluator;
 
     public DoWhile(ParametersUtils parametersUtils) {
         super(TASK_TYPE_DO_WHILE);
         this.parametersUtils = parametersUtils;
+        this.scriptEvaluator = new ScriptEvaluator(null);
     }
 
     @Override
@@ -218,8 +220,8 @@ public class DoWhile extends WorkflowSystemTask {
         boolean shouldContinue = false;
         if (condition != null) {
             LOGGER.debug("Condition: {} is being evaluated", condition);
-            // Evaluate the expression by using the Nashorn based script evaluator
-            shouldContinue = ScriptEvaluator.evalBool(condition, taskInput);
+            // Evaluate the expression by using the Nashhorn based script evaluator
+            shouldContinue = scriptEvaluator.evalBool(condition, taskInput);
         }
         return shouldContinue;
     }
