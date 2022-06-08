@@ -60,6 +60,8 @@ public class WorkflowDef extends Auditable {
 
 	private Map<String, Object> attributes = new HashMap<>();;
 
+	private Map<String, Object> variables = new HashMap<>();
+
 
 	/**
 	 * @return the name
@@ -319,5 +321,13 @@ public class WorkflowDef extends Auditable {
 			all.addAll(wft.all());
 		}
 		return all;
+	}
+
+	public Map<String, Object> getVariables() {
+		return variables;
+	}
+
+	public void setVariables(Map<String, Object> variables) {
+		this.variables = variables;
 	}
 }

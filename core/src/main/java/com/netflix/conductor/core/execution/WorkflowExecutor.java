@@ -240,6 +240,7 @@ public class WorkflowExecutor {
 			wf.setAuthorization(authorization);
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
+			wf.setVariables(workflowDef.getVariables());
 			if (jobPriority == null) {
 				Object priority = input.get("jobPriority"); // Backward compatible
 				if (priority instanceof String) {
@@ -915,6 +916,7 @@ public class WorkflowExecutor {
 				map.put("workflowRestartCount", workflow.getRestartCount());
 				map.put("workflowRerunCount", workflow.getRerunCount());
 				map.put("attributes", workflow.getAttributes());
+				map.put("variables", workflow.getVariables());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
@@ -982,6 +984,7 @@ public class WorkflowExecutor {
 				input.put("taskInput", failedTask.getInputData());
 				input.put("taskRefName", failedTask.getReferenceTaskName());
 				input.put("taskRetryCount", failedTask.getRetryCount());
+				input.put("variables", workflow.getVariables());
 
 				try {
 					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
@@ -1003,6 +1006,7 @@ public class WorkflowExecutor {
 				input.putAll(workflow.getInput());
 			} else {
 				input.put("workflowInput", workflow.getInput());
+				input.put("variables", workflow.getVariables());
 			}
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
