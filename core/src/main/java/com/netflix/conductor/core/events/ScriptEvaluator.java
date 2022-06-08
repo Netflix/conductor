@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.core.events;
 
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -19,7 +21,7 @@ import javax.script.ScriptException;
 
 public class ScriptEvaluator {
 
-    private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+    private static ScriptEngine engine;
 
     private ScriptEvaluator() {}
 
@@ -45,9 +47,20 @@ public class ScriptEvaluator {
      * @return Generic object, the result of the evaluated expression.
      */
     public static Object eval(String script, Object input) throws ScriptException {
+        if (engine == null) {
+            engine = createEngine();
+        }
         Bindings bindings = engine.createBindings();
         bindings.put("$", input);
         return engine.eval(script, bindings);
+    }
+
+    private static ScriptEngine createEngine() {
+        NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+        return factory.getScriptEngine(
+                new String[] {
+                        "-strict", "--no-java", "--no-syntax-extensions", "--verify-code"
+                });
     }
 
     /**
