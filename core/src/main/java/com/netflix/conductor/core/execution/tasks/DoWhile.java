@@ -78,6 +78,11 @@ public class DoWhile extends WorkflowSystemTask {
             }
         }
         Collection<TaskModel> loopOverTasks = relevantTasks.values();
+
+        // Check for any JSON_JQ task within do-while task.
+        // If yes find all task after json-jq and create dummy task model and add it in relevant task map so that
+        // Loop task does not schedule next iteration abruptly.
+
         LOGGER.debug(
                 "Workflow {} waiting for tasks {} to complete iteration {}",
                 workflow.getWorkflowId(),
