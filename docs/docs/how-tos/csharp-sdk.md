@@ -1,4 +1,4 @@
-# Netflix Conductor Client SDK
+# Netflix Conductor Client C# SDK
 
 `conductor-csharp` repository provides the client SDKs to build Task Workers and Clients in C#
 
