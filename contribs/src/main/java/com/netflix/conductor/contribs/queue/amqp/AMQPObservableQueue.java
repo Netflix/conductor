@@ -212,6 +212,7 @@ public class AMQPObservableQueue implements ObservableQueue {
                                 "Retries completed. Cannot ACK message with delivery tag {}",
                                 message.getReceipt(),
                                 e);
+                        throw new RuntimeException(ex);
                     }
                     retryIndex++;
                 }
