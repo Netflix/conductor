@@ -187,38 +187,45 @@ public class AMQPObservableQueue implements ObservableQueue {
     public List<String> ack(List<Message> messages) {
         final List<String> processedDeliveryTags = new ArrayList<>();
         for (final Message message : messages) {
-            int retryIndex = 1;
-            while (true) {
-                try {
-                    LOGGER.info("ACK message with delivery tag {}", message.getReceipt());
-                    Channel chn =
-                            amqpConnection.getOrCreateChannel(
-                                    ConnectionType.SUBSCRIBER,
-                                    getSettings().getQueueOrExchangeName());
-                    chn.basicAck(Long.parseLong(message.getReceipt()), false);
-                    processedDeliveryTags.add(message.getReceipt());
-                    LOGGER.info("Ack'ed the message with delivery tag {}", message.getReceipt());
-                    break;
-                } catch (final Exception e) {
-                    AMQPRetryPattern retry = retrySettings;
-                    if (retry == null) {
-                        LOGGER.error(
-                                "Cannot ACK message with delivery tag {}", message.getReceipt(), e);
-                    }
-                    try {
-                        retry.continueOrPropogate(e, retryIndex);
-                    } catch (Exception ex) {
-                        LOGGER.error(
-                                "Retries completed. Cannot ACK message with delivery tag {}",
-                                message.getReceipt(),
-                                e);
-                        throw new RuntimeException(ex);
-                    }
-                    retryIndex++;
-                }
+            try {
+                ackMsg(message);
+                processedDeliveryTags.add(message.getReceipt());
+            } catch (final Exception e) {
+                LOGGER.error("Cannot ACK message with delivery tag {}", message.getReceipt(), e);
             }
         }
         return processedDeliveryTags;
+    }
+
+    public void ackMsg(Message message) throws Exception {
+        int retryIndex = 1;
+        while (true) {
+            try {
+                LOGGER.info("ACK message with delivery tag {}", message.getReceipt());
+                Channel chn =
+                        amqpConnection.getOrCreateChannel(
+                                ConnectionType.SUBSCRIBER, getSettings().getQueueOrExchangeName());
+                chn.basicAck(Long.parseLong(message.getReceipt()), false);
+                LOGGER.info("Ack'ed the message with delivery tag {}", message.getReceipt());
+                break;
+            } catch (final Exception e) {
+                AMQPRetryPattern retry = retrySettings;
+                if (retry == null) {
+                    LOGGER.error(
+                            "Cannot ACK message with delivery tag {}", message.getReceipt(), e);
+                }
+                try {
+                    retry.continueOrPropogate(e, retryIndex);
+                } catch (Exception ex) {
+                    LOGGER.error(
+                            "Retries completed. Cannot ACK message with delivery tag {}",
+                            message.getReceipt(),
+                            e);
+                    throw ex;
+                }
+                retryIndex++;
+            }
+        }
     }
 
     private static AMQP.BasicProperties buildBasicProperties(
