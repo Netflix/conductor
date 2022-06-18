@@ -404,6 +404,7 @@ public class DeciderService {
             throws TerminateWorkflowException {
 
         Map<String, TaskModel.Status> taskStatusMap = new HashMap<>();
+        List<TaskModel> nonExecutedTasks = new ArrayList<>();
         for (TaskModel task : workflow.getTasks()) {
             taskStatusMap.put(task.getReferenceTaskName(), task.getStatus());
             if (!task.getStatus().isTerminal()) {
@@ -416,6 +417,9 @@ public class DeciderService {
                     && task.getStatus().isTerminal()
                     && task.getStatus().isSuccessful()) {
                 return true;
+            }
+            if(!task.isRetried() || !task.isExecuted()) {
+                nonExecutedTasks.add(task);
             }
         }
 
@@ -438,11 +442,16 @@ public class DeciderService {
             }
         }
 
-        List<TaskModel> executedTasks = workflow.getTasks();
-        TaskModel last = executedTasks.get(executedTasks.size() - 1);
-        // Check if the last task has any next task to be scheduled
-        String next = getNextTasksToBeScheduled(workflow, last);
-        return next == null && !taskStatusMap.containsKey(next);
+        boolean noPendingSchedule =
+                nonExecutedTasks.stream()
+                        .parallel()
+                        .noneMatch(
+                                wftask -> {
+                                    String next = getNextTasksToBeScheduled(workflow, wftask);
+                                    return next != null && !taskStatusMap.containsKey(next);
+                                });
+
+        return noPendingSchedule;
     }
 
     List<TaskModel> getNextTask(WorkflowModel workflow, TaskModel task) {
