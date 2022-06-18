@@ -402,45 +402,47 @@ public class DeciderService {
 
     public boolean checkForWorkflowCompletion(final WorkflowModel workflow)
             throws TerminateWorkflowException {
-        List<TaskModel> allTasks = workflow.getTasks();
-        if (allTasks.isEmpty()) {
+
+        Map<String, TaskModel.Status> taskStatusMap = new HashMap<>();
+        for (TaskModel task : workflow.getTasks()) {
+            taskStatusMap.put(task.getReferenceTaskName(), task.getStatus());
+            if (!task.getStatus().isTerminal()) {
+                return false;
+            }
+
+            // If there is a TERMINATE task that has been executed successfuly then the workflow
+            // should be marked as completed.
+            if (TERMINATE.name().equals(task.getTaskType())
+                    && task.getStatus().isTerminal()
+                    && task.getStatus().isSuccessful()) {
+                return true;
+            }
+        }
+
+        // If there are no tasks executed, then we are not done yet
+        if (taskStatusMap.isEmpty()) {
             return false;
         }
 
-        if (containsSuccessfulTerminateTask.test(workflow)) {
-            return true;
+        List<WorkflowTask> workflowTasks = workflow.getWorkflowDefinition().getTasks();
+
+        for (WorkflowTask wftask : workflowTasks) {
+            TaskModel.Status status = taskStatusMap.get(wftask.getTaskReferenceName());
+            if (status == null || !status.isTerminal()) {
+                return false;
+            }
+            // if we reach here, the task has been completed.
+            // Was the task successful in completion?
+            if (!status.isSuccessful()) {
+                return false;
+            }
         }
 
-        Map<String, TaskModel.Status> taskStatusMap = new HashMap<>();
-        workflow.getTasks()
-                .forEach(task -> taskStatusMap.put(task.getReferenceTaskName(), task.getStatus()));
-
-        List<WorkflowTask> workflowTasks = workflow.getWorkflowDefinition().getTasks();
-        boolean allCompletedSuccessfully =
-                workflowTasks.stream()
-                        .parallel()
-                        .allMatch(
-                                wftask -> {
-                                    TaskModel.Status status =
-                                            taskStatusMap.get(wftask.getTaskReferenceName());
-                                    return status != null
-                                            && status.isSuccessful()
-                                            && status.isTerminal();
-                                });
-
-        boolean noPendingTasks =
-                taskStatusMap.values().stream().allMatch(TaskModel.Status::isTerminal);
-
-        boolean noPendingSchedule =
-                workflow.getTasks().stream()
-                        .parallel()
-                        .noneMatch(
-                                wftask -> {
-                                    String next = getNextTasksToBeScheduled(workflow, wftask);
-                                    return next != null && !taskStatusMap.containsKey(next);
-                                });
-
-        return allCompletedSuccessfully && noPendingTasks && noPendingSchedule;
+        List<TaskModel> executedTasks = workflow.getTasks();
+        TaskModel last = executedTasks.get(executedTasks.size() - 1);
+        // Check if the last task has any next task to be scheduled
+        String next = getNextTasksToBeScheduled(workflow, last);
+        return next == null && !taskStatusMap.containsKey(next);
     }
 
     List<TaskModel> getNextTask(WorkflowModel workflow, TaskModel task) {
