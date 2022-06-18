@@ -14,7 +14,6 @@ package com.netflix.conductor.core.execution;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +64,6 @@ public class DeciderService {
     private final long taskPendingTimeThresholdMins;
 
     private final Map<TaskType, TaskMapper> taskMappers;
-
 
     public DeciderService(
             IDGenerator idGenerator,
@@ -137,17 +135,17 @@ public class DeciderService {
             // Filter the list of tasks and include only tasks that are not retried, not executed
             // marked to be skipped and not part of System tasks that is DECISION, FORK, JOIN
             // This list will be empty for a new workflow being started
-            if(!task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted()) {
+            if (!task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted()) {
                 pendingTasks.add(task);
             }
 
             // Get all the tasks that have not completed their lifecycle yet
             // This list will be empty for a new workflow
-            if(task.isExecuted()) {
+            if (task.isExecuted()) {
                 executedTaskRefNames.add(task.getReferenceTaskName());
             }
 
-            if(TERMINATE.name().equals(task.getTaskType())
+            if (TERMINATE.name().equals(task.getTaskType())
                     && task.getStatus().isTerminal()
                     && task.getStatus().isSuccessful()) {
                 hasSuccessfulTerminateTask = true;
@@ -418,7 +416,7 @@ public class DeciderService {
                     && task.getStatus().isSuccessful()) {
                 return true;
             }
-            if(!task.isRetried() || !task.isExecuted()) {
+            if (!task.isRetried() || !task.isExecuted()) {
                 nonExecutedTasks.add(task);
             }
         }
