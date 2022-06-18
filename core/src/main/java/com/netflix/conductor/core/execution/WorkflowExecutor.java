@@ -1445,10 +1445,10 @@ public class WorkflowExecutor {
 
     @VisibleForTesting
     List<TaskModel> dedupAndAddTasks(WorkflowModel workflow, List<TaskModel> tasks) {
-        List<String> tasksInWorkflow =
+        Set<String> tasksInWorkflow =
                 workflow.getTasks().stream()
                         .map(task -> task.getReferenceTaskName() + "_" + task.getRetryCount())
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toSet());
 
         List<TaskModel> dedupedTasks =
                 tasks.stream()
