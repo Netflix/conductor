@@ -66,17 +66,6 @@ public class DeciderService {
 
     private final Map<TaskType, TaskMapper> taskMappers;
 
-    private final Predicate<TaskModel> isNonPendingTask =
-            task -> !task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted();
-
-    private final Predicate<WorkflowModel> containsSuccessfulTerminateTask =
-            workflow ->
-                    workflow.getTasks().stream()
-                            .anyMatch(
-                                    task ->
-                                            TERMINATE.name().equals(task.getTaskType())
-                                                    && task.getStatus().isTerminal()
-                                                    && task.getStatus().isSuccessful());
 
     public DeciderService(
             IDGenerator idGenerator,
