@@ -140,19 +140,30 @@ public class DeciderService {
             return outcome;
         }
 
-        // Filter the list of tasks and include only tasks that are not retried, not executed
-        // marked to be skipped and not part of System tasks that is DECISION, FORK, JOIN
-        // This list will be empty for a new workflow being started
-        List<TaskModel> pendingTasks =
-                workflow.getTasks().stream().filter(isNonPendingTask).collect(Collectors.toList());
+        List<TaskModel> pendingTasks = new ArrayList<>();
+        Set<String> executedTaskRefNames = new HashSet<>();
+        boolean hasSuccessfulTerminateTask = false;
+        for (TaskModel task : workflow.getTasks()) {
 
-        // Get all the tasks that have not completed their lifecycle yet
-        // This list will be empty for a new workflow
-        Set<String> executedTaskRefNames =
-                workflow.getTasks().stream()
-                        .filter(TaskModel::isExecuted)
-                        .map(TaskModel::getReferenceTaskName)
-                        .collect(Collectors.toSet());
+            // Filter the list of tasks and include only tasks that are not retried, not executed
+            // marked to be skipped and not part of System tasks that is DECISION, FORK, JOIN
+            // This list will be empty for a new workflow being started
+            if(!task.isRetried() && !task.getStatus().equals(SKIPPED) && !task.isExecuted()) {
+                pendingTasks.add(task);
+            }
+
+            // Get all the tasks that have not completed their lifecycle yet
+            // This list will be empty for a new workflow
+            if(task.isExecuted()) {
+                executedTaskRefNames.add(task.getReferenceTaskName());
+            }
+
+            if(TERMINATE.name().equals(task.getTaskType())
+                    && task.getStatus().isTerminal()
+                    && task.getStatus().isSuccessful()) {
+                hasSuccessfulTerminateTask = true;
+            }
+        }
 
         Map<String, TaskModel> tasksToBeScheduled = new LinkedHashMap<>();
 
@@ -249,7 +260,7 @@ public class DeciderService {
                     workflow.getWorkflowId());
             outcome.tasksToBeScheduled.addAll(unScheduledTasks);
         }
-        if (containsSuccessfulTerminateTask.test(workflow)
+        if (hasSuccessfulTerminateTask
                 || (outcome.tasksToBeScheduled.isEmpty() && checkForWorkflowCompletion(workflow))) {
             LOGGER.debug("Marking workflow: {} as complete.", workflow);
             outcome.isComplete = true;
