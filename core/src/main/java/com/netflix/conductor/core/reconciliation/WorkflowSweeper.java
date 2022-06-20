@@ -15,6 +15,8 @@ package com.netflix.conductor.core.reconciliation;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.model.WorkflowModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,8 +75,8 @@ public class WorkflowSweeper {
                 workflowRepairService.verifyAndRepairWorkflowTasks(workflowId);
             }
 
-            boolean done = workflowExecutor.decide(workflowId);
-            if (done) {
+            WorkflowModel workflow = workflowExecutor.decide(workflowId);
+            if (workflow.getStatus().isTerminal()) {
                 queueDAO.remove(DECIDER_QUEUE, workflowId);
                 return;
             }

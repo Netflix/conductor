@@ -1275,9 +1275,9 @@ public class WorkflowExecutor {
      * @return true if the workflow has completed (success or failed), false otherwise.
      * @throws ApplicationException If there was an error - caller should retry in this case.
      */
-    public boolean decide(String workflowId) {
+    public WorkflowModel decide(String workflowId) {
         if (!executionLockService.acquireLock(workflowId)) {
-            return false;
+            return null;
         }
 
         // If it is a new workflow, the tasks will be still empty even though include tasks is true
@@ -1291,7 +1291,7 @@ public class WorkflowExecutor {
             if (!workflow.getStatus().isSuccessful()) {
                 cancelNonTerminalTasks(workflow);
             }
-            return true;
+            return workflow;
         }
 
         // we find any sub workflow tasks that have changed
@@ -1302,7 +1302,7 @@ public class WorkflowExecutor {
             DeciderService.DeciderOutcome outcome = deciderService.decide(workflow);
             if (outcome.isComplete) {
                 endExecution(workflow);
-                return true;
+                return workflow;
             }
 
             List<TaskModel> tasksToBeScheduled = outcome.tasksToBeScheduled;
@@ -1332,19 +1332,21 @@ public class WorkflowExecutor {
             }
 
             if (stateChanged) {
-                decide(workflowId);
+                return decide(workflowId);
             }
+
+            return workflow;
+
         } catch (TerminateWorkflowException twe) {
             LOGGER.info("Execution terminated of workflow: {}", workflowId, twe);
             terminate(workflow, twe);
-            return true;
+            return null;
         } catch (RuntimeException e) {
             LOGGER.error("Error deciding workflow: {}", workflowId, e);
             throw e;
         } finally {
             executionLockService.releaseLock(workflowId);
         }
-        return false;
     }
 
     private void adjustStateIfSubWorkflowChanged(WorkflowModel workflow) {
