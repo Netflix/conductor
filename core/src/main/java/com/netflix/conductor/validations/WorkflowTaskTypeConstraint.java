@@ -271,19 +271,6 @@ public @interface WorkflowTaskTypeConstraint {
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
             }
-
-            try {
-                if (StringUtils.isNotBlank(duration)) {
-                    DateTimeUtils.parseDuration(duration);
-                } else if (StringUtils.isNotBlank(until)) {
-                    DateTimeUtils.parseDate(until);
-                }
-            } catch (Exception e) {
-                String message = "Wait time specified is invalid.  The duration must be in ";
-                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
-                valid = false;
-            }
-
             return valid;
         }
 
