@@ -47,6 +47,7 @@ import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.core.utils.JobUtils;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -1069,12 +1070,10 @@ public class WorkflowExecutor {
 				map = mapper.readValue(workflow.getCorrelationId(), new TypeReference<HashMap<String, Object>>() {
 				});
 				List<String> urns = (List<String>) map.get("urns");
+				jobId = JobUtils.getJobId(workflow.getCorrelationId());
+				orderId = JobUtils.getOrderId(workflow.getCorrelationId());
 				for (String urn : urns) {
-					if (urn.contains("orderid:") || urn.contains("order:")) {
-						orderId = urn.substring(urn.lastIndexOf(':') + 1);
-					} else if (urn.contains("jobid:") || urn.contains("deliveryjob:")) {
-						jobId = urn.substring(urn.lastIndexOf(':') + 1);
-					} else if (urn.contains("rankingid:")) {
+				  if (urn.contains("rankingid:")) {
 						rankingId = urn.substring(urn.lastIndexOf(':') + 1);
 					}
 				}

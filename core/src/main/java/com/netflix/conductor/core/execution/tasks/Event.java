@@ -31,6 +31,7 @@ import com.netflix.conductor.core.events.queue.ObservableQueue;
 import com.netflix.conductor.core.execution.ParametersUtils;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import org.apache.commons.lang3.StringUtils;
+import com.netflix.conductor.core.utils.JobUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,7 +169,7 @@ public class Event extends WorkflowSystemTask {
 		String jmsxGroupId = workflow.getWorkflowId();
 		String correlationId = workflow.getCorrelationId();
 		if ( StringUtils.isNotEmpty(correlationId)){
-			String jobId = getJobId(correlationId);
+			String jobId = JobUtils.getJobId(correlationId);
 			if ( StringUtils.isNotEmpty(jobId)){
 				jmsxGroupId = jobId;
 			}
@@ -176,18 +177,5 @@ public class Event extends WorkflowSystemTask {
 		return jmsxGroupId;
 	}
 
-	private String getJobId(String correlationId) {
-		Correlator correlator = new Correlator(logger, correlationId);
-
-		String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
-		if (StringUtils.isNotEmpty(jobIdUrn))
-			return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
-
-		String shrlkJobIdUrn = correlator.getContext().getUrn(SHRLK_JOB_ID_URN_PREFIX);
-		if (StringUtils.isNotEmpty(shrlkJobIdUrn))
-			return shrlkJobIdUrn.substring(SHRLK_JOB_ID_URN_PREFIX.length());
-
-		return null;
-	}
 
 }

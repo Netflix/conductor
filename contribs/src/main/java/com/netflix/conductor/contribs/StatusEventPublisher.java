@@ -37,6 +37,7 @@ import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import com.netflix.conductor.core.utils.JobUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,7 @@ import javax.inject.Singleton;
 import java.util.*;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.join;
 
 @Singleton
 public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusListener {
@@ -223,7 +225,7 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 		String jmsxGroupId = workflow.getWorkflowId();
 		String correlationId = workflow.getCorrelationId();
 		if ( StringUtils.isNotEmpty(correlationId)){
-			String jobId = getJobId(correlationId);
+			String jobId = JobUtils.getJobId(correlationId);
 			if ( StringUtils.isNotEmpty(jobId)){
 				jmsxGroupId = jobId;
 			}
@@ -231,18 +233,5 @@ public class StatusEventPublisher implements TaskStatusListener, WorkflowStatusL
 		return jmsxGroupId;
 	}
 
-	private String getJobId(String correlationId) {
-		Correlator correlator = new Correlator(logger, correlationId);
-
-		String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
-		if (StringUtils.isNotEmpty(jobIdUrn))
-			return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
-
-		String shrlkJobIdUrn = correlator.getContext().getUrn(SHRLK_JOB_ID_URN_PREFIX);
-		if (StringUtils.isNotEmpty(shrlkJobIdUrn))
-			return shrlkJobIdUrn.substring(SHRLK_JOB_ID_URN_PREFIX.length());
-
-		return null;
-	}
 
 }
