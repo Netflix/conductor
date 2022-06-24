@@ -1923,8 +1923,6 @@ public class TestWorkflowExecutor {
                 taskToDomain);
 
         verify(executionDAOFacade, times(1)).createWorkflow(any(WorkflowModel.class));
-        verify(executionLockService, times(2)).acquireLock(anyString());
-        verify(executionDAOFacade, times(1)).getWorkflowModel(anyString(), anyBoolean());
     }
 
     @Test
@@ -2396,16 +2394,14 @@ public class TestWorkflowExecutor {
         taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
 
         workflowExecutor.updateTask(taskResult);
-        verify(queueDAO, times(1)).postpone(anyString(), anyString(), any(), any());
+        verify(queueDAO, times(1)).postpone(anyString(), anyString(), anyInt(), anyLong());
         ArgumentCaptor<TaskModel> argumentCaptor = ArgumentCaptor.forClass(TaskModel.class);
         verify(executionDAOFacade, times(1)).updateTask(argumentCaptor.capture());
         assertEquals(TaskModel.Status.SCHEDULED, argumentCaptor.getAllValues().get(0).getStatus());
         assertEquals(
                 taskResult.getCallbackAfterSeconds(),
                 argumentCaptor.getAllValues().get(0).getCallbackAfterSeconds());
-        assertEquals(
-                taskResult.getWorkflowInstanceId(),
-                argumentCaptor.getAllValues().get(0).getWorkerId());
+        assertEquals(taskResult.getWorkerId(), argumentCaptor.getAllValues().get(0).getWorkerId());
     }
 
     @Test
@@ -2437,14 +2433,12 @@ public class TestWorkflowExecutor {
         taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
 
         workflowExecutor.updateTask(taskResult);
-        verify(queueDAO, times(1)).postpone(anyString(), anyString(), any(), any());
+        verify(queueDAO, times(1)).postpone(anyString(), anyString(), anyInt(), anyLong());
         ArgumentCaptor<TaskModel> argumentCaptor = ArgumentCaptor.forClass(TaskModel.class);
         verify(executionDAOFacade, times(1)).updateTask(argumentCaptor.capture());
         assertEquals(TaskModel.Status.SCHEDULED, argumentCaptor.getAllValues().get(0).getStatus());
         assertEquals(0, argumentCaptor.getAllValues().get(0).getCallbackAfterSeconds());
-        assertEquals(
-                taskResult.getWorkflowInstanceId(),
-                argumentCaptor.getAllValues().get(0).getWorkerId());
+        assertEquals(taskResult.getWorkerId(), argumentCaptor.getAllValues().get(0).getWorkerId());
     }
 
     private WorkflowModel generateSampleWorkflow() {

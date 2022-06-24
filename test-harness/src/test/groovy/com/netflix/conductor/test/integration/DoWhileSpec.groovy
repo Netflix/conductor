@@ -795,10 +795,10 @@ class DoWhileSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.IN_PROGRESS
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
-            tasks[3].taskType == 'integration_task_0'
-            tasks[3].status == Task.Status.SCHEDULED
-            tasks[4].taskType == 'JOIN'
-            tasks[4].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[4].taskType == 'integration_task_0'
+            tasks[4].status == Task.Status.SCHEDULED
         }
 
         when: "Polling and completing first task in DO While"
@@ -816,10 +816,10 @@ class DoWhileSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.IN_PROGRESS
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
-            tasks[3].taskType == 'integration_task_0'
-            tasks[3].status == Task.Status.COMPLETED
-            tasks[4].taskType == 'JOIN'
-            tasks[4].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[4].taskType == 'integration_task_0'
+            tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == 'integration_task_1'
             tasks[5].status == Task.Status.SCHEDULED
         }
@@ -839,10 +839,10 @@ class DoWhileSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
-            tasks[3].taskType == 'integration_task_0'
-            tasks[3].status == Task.Status.COMPLETED
-            tasks[4].taskType == 'JOIN'
-            tasks[4].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[4].taskType == 'integration_task_0'
+            tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == 'integration_task_1'
             tasks[5].status == Task.Status.COMPLETED
         }
@@ -861,9 +861,9 @@ class DoWhileSpec extends AbstractSpecification {
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.COMPLETED
-            tasks[3].taskType == 'integration_task_0'
+            tasks[3].taskType == 'JOIN'
             tasks[3].status == Task.Status.COMPLETED
-            tasks[4].taskType == 'JOIN'
+            tasks[4].taskType == 'integration_task_0'
             tasks[4].status == Task.Status.COMPLETED
             tasks[5].taskType == 'integration_task_1'
             tasks[5].status == Task.Status.COMPLETED
