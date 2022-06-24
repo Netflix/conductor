@@ -18,7 +18,9 @@ import com.netflix.conductor.client.grpc.EventClient;
 import com.netflix.conductor.client.grpc.MetadataClient;
 import com.netflix.conductor.client.grpc.TaskClient;
 import com.netflix.conductor.client.grpc.WorkflowClient;
+import org.junit.Ignore;
 
+@Ignore
 public class GrpcEndToEndTest extends AbstractGrpcEndToEndTest {
 
     @Before
