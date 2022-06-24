@@ -1271,6 +1271,10 @@ public class WorkflowExecutor {
         try {
 
             WorkflowModel workflow = executionDAOFacade.getWorkflowModel(workflowId, true);
+            if(workflow == null) {
+                //This can hapen if the workflowId is incorrect
+                return null;
+            }
             // FIXME Backwards compatibility for legacy workflows already running.
             // This code will be removed in a future version.
             workflow = metadataMapperService.populateWorkflowWithDefinitions(workflow);
