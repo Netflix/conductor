@@ -32,6 +32,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import com.netflix.conductor.core.utils.JobUtils;
+
 import org.apache.log4j.NDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,16 +262,9 @@ public class BatchSweeper {
 
         // Otherwise (legacy) retrieve it from the correlation id
         if (StringUtils.isNotEmpty(task.getCorrelationId()))
-            return getJobId(task.getCorrelationId());
+            return JobUtils.getJobId(task.getCorrelationId());
 
         return null;
     }
 
-    private String getJobId(String correlationId) {
-        Correlator correlator = new Correlator(logger, correlationId);
-        String jobIdUrn = correlator.getContext().getUrn(JOB_ID_URN_PREFIX);
-        if (StringUtils.isNotEmpty(jobIdUrn))
-            return jobIdUrn.substring(JOB_ID_URN_PREFIX.length());
-        return null;
-    }
 }

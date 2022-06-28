@@ -11,6 +11,7 @@ const ErrorDashboard = React.createClass({
     return {
       name: '',
       version: '',
+      includeAllErrors: false,
       errorData: [],
       errorDataDay: [],
       errorDataWeek: [],
@@ -75,12 +76,17 @@ const ErrorDashboard = React.createClass({
                 };
               this.props.dispatch(getErrorData(inputData));
       },
+ errorChange(e) {
+   this.setState({
+        includeAllErrors:e.target.checked
+   });
+ },
   render() {
     var errorData = this.state.errorData;
     var errorDataDay = this.state.errorDataDay;
     var errorDataWeek = this.state.errorDataWeek;
     var errorDataMonth = this.state.errorDataMonth;
-
+    var includeAllErrors = this.state.includeAllErrors;
     var dayErrorCount = 0 ;
     var weekErrorCount = 0 ;
     var monthErrorCount = 0 ;
@@ -107,9 +113,8 @@ const ErrorDashboard = React.createClass({
        }
     var knownErrors = [];
     var unknownErrors = [];
-      if (errorData !== undefined && errorData.result !== undefined ) {
+      if (errorData !== undefined && errorData.result !== undefined && includeAllErrors !== undefined) {
           errorData.result.forEach(function (d) {
-
            if(d.id === 0)
            {
             unknownErrors.push({
@@ -127,10 +132,19 @@ const ErrorDashboard = React.createClass({
                         totalCount: d.totalCount
                        });
                 }
+                else if(includeAllErrors == true)
+                {
+                  knownErrors.push({
+                          id: d.id,
+                          lookup: d.lookup,
+                          totalCount: d.totalCount
+                      });
+                }
            }
           });
         }
-    const rangeList = ['All data','This year',
+
+      const rangeList = ['All data','This year',
       'Last quarter','This quarter',
       'Last month','This month',
       'Yesterday', 'Today',
@@ -168,7 +182,7 @@ const ErrorDashboard = React.createClass({
 
                            </Col>
                              <Col md={3}>
-
+                                <input type="checkbox" checked={this.state.includeAllErrors} onChange={this.errorChange}/><label className="medium nobold">&nbsp;Include Ignorable Errors</label>
                               </Col>
                       </Row>
                    </Grid>
