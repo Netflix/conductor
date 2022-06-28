@@ -80,28 +80,23 @@ public class UpdatePackagingStatus implements JavaEventAction {
 
         TaskResult taskResult = new TaskResult(task);
 
-        Map<String, Consumer<Object>> actionPerTaskResult = new HashMap<>();
-        actionPerTaskResult.put("complete", (obj) -> taskResult.setStatus(TaskResult.Status.COMPLETED));
-        actionPerTaskResult.put("failed", (obj) -> {
+        if ("Complete".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.COMPLETED);
+        } else if ("Failed".equalsIgnoreCase(statusName)) {
             taskResult.setStatus(TaskResult.Status.FAILED);
             taskResult.setReasonForIncompletion(statusReason);
-        });
-        actionPerTaskResult.put("cancelled", (obj) -> taskResult.setStatus(TaskResult.Status.CANCELED));
-        actionPerTaskResult.put("pending", (obj) -> {
-            if ("IN_PROGRESS".equals(getTaskStatus(task))) {
-                taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
-                taskResult.setResetStartTime(true);
-            }
-        });
-        actionPerTaskResult.put("in-progress", (obj) -> {
-            if ("IN_PROGRESS".equals(getTaskStatus(task))) {
-                taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
-                taskResult.setResetStartTime(true);
-            }
-        });
-        actionPerTaskResult.getOrDefault(statusName, (obj) -> {
+        } else if ("Cancelled".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.CANCELED);
+        } else if ("pending".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
+            taskResult.setResetStartTime(true);
+        } else if ("in-progress".equalsIgnoreCase(statusName)) {
+            taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
+            taskResult.setResetStartTime(true);
+        }else{
             logger.debug("Handler for status value {} is not registered", statusName);
-        }).accept(Optional.empty());
+            return Collections.singletonList(UUID.randomUUID().toString());
+        }
 
         if (params.payloadToOutput) {
             taskResult.setUpdateOutput(true);
