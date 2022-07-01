@@ -32,10 +32,14 @@ if [ -z "$CONFIG_PROP" ];
     export config_file=/app/config/$CONFIG_PROP
 fi
 
+if [ ! -z "${LOG4J_PROP}" ]; then
+  LOG4J_CONF="-Dlog4j2.configurationFile=${LOG4J_PROP}"
+fi
+
 echo "Using java options config: $JAVA_OPTS"
 
 if [ -f "/set_env_secrets.sh" ]; then
 . /set_env_secrets.sh
 fi
 
-java ${JAVA_OPTS} -jar -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar
+java ${JAVA_OPTS} -jar ${LOG4J_CONF:-} -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar
