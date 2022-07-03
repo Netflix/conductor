@@ -14,14 +14,17 @@ import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowError;
 import com.netflix.conductor.common.run.WorkflowErrorRegistry;
 import com.netflix.conductor.core.events.queue.Message;
+import com.netflix.conductor.core.execution.ApplicationException;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 import org.apache.commons.lang3.StringUtils;
+import org.postgresql.util.PGobject;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,12 +34,14 @@ import java.util.stream.Stream;
 public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     private final MetadataDAO metadata;
     private final IndexDAO indexer;
+    private final ObjectMapper mapper;
 
     @Inject
     public AuroraExecutionDAO(DataSource dataSource, ObjectMapper mapper, MetadataDAO metadata, IndexDAO indexer) {
         super(dataSource, mapper);
         this.metadata = metadata;
         this.indexer = indexer;
+        this.mapper = mapper;
     }
 
     @Override
@@ -569,11 +574,11 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
     private String buildQueryForSearchByStartDate(String startedBefore, String startedAfter) {
         StringBuilder query = new StringBuilder();
 
-        if (StringUtils.isNotEmpty(startedAfter)){
+        if (StringUtils.isNotEmpty(startedAfter)) {
             query.append(String.format(" and start_time > '%s' ", startedAfter));
         }
 
-        if (StringUtils.isNotEmpty(startedBefore)){
+        if (StringUtils.isNotEmpty(startedBefore)) {
             query.append(String.format(" and start_time < '%s' ", startedBefore));
         }
 
@@ -681,10 +686,15 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         }
         List<Task> tasks = workflow.getTasks();
         workflow.setTasks(Lists.newLinkedList());
+        workflow.setJsonDataWorkflowIds(getJsonDataWorkflowIds(workflow.getWorkflowIds()));
 
         withTransaction(tx -> {
             if (update) {
-                updateWorkflow(tx, workflow);
+                try {
+                    updateWorkflow(tx, workflow);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
             } else {
                 addWorkflow(tx, workflow);
             }
@@ -695,10 +705,21 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         return workflow.getWorkflowId();
     }
 
+    private PGobject getJsonDataWorkflowIds(List<String> workflowIds) {
+        try {
+            PGobject jsonDataWorkflowIds = new PGobject();
+            jsonDataWorkflowIds.setType("jsonb");
+            jsonDataWorkflowIds.setValue(mapper.writeValueAsString(workflowIds));
+            return jsonDataWorkflowIds;
+        } catch (Exception ex) {
+            throw new ApplicationException(ApplicationException.Code.BACKEND_ERROR, ex.getMessage(), ex);
+        }
+    }
+
     private void addWorkflow(Connection tx, Workflow workflow) {
         String SQL = "INSERT INTO workflow (workflow_id, parent_workflow_id, workflow_type, workflow_status, " +
-                "correlation_id, tags, input, json_data, date_str, start_time) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "correlation_id, tags, input, json_data, date_str, start_time, json_data_workflow_ids) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         execute(tx, SQL, q -> q.addParameter(workflow.getWorkflowId())
                 .addParameter(workflow.getParentWorkflowId())
@@ -710,12 +731,14 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                 .addJsonParameter(workflow)
                 .addParameter(dateStr(workflow.getCreateTime()))
                 .addTimestampParameter(workflow.getStartTime())
+                .addParameter(workflow.getJsonDataWorkflowIds())
                 .executeUpdate());
     }
 
-    private void updateWorkflow(Connection tx, Workflow workflow) {
+
+    private void updateWorkflow(Connection tx, Workflow workflow) throws SQLException {
         String SQL = "UPDATE workflow SET json_data = ?, workflow_status = ?, output = ?, end_time = ?, " +
-                "tags = ?, modified_on = now() WHERE workflow_id = ?";
+                "tags = ?, modified_on = now(), json_data_workflow_ids = ?  WHERE workflow_id = ?";
 
         // We must not delete tags for RESET as it must be restarted right away
         Set<String> tags;
@@ -731,6 +754,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
                         .addJsonParameter(workflow.getOutput())
                         .addTimestampParameter(workflow.getEndTime())
                         .addParameter(tags)
+                        .addParameter(workflow.getJsonDataWorkflowIds())
                         .addParameter(workflow.getWorkflowId())
                         .executeUpdate());
     }
@@ -1042,7 +1066,7 @@ public class AuroraExecutionDAO extends AuroraBaseDAO implements ExecutionDAO {
         if (workflowId != null) {
             SQL.append("AND (w.workflow_id = ? OR w.json_data_workflow_ids @> cast(? as jsonb)) ");
             params.add(workflowId);
-            params.add( "\"" + workflowId + "\"");
+            params.add("\"" + workflowId + "\"");
         } else if (jobId != null) {
             SQL.append("AND w.correlation_id ilike ? ");
             params.add("%jobId:" + jobId + "%");

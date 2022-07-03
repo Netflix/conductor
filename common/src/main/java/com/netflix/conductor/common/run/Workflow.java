@@ -17,6 +17,7 @@ package com.netflix.conductor.common.run;
 
 import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import org.postgresql.util.PGobject;
 
 import java.util.*;
 
@@ -102,6 +103,8 @@ public class Workflow extends Auditable {
 	private boolean resetTags;
 
 	private int jobPriority = 5;
+
+	private PGobject jsonDataWorkflowIds;
 
 	public Workflow(){
 		
@@ -452,6 +455,14 @@ public class Workflow extends Auditable {
 
 	public void setResetTags(boolean resetTags) {
 		this.resetTags = resetTags;
+	}
+
+	public PGobject getJsonDataWorkflowIds() {
+		return jsonDataWorkflowIds;
+	}
+
+	public void setJsonDataWorkflowIds(PGobject jsonDataWorkflowIds) {
+		this.jsonDataWorkflowIds = jsonDataWorkflowIds;
 	}
 
 	@Override
