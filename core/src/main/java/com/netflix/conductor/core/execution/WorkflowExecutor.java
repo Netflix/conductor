@@ -838,8 +838,7 @@ public class WorkflowExecutor {
                     (String)
                             terminateTask
                                     .get()
-                                    .getWorkflowTask()
-                                    .getInputParameters()
+                                    .getInputData()
                                     .get(Terminate.getTerminationReasonParameter());
             if (StringUtils.isBlank(reason)) {
                 reason =
