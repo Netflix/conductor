@@ -838,8 +838,7 @@ public class WorkflowExecutor {
                     (String)
                             terminateTask
                                     .get()
-                                    .getWorkflowTask()
-                                    .getInputParameters()
+                                    .getInputData()
                                     .get(Terminate.getTerminationReasonParameter());
             if (StringUtils.isBlank(reason)) {
                 reason =
@@ -1286,7 +1285,6 @@ public class WorkflowExecutor {
         // FIXME Backwards compatibility for legacy workflows already running.
         // This code will be removed in a future version.
         workflow = metadataMapperService.populateWorkflowWithDefinitions(workflow);
-
         if (workflow.getStatus().isTerminal()) {
             if (!workflow.getStatus().isSuccessful()) {
                 cancelNonTerminalTasks(workflow);
