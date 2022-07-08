@@ -571,6 +571,6 @@ public class Monitors {
     }
 
     public static void recordTaskExecLogSize(int val) {
-        gauge(Monitors.classQualifier, "task_exec_log_size", val);
+        gauge(classQualifier, "task_exec_log_size", val);
     }
 }
