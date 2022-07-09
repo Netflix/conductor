@@ -36,7 +36,7 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDefSummary;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.dao.EventHandlerDAO;
 import com.netflix.conductor.dao.MetadataDAO;
 
@@ -175,7 +175,7 @@ public class MetadataServiceTest {
         fail("metadataService.updateTaskDef did not throw ConstraintViolationException !");
     }
 
-    @Test(expected = ApplicationException.class)
+    @Test(expected = NotFoundException.class)
     public void testUpdateTaskDefNotExisting() {
         TaskDef taskDef = new TaskDef();
         taskDef.setName("test");
@@ -184,7 +184,7 @@ public class MetadataServiceTest {
         metadataService.updateTaskDef(taskDef);
     }
 
-    @Test(expected = ApplicationException.class)
+    @Test(expected = NotFoundException.class)
     public void testUpdateTaskDefDaoException() {
         TaskDef taskDef = new TaskDef();
         taskDef.setName("test");
@@ -391,14 +391,14 @@ public class MetadataServiceTest {
         Map<String, ? extends Iterable<WorkflowDefSummary>> namesAndVersions =
                 metadataService.getWorkflowNamesAndVersions();
 
-        Iterator<WorkflowDefSummary> versions = namesAndVersions.get("test_workflow_def").iterator();
+        Iterator<WorkflowDefSummary> versions =
+                namesAndVersions.get("test_workflow_def").iterator();
 
-        for(int i = 1; i<=5; i++){
+        for (int i = 1; i <= 5; i++) {
             WorkflowDefSummary ver = versions.next();
             assertEquals(i, ver.getVersion());
             assertNotNull(ver.getCreateTime());
             assertEquals("test_workflow_def", ver.getName());
         }
-
     }
 }
