@@ -216,19 +216,23 @@ public class MetadataServiceImpl implements MetadataService {
         Map<String, TreeSet<WorkflowDefSummary>> retval = new HashMap<>();
         for (WorkflowDef def : workflowDefs) {
             String workflowName = def.getName();
-            WorkflowDefSummary summary = new WorkflowDefSummary();
-            summary.setName(def.getName());
-            summary.setVersion(def.getVersion());
-            summary.setCreateTime(def.getCreateTime());
+            WorkflowDefSummary summary = fromWorkflowDef(def);
 
-            if (!retval.containsKey(workflowName)) {
-                retval.put(workflowName, new TreeSet<WorkflowDefSummary>());
-            }
+            retval.putIfAbsent(workflowName, new TreeSet<WorkflowDefSummary>());
 
             TreeSet<WorkflowDefSummary> versions = retval.get(workflowName);
             versions.add(summary);
         }
 
         return retval;
+    }
+
+    private WorkflowDefSummary fromWorkflowDef(WorkflowDef def) {
+        WorkflowDefSummary summary = new WorkflowDefSummary();
+        summary.setName(def.getName());
+        summary.setVersion(def.getVersion());
+        summary.setCreateTime(def.getCreateTime());
+
+        return summary;
     }
 }
