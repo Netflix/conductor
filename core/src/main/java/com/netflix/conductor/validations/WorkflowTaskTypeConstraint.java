@@ -23,6 +23,7 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
+import com.netflix.conductor.core.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -270,6 +271,19 @@ public @interface WorkflowTaskTypeConstraint {
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
             }
+
+            try {
+                if (StringUtils.isNotBlank(duration) && !(duration.startsWith("${") && duration.endsWith("}"))) {
+                    DateTimeUtils.parseDuration(duration);
+                } else if (StringUtils.isNotBlank(until) && !(until.startsWith("${") && until.endsWith("}"))) {
+                    DateTimeUtils.parseDate(until);
+                }
+            } catch (Exception e) {
+                String message = "Wait time specified is invalid.  The duration must be in ";
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            }
+
             return valid;
         }
 
