@@ -380,6 +380,7 @@ public class SubWorkflow extends WorkflowSystemTask {
 		result.put("correlationId", workflow.getCorrelationId());
 		result.put("failureStatus", workflow.getStatus().toString());
 		result.put("reason", subWorkflow.getReasonForIncompletion());
+		result.put("variables", workflow.getVariables());
 
 		// Failed sub-workflow details
 		Map<String, Object> failedSubWorkflow = new HashMap<>();
