@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.core.orchestration;
 
+import static com.netflix.conductor.common.metadata.tasks.Task.Status.IN_PROGRESS;
 import static com.netflix.conductor.core.execution.WorkflowExecutor.DECIDER_QUEUE;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
