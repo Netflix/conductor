@@ -361,7 +361,9 @@ public class ExecutionDAOFacade {
      */
     public void updateTask(Task task) {
         try {
-            if (task.getStatus() != null) {
+                if (task.getStatus() == IN_PROGRESS && task.getStartTime() == 0) {
+                    task.setStartTime(System.currentTimeMillis());
+                }
                 if (!task.getStatus().isTerminal() || (task.getStatus().isTerminal() && task.getUpdateTime() == 0)) {
                     task.setUpdateTime(System.currentTimeMillis());
                 }
