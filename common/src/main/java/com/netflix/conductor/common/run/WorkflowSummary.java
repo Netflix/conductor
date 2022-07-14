@@ -21,10 +21,7 @@ package com.netflix.conductor.common.run;
 import com.netflix.conductor.common.run.Workflow.WorkflowStatus;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * @author Viren
@@ -64,8 +61,6 @@ public class WorkflowSummary {
 	private String event;
 
 	private List<String> workflowIds = new ArrayList<>();
-
-	private String variables;
 	
 	public WorkflowSummary() {
 		
@@ -97,7 +92,6 @@ public class WorkflowSummary {
 		}
 		this.event = workflow.getEvent();
 		this.workflowIds = workflow.getWorkflowIds();
-		this.variables = workflow.getVariables().toString();
 	}
 
 	/**
@@ -214,13 +208,5 @@ public class WorkflowSummary {
 	 */
 	public void setWorkflowIds(List<String> workflowIds) {
 		this.workflowIds = workflowIds;
-	}
-
-	public String getVariables() {
-		return variables;
-	}
-
-	public void setVariables(String variables) {
-		this.variables = variables;
 	}
 }

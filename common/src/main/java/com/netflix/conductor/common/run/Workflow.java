@@ -21,7 +21,7 @@ import com.netflix.conductor.common.metadata.tasks.Task;
 import java.util.*;
 
 public class Workflow extends Auditable {
-
+	
 	public enum  WorkflowStatus {
 		RUNNING(false, false), COMPLETED(true, true), FAILED(true, false), TIMED_OUT(true, false), TERMINATED(true, false), CANCELLED(true, false), PAUSED(false, true), RESET(true, false);
 		
@@ -102,8 +102,6 @@ public class Workflow extends Auditable {
 	private boolean resetTags;
 
 	private int jobPriority = 5;
-
-    private Map<String, Object> variables = new HashMap<>();
 
 	public Workflow(){
 		
@@ -480,11 +478,4 @@ public class Workflow extends Auditable {
 		return found.getLast();
 	}
 
-    public Map<String, Object> getVariables() {
-        return variables;
-    }
-
-    public void setVariables(Map<String, Object> variables) {
-        this.variables = variables;
-    }
 }
