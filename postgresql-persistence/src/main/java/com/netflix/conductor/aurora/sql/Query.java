@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.core.execution.ApplicationException;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,10 +131,6 @@ public class Query implements AutoCloseable {
      */
     public Query addJsonParameter(Object value) {
         return addParameter(toJson(value));
-    }
-
-    public Query addParameter(PGobject value) {
-        return addParameterInternal((ps, idx) -> ps.setObject(idx, value));
     }
 
     /**
