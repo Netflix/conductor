@@ -1,8 +1,7 @@
 dependencies {
     compile project(':conductor-core')
 
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
     compile group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
-    compile 'org.flywaydb:flyway-core:8.5.7'
     provided 'log4j:log4j:1.2.17'
 }

@@ -28,8 +28,8 @@ dependencies {
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.17.0'
 
     // PostgreSQL
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.4.0'
-    compile group: 'com.zaxxer', name: 'HikariCP', version: '4.0.3'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
+    compile group: 'com.zaxxer', name: 'HikariCP', version: '3.3.1'
 
     // Tools
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
