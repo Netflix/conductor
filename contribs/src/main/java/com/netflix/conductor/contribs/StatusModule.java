@@ -20,6 +20,7 @@ package com.netflix.conductor.contribs;
 
 import com.google.inject.AbstractModule;
 import com.netflix.conductor.contribs.status.SimpleStatusHandler;
+import com.netflix.conductor.contribs.status.UpdatePackagingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ public class StatusModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(SimpleStatusHandler.class).asEagerSingleton();
+		bind(UpdatePackagingStatus.class).asEagerSingleton();
 		logger.debug("Status Module configured ...");
 	}
 }

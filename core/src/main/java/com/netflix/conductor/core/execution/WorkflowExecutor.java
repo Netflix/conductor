@@ -47,6 +47,7 @@ import com.netflix.conductor.core.execution.tasks.SubWorkflow;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.QueueUtils;
+import com.netflix.conductor.core.utils.JobUtils;
 import com.netflix.conductor.dao.ErrorLookupDAO;
 import com.netflix.conductor.dao.ExecutionDAO;
 import com.netflix.conductor.dao.MetadataDAO;
@@ -240,6 +241,7 @@ public class WorkflowExecutor {
 			wf.setAuthorization(authorization);
 			wf.setClientId(clientId);
 			wf.setContextUser(contextUser);
+			wf.setVariables(workflowDef.getVariables());
 			if (jobPriority == null) {
 				Object priority = input.get("jobPriority"); // Backward compatible
 				if (priority instanceof String) {
@@ -915,6 +917,7 @@ public class WorkflowExecutor {
 				map.put("workflowRestartCount", workflow.getRestartCount());
 				map.put("workflowRerunCount", workflow.getRerunCount());
 				map.put("attributes", workflow.getAttributes());
+				map.put("variables", workflow.getVariables());
 				originalFailed = map;
 			}
 			workflow.getOutput().put("originalFailedTask", originalFailed);
@@ -982,6 +985,7 @@ public class WorkflowExecutor {
 				input.put("taskInput", failedTask.getInputData());
 				input.put("taskRefName", failedTask.getReferenceTaskName());
 				input.put("taskRetryCount", failedTask.getRetryCount());
+				input.put("variables", workflow.getVariables());
 
 				try {
 					startWorkflow(workflowName, workflowVersion, input, workflow.getCorrelationId(),
@@ -1003,6 +1007,7 @@ public class WorkflowExecutor {
 				input.putAll(workflow.getInput());
 			} else {
 				input.put("workflowInput", workflow.getInput());
+				input.put("variables", workflow.getVariables());
 			}
 			input.put("workflowId", workflowId);
 			input.put("workflowType", workflow.getWorkflowType());
@@ -1069,12 +1074,10 @@ public class WorkflowExecutor {
 				map = mapper.readValue(workflow.getCorrelationId(), new TypeReference<HashMap<String, Object>>() {
 				});
 				List<String> urns = (List<String>) map.get("urns");
+				jobId = JobUtils.getJobId(workflow.getCorrelationId());
+				orderId = JobUtils.getOrderId(workflow.getCorrelationId());
 				for (String urn : urns) {
-					if (urn.contains("orderid:")) {
-						orderId = urn.substring(urn.lastIndexOf(':') + 1);
-					} else if (urn.contains("jobid:")) {
-						jobId = urn.substring(urn.lastIndexOf(':') + 1);
-					} else if (urn.contains("rankingid:")) {
+				  if (urn.contains("rankingid:")) {
 						rankingId = urn.substring(urn.lastIndexOf(':') + 1);
 					}
 				}
