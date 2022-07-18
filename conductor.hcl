@@ -1,3 +1,70 @@
+variable "app_version" {
+  default = "latest"
+}
+
+variable "env" {
+  default = "dev"
+}
+
+variable "conductor_server_count" {
+    type = map(string)
+    default = {
+        dev = 5
+        int = 10
+        uat = 5
+        live = 10
+    }
+}
+
+variable "conductor_server_cpu" {
+    type = map(string)
+    default = {
+        dev = 256
+        int = 512
+        uat = 256
+        live = 512
+    }
+}
+
+variable "conductor_server_mem" {
+    type = map(string)
+    default = {
+        dev = 1024
+        int = 2048
+        uat = 1024
+        live = 2048
+    }
+}
+variable "conductor_ui_count" {
+    type = map(string)
+    default = {
+        dev = 2
+        int = 3
+        uat = 2
+        live = 3
+    }
+}
+
+variable "conductor_ui_cpu" {
+    type = map(string)
+    default = {
+        dev = 100
+        int = 100
+        uat = 100
+        live = 100
+    }
+}
+
+variable "conductor_ui_mem" {
+    type = map(string)
+    default = {
+        dev = 128
+        int = 128
+        uat = 128
+        live = 128
+    }
+}
+
 job "conductor" {
   type        = "service"
   region      = "us-west-2"
@@ -8,6 +75,8 @@ job "conductor" {
   }
 
   meta {
+    repository = "git@github.com:d3sw/conductor.git"
+    job_file = "conductor.hcl"
     service-class = "platform"
   }
 
@@ -27,7 +96,15 @@ job "conductor" {
   }
 
   group "ui" {
-    count = 3
+    count = lookup(var.conductor_ui_count, var.env, 1)
+
+    network {
+       mode = "bridge"
+
+       port "default" {
+           to = 5000
+       }
+    }
 
     # vault declaration
     vault {
@@ -45,11 +122,7 @@ job "conductor" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-ui"
-
-        port_map {
-          http = 5000
-        }
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${var.app_version}-ui"
 
         volumes = [
           "local/secrets/conductor-ui.env:/app/config/secrets.env",
@@ -71,7 +144,7 @@ job "conductor" {
 
       env {
         TLD = "${meta.tld}"
-        APP_VERSION = "[[.app_version]]"
+        APP_VERSION = "${var.app_version}"
         WF_SERVICE  = "${NOMAD_JOB_NAME}-server.service.${meta.tld}"
         AUTH_SERVICE_NAME    = "auth.service.${meta.tld}"
         KEYCLOAK_SERVICE_URL = "http://keycloak.service.${meta.tld}"
@@ -83,7 +156,7 @@ job "conductor" {
       service {
         tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/"]
         name = "${JOB}-${TASK}"
-        port = "http"
+        port = "default"
 
         check {
           type     = "http"
@@ -96,7 +169,7 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor/ui" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "kv/conductor/ui" | secret }}{{ range $k, $v := .Data.data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
@@ -106,19 +179,22 @@ job "conductor" {
       }
 
       resources {
-        cpu    = 100 # MHz
-        memory = 128 # MB
-
-        network {
-          mbits = 4
-          port  "http"{}
-        }
+        cpu    = lookup(var.conductor_ui_cpu, var.env, 100)  # MHz
+        memory = lookup(var.conductor_ui_mem, var.env, 128) # MB
       }
     } // end ui task
   } // end ui group
 
   group "server" {
-    count = 10
+    count = lookup(var.conductor_server_count, var.env, 1)
+
+    network {
+       mode = "bridge"
+
+       port "default" {
+           to = 8080
+       }
+    }
 
     # vault declaration
     vault {
@@ -136,11 +212,7 @@ job "conductor" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-server"
-
-        port_map {
-          http = 8080
-        }
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${var.app_version}-server"
 
         volumes = [
           "local/secrets/conductor-server.env:/app/config/secrets.env",
@@ -163,7 +235,7 @@ job "conductor" {
       env {
         TLD         = "${meta.tld}"
         STACK       = "${meta.env}"
-        APP_VERSION = "[[.app_version]]"
+        APP_VERSION = "${var.app_version}"
 
         // Database settings
         db = "aurora"
@@ -229,7 +301,7 @@ job "conductor" {
       service {
         tags = ["urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.dmlib.${meta.public_tld}/ auth=true trace=true", "urlprefix-${NOMAD_JOB_NAME}-${NOMAD_TASK_NAME}.service.${meta.tld}/ trace=true", "metrics=${NOMAD_JOB_NAME}"]
         name = "${JOB}-${TASK}"
-        port = "http"
+        port = "default"
 
         check {
           type     = "http"
@@ -247,7 +319,7 @@ job "conductor" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "kv/conductor" | secret }}{{ range $k, $v := .Data.data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
@@ -257,13 +329,8 @@ job "conductor" {
       }
 
       resources {
-        cpu    = 512  # MHz
-        memory = 2048 # MB
-
-        network {
-          mbits = 1000
-          port  "http"{}
-        }
+        cpu    = lookup(var.conductor_server_cpu, var.env, 512)  # MHz
+        memory = lookup(var.conductor_server_mem, var.env, 2048) # MB
       }
     } // end server task
   } // end server group
