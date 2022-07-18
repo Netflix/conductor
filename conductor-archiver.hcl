@@ -1,3 +1,41 @@
+variable "app_version" {
+  default = "latest"
+}
+
+variable "env" {
+  default = "dev"
+}
+
+variable "conductor_archiver_count" {
+    type = map(string)
+    default = {
+        dev = 1
+        int = 1
+        uat = 1
+        live = 1
+    }
+}
+
+variable "conductor_archiver_cpu" {
+    type = map(string)
+    default = {
+        dev = 128
+        int = 128
+        uat = 128
+        live = 128
+    }
+}
+
+variable "conductor_archiver_mem" {
+    type = map(string)
+    default = {
+        dev = 1024
+        int = 1024
+        uat = 1024
+        live = 1024
+    }
+}
+
 job "conductor-archiver" {
   type        = "batch"
   region      = "us-west-2"
@@ -10,6 +48,8 @@ job "conductor-archiver" {
   }
 
   meta {
+    repository = "git@github.com:d3sw/conductor.git"
+    job_file = "conductor-archiver.hcl"
     service-class = "platform"
   }
 
@@ -19,7 +59,11 @@ job "conductor-archiver" {
   }
 
   group "archiver" {
-    count = 1
+   count = lookup(var.conductor_archiver_count, var.env, 1)
+
+    network {
+       mode = "bridge"
+    }
 
     # vault declaration
     vault {
@@ -37,7 +81,7 @@ job "conductor-archiver" {
       driver = "docker"
 
       config {
-        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:[[.app_version]]-archiver"
+        image = "583623634344.dkr.ecr.us-west-2.amazonaws.com/conductor:${var.app_version}-archiver"
 
         volumes = [
           "local/secrets/conductor-archiver.env:/app/config/secrets.env",
@@ -64,7 +108,7 @@ job "conductor-archiver" {
       # Write secrets to the file that can be mounted as volume
       template {
         data = <<EOF
-        {{ with printf "secret/conductor" | secret }}{{ range $k, $v := .Data }}{{ $k }}={{ $v }}
+        {{ with printf "kv/conductor" | secret }}{{ range $k, $v := .Data.data }}{{ $k }}={{ $v }}
         {{ end }}{{ end }}
         EOF
 
@@ -74,12 +118,8 @@ job "conductor-archiver" {
       }
 
       resources {
-        cpu    = 128  # MHz
-        memory = 1024 # MB
-
-        network {
-          mbits = 4
-        }
+        cpu    = lookup(var.conductor_archiver_cpu, var.env, 128)  # MHz
+        memory = lookup(var.conductor_archiver_mem, var.env, 1024) # MB
       }
     } // end archiver task
   } // end archiver group
