@@ -46,16 +46,16 @@ public class InlineTaskMapperTest {
     @Test
     public void getMappedTasks() {
 
-        WorkflowTask taskToSchedule = new WorkflowTask();
-        taskToSchedule.setName("inline_task");
-        taskToSchedule.setType(TaskType.INLINE.name());
-        taskToSchedule.setTaskDefinition(new TaskDef("inline_task"));
-        taskToSchedule.setEvaluatorType(JavascriptEvaluator.NAME);
-        taskToSchedule.setExpression(
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setName("inline_task");
+        workflowTask.setType(TaskType.INLINE.name());
+        workflowTask.setTaskDefinition(new TaskDef("inline_task"));
+        workflowTask.setEvaluatorType(JavascriptEvaluator.NAME);
+        workflowTask.setExpression(
                 "function scriptFun() {if ($.input.a==1){return {testValue: true}} else{return "
                         + "{testValue: false} }}; scriptFun();");
 
-        String taskId = IDGenerator.generate();
+        String taskId = new IDGenerator().generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
         WorkflowModel workflow = new WorkflowModel();
@@ -63,10 +63,9 @@ public class InlineTaskMapperTest {
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflowDef)
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(new TaskDef())
-                        .withTaskToSchedule(taskToSchedule)
+                        .withWorkflowTask(workflowTask)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .build();
@@ -83,14 +82,14 @@ public class InlineTaskMapperTest {
     @Test
     public void getMappedTasks_WithoutTaskDef() {
 
-        WorkflowTask taskToSchedule = new WorkflowTask();
-        taskToSchedule.setType(TaskType.INLINE.name());
-        taskToSchedule.setEvaluatorType(JavascriptEvaluator.NAME);
-        taskToSchedule.setExpression(
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setType(TaskType.INLINE.name());
+        workflowTask.setEvaluatorType(JavascriptEvaluator.NAME);
+        workflowTask.setExpression(
                 "function scriptFun() {if ($.input.a==1){return {testValue: true}} else{return "
                         + "{testValue: false} }}; scriptFun();");
 
-        String taskId = IDGenerator.generate();
+        String taskId = new IDGenerator().generate();
 
         WorkflowDef workflowDef = new WorkflowDef();
         WorkflowModel workflow = new WorkflowModel();
@@ -98,10 +97,9 @@ public class InlineTaskMapperTest {
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflowDef)
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(null)
-                        .withTaskToSchedule(taskToSchedule)
+                        .withWorkflowTask(workflowTask)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .build();

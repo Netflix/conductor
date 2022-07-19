@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         }
     },
     "annotationsProcessorCodegen": {
@@ -15,13 +15,13 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "25.1-jre"
+            "locked": "31.1-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "3.19.4"
+            "locked": "3.21.1"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -49,46 +49,43 @@
                 "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "2.13.3"
+            "locked": "2.17.2"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "2.13.3"
+            "locked": "2.17.2"
         },
         "org.apache.logging.log4j:log4j-jul": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "2.13.3"
+            "locked": "2.17.2"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "2.13.3"
+            "locked": "2.17.2"
         },
         "org.apache.logging.log4j:log4j-web": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "2.13.3"
+            "locked": "2.17.2"
         }
     },
     "compileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.2"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
-        },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0"
+            "locked": "2.13.2.1"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.13.0"
@@ -100,7 +97,7 @@
             "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -118,24 +115,21 @@
             "locked": "2.17.1"
         },
         "org.springdoc:springdoc-openapi-ui": {
-            "locked": "1.6.6"
+            "locked": "1.6.9"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         }
     },
     "runtimeClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.2"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
-        },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0"
+            "locked": "2.13.2.1"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.13.0"
@@ -147,7 +141,7 @@
             "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -182,13 +176,10 @@
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.2"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
-        },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0"
+            "locked": "2.13.2.1"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.13.0"
@@ -196,11 +187,14 @@
         "com.netflix.conductor:conductor-annotations": {
             "project": true
         },
+        "junit:junit": {
+            "locked": "4.13.2"
+        },
         "org.apache.bval:bval-jsr": {
             "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.1"
@@ -217,25 +211,25 @@
         "org.apache.logging.log4j:log4j-web": {
             "locked": "2.17.1"
         },
+        "org.junit.vintage:junit-vintage-engine": {
+            "locked": "5.8.2"
+        },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         }
     },
     "testRuntimeClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.11.4"
+            "locked": "2.13.2"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.11.4"
-        },
-        "com.github.rholder:guava-retrying": {
-            "locked": "2.0.0"
+            "locked": "2.13.2.1"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.13.0"
@@ -243,11 +237,14 @@
         "com.netflix.conductor:conductor-annotations": {
             "project": true
         },
+        "junit:junit": {
+            "locked": "4.13.2"
+        },
         "org.apache.bval:bval-jsr": {
             "locked": "2.0.5"
         },
         "org.apache.commons:commons-lang3": {
-            "locked": "3.10"
+            "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -279,14 +276,17 @@
             ],
             "locked": "2.17.1"
         },
+        "org.junit.vintage:junit-vintage-engine": {
+            "locked": "5.8.2"
+        },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "2.3.12.RELEASE"
+            "locked": "2.6.7"
         }
     }
 }

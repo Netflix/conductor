@@ -35,6 +35,7 @@ import static org.mockito.Mockito.mock;
 
 public class KafkaPublishTaskMapperTest {
 
+    private IDGenerator idGenerator;
     private KafkaPublishTaskMapper kafkaTaskMapper;
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -44,17 +45,18 @@ public class KafkaPublishTaskMapperTest {
         ParametersUtils parametersUtils = mock(ParametersUtils.class);
         MetadataDAO metadataDAO = mock(MetadataDAO.class);
         kafkaTaskMapper = new KafkaPublishTaskMapper(parametersUtils, metadataDAO);
+        idGenerator = new IDGenerator();
     }
 
     @Test
     public void getMappedTasks() {
         // Given
-        WorkflowTask taskToSchedule = new WorkflowTask();
-        taskToSchedule.setName("kafka_task");
-        taskToSchedule.setType(TaskType.KAFKA_PUBLISH.name());
-        taskToSchedule.setTaskDefinition(new TaskDef("kafka_task"));
-        String taskId = IDGenerator.generate();
-        String retriedTaskId = IDGenerator.generate();
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setName("kafka_task");
+        workflowTask.setType(TaskType.KAFKA_PUBLISH.name());
+        workflowTask.setTaskDefinition(new TaskDef("kafka_task"));
+        String taskId = idGenerator.generate();
+        String retriedTaskId = idGenerator.generate();
 
         WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
@@ -62,10 +64,9 @@ public class KafkaPublishTaskMapperTest {
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflowDef)
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(new TaskDef())
-                        .withTaskToSchedule(taskToSchedule)
+                        .withWorkflowTask(workflowTask)
                         .withTaskInput(new HashMap<>())
                         .withRetryCount(0)
                         .withRetryTaskId(retriedTaskId)
@@ -83,11 +84,11 @@ public class KafkaPublishTaskMapperTest {
     @Test
     public void getMappedTasks_WithoutTaskDef() {
         // Given
-        WorkflowTask taskToSchedule = new WorkflowTask();
-        taskToSchedule.setName("kafka_task");
-        taskToSchedule.setType(TaskType.KAFKA_PUBLISH.name());
-        String taskId = IDGenerator.generate();
-        String retriedTaskId = IDGenerator.generate();
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setName("kafka_task");
+        workflowTask.setType(TaskType.KAFKA_PUBLISH.name());
+        String taskId = idGenerator.generate();
+        String retriedTaskId = idGenerator.generate();
 
         WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
@@ -100,10 +101,9 @@ public class KafkaPublishTaskMapperTest {
         taskdefinition.setIsolationGroupId(testIsolationGroupId);
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflowDef)
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(taskdefinition)
-                        .withTaskToSchedule(taskToSchedule)
+                        .withWorkflowTask(workflowTask)
                         .withTaskInput(new HashMap<>())
                         .withRetryCount(0)
                         .withRetryTaskId(retriedTaskId)

@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,19 +28,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.support.RetryTemplate;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.core.events.EventQueueProvider;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
 import com.netflix.conductor.core.listener.WorkflowStatusListenerStub;
 import com.netflix.conductor.core.storage.DummyPayloadStorage;
 import com.netflix.conductor.core.sync.Lock;
-import com.netflix.conductor.core.sync.NoopLock;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.netflix.conductor.core.sync.noop.NoopLock;
 
 import static com.netflix.conductor.core.events.EventQueues.EVENT_QUEUE_PROVIDERS_QUALIFIER;
 import static com.netflix.conductor.core.execution.tasks.SystemTaskRegistry.ASYNC_SYSTEM_TASKS_QUALIFIER;
@@ -83,16 +84,16 @@ public class ConductorCoreConfiguration {
     @Bean
     public ExecutorService executorService(ConductorProperties conductorProperties) {
         ThreadFactory threadFactory =
-                new ThreadFactoryBuilder()
-                        .setNameFormat("conductor-worker-%d")
-                        .setDaemon(true)
+                new BasicThreadFactory.Builder()
+                        .namingPattern("conductor-worker-%d")
+                        .daemon(true)
                         .build();
         return Executors.newFixedThreadPool(
                 conductorProperties.getExecutorServiceMaxThreadCount(), threadFactory);
     }
 
     @Bean
-    @Qualifier("taskProcessorsMap")
+    @Qualifier("taskMappersByTaskType")
     public Map<TaskType, TaskMapper> getTaskMappers(List<TaskMapper> taskMappers) {
         return taskMappers.stream().collect(Collectors.toMap(TaskMapper::getTaskType, identity()));
     }
@@ -111,5 +112,14 @@ public class ConductorCoreConfiguration {
             List<EventQueueProvider> eventQueueProviders) {
         return eventQueueProviders.stream()
                 .collect(Collectors.toMap(EventQueueProvider::getQueueType, identity()));
+    }
+
+    @Bean
+    public RetryTemplate onTransientErrorRetryTemplate() {
+        return RetryTemplate.builder()
+                .retryOn(TransientException.class)
+                .maxAttempts(3)
+                .noBackoff()
+                .build();
     }
 }

@@ -1,16 +1,22 @@
 import React from "react";
 import _ from "lodash";
 import { NavLink, KeyValueTable } from "../../components";
+import { useTime } from "../../hooks/useTime";
 
 export default function TaskSummary({ taskResult }) {
-  // To accommodate unexecuted tasks, read type & name & ref out of workflowTask
+  const now = useTime();
+
+  // To accommodate unexecuted tasks, read type & name & ref out of workflow
   const data = [
     { label: "Task Type", value: taskResult.workflowTask.type },
     { label: "Status", value: taskResult.status || "Not executed" },
     { label: "Task Name", value: taskResult.workflowTask.name },
     {
       label: "Task Reference",
-      value: taskResult.workflowTask.taskReferenceName,
+      value:
+        taskResult.referenceTaskName ||
+        taskResult.workflowTask.aliasForRef ||
+        taskResult.workflowTask.taskReferenceName,
     },
   ];
 
@@ -30,24 +36,35 @@ export default function TaskSummary({ taskResult }) {
     data.push({
       label: "Scheduled Time",
       value: taskResult.scheduledTime > 0 && taskResult.scheduledTime,
-      type: "date",
+      type: "date-ms",
     });
   }
   if (taskResult.startTime) {
     data.push({
       label: "Start Time",
       value: taskResult.startTime > 0 && taskResult.startTime,
-      type: "date",
+      type: "date-ms",
     });
   }
   if (taskResult.endTime) {
-    data.push({ label: "End Time", value: taskResult.endTime, type: "date" });
+    data.push({
+      label: "End Time",
+      value: taskResult.endTime,
+      type: "date-ms",
+    });
   }
   if (taskResult.startTime && taskResult.endTime) {
     data.push({
       label: "Duration",
       value:
         taskResult.startTime > 0 && taskResult.endTime - taskResult.startTime,
+      type: "duration",
+    });
+  }
+  if (taskResult.startTime && taskResult.status === "IN_PROGRESS") {
+    data.push({
+      label: "Current Elapsed Time",
+      value: taskResult.startTime > 0 && now - taskResult.startTime,
       type: "duration",
     });
   }
@@ -70,7 +87,9 @@ export default function TaskSummary({ taskResult }) {
   if (taskResult.taskType === "DECISION") {
     data.push({
       label: "Evaluated Case",
-      value: taskResult.outputData.caseOutput[0],
+      value:
+        _.has(taskResult, "outputData.caseOutput[0]") &&
+        taskResult.outputData.caseOutput[0],
     });
   }
   if (taskResult.workflowTask.type === "SUB_WORKFLOW") {
@@ -79,13 +98,13 @@ export default function TaskSummary({ taskResult }) {
       value: (
         <NavLink
           newTab
-          path={`/definition/${taskResult.workflowTask.subWorkflowParam.name}`}
+          path={`/workflowDef/${taskResult.workflowTask.subWorkflowParam.name}`}
         >
           {taskResult.workflowTask.subWorkflowParam.name}{" "}
         </NavLink>
       ),
     });
-    if (_.get(taskResult, "outputData.subWorkflowId")) {
+    if (_.has(taskResult, "outputData.subWorkflowId")) {
       data.push({
         label: "Subworkflow ID",
         value: (
@@ -100,9 +119,16 @@ export default function TaskSummary({ taskResult }) {
     }
   }
 
+  if (taskResult.externalInputPayloadStoragePath) {
+    data.push({
+      label: "Externalized Input",
+      value: taskResult.externalInputPayloadStoragePath,
+    });
+  }
+
   if (taskResult.externalOutputPayloadStoragePath) {
     data.push({
-      label: "External Output",
+      label: "Externalized Output",
       value: taskResult.externalOutputPayloadStoragePath,
     });
   }

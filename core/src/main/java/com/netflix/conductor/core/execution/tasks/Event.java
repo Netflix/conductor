@@ -20,10 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.core.events.EventQueues;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.model.TaskModel;
@@ -31,7 +32,6 @@ import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_EVENT;
 
@@ -72,20 +72,10 @@ public class Event extends WorkflowSystemTask {
                     isAsyncComplete(task)
                             ? TaskModel.Status.IN_PROGRESS
                             : TaskModel.Status.COMPLETED);
-        } catch (ApplicationException ae) {
-            if (ae.isRetryable()) {
-                LOGGER.info(
-                        "A transient backend error happened when task {} tried to publish an event.",
-                        task.getTaskId());
-            } else {
-                task.setStatus(TaskModel.Status.FAILED);
-                task.setReasonForIncompletion(ae.getMessage());
-                LOGGER.error(
-                        "Error executing task: {}, workflow: {}",
-                        task.getTaskId(),
-                        workflow.getWorkflowId(),
-                        ae);
-            }
+        } catch (TransientException te) {
+            LOGGER.info(
+                    "A transient backend error happened when task {} tried to publish an event.",
+                    task.getTaskId());
         } catch (JsonProcessingException jpe) {
             task.setStatus(TaskModel.Status.FAILED);
             task.setReasonForIncompletion("Error serializing JSON payload: " + jpe.getMessage());

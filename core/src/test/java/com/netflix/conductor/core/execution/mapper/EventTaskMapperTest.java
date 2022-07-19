@@ -42,7 +42,7 @@ public class EventTaskMapperTest {
 
         WorkflowTask taskToBeScheduled = new WorkflowTask();
         taskToBeScheduled.setSink("SQSSINK");
-        String taskId = IDGenerator.generate();
+        String taskId = new IDGenerator().generate();
 
         Map<String, Object> eventTaskInput = new HashMap<>();
         eventTaskInput.put("sink", "SQSSINK");
@@ -57,10 +57,9 @@ public class EventTaskMapperTest {
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflowDef)
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(new TaskDef())
-                        .withTaskToSchedule(taskToBeScheduled)
+                        .withWorkflowTask(taskToBeScheduled)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .build();

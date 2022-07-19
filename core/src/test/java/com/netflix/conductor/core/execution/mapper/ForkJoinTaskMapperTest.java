@@ -41,6 +41,7 @@ public class ForkJoinTaskMapperTest {
 
     private DeciderService deciderService;
     private ForkJoinTaskMapper forkJoinTaskMapper;
+    private IDGenerator idGenerator;
 
     @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -48,6 +49,7 @@ public class ForkJoinTaskMapperTest {
     public void setUp() {
         deciderService = Mockito.mock(DeciderService.class);
         forkJoinTaskMapper = new ForkJoinTaskMapper();
+        idGenerator = new IDGenerator();
     }
 
     @Test
@@ -115,12 +117,11 @@ public class ForkJoinTaskMapperTest {
         Mockito.when(deciderService.getTasksToBeScheduled(workflow, wft2, 0))
                 .thenReturn(Collections.singletonList(task3));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(def)
-                        .withWorkflowInstance(workflow)
-                        .withTaskToSchedule(forkTask)
+                        .withWorkflowModel(workflow)
+                        .withWorkflowTask(forkTask)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .withDeciderService(deciderService)
@@ -196,13 +197,12 @@ public class ForkJoinTaskMapperTest {
         Mockito.when(deciderService.getTasksToBeScheduled(workflow, wft2, 0))
                 .thenReturn(Collections.singletonList(task3));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(def)
-                        .withWorkflowInstance(workflow)
-                        .withTaskToSchedule(forkTask)
+                        .withWorkflowModel(workflow)
+                        .withWorkflowTask(forkTask)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .withDeciderService(deciderService)

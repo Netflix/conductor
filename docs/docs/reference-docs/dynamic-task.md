@@ -1,6 +1,3 @@
----
-sidebar_position: 1
----
 # Dynamic
 ```json
 "type" : "DYNAMIC"
@@ -23,9 +20,9 @@ Dynamic task is defined directly inside the workflow with type `DYNAMIC`.
 
 Following are the input parameters :
 
-|name|description|
-|---|---|
-| dynamicTaskNameParam|Name of the parameter from the task input whose value is used to schedule the task.  e.g. if the value of the parameter is ABC, the next task scheduled is of type 'ABC'.|
+| name                 | description                                                                                                                                                               |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| dynamicTaskNameParam | Name of the parameter from the task input whose value is used to schedule the task.  e.g. if the value of the parameter is ABC, the next task scheduled is of type 'ABC'. |
 
 #### Output
 
@@ -147,10 +144,6 @@ If the input value is provided while running the workflow it can be accessed by
 
 We can see in the below example that on the basis of Post Code the shipping service is being
 decided.
-
-```js reference
-https://github.com/orkes-io/orkesworkers/blob/main/src/main/java/io/orkes/samples/workers/ShippingInfoWorker.java#L10-L36
-```
 
 Based on given set of inputs i.e. Post Code starts with '9' hence, `ship_via_fedex` is executed -
 

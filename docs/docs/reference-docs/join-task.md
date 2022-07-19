@@ -15,28 +15,28 @@ a `FORK_JOIN_DYNAMIC` task, it implicitly waits for all of the dynamically forke
 
 ### Use Cases
 
-[FORK_JOIN](../../reference-docs/fork-task) and [FORK_JOIN_DYNAMIC](../../reference-docs/dynamic-fork-task) task are used to execute a collection of other tasks or sub workflows in parallel. In
+[FORK_JOIN](/reference-docs/fork-task.html) and [FORK_JOIN_DYNAMIC](/reference-docs/dynamic-fork-task.html) task are used to execute a collection of other tasks or sub workflows in parallel. In
 such cases, there is a need for these forked tasks to complete before moving to the next stage in the workflow. 
 
 ### Configuration
 
 #### Input Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| name      | Task Name. A unique name that is descriptive of the task function      |
-| taskReferenceName   | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition        |
-| type   | Task Type. In this case, `JOIN`        |
-| joinOn   | A list of task reference names, that this `JOIN` task will wait for completion |
+| Attribute         | Description                                                                                                                          |
+|-------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| name              | Task Name. A unique name that is descriptive of the task function                                                                    |
+| taskReferenceName | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition |
+| type              | Task Type. In this case, `JOIN`                                                                                                      |
+| joinOn            | A list of task reference names, that this `JOIN` task will wait for completion                                                       |
 
 #### Output Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| task_ref_name_1  | A task reference name that was being `joinOn`. The value is the output of that task     |
-| task_ref_name_2  | A task reference name that was being `joinOn`. The value is the output of that task     |
-| ...   | ...     |
-| task_ref_name_N  | A task reference name that was being `joinOn`. The value is the output of that task     |
+| Attribute       | Description                                                                         |
+|-----------------|-------------------------------------------------------------------------------------|
+| task_ref_name_1 | A task reference name that was being `joinOn`. The value is the output of that task |
+| task_ref_name_2 | A task reference name that was being `joinOn`. The value is the output of that task |
+| ...             | ...                                                                                 |
+| task_ref_name_N | A task reference name that was being `joinOn`. The value is the output of that task |
 
 
 

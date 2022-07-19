@@ -12,11 +12,7 @@
  */
 package com.netflix.conductor.core.execution.mapper;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -40,7 +36,6 @@ import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_FORK;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_JOIN;
@@ -55,6 +50,7 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unchecked")
 public class ForkJoinDynamicTaskMapperTest {
 
+    private IDGenerator idGenerator;
     private ParametersUtils parametersUtils;
     private ObjectMapper objectMapper;
     private DeciderService deciderService;
@@ -65,12 +61,14 @@ public class ForkJoinDynamicTaskMapperTest {
     @Before
     public void setUp() {
         MetadataDAO metadataDAO = Mockito.mock(MetadataDAO.class);
+        idGenerator = new IDGenerator();
         parametersUtils = Mockito.mock(ParametersUtils.class);
         objectMapper = Mockito.mock(ObjectMapper.class);
         deciderService = Mockito.mock(DeciderService.class);
 
         forkJoinDynamicTaskMapper =
-                new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO);
+                new ForkJoinDynamicTaskMapper(
+                        idGenerator, parametersUtils, objectMapper, metadataDAO);
     }
 
     @Test
@@ -82,8 +80,8 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowModel workflowInstance = new WorkflowModel();
-        workflowInstance.setWorkflowDefinition(def);
+        WorkflowModel workflowModel = new WorkflowModel();
+        workflowModel.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
         dynamicForkJoinToSchedule.setType(TaskType.FORK_JOIN_DYNAMIC.name());
@@ -135,18 +133,17 @@ public class ForkJoinDynamicTaskMapperTest {
         TaskModel simpleTask2 = new TaskModel();
         simpleTask2.setReferenceTaskName("xdt2");
 
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0))
+        when(deciderService.getTasksToBeScheduled(workflowModel, wt2, 0))
                 .thenReturn(Collections.singletonList(simpleTask1));
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0))
+        when(deciderService.getTasksToBeScheduled(workflowModel, wt3, 0))
                 .thenReturn(Collections.singletonList(simpleTask2));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(def)
-                        .withWorkflowInstance(workflowInstance)
-                        .withTaskToSchedule(dynamicForkJoinToSchedule)
+                        .withWorkflowModel(workflowModel)
+                        .withWorkflowTask(dynamicForkJoinToSchedule)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .withDeciderService(deciderService)
@@ -166,8 +163,8 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowModel workflowInstance = new WorkflowModel();
-        workflowInstance.setWorkflowDefinition(def);
+        WorkflowModel workflowModel = new WorkflowModel();
+        workflowModel.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
         dynamicForkJoinToSchedule.setType(TaskType.FORK_JOIN_DYNAMIC.name());
@@ -219,17 +216,16 @@ public class ForkJoinDynamicTaskMapperTest {
         TaskModel simpleTask2 = new TaskModel();
         simpleTask2.setReferenceTaskName("xdt2");
 
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0))
+        when(deciderService.getTasksToBeScheduled(workflowModel, wt2, 0))
                 .thenReturn(Collections.singletonList(simpleTask1));
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt3, 0))
+        when(deciderService.getTasksToBeScheduled(workflowModel, wt3, 0))
                 .thenReturn(Collections.singletonList(simpleTask2));
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(def)
-                        .withWorkflowInstance(workflowInstance)
-                        .withTaskToSchedule(dynamicForkJoinToSchedule)
+                        .withWorkflowModel(workflowModel)
+                        .withWorkflowTask(dynamicForkJoinToSchedule)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .withDeciderService(deciderService)
@@ -434,8 +430,8 @@ public class ForkJoinDynamicTaskMapperTest {
         def.setVersion(1);
         def.setInputParameters(Arrays.asList("param1", "param2"));
 
-        WorkflowModel workflowInstance = new WorkflowModel();
-        workflowInstance.setWorkflowDefinition(def);
+        WorkflowModel workflowModel = new WorkflowModel();
+        workflowModel.setWorkflowDefinition(def);
 
         WorkflowTask dynamicForkJoinToSchedule = new WorkflowTask();
         dynamicForkJoinToSchedule.setType(TaskType.FORK_JOIN_DYNAMIC.name());
@@ -485,15 +481,14 @@ public class ForkJoinDynamicTaskMapperTest {
         simpleTask1.setReferenceTaskName("xdt1");
 
         // Empty list, this is a bad state, workflow should terminate
-        when(deciderService.getTasksToBeScheduled(workflowInstance, wt2, 0))
-                .thenReturn(Lists.newArrayList());
+        when(deciderService.getTasksToBeScheduled(workflowModel, wt2, 0))
+                .thenReturn(new ArrayList<>());
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(def)
-                        .withWorkflowInstance(workflowInstance)
-                        .withTaskToSchedule(dynamicForkJoinToSchedule)
+                        .withWorkflowModel(workflowModel)
+                        .withWorkflowTask(dynamicForkJoinToSchedule)
                         .withRetryCount(0)
                         .withTaskId(taskId)
                         .withDeciderService(deciderService)

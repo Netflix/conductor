@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Fork
 ```json
 "type" : "FORK_JOIN"
@@ -32,13 +28,13 @@ before moving to the next stage in the workflow.
 
 #### Input Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| name      | Task Name. A unique name that is descriptive of the task function      |
-| taskReferenceName   | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition        |
-| type   | Task Type. In this case, `FORK_JOIN`        |
-| inputParameters   | The input parameters that will be supplied to this task    |
-| forkTasks   | A list of a list of tasks. Each of the outer list will be invoked in parallel. The inner list can be a graph of other tasks and sub-workflows   |
+| Attribute         | Description                                                                                                                                   |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| name              | Task Name. A unique name that is descriptive of the task function                                                                             |
+| taskReferenceName | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition          |
+| type              | Task Type. In this case, `FORK_JOIN`                                                                                                          |
+| inputParameters   | The input parameters that will be supplied to this task                                                                                       |
+| forkTasks         | A list of a list of tasks. Each of the outer list will be invoked in parallel. The inner list can be a graph of other tasks and sub-workflows |
 
 #### Output Configuration
 
@@ -47,12 +43,12 @@ the
 `JOIN` task is a map, where the keys are the names of the task reference names where were being `joinOn` and the keys
 are the corresponding outputs of those tasks.
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| task_ref_name_1  | A task reference name that was being `joinOn`. The value is the output of that task     |
-| task_ref_name_2  | A task reference name that was being `joinOn`. The value is the output of that task     |
-| ...   | ...     |
-| task_ref_name_N  | A task reference name that was being `joinOn`. The value is the output of that task     |
+| Attribute       | Description                                                                         |
+|-----------------|-------------------------------------------------------------------------------------|
+| task_ref_name_1 | A task reference name that was being `joinOn`. The value is the output of that task |
+| task_ref_name_2 | A task reference name that was being `joinOn`. The value is the output of that task |
+| ...             | ...                                                                                 |
+| task_ref_name_N | A task reference name that was being `joinOn`. The value is the output of that task |
 
 
 
@@ -62,7 +58,7 @@ Imagine a workflow that sends 3 notifications: email, SMS and HTTP. Since none o
 
 The diagram will appear as:
 
-![fork diagram](../img/fork-task-diagram.png)
+![fork diagram](/img/fork-task-diagram.png)
 
 Here's the JSON definition for the workflow:
 
@@ -141,4 +137,4 @@ references that were being `joinOn`. The corresponding values are the outputs of
 }
 ```
 
-See [JOIN](../../reference-docs/join-task) for more details ni the JOIN aspect of the FORK.
+See [JOIN](/reference-docs/join-task.html) for more details on the JOIN aspect of the FORK.

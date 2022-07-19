@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.WorkflowContext;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
@@ -76,25 +76,18 @@ public class WorkflowSweeper {
             boolean done = workflowExecutor.decide(workflowId);
             if (done) {
                 queueDAO.remove(DECIDER_QUEUE, workflowId);
-            } else {
-                queueDAO.setUnackTimeout(
-                        DECIDER_QUEUE,
-                        workflowId,
-                        properties.getWorkflowOffsetTimeout().toMillis());
+                return;
             }
-        } catch (ApplicationException e) {
-            if (e.getCode() == ApplicationException.Code.NOT_FOUND) {
-                queueDAO.remove(DECIDER_QUEUE, workflowId);
-                LOGGER.info(
-                        "Workflow NOT found for id:{}. Removed it from decider queue",
-                        workflowId,
-                        e);
-            }
+        } catch (NotFoundException nfe) {
+            queueDAO.remove(DECIDER_QUEUE, workflowId);
+            LOGGER.info(
+                    "Workflow NOT found for id:{}. Removed it from decider queue", workflowId, nfe);
+            return;
         } catch (Exception e) {
-            queueDAO.setUnackTimeout(
-                    DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
             Monitors.error(CLASS_NAME, "sweep");
             LOGGER.error("Error running sweep for " + workflowId, e);
         }
+        queueDAO.setUnackTimeout(
+                DECIDER_QUEUE, workflowId, properties.getWorkflowOffsetTimeout().toMillis());
     }
 }

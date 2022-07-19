@@ -13,13 +13,17 @@
 package com.netflix.conductor.model;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.common.run.Workflow;
+import com.netflix.conductor.core.utils.Utils;
 
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class WorkflowModel {
 
@@ -60,10 +64,6 @@ public class WorkflowModel {
 
     private List<TaskModel> tasks = new LinkedList<>();
 
-    private Map<String, Object> input = new HashMap<>();
-
-    private Map<String, Object> output = new HashMap<>();
-
     private String correlationId;
 
     private String reRunFromWorkflowId;
@@ -102,6 +102,14 @@ public class WorkflowModel {
     private String failedTaskId;
 
     private Status previousStatus;
+
+    @JsonIgnore private Map<String, Object> input = new HashMap<>();
+
+    @JsonIgnore private Map<String, Object> output = new HashMap<>();
+
+    @JsonIgnore private Map<String, Object> inputPayload = new HashMap<>();
+
+    @JsonIgnore private Map<String, Object> outputPayload = new HashMap<>();
 
     public Status getPreviousStatus() {
         return previousStatus;
@@ -163,10 +171,12 @@ public class WorkflowModel {
         this.tasks = tasks;
     }
 
+    @JsonIgnore
     public Map<String, Object> getInput() {
-        return input;
+        return externalInputPayloadStoragePath != null ? inputPayload : input;
     }
 
+    @JsonIgnore
     public void setInput(Map<String, Object> input) {
         if (input == null) {
             input = new HashMap<>();
@@ -174,15 +184,53 @@ public class WorkflowModel {
         this.input = input;
     }
 
+    @JsonIgnore
     public Map<String, Object> getOutput() {
-        return output;
+        return externalOutputPayloadStoragePath != null ? outputPayload : output;
     }
 
+    @JsonIgnore
     public void setOutput(Map<String, Object> output) {
         if (output == null) {
             output = new HashMap<>();
         }
         this.output = output;
+    }
+
+    /**
+     * @deprecated Used only for JSON serialization and deserialization.
+     */
+    @Deprecated
+    @JsonProperty("input")
+    public Map<String, Object> getRawInput() {
+        return input;
+    }
+
+    /**
+     * @deprecated Used only for JSON serialization and deserialization.
+     */
+    @Deprecated
+    @JsonProperty("input")
+    public void setRawInput(Map<String, Object> input) {
+        setInput(input);
+    }
+
+    /**
+     * @deprecated Used only for JSON serialization and deserialization.
+     */
+    @Deprecated
+    @JsonProperty("output")
+    public Map<String, Object> getRawOutput() {
+        return output;
+    }
+
+    /**
+     * @deprecated Used only for JSON serialization and deserialization.
+     */
+    @Deprecated
+    @JsonProperty("output")
+    public void setRawOutput(Map<String, Object> output) {
+        setOutput(output);
     }
 
     public String getCorrelationId() {
@@ -338,7 +386,7 @@ public class WorkflowModel {
      * @return the workflow definition name.
      */
     public String getWorkflowName() {
-        Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
+        Utils.checkNotNull(workflowDefinition, "Workflow definition is null");
         return workflowDefinition.getName();
     }
 
@@ -348,7 +396,7 @@ public class WorkflowModel {
      * @return the workflow definition version.
      */
     public int getWorkflowVersion() {
-        Preconditions.checkNotNull(workflowDefinition, "Workflow definition is null");
+        Utils.checkNotNull(workflowDefinition, "Workflow definition is null");
         return workflowDefinition.getVersion();
     }
 
@@ -391,11 +439,26 @@ public class WorkflowModel {
         return found.getLast();
     }
 
-    /** @return a copy of the workflow instance */
-    public WorkflowModel copy() {
-        WorkflowModel copy = new WorkflowModel();
-        BeanUtils.copyProperties(this, copy);
-        return copy;
+    public void externalizeInput(String path) {
+        this.inputPayload = this.input;
+        this.input = new HashMap<>();
+        this.externalInputPayloadStoragePath = path;
+    }
+
+    public void externalizeOutput(String path) {
+        this.outputPayload = this.output;
+        this.output = new HashMap<>();
+        this.externalOutputPayloadStoragePath = path;
+    }
+
+    public void internalizeInput(Map<String, Object> data) {
+        this.input = new HashMap<>();
+        this.inputPayload = data;
+    }
+
+    public void internalizeOutput(Map<String, Object> data) {
+        this.output = new HashMap<>();
+        this.outputPayload = data;
     }
 
     @Override
@@ -469,5 +532,21 @@ public class WorkflowModel {
                 getUpdatedTime(),
                 getCreatedBy(),
                 getUpdatedBy());
+    }
+
+    public Workflow toWorkflow() {
+        Workflow workflow = new Workflow();
+        BeanUtils.copyProperties(this, workflow);
+        workflow.setStatus(Workflow.WorkflowStatus.valueOf(this.status.name()));
+        workflow.setTasks(tasks.stream().map(TaskModel::toTask).collect(Collectors.toList()));
+
+        // ensure that input/output is properly represented
+        if (externalInputPayloadStoragePath != null) {
+            workflow.setInput(new HashMap<>());
+        }
+        if (externalOutputPayloadStoragePath != null) {
+            workflow.setOutput(new HashMap<>());
+        }
+        return workflow;
     }
 }

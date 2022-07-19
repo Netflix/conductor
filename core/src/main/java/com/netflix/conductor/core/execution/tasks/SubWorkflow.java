@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.NonTransientException;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
@@ -99,36 +100,27 @@ public class SubWorkflow extends WorkflowSystemTask {
 
             task.setSubWorkflowId(subWorkflowId);
             // For backwards compatibility
-            task.getOutputData().put(SUB_WORKFLOW_ID, subWorkflowId);
+            task.addOutput(SUB_WORKFLOW_ID, subWorkflowId);
 
             // Set task status based on current sub-workflow status, as the status can change in
             // recursion by the time we update here.
             WorkflowModel subWorkflow = workflowExecutor.getWorkflow(subWorkflowId, false);
             updateTaskStatus(subWorkflow, task);
-        } catch (ApplicationException ae) {
-            if (ae.isRetryable()) {
-                LOGGER.info(
-                        "A transient backend error happened when task {} in {} tried to start sub workflow {}.",
-                        task.getTaskId(),
-                        workflow.toShortString(),
-                        name);
-            } else {
-                task.setStatus(TaskModel.Status.FAILED);
-                task.setReasonForIncompletion(ae.getMessage());
-                LOGGER.error(
-                        "Error starting sub workflow: {} from workflow: {}",
-                        name,
-                        workflow.toShortString(),
-                        ae);
-            }
-        } catch (Exception e) {
+        } catch (TransientException te) {
+            LOGGER.info(
+                    "A transient backend error happened when task {} in {} tried to start sub workflow {}.",
+                    task.getTaskId(),
+                    workflow.toShortString(),
+                    name);
+        } catch (Exception ae) {
+
             task.setStatus(TaskModel.Status.FAILED);
-            task.setReasonForIncompletion(e.getMessage());
+            task.setReasonForIncompletion(ae.getMessage());
             LOGGER.error(
                     "Error starting sub workflow: {} from workflow: {}",
                     name,
                     workflow.toShortString(),
-                    e);
+                    ae);
         }
     }
 
@@ -204,8 +196,7 @@ public class SubWorkflow extends WorkflowSystemTask {
                 task.setStatus(TaskModel.Status.TIMED_OUT);
                 break;
             default:
-                throw new ApplicationException(
-                        ApplicationException.Code.INTERNAL_ERROR,
+                throw new NonTransientException(
                         "Subworkflow status does not conform to relevant task status.");
         }
 

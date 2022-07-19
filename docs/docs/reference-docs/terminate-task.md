@@ -38,22 +38,22 @@ Terminate task is defined directly inside the workflow with type
 
 **Parameters:**
 
-|name|type|description|notes|
-|---|---|---|---|
-|terminationStatus|String|can only accept "COMPLETED" or "FAILED"|task cannot be optional|
-|workflowOutput|Any|Expected workflow output||
+| name              | type   | description                             | notes                   |
+|-------------------|--------|-----------------------------------------|-------------------------|
+| terminationStatus | String | can only accept "COMPLETED" or "FAILED" | task cannot be optional |
+| workflowOutput    | Any    | Expected workflow output                ||
 
 ### Output
 
 **Outputs:**
 
-|name|type|description|
-|---|---|---|
-|output|Map|The content of `workflowOutput` from the inputParameters. An empty object if `workflowOutput` is not set.|
+| name   | type | description                                                                                               |
+|--------|------|-----------------------------------------------------------------------------------------------------------|
+| output | Map  | The content of `workflowOutput` from the inputParameters. An empty object if `workflowOutput` is not set. |
 
 ### Examples
 
-Let's consider the same example we had in [Switch Task](../switch-task).
+Let's consider the same example we had in [Switch Task](/reference-docs/switch-task.html).
 
 Suppose in a workflow, we have to take decision to ship the courier with the shipping
 service providers on the basis of input provided while running the workflow.
@@ -83,7 +83,7 @@ Here is a snippet that shows the defalt switch case terminating the workflow:
 
 Workflow gets created as shown in the diagram.
 
-![Conductor UI - Workflow Diagram](../img/Terminate_Task.png)
+![Conductor UI - Workflow Diagram](/img/Terminate_Task.png)
 
 
 ### Best Practices

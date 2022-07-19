@@ -12,11 +12,7 @@
  */
 package com.netflix.conductor.core.events;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,8 +21,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -37,11 +35,11 @@ import com.netflix.conductor.common.metadata.events.EventHandler.Action;
 import com.netflix.conductor.common.metadata.events.EventHandler.Action.Type;
 import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
+import com.netflix.conductor.core.config.ConductorCoreConfiguration;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.dal.ModelMapper;
 import com.netflix.conductor.core.events.queue.Message;
 import com.netflix.conductor.core.events.queue.ObservableQueue;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.execution.evaluators.Evaluator;
 import com.netflix.conductor.core.execution.evaluators.JavascriptEvaluator;
@@ -55,19 +53,15 @@ import com.netflix.conductor.service.MetadataService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ContextConfiguration(
         classes = {
             TestObjectMapperConfiguration.class,
-            TestDefaultEventProcessor.TestConfiguration.class
+            TestDefaultEventProcessor.TestConfiguration.class,
+            ConductorCoreConfiguration.class
         })
 @RunWith(SpringRunner.class)
 public class TestDefaultEventProcessor {
@@ -77,7 +71,6 @@ public class TestDefaultEventProcessor {
     private MetadataService metadataService;
     private ExecutionService executionService;
     private WorkflowExecutor workflowExecutor;
-    private ModelMapper modelMapper;
     private ExternalPayloadStorageUtils externalPayloadStorageUtils;
     private SimpleActionProcessor actionProcessor;
     private ParametersUtils parametersUtils;
@@ -88,6 +81,9 @@ public class TestDefaultEventProcessor {
     @Autowired private Map<String, Evaluator> evaluators;
 
     @Autowired private ObjectMapper objectMapper;
+
+    @Autowired
+    private @Qualifier("onTransientErrorRetryTemplate") RetryTemplate retryTemplate;
 
     @Configuration
     @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans
@@ -102,7 +98,6 @@ public class TestDefaultEventProcessor {
         executionService = mock(ExecutionService.class);
         workflowExecutor = mock(WorkflowExecutor.class);
         externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
-        modelMapper = new ModelMapper(externalPayloadStorageUtils);
         actionProcessor = mock(SimpleActionProcessor.class);
         parametersUtils = new ParametersUtils(objectMapper);
         jsonUtils = new JsonUtils(objectMapper);
@@ -194,8 +189,7 @@ public class TestDefaultEventProcessor {
         doNothing().when(externalPayloadStorageUtils).verifyAndUpload(any(), any());
 
         SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
+                new SimpleActionProcessor(workflowExecutor, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -205,7 +199,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
         assertTrue(completed.get());
@@ -261,8 +256,7 @@ public class TestDefaultEventProcessor {
                         eq(null));
 
         SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
+                new SimpleActionProcessor(workflowExecutor, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -272,7 +266,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
     }
@@ -326,8 +321,7 @@ public class TestDefaultEventProcessor {
                         eq(null));
 
         SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor, modelMapper, parametersUtils, jsonUtils);
+                new SimpleActionProcessor(workflowExecutor, parametersUtils, jsonUtils);
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -337,7 +331,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
     }
@@ -362,9 +357,7 @@ public class TestDefaultEventProcessor {
                 .thenReturn(Collections.singletonList(eventHandler));
         when(executionService.addEventExecution(any())).thenReturn(true);
         when(actionProcessor.execute(any(), any(), any(), any()))
-                .thenThrow(
-                        new ApplicationException(
-                                ApplicationException.Code.BACKEND_ERROR, "some retriable error"));
+                .thenThrow(new TransientException("some retriable error"));
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -374,7 +367,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         eventProcessor.handle(queue, message);
         verify(queue, never()).ack(any());
         verify(queue, never()).publish(any());
@@ -400,10 +394,7 @@ public class TestDefaultEventProcessor {
         when(executionService.addEventExecution(any())).thenReturn(true);
 
         when(actionProcessor.execute(any(), any(), any(), any()))
-                .thenThrow(
-                        new ApplicationException(
-                                ApplicationException.Code.INVALID_INPUT,
-                                "some non-retriable error"));
+                .thenThrow(new IllegalArgumentException("some non-retriable error"));
 
         DefaultEventProcessor eventProcessor =
                 new DefaultEventProcessor(
@@ -413,7 +404,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         eventProcessor.handle(queue, message);
         verify(queue, atMost(1)).ack(any());
         verify(queue, never()).publish(any());
@@ -439,7 +431,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setName("handler");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
@@ -454,15 +447,13 @@ public class TestDefaultEventProcessor {
     }
 
     @Test
-    public void testExecuteNonRetriableApplicationException() {
+    public void testExecuteNonRetriableException() {
         AtomicInteger executeInvoked = new AtomicInteger(0);
         doAnswer(
                         (Answer<Map<String, Object>>)
                                 invocation -> {
                                     executeInvoked.incrementAndGet();
-                                    throw new ApplicationException(
-                                            ApplicationException.Code.INVALID_INPUT,
-                                            "some non-retriable error");
+                                    throw new IllegalArgumentException("some non-retriable error");
                                 })
                 .when(actionProcessor)
                 .execute(any(), any(), any(), any());
@@ -475,7 +466,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");
@@ -491,15 +483,13 @@ public class TestDefaultEventProcessor {
     }
 
     @Test
-    public void testExecuteRetriableApplicationException() {
+    public void testExecuteTransientException() {
         AtomicInteger executeInvoked = new AtomicInteger(0);
         doAnswer(
                         (Answer<Map<String, Object>>)
                                 invocation -> {
                                     executeInvoked.incrementAndGet();
-                                    throw new ApplicationException(
-                                            ApplicationException.Code.BACKEND_ERROR,
-                                            "some retriable error");
+                                    throw new TransientException("some retriable error");
                                 })
                 .when(actionProcessor)
                 .execute(any(), any(), any(), any());
@@ -512,7 +502,8 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators);
+                        evaluators,
+                        retryTemplate);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");

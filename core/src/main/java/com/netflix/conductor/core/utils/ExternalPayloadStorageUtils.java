@@ -25,18 +25,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.run.ExternalStorageLocation;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 import com.netflix.conductor.core.config.ConductorProperties;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.NonTransientException;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 
 /** Provides utility functions to upload and download payloads to {@link ExternalPayloadStorage} */
 @Component
@@ -58,11 +58,11 @@ public class ExternalPayloadStorageUtils {
     }
 
     /**
-     * Download the payload from the given path
+     * Download the payload from the given path.
      *
      * @param path the relative path of the payload in the {@link ExternalPayloadStorage}
      * @return the payload object
-     * @throws ApplicationException in case of JSON parsing errors or download errors
+     * @throws NonTransientException in case of JSON parsing errors or download errors
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> downloadPayload(String path) {
@@ -71,7 +71,8 @@ public class ExternalPayloadStorageUtils {
                     IOUtils.toString(inputStream, StandardCharsets.UTF_8), Map.class);
         } catch (IOException e) {
             LOGGER.error("Unable to download payload from external storage path: {}", path, e);
-            throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, e);
+            throw new NonTransientException(
+                    "Unable to download payload from external storage path: " + path, e);
         }
     }
 
@@ -81,7 +82,7 @@ public class ExternalPayloadStorageUtils {
      * @param entity the task or workflow for which the payload is to be verified and uploaded
      * @param payloadType the {@link PayloadType} of the payload
      * @param <T> {@link TaskModel} or {@link WorkflowModel}
-     * @throws ApplicationException in case of JSON parsing errors or upload errors
+     * @throws NonTransientException in case of JSON parsing errors or upload errors
      * @throws TerminateWorkflowException if the payload size is bigger than permissible limit as
      *     per {@link ConductorProperties}
      */
@@ -122,7 +123,8 @@ public class ExternalPayloadStorageUtils {
             byte[] payloadBytes = byteArrayOutputStream.toByteArray();
             long payloadSize = payloadBytes.length;
 
-            if (payloadSize > maxThreshold * 1024) {
+            final long maxThresholdInBytes = maxThreshold * 1024;
+            if (payloadSize > maxThresholdInBytes) {
                 if (entity instanceof TaskModel) {
                     String errorMsg =
                             String.format(
@@ -130,64 +132,53 @@ public class ExternalPayloadStorageUtils {
                                     payloadSize,
                                     ((TaskModel) entity).getTaskId(),
                                     ((TaskModel) entity).getWorkflowInstanceId(),
-                                    maxThreshold);
+                                    maxThresholdInBytes);
                     failTask(((TaskModel) entity), payloadType, errorMsg);
                 } else {
                     String errorMsg =
                             String.format(
-                                    "The output payload size: %dB of workflow: %s is greater than the permissible limit: %d bytes",
+                                    "The payload size: %d of workflow: %s is greater than the permissible limit: %d bytes",
                                     payloadSize,
                                     ((WorkflowModel) entity).getWorkflowId(),
-                                    maxThreshold);
+                                    maxThresholdInBytes);
                     failWorkflow(((WorkflowModel) entity), payloadType, errorMsg);
                 }
             } else if (payloadSize > threshold * 1024) {
+                String externalInputPayloadStoragePath, externalOutputPayloadStoragePath;
                 switch (payloadType) {
                     case TASK_INPUT:
-                        ((TaskModel) entity).setInputData(new HashMap<>());
-                        ((TaskModel) entity)
-                                .setExternalInputPayloadStoragePath(
-                                        uploadHelper(
-                                                payloadBytes, payloadSize, PayloadType.TASK_INPUT));
+                        externalInputPayloadStoragePath =
+                                uploadHelper(payloadBytes, payloadSize, PayloadType.TASK_INPUT);
+                        ((TaskModel) entity).externalizeInput(externalInputPayloadStoragePath);
                         Monitors.recordExternalPayloadStorageUsage(
                                 ((TaskModel) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_INPUT.toString());
                         break;
                     case TASK_OUTPUT:
-                        ((TaskModel) entity).setOutputData(new HashMap<>());
-                        ((TaskModel) entity)
-                                .setExternalOutputPayloadStoragePath(
-                                        uploadHelper(
-                                                payloadBytes,
-                                                payloadSize,
-                                                PayloadType.TASK_OUTPUT));
+                        externalOutputPayloadStoragePath =
+                                uploadHelper(payloadBytes, payloadSize, PayloadType.TASK_OUTPUT);
+                        ((TaskModel) entity).externalizeOutput(externalOutputPayloadStoragePath);
                         Monitors.recordExternalPayloadStorageUsage(
                                 ((TaskModel) entity).getTaskDefName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.TASK_OUTPUT.toString());
                         break;
                     case WORKFLOW_INPUT:
-                        ((WorkflowModel) entity).setInput(new HashMap<>());
-                        ((WorkflowModel) entity)
-                                .setExternalInputPayloadStoragePath(
-                                        uploadHelper(
-                                                payloadBytes,
-                                                payloadSize,
-                                                PayloadType.WORKFLOW_INPUT));
+                        externalInputPayloadStoragePath =
+                                uploadHelper(payloadBytes, payloadSize, PayloadType.WORKFLOW_INPUT);
+                        ((WorkflowModel) entity).externalizeInput(externalInputPayloadStoragePath);
                         Monitors.recordExternalPayloadStorageUsage(
                                 ((WorkflowModel) entity).getWorkflowName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
                                 PayloadType.WORKFLOW_INPUT.toString());
                         break;
                     case WORKFLOW_OUTPUT:
-                        ((WorkflowModel) entity).setOutput(new HashMap<>());
+                        externalOutputPayloadStoragePath =
+                                uploadHelper(
+                                        payloadBytes, payloadSize, PayloadType.WORKFLOW_OUTPUT);
                         ((WorkflowModel) entity)
-                                .setExternalOutputPayloadStoragePath(
-                                        uploadHelper(
-                                                payloadBytes,
-                                                payloadSize,
-                                                PayloadType.WORKFLOW_OUTPUT));
+                                .externalizeOutput(externalOutputPayloadStoragePath);
                         Monitors.recordExternalPayloadStorageUsage(
                                 ((WorkflowModel) entity).getWorkflowName(),
                                 ExternalPayloadStorage.Operation.WRITE.toString(),
@@ -198,7 +189,8 @@ public class ExternalPayloadStorageUtils {
         } catch (IOException e) {
             LOGGER.error(
                     "Unable to upload payload to external storage for workflow: {}", workflowId, e);
-            throw new ApplicationException(ApplicationException.Code.INTERNAL_ERROR, e);
+            throw new NonTransientException(
+                    "Unable to upload payload to external storage for workflow: " + workflowId, e);
         }
     }
 

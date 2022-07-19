@@ -61,6 +61,7 @@ import com.netflix.conductor.core.execution.tasks.Switch;
 import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
+import com.netflix.conductor.core.utils.IDGenerator;
 import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.model.TaskModel;
@@ -160,7 +161,8 @@ public class TestDeciderOutcomes {
         taskMappers.put(JOIN, new JoinTaskMapper());
         taskMappers.put(
                 FORK_JOIN_DYNAMIC,
-                new ForkJoinDynamicTaskMapper(parametersUtils, objectMapper, metadataDAO));
+                new ForkJoinDynamicTaskMapper(
+                        new IDGenerator(), parametersUtils, objectMapper, metadataDAO));
         taskMappers.put(USER_DEFINED, new UserDefinedTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(SIMPLE, new SimpleTaskMapper(parametersUtils));
         taskMappers.put(SUB_WORKFLOW, new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
@@ -170,6 +172,7 @@ public class TestDeciderOutcomes {
 
         this.deciderService =
                 new DeciderService(
+                        new IDGenerator(),
                         parametersUtils,
                         metadataDAO,
                         externalPayloadStorageUtils,
@@ -512,7 +515,9 @@ public class TestDeciderOutcomes {
 
         assertEquals(TaskModel.Status.IN_PROGRESS, outcome.tasksToBeScheduled.get(0).getStatus());
         new Join().execute(workflow, outcome.tasksToBeScheduled.get(0), null);
-        assertEquals(TaskModel.Status.COMPLETED, outcome.tasksToBeScheduled.get(0).getStatus());
+        assertEquals(
+                TaskModel.Status.COMPLETED_WITH_ERRORS,
+                outcome.tasksToBeScheduled.get(0).getStatus());
     }
 
     @Test

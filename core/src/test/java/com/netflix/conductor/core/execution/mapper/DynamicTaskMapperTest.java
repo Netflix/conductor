@@ -70,7 +70,7 @@ public class DynamicTaskMapperTest {
                         anyMap(), any(WorkflowModel.class), any(TaskDef.class), anyString()))
                 .thenReturn(taskInput);
 
-        String taskId = IDGenerator.generate();
+        String taskId = new IDGenerator().generate();
 
         WorkflowModel workflow = new WorkflowModel();
         WorkflowDef workflowDef = new WorkflowDef();
@@ -78,10 +78,9 @@ public class DynamicTaskMapperTest {
 
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowInstance(workflow)
-                        .withWorkflowDefinition(workflowDef)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(workflowTask.getTaskDefinition())
-                        .withTaskToSchedule(workflowTask)
+                        .withWorkflowTask(workflowTask)
                         .withTaskInput(taskInput)
                         .withRetryCount(0)
                         .withTaskId(taskId)

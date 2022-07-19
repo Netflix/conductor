@@ -29,11 +29,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.service.MetadataService;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import static com.netflix.conductor.core.execution.tasks.SystemTaskRegistry.ASYNC_SYSTEM_TASKS_QUALIFIER;
 
@@ -58,7 +57,7 @@ public class IsolatedTaskQueueProducer {
             @Value("${conductor.app.isolatedSystemTaskEnabled:false}")
                     boolean isolatedSystemTaskEnabled,
             @Value("${conductor.app.isolatedSystemTaskQueuePollInterval:10s}")
-                    Duration isolatedSystemTaskQueuePollIntervalSecs) {
+                    Duration isolatedSystemTaskQueuePollInterval) {
 
         this.metadataService = metadataService;
         this.asyncSystemTasks = asyncSystemTasks;
@@ -71,8 +70,8 @@ public class IsolatedTaskQueueProducer {
                     .scheduleWithFixedDelay(
                             this::addTaskQueues,
                             1000,
-                            isolatedSystemTaskQueuePollIntervalSecs.getSeconds(),
-                            TimeUnit.SECONDS);
+                            isolatedSystemTaskQueuePollInterval.toMillis(),
+                            TimeUnit.MILLISECONDS);
         } else {
             LOGGER.info("Isolated System Task Worker DISABLED");
         }

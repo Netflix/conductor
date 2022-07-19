@@ -5,13 +5,21 @@ $edge-label-color: blue;
 $outline-width: 0.6px;
 $node-text-size: 12px;
 
-.graphContainer {
-  padding: 10px;
+.graphWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  user-select: none;
+}
+
+.graphToolbar {
+  flex: 0;
 }
 
 .graphSvg {
   width: 100%;
   min-height: 600px;
+  flex-grow: 1;
 }
 
 @mixin nodeColor($colorfg, $colorbg: #fff) {
@@ -88,16 +96,19 @@ $node-text-size: 12px;
   &.status_COMPLETED_WITH_ERRORS {
     @include nodeColor(#8b5b02, #feeac5);
   }
-  &.status_IN_PROGRESS,
+  &.status_IN_PROGRESS {
+    @include nodeColor(#c2920d, #fff5da);
+  }
   &.status_SCHEDULED {
     @include nodeColor(#11497a, #cbe2f7);
   }
-  //&.status_CANCELED { @include nodeColor(#26194b, #ded5f8); }
+  &.status_CANCELED {
+    @include nodeColor(#26194b, #ded5f8);
+  }
   &.status_FAILED,
   &.status_FAILED_WITH_TERMINAL_ERROR,
   &.status_TIMED_OUT,
-  &.status_DF_PARTIAL,
-  &.status_CANCELED {
+  &.status_DF_PARTIAL {
     @include nodeColor(#7f050b, #f9c6c9);
   }
   &.status_SKIPPED {
@@ -165,18 +176,36 @@ $node-text-size: 12px;
 
 .edgePath {
   path {
+    marker-end: url(#endarrow);
     stroke: $dark-color;
     stroke-width: 1px;
   }
+
+  &.reverse {
+    path {
+      marker-end: none;
+      marker-start: url(#startarrow);
+    }
+  }
+
   &.dimmed {
     path {
       stroke: $light-color;
       stroke-dasharray: 5;
+      marker-end: url(#endarrow-dimmed);
     }
     marker {
       fill: $light-color;
     }
   }
+
+  &.dimmed.reverse {
+    path {
+      marker-end: none;
+      marker-start: url(#startarrow-dimmed);
+    }
+  }
+
   &.executed {
     path {
       stroke-width: 2px;

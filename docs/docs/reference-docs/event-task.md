@@ -13,7 +13,7 @@ EVENT is a task used to publish an event into one of the supported eventing syst
 Conductor supports the the following eventing models:
 
 1. Conductor internal events (type: conductor)
-2. SQL (type: sqs)
+2. SQS (type: sqs)
 
 ### Use Cases 
 Consider a use case where at some point in the execution, an event is published to an external eventing system such as SQS.
@@ -43,13 +43,13 @@ An example where we want to publish a messase to conductor's internal queuing sy
 
 #### Input Configuration
 
-| Attribute      | Description |
-| ----------- | ----------- |
-| name      | Task Name. A unique name that is descriptive of the task function      |
-| taskReferenceName   | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition        |
-| type   | Task Type. In this case, `EVENT`        |
-| sink   | External event queue in the format of `prefix:location`.  Prefix is either `sqs` or `conductor` and `location` specifies the actual queue name. e.g. "sqs:send_email_queue" |
-| asyncComplete | Boolean |
+| Attribute         | Description                                                                                                                                                                 |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name              | Task Name. A unique name that is descriptive of the task function                                                                                                           |
+| taskReferenceName | Task Reference Name. A unique reference to this task. There can be multiple references of a task within the same workflow definition                                        |
+| type              | Task Type. In this case, `EVENT`                                                                                                                                            |
+| sink              | External event queue in the format of `prefix:location`.  Prefix is either `sqs` or `conductor` and `location` specifies the actual queue name. e.g. "sqs:send_email_queue" |
+| asyncComplete     | Boolean                                                                                                                                                                     |
 
 #### asyncComplete
 * ```false``` to mark status COMPLETED upon execution 
@@ -59,15 +59,15 @@ An example where we want to publish a messase to conductor's internal queuing sy
 Tasks's output are sent as a payload to the external event. In case of SQS the task's output is sent to the SQS message a a payload.
 
 
-|name|type|description|
-|---|---|---|
-| workflowInstanceId | String | Workflow id |
-| workflowType | String | Workflow Name | 
-| workflowVersion | Integer | Workflow Version |
-| correlationId | String | Workflow CorrelationId |
-| sink | String | Copy of the input data "sink" |
-| asyncComplete | Boolean | Copy of the input data "asyncComplete |
-| event_produced | String | Name of the event produced |
+| name               | type    | description                           |
+|--------------------|---------|---------------------------------------|
+| workflowInstanceId | String  | Workflow id                           |
+| workflowType       | String  | Workflow Name                         | 
+| workflowVersion    | Integer | Workflow Version                      |
+| correlationId      | String  | Workflow CorrelationId                |
+| sink               | String  | Copy of the input data "sink"         |
+| asyncComplete      | Boolean | Copy of the input data "asyncComplete |
+| event_produced     | String  | Name of the event produced            |
 
 The published event's payload is identical to the output of the task (except "event_produced").
 

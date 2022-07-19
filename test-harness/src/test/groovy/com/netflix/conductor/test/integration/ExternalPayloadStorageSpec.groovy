@@ -20,16 +20,13 @@ import com.netflix.conductor.common.metadata.tasks.TaskType
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
 import com.netflix.conductor.test.base.AbstractSpecification
+import com.netflix.conductor.test.utils.MockExternalPayloadStorage
 import com.netflix.conductor.test.utils.UserTask
 
 import spock.lang.Shared
 
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedLargePayloadTask
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
-import static com.netflix.conductor.test.utils.MockExternalPayloadStorage.INITIAL_WORKFLOW_INPUT_PATH
-import static com.netflix.conductor.test.utils.MockExternalPayloadStorage.INPUT_PAYLOAD_PATH
-import static com.netflix.conductor.test.utils.MockExternalPayloadStorage.TASK_OUTPUT_PATH
-import static com.netflix.conductor.test.utils.MockExternalPayloadStorage.WORKFLOW_OUTPUT_PATH
 
 class ExternalPayloadStorageSpec extends AbstractSpecification {
 
@@ -41,6 +38,9 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
     @Shared
     def FORK_JOIN_WF = 'FanInOutTest'
+
+    @Shared
+    def DYNAMIC_FORK_JOIN_WF = "DynamicFanInOutTest"
 
     @Shared
     def WORKFLOW_WITH_INLINE_SUB_WF = 'WorkflowWithInlineSubWorkflow'
@@ -57,13 +57,17 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
     @Autowired
     SubWorkflow subWorkflowTask
 
+    @Autowired
+    MockExternalPayloadStorage mockExternalPayloadStorage
+
     def setup() {
         workflowTestUtil.registerWorkflows('simple_workflow_1_integration_test.json',
                 'conditional_system_task_workflow_integration_test.json',
                 'fork_join_integration_test.json',
                 'simple_workflow_with_sub_workflow_inline_def_integration_test.json',
                 'decision_and_terminate_integration_test.json',
-                'workflow_with_synchronous_system_task.json'
+                'workflow_with_synchronous_system_task.json',
+                'dynamic_fork_join_integration_test.json'
         )
     }
 
@@ -74,7 +78,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
         and: "input required to start large payload workflow"
         def correlationId = 'wf_external_storage'
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
 
         when: "the workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow(LINEAR_WORKFLOW_T1_T2, 1, correlationId, null, workflowInputPath, null, null)
@@ -88,7 +92,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -101,10 +105,8 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
             tasks[1].taskType == 'integration_task_2'
             tasks[1].status == Task.Status.SCHEDULED
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
         }
 
         when: "poll and complete the 'integration_task_2' with external payload storage"
@@ -118,14 +120,14 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 2
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == 'integration_task_2'
             tasks[1].status == Task.Status.COMPLETED
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
     }
 
@@ -135,7 +137,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
         and: "input required to start large payload workflow"
         def correlationId = 'wf_external_storage'
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
 
         when: "the workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow(WORKFLOW_WITH_SYNCHRONOUS_SYSTEM_TASK, 1, correlationId, null, workflowInputPath, null, null)
@@ -149,7 +151,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -162,10 +164,10 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == 'JSON_JQ_TRANSFORM'
             tasks[1].status == Task.Status.COMPLETED
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[1].outputData['result'] == 104 // output of .tp2.TEST_SAMPLE | length expression from output.json. On assertion failure, check workflow definition and output.json
         }
     }
@@ -176,7 +178,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         metadataService.getWorkflowDef(CONDITIONAL_SYSTEM_TASK_WORKFLOW, 1)
 
         and: "input required to start large payload workflow"
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
         def correlationId = "conditional_system_external_storage"
 
         when: "the workflow is started"
@@ -191,7 +193,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -204,13 +206,13 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == "DECISION"
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == "USER_TASK"
             tasks[2].status == Task.Status.SCHEDULED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "the system task 'USER_TASK' is started by issuing a system task call"
@@ -225,13 +227,13 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == "DECISION"
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == "USER_TASK"
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].outputData.get("size") == 104
             tasks[3].taskType == 'integration_task_3'
             tasks[3].status == Task.Status.SCHEDULED
@@ -249,17 +251,17 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 4
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == "DECISION"
             tasks[1].status == Task.Status.COMPLETED
             tasks[2].taskType == "USER_TASK"
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].outputData.get("size") == 104
             tasks[3].taskType == 'integration_task_3'
             tasks[3].status == Task.Status.COMPLETED
@@ -273,7 +275,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
         and: "input required to start large payload workflow"
         def correlationId = 'fork_join_external_storage'
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
 
         when: "the workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow(FORK_JOIN_WF, 1, correlationId, null, workflowInputPath, null, null)
@@ -315,7 +317,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "the first task of the right fork is polled and completed with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def polledAndAckLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_2', 'task2.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_2' was polled and acknowledged"
@@ -354,15 +356,15 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].taskType == 'integration_task_2'
             tasks[2].outputData.isEmpty()
-            tasks[2].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[3].status == Task.Status.COMPLETED
             tasks[3].taskType == 'JOIN'
             tasks[3].outputData.isEmpty()
-            tasks[3].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[4].status == Task.Status.COMPLETED
             tasks[4].taskType == 'integration_task_3'
             tasks[4].outputData.isEmpty()
-            tasks[4].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[5].status == Task.Status.SCHEDULED
             tasks[5].taskType == 'integration_task_4'
         }
@@ -384,15 +386,15 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].taskType == 'integration_task_2'
             tasks[2].outputData.isEmpty()
-            tasks[2].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[3].status == Task.Status.COMPLETED
             tasks[3].taskType == 'JOIN'
             tasks[3].outputData.isEmpty()
-            tasks[3].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[4].status == Task.Status.COMPLETED
             tasks[4].taskType == 'integration_task_3'
             tasks[4].outputData.isEmpty()
-            tasks[4].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[5].status == Task.Status.COMPLETED
             tasks[5].taskType == 'integration_task_4'
         }
@@ -404,7 +406,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         metadataService.getWorkflowDef(WORKFLOW_WITH_INLINE_SUB_WF, 1)
 
         and: "input required to start large payload workflow"
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
         def correlationId = "workflow_with_inline_sub_wf_external_storage"
 
         when: "the workflow is started"
@@ -419,7 +421,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -432,11 +434,11 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == TaskType.SUB_WORKFLOW.name()
             tasks[1].status == Task.Status.SCHEDULED
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "the subworkflow is started by issuing a system task call"
@@ -451,11 +453,11 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == TaskType.SUB_WORKFLOW.name()
             tasks[1].status == Task.Status.IN_PROGRESS
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "sub workflow is retrieved"
@@ -467,7 +469,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 1
             input.isEmpty()
-            externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[0].status == Task.Status.SCHEDULED
             tasks[0].taskType == 'integration_task_3'
         }
@@ -483,13 +485,13 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 1
             input.isEmpty()
-            externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].taskType == 'integration_task_3'
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
         }
 
         and: "the subworkflow task is completed and the workflow is in running state"
@@ -500,17 +502,17 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == TaskType.SUB_WORKFLOW.name()
             tasks[1].status == Task.Status.COMPLETED
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[1].outputData.isEmpty()
-            tasks[1].externalOutputPayloadStoragePath
+
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "poll and complete the 'integration_task_2' with external payload storage"
@@ -524,23 +526,23 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 3
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == TaskType.SUB_WORKFLOW.name()
             tasks[1].status == Task.Status.COMPLETED
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[1].outputData.isEmpty()
-            tasks[1].externalOutputPayloadStoragePath
+
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].outputData.isEmpty()
-            tasks[2].externalOutputPayloadStoragePath == taskOutputPath
+
         }
     }
 
@@ -559,7 +561,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
 
         and: "input required to start large payload workflow"
         def correlationId = 'retry_wf_external_storage'
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
 
         when: "the workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow(LINEAR_WORKFLOW_T1_T2, 1, correlationId, null, workflowInputPath, null, null)
@@ -573,7 +575,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -586,10 +588,10 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == 'integration_task_2'
             tasks[1].status == Task.Status.SCHEDULED
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "poll and fail the 'integration_task_2'"
@@ -605,15 +607,15 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == 'integration_task_2'
             tasks[1].status == Task.Status.FAILED
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.SCHEDULED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         when: "poll and complete the retried 'integration_task_2'"
@@ -627,19 +629,19 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 3
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[1].taskType == 'integration_task_2'
             tasks[1].status == Task.Status.FAILED
             tasks[1].inputData.isEmpty()
-            tasks[1].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].taskType == 'integration_task_2'
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
         }
 
         cleanup:
@@ -649,17 +651,17 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
     def "Test workflow with terminate in decision branch using external payload storage"() {
 
         given: "An existing workflow definition"
-        metadataService.getWorkflowDef(WORKFLOW_WITH_DECISION_AND_TERMINATE,1)
+        metadataService.getWorkflowDef(WORKFLOW_WITH_DECISION_AND_TERMINATE, 1)
 
         and: "input required to start large payload workflow"
-        def workflowInputPath = INITIAL_WORKFLOW_INPUT_PATH
+        String workflowInputPath = uploadInitialWorkflowInput()
         def correlationId = "decision_terminate_external_storage"
 
         when: "the workflow is started"
         def workflowInstanceId = workflowExecutor.startWorkflow(WORKFLOW_WITH_DECISION_AND_TERMINATE, 1, correlationId, null, workflowInputPath, null, null)
 
         then: "verify that the workflow is in RUNNING state"
-        with (workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 1
             tasks[0].taskType == 'integration_task_1'
@@ -668,7 +670,7 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
         }
 
         when: "poll and complete the 'integration_task_1' with external payload storage"
-        def taskOutputPath = TASK_OUTPUT_PATH
+        String taskOutputPath = uploadLargeTaskOutput()
         def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
 
         then: "verify that the 'integration_task_1' was polled and acknowledged"
@@ -679,12 +681,12 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             status == Workflow.WorkflowStatus.FAILED
             tasks.size() == 3
             output.isEmpty()
-            externalOutputPayloadStoragePath == WORKFLOW_OUTPUT_PATH
+
             reasonForIncompletion.contains('Workflow is FAILED by TERMINATE task')
             tasks[0].taskType == 'integration_task_1'
             tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData.isEmpty()
-            tasks[0].externalOutputPayloadStoragePath == taskOutputPath
+
             tasks[0].seq == 1
             tasks[1].taskType == 'DECISION'
             tasks[1].status == Task.Status.COMPLETED
@@ -692,10 +694,72 @@ class ExternalPayloadStorageSpec extends AbstractSpecification {
             tasks[2].taskType == 'TERMINATE'
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].inputData.isEmpty()
-            tasks[2].externalInputPayloadStoragePath == INPUT_PAYLOAD_PATH
+
             tasks[2].seq == 3
             tasks[2].outputData.isEmpty()
-            tasks[2].externalOutputPayloadStoragePath == TASK_OUTPUT_PATH
         }
+    }
+
+    def "Test dynamic fork join workflow with subworkflow using external payload storage"() {
+        given: "An existing dynamic fork join workflow definition"
+        metadataService.getWorkflowDef(DYNAMIC_FORK_JOIN_WF, 1)
+
+        and: "input required to start large payload workflow"
+        def correlationId = "dynamic_fork_join_subworkflow_external_storage"
+        String workflowInputPath = uploadInitialWorkflowInput()
+
+        when: "the workflow is started"
+        def workflowInstanceId = workflowExecutor.startWorkflow(DYNAMIC_FORK_JOIN_WF, 1, correlationId, null, workflowInputPath, null, null)
+
+        then: "verify that the workflow is in a RUNNING state"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            input.isEmpty()
+
+            tasks.size() == 1
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.SCHEDULED
+        }
+
+        when: "poll and complete the 'integration_task_1' with external payload storage"
+        String taskOutputPath = "${UUID.randomUUID()}.json"
+        mockExternalPayloadStorage.upload(taskOutputPath, mockExternalPayloadStorage.curateDynamicForkLargePayload())
+        def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteLargePayloadTask('integration_task_1', 'task1.integration.worker', taskOutputPath)
+
+        then: "verify that the 'integration_task_1' was polled and acknowledged"
+        verifyPolledAndAcknowledgedLargePayloadTask(pollAndCompleteLargePayloadTask)
+
+        and: "verify that workflow has progressed further ahead and new dynamic tasks have been scheduled with externalized payloads"
+        def workflow = workflowExecutionService.getExecutionStatus(workflowInstanceId, true)
+        with(workflow) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 4
+            tasks[0].taskType == 'integration_task_1'
+            tasks[0].status == Task.Status.COMPLETED
+            !tasks[0].outputData
+            tasks[1].taskType == 'FORK'
+            !tasks[1].inputData
+
+            tasks[1].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'SUB_WORKFLOW'
+            !tasks[2].inputData
+
+            tasks[2].status == Task.Status.SCHEDULED
+            tasks[3].taskType == 'JOIN'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[3].referenceTaskName == 'dynamicfanouttask_join'
+        }
+    }
+
+    private String uploadLargeTaskOutput() {
+        String taskOutputPath = "${UUID.randomUUID()}.json"
+        mockExternalPayloadStorage.upload(taskOutputPath, mockExternalPayloadStorage.readOutputDotJson(), 0)
+        return taskOutputPath
+    }
+
+    private String uploadInitialWorkflowInput() {
+        String workflowInputPath = "${UUID.randomUUID()}.json"
+        mockExternalPayloadStorage.upload(workflowInputPath, ['param1': 'p1 value', 'param2': 'p2 value', 'case': 'two'])
+        return workflowInputPath
     }
 }

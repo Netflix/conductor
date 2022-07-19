@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -27,8 +28,6 @@ import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.dao.MetadataDAO;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_SUB_WORKFLOW;
 
@@ -54,15 +53,15 @@ public class SubWorkflowTaskMapper implements TaskMapper {
     @Override
     public List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext) {
         LOGGER.debug("TaskMapperContext {} in SubWorkflowTaskMapper", taskMapperContext);
-        WorkflowTask taskToSchedule = taskMapperContext.getTaskToSchedule();
-        WorkflowModel workflowInstance = taskMapperContext.getWorkflowInstance();
+        WorkflowTask workflowTask = taskMapperContext.getWorkflowTask();
+        WorkflowModel workflowModel = taskMapperContext.getWorkflowModel();
         String taskId = taskMapperContext.getTaskId();
         // Check if there are sub workflow parameters, if not throw an exception, cannot initiate a
         // sub-workflow without workflow params
-        SubWorkflowParams subWorkflowParams = getSubWorkflowParams(taskToSchedule);
+        SubWorkflowParams subWorkflowParams = getSubWorkflowParams(workflowTask);
 
         Map<String, Object> resolvedParams =
-                getSubWorkflowInputParameters(workflowInstance, subWorkflowParams);
+                getSubWorkflowInputParameters(workflowModel, subWorkflowParams);
 
         String subWorkflowName = resolvedParams.get("name").toString();
         Integer subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
@@ -75,45 +74,36 @@ public class SubWorkflowTaskMapper implements TaskMapper {
             subWorkflowTaskToDomain = (Map) uncheckedTaskToDomain;
         }
 
-        TaskModel subWorkflowTask = new TaskModel();
+        TaskModel subWorkflowTask = taskMapperContext.createTaskModel();
         subWorkflowTask.setTaskType(TASK_TYPE_SUB_WORKFLOW);
-        subWorkflowTask.setTaskDefName(taskToSchedule.getName());
-        subWorkflowTask.setReferenceTaskName(taskToSchedule.getTaskReferenceName());
-        subWorkflowTask.setWorkflowInstanceId(workflowInstance.getWorkflowId());
-        subWorkflowTask.setWorkflowType(workflowInstance.getWorkflowName());
-        subWorkflowTask.setCorrelationId(workflowInstance.getCorrelationId());
-        subWorkflowTask.setScheduledTime(System.currentTimeMillis());
-        subWorkflowTask.getInputData().put("subWorkflowName", subWorkflowName);
-        subWorkflowTask.getInputData().put("subWorkflowVersion", subWorkflowVersion);
-        subWorkflowTask.getInputData().put("subWorkflowTaskToDomain", subWorkflowTaskToDomain);
-        subWorkflowTask.getInputData().put("subWorkflowDefinition", subWorkflowDefinition);
-        subWorkflowTask.getInputData().put("workflowInput", taskMapperContext.getTaskInput());
-        subWorkflowTask.setTaskId(taskId);
+        subWorkflowTask.addInput("subWorkflowName", subWorkflowName);
+        subWorkflowTask.addInput("subWorkflowVersion", subWorkflowVersion);
+        subWorkflowTask.addInput("subWorkflowTaskToDomain", subWorkflowTaskToDomain);
+        subWorkflowTask.addInput("subWorkflowDefinition", subWorkflowDefinition);
+        subWorkflowTask.addInput("workflowInput", taskMapperContext.getTaskInput());
         subWorkflowTask.setStatus(TaskModel.Status.SCHEDULED);
-        subWorkflowTask.setWorkflowTask(taskToSchedule);
-        subWorkflowTask.setWorkflowPriority(workflowInstance.getPriority());
-        subWorkflowTask.setCallbackAfterSeconds(taskToSchedule.getStartDelay());
+        subWorkflowTask.setCallbackAfterSeconds(workflowTask.getStartDelay());
         LOGGER.debug("SubWorkflowTask {} created to be Scheduled", subWorkflowTask);
-        return Collections.singletonList(subWorkflowTask);
+        return List.of(subWorkflowTask);
     }
 
     @VisibleForTesting
-    SubWorkflowParams getSubWorkflowParams(WorkflowTask taskToSchedule) {
-        return Optional.ofNullable(taskToSchedule.getSubWorkflowParam())
+    SubWorkflowParams getSubWorkflowParams(WorkflowTask workflowTask) {
+        return Optional.ofNullable(workflowTask.getSubWorkflowParam())
                 .orElseThrow(
                         () -> {
                             String reason =
                                     String.format(
                                             "Task %s is defined as sub-workflow and is missing subWorkflowParams. "
-                                                    + "Please check the blueprint",
-                                            taskToSchedule.getName());
+                                                    + "Please check the workflow definition",
+                                            workflowTask.getName());
                             LOGGER.error(reason);
                             return new TerminateWorkflowException(reason);
                         });
     }
 
     private Map<String, Object> getSubWorkflowInputParameters(
-            WorkflowModel workflowInstance, SubWorkflowParams subWorkflowParams) {
+            WorkflowModel workflowModel, SubWorkflowParams subWorkflowParams) {
         Map<String, Object> params = new HashMap<>();
         params.put("name", subWorkflowParams.getName());
 
@@ -126,7 +116,7 @@ public class SubWorkflowTaskMapper implements TaskMapper {
             params.put("taskToDomain", taskToDomain);
         }
 
-        params = parametersUtils.getTaskInputV2(params, workflowInstance, null, null);
+        params = parametersUtils.getTaskInputV2(params, workflowModel, null, null);
 
         // do not resolve params inside subworkflow definition
         Object subWorkflowDefinition = subWorkflowParams.getWorkflowDefinition();

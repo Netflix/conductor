@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Form, Formik } from "formik";
 import {
   Checkbox,
   Grid,
@@ -7,6 +8,7 @@ import {
   InputLabel,
   FormControl,
   IconButton,
+  Toolbar,
 } from "@material-ui/core";
 import DeleteIcon from "@material-ui/icons/Delete";
 import {
@@ -24,16 +26,19 @@ import {
   Text,
   Input,
   Select,
+  Button,
 } from "../../components";
-
+import ZoomInIcon from "@material-ui/icons/ZoomIn";
+import * as Yup from "yup";
 import EnhancedTable from "./EnhancedTable";
 import DataTableDemo from "./DataTableDemo";
-import { useAction } from "../../utils/query";
-import top100Films from "./sampleMovieData";
-import Dropdown from "../../components/Dropdown";
+
 import sharedStyles from "../styles";
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/styles";
 import clsx from "clsx";
+import FormikInput from "../../components/formik/FormikInput";
+import FormikJsonInput from "../../components/formik/FormikJsonInput";
+import Dropdown from "./Dropdown";
 
 const useStyles = makeStyles(sharedStyles);
 
@@ -44,6 +49,9 @@ export default function KitchenSink() {
       <Grid container spacing={5}>
         <Grid item xs={12}>
           <p>This is a Hawkins-like theme based on vanilla Material-UI.</p>
+        </Grid>
+        <Grid item xs={12}>
+          <FormikSection />
         </Grid>
         <Grid item xs={12}>
           <NavLink path="/kitchen/gantt">Gantt</NavLink>
@@ -67,7 +75,10 @@ export default function KitchenSink() {
           <Inputs />
         </Grid>
         <Grid item xs={12}>
-          <Selects />
+          <Dropdown />
+        </Grid>
+        <Grid item xs={12}>
+          <ToolbarSection />
         </Grid>
         <Grid item xs={12}>
           <EnhancedTable />
@@ -75,13 +86,65 @@ export default function KitchenSink() {
         <Grid item xs={12}>
           <DataTableDemo />
         </Grid>
-        <Grid item xs={12}>
-          <MutationTest />
-        </Grid>
       </Grid>
     </div>
   );
 }
+
+const FormikSection = () => {
+  const [formState, setFormState] = useState();
+  return (
+    <Paper padded>
+      <Heading level={3}>Formik</Heading>
+      <Formik
+        initialValues={{
+          firstName: "",
+          lastName: "",
+          description: "",
+        }}
+        validationSchema={Yup.object({
+          firstName: Yup.string()
+            .min(15, "Must be 15 characters or more")
+            .required("Required"),
+        })}
+        onSubmit={(values) => setFormState(values)}
+      >
+        <Form>
+          <FormikInput label="First Name" name="firstName" />
+          <FormikInput label="Last Name" name="lastName" />
+          <FormikJsonInput label="Description" name="description" />
+          <Button type="submit">Submit</Button>
+        </Form>
+      </Formik>
+      <code>
+        <pre>{JSON.stringify(formState)}</pre>
+      </code>
+    </Paper>
+  );
+};
+
+const ToolbarSection = () => {
+  return (
+    <Paper padded>
+      <Heading level={3} gutterBottom>
+        Toolbar
+      </Heading>
+
+      <Toolbar>
+        <Text>Label</Text>
+        <Select value={10}>
+          <MenuItem value={10}>Ten</MenuItem>
+          <MenuItem value={20}>Twenty</MenuItem>
+          <MenuItem value={30}>Thirty</MenuItem>
+        </Select>{" "}
+        <Button>Primary</Button>
+        <IconButton>
+          <ZoomInIcon />
+        </IconButton>
+      </Toolbar>
+    </Paper>
+  );
+};
 
 const HeadingSection = () => {
   return (
@@ -293,6 +356,8 @@ const Inputs = () => (
       style={{ marginBottom: 20 }}
     />
 
+    <Input label="Disabled" disabled style={{ marginBottom: 20 }} />
+
     <Input label="Fullwidth" fullWidth style={{ marginBottom: 20 }} />
 
     <Input label="Clearable" clearable style={{ marginBottom: 20 }} />
@@ -305,123 +370,3 @@ const Inputs = () => (
     <Input label="DateTime" type="datetime-local" />
   </Paper>
 );
-
-const Selects = () => {
-  const [value, setValue] = useState(10);
-  return (
-    <Paper style={{ padding: 15 }}>
-      <Heading level={3} gutterBottom>
-        Select
-      </Heading>
-
-      <Select
-        style={{ marginBottom: 10 }}
-        value={value}
-        onChange={(evt) => setValue(evt.target.value)}
-      >
-        <MenuItem value={10}>Ten</MenuItem>
-        <MenuItem value={20}>Twenty</MenuItem>
-        <MenuItem value={30}>Thirty</MenuItem>
-      </Select>
-
-      <Select
-        style={{ marginBottom: 20 }}
-        label="With Label"
-        value={value}
-        onChange={(evt) => setValue(evt.target.value)}
-      >
-        <MenuItem value={10}>Ten</MenuItem>
-        <MenuItem value={20}>Twenty</MenuItem>
-        <MenuItem value={30}>Thirty</MenuItem>
-      </Select>
-
-      <Select
-        fullWidth
-        style={{ marginBottom: 20 }}
-        label="Fullwidth"
-        value={value}
-        onChange={(evt) => setValue(evt.target.value)}
-      >
-        <MenuItem value={10}>Ten</MenuItem>
-        <MenuItem value={20}>Twenty</MenuItem>
-        <MenuItem value={30}>Thirty</MenuItem>
-      </Select>
-
-      <Dropdown
-        style={{ marginBottom: 20, width: 300 }}
-        label="Autocomplete"
-        disableClearable
-        options={top100Films}
-        getOptionLabel={(option) => option.title}
-      />
-
-      <Dropdown
-        style={{ marginBottom: 20, width: 300 }}
-        label="Autocomplete Clearable"
-        options={top100Films}
-        getOptionLabel={(option) => option.title}
-      />
-
-      <Dropdown
-        fullWidth
-        debug
-        style={{ marginBottom: 20 }}
-        label="Autocomplete Fullwidth"
-        disableClearable
-        options={top100Films}
-        getOptionLabel={(option) => option.title}
-      />
-
-      <Dropdown
-        multiple
-        label="Multiple Pills"
-        options={top100Films}
-        getOptionLabel={(option) => option.title}
-        defaultValue={[top100Films[13]]}
-        style={{ width: 500 }}
-        filterSelectedOptions
-      />
-    </Paper>
-  );
-};
-
-const MutationTest = () => {
-  const postAction = useAction("/dummy/post", "post", {
-    onSuccess: (data) => console.log("onsuccess", data),
-    onError: (err) => console.log("onerror", err),
-  });
-
-  const putAction = useAction("/dummy/put", "put", {
-    onSuccess: (data) => console.log("onsuccess", data),
-    onError: (err) => console.log("onerror", err),
-  });
-
-  const deleteAction = useAction("/dummy/delete", "delete", {
-    onSuccess: (data) => console.log("onsuccess", data),
-    onError: (err) => console.log("onerror", err),
-  });
-
-  return (
-    <Paper style={{ padding: 15 }}>
-      <Heading level={3} gutterBottom>
-        Mutations
-      </Heading>
-
-      <Grid container spacing={4}>
-        <Grid item>
-          <PrimaryButton onClick={() => postAction.mutate({ body: "{}" })}>
-            POST
-          </PrimaryButton>
-        </Grid>
-        <Grid item>
-          <PrimaryButton onClick={() => putAction.mutate()}>PUT</PrimaryButton>
-        </Grid>
-        <Grid item>
-          <PrimaryButton onClick={() => deleteAction.mutate()}>
-            DELETE
-          </PrimaryButton>
-        </Grid>
-      </Grid>
-    </Paper>
-  );
-};

@@ -24,6 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.netflix.conductor.annotations.Trace;
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
@@ -43,8 +45,6 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
 import static com.netflix.conductor.model.TaskModel.Status.*;
 
@@ -54,12 +54,12 @@ import static com.netflix.conductor.model.TaskModel.Status.*;
  * workflow or do nothing.
  */
 @Service
+@Trace
 public class DeciderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeciderService.class);
 
-    @VisibleForTesting static final String MAX_TASK_LIMIT = "conductor.app.max-task-limit";
-
+    private final IDGenerator idGenerator;
     private final ParametersUtils parametersUtils;
     private final ExternalPayloadStorageUtils externalPayloadStorageUtils;
     private final MetadataDAO metadataDAO;
@@ -81,13 +81,15 @@ public class DeciderService {
                                                     && task.getStatus().isSuccessful());
 
     public DeciderService(
+            IDGenerator idGenerator,
             ParametersUtils parametersUtils,
             MetadataDAO metadataDAO,
             ExternalPayloadStorageUtils externalPayloadStorageUtils,
             SystemTaskRegistry systemTaskRegistry,
-            @Qualifier("taskProcessorsMap") Map<TaskType, TaskMapper> taskMappers,
+            @Qualifier("taskMappersByTaskType") Map<TaskType, TaskMapper> taskMappers,
             @Value("${conductor.app.taskPendingTimeThreshold:60m}")
                     Duration taskPendingTimeThreshold) {
+        this.idGenerator = idGenerator;
         this.metadataDAO = metadataDAO;
         this.parametersUtils = parametersUtils;
         this.taskMappers = taskMappers;
@@ -569,12 +571,11 @@ public class DeciderService {
         rescheduled.setCallbackAfterSeconds(startDelay);
         rescheduled.setRetryCount(task.getRetryCount() + 1);
         rescheduled.setRetried(false);
-        rescheduled.setTaskId(IDGenerator.generate());
+        rescheduled.setTaskId(idGenerator.generate());
         rescheduled.setRetriedTaskId(task.getTaskId());
         rescheduled.setStatus(SCHEDULED);
         rescheduled.setPollCount(0);
-        rescheduled.setInputData(new HashMap<>());
-        rescheduled.getInputData().putAll(task.getInputData());
+        rescheduled.setInputData(new HashMap<>(task.getInputData()));
         rescheduled.setReasonForIncompletion(null);
         rescheduled.setSubWorkflowId(null);
         rescheduled.setSeq(0);
@@ -587,7 +588,7 @@ public class DeciderService {
             rescheduled.setExternalInputPayloadStoragePath(
                     task.getExternalInputPayloadStoragePath());
         } else {
-            rescheduled.getInputData().putAll(task.getInputData());
+            rescheduled.addInput(task.getInputData());
         }
         if (workflowTask != null && workflow.getWorkflowDefinition().getSchemaVersion() > 1) {
             Map<String, Object> taskInput =
@@ -596,7 +597,7 @@ public class DeciderService {
                             workflow,
                             rescheduled.getTaskId(),
                             taskDefinition);
-            rescheduled.getInputData().putAll(taskInput);
+            rescheduled.addInput(taskInput);
         }
         // for the schema version 1, we do not have to recompute the inputs
         return Optional.of(rescheduled);
@@ -634,7 +635,7 @@ public class DeciderService {
 
         switch (workflowDef.getTimeoutPolicy()) {
             case ALERT_ONLY:
-                LOGGER.info(reason);
+                LOGGER.info("{} {}", workflow.getWorkflowId(), reason);
                 Monitors.recordWorkflowTermination(
                         workflow.getWorkflowName(),
                         WorkflowModel.Status.TIMED_OUT,
@@ -833,13 +834,12 @@ public class DeciderService {
                         .map(TaskModel::getReferenceTaskName)
                         .collect(Collectors.toList());
 
-        String taskId = IDGenerator.generate();
+        String taskId = idGenerator.generate();
         TaskMapperContext taskMapperContext =
                 TaskMapperContext.newBuilder()
-                        .withWorkflowDefinition(workflow.getWorkflowDefinition())
-                        .withWorkflowInstance(workflow)
+                        .withWorkflowModel(workflow)
                         .withTaskDefinition(taskToSchedule.getTaskDefinition())
-                        .withTaskToSchedule(taskToSchedule)
+                        .withWorkflowTask(taskToSchedule)
                         .withTaskInput(input)
                         .withRetryCount(retryCount)
                         .withRetryTaskId(retriedTaskId)

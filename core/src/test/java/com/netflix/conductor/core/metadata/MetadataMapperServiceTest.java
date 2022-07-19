@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Netflix, Inc.
+ * Copyright 2022 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -33,11 +33,9 @@ import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
-import com.netflix.conductor.core.exception.ApplicationException;
+import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.dao.MetadataDAO;
-
-import com.google.common.collect.ImmutableList;
 
 import static com.netflix.conductor.TestUtils.getConstraintViolationMessages;
 
@@ -45,6 +43,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -89,7 +88,7 @@ public class MetadataMapperServiceTest {
         when(metadataDAO.getTaskDef(nameTaskDefinition)).thenReturn(taskDefinition);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask));
+        workflowDefinition.setTasks(List.of(workflowTask));
 
         metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
@@ -107,7 +106,7 @@ public class MetadataMapperServiceTest {
         workflowTask.setTaskDefinition(taskDefinition);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask));
+        workflowDefinition.setTasks(List.of(workflowTask));
 
         metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
@@ -128,7 +127,7 @@ public class MetadataMapperServiceTest {
         WorkflowTask workflowTask2 = createWorkflowTask(nameTaskDefinition2);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask1, workflowTask2));
+        workflowDefinition.setTasks(List.of(workflowTask1, workflowTask2));
 
         when(metadataDAO.getTaskDef(nameTaskDefinition2)).thenReturn(taskDefinition);
 
@@ -143,7 +142,7 @@ public class MetadataMapperServiceTest {
         verifyNoMoreInteractions(metadataDAO);
     }
 
-    @Test(expected = ApplicationException.class)
+    @Test
     public void testMetadataPopulationMissingDefinitions() {
         String nameTaskDefinition1 = "task4";
         WorkflowTask workflowTask1 = createWorkflowTask(nameTaskDefinition1);
@@ -154,12 +153,16 @@ public class MetadataMapperServiceTest {
         TaskDef taskDefinition = createTaskDefinition(nameTaskDefinition1);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask1, workflowTask2));
+        workflowDefinition.setTasks(List.of(workflowTask1, workflowTask2));
 
         when(metadataDAO.getTaskDef(nameTaskDefinition1)).thenReturn(taskDefinition);
         when(metadataDAO.getTaskDef(nameTaskDefinition2)).thenReturn(null);
 
-        metadataMapperService.populateTaskDefinitions(workflowDefinition);
+        try {
+            metadataMapperService.populateTaskDefinitions(workflowDefinition);
+        } catch (NotFoundException nfe) {
+            fail("Missing TaskDefinitions are not defaulted");
+        }
     }
 
     @Test
@@ -178,7 +181,7 @@ public class MetadataMapperServiceTest {
         workflowTask.setSubWorkflowParam(subWorkflowParams);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask));
+        workflowDefinition.setTasks(List.of(workflowTask));
 
         when(metadataDAO.getLatestWorkflowDef(workflowDefinitionName))
                 .thenReturn(Optional.of(subWorkflowDefinition));
@@ -211,7 +214,7 @@ public class MetadataMapperServiceTest {
         workflowTask.setSubWorkflowParam(subWorkflowParams);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask));
+        workflowDefinition.setTasks(List.of(workflowTask));
 
         metadataMapperService.populateTaskDefinitions(workflowDefinition);
 
@@ -238,7 +241,7 @@ public class MetadataMapperServiceTest {
         workflowTask.setSubWorkflowParam(subWorkflowParams);
 
         WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
-        workflowDefinition.setTasks(ImmutableList.of(workflowTask));
+        workflowDefinition.setTasks(List.of(workflowTask));
 
         when(metadataDAO.getLatestWorkflowDef(workflowDefinitionName)).thenReturn(Optional.empty());
 
@@ -286,6 +289,23 @@ public class MetadataMapperServiceTest {
     public void testShouldPopulateTaskDefinition() {
         WorkflowTask workflowTask = createWorkflowTask("test");
         assertTrue(metadataMapperService.shouldPopulateTaskDefinition(workflowTask));
+    }
+
+    @Test
+    public void testMetadataPopulationOnSimpleTaskDefMissing() {
+        String nameTaskDefinition = "task1";
+        WorkflowTask workflowTask = createWorkflowTask(nameTaskDefinition);
+
+        when(metadataDAO.getTaskDef(nameTaskDefinition)).thenReturn(null);
+
+        WorkflowDef workflowDefinition = createWorkflowDefinition("testMetadataPopulation");
+        workflowDefinition.setTasks(List.of(workflowTask));
+
+        metadataMapperService.populateTaskDefinitions(workflowDefinition);
+
+        assertEquals(1, workflowDefinition.getTasks().size());
+        WorkflowTask populatedWorkflowTask = workflowDefinition.getTasks().get(0);
+        assertNotNull(populatedWorkflowTask.getTaskDefinition());
     }
 
     private WorkflowDef createWorkflowDefinition(String name) {

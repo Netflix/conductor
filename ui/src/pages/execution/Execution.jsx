@@ -1,7 +1,6 @@
-import React, { useMemo, useReducer, useEffect, useCallback } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useQueryState } from "react-router-use-location-state";
 import Alert from "@material-ui/lab/Alert";
-import update from "immutability-helper";
 import {
   Tabs,
   Tab,
@@ -11,7 +10,7 @@ import {
   Heading,
 } from "../../components";
 import { Tooltip } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/styles";
 import { useRouteMatch } from "react-router-dom";
 import TaskDetails from "./TaskDetails";
 import ExecutionSummary from "./ExecutionSummary";
@@ -26,20 +25,16 @@ import FullscreenExitIcon from "@material-ui/icons/FullscreenExit";
 import RightPanel from "./RightPanel";
 import WorkflowDAG from "../../components/diagram/WorkflowDAG";
 import StatusBadge from "../../components/StatusBadge";
-import { useFetch } from "../../utils/query";
 import { Helmet } from "react-helmet";
 import sharedStyles from "../styles";
+import rison from "rison";
+import { useWorkflow } from "../../data/workflow";
 
 const maxWindowWidth = window.innerWidth;
 const INIT_DRAWER_WIDTH = 650;
 
 const useStyles = makeStyles({
   header: sharedStyles.header,
-  tabContent: sharedStyles.tabContent,
-
-  wrapper: {
-    height: "100%",
-  },
   drawer: {
     zIndex: 999,
     position: "absolute",
@@ -76,22 +71,29 @@ const useStyles = makeStyles({
     flexDirection: "column",
   },
   drawerContent: {
-    flex: "1 1 auto",
-    overflowY: "scroll",
+    flex: 1,
     backgroundColor: "#fff",
-    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
   },
   content: {
-    overflowY: "scroll",
     height: "100%",
+    display: "flex",
+    flexDirection: "column",
   },
   contentShift: {
     marginRight: (state) => state.drawerWidth,
   },
+  tabContent: {
+    flex: 1,
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+  },
   headerSubtitle: {
     marginBottom: 20,
   },
-
   fr: {
     display: "flex",
     position: "relative",
@@ -105,94 +107,52 @@ const useStyles = makeStyles({
     alignItems: "center",
     marginRight: 15,
   },
+  rightPanel: {
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+  },
 });
 
-const actions = {
-  EXPAND_FULL: 1,
-  RESET_EXPAND_FULL: 2,
-  MOUSE_DOWN: 3,
-  MOUSE_UP: 4,
-  MOUSE_MOVE: 5,
-  CLOSE: 6,
-  SELECT_TASK: 7,
-};
-
-const initialDrawerState = {
-  drawerWidth: INIT_DRAWER_WIDTH,
-  isFullWidth: false,
-  isResizing: false,
-  selectedTask: null,
-};
-
-function drawerReducer(state, action) {
-  switch (action.type) {
-    case actions.EXPAND_FULL:
-      return update(state, {
-        isFullWidth: {
-          $set: true,
-        },
-      });
-    case actions.RESET_EXPAND_FULL:
-      return update(state, {
-        isFullWidth: {
-          $set: false,
-        },
-      });
-    case actions.MOUSE_DOWN:
-      return update(state, {
-        isResizing: {
-          $set: true,
-        },
-      });
-    case actions.MOUSE_UP:
-      return update(state, {
-        isResizing: {
-          $set: false,
-        },
-      });
-    case actions.MOUSE_MOVE:
-      return update(state, {
-        drawerWidth: {
-          $set: action.offsetRight,
-        },
-      });
-    case actions.CLOSE:
-      return update(state, {
-        selectedTask: {
-          $set: null,
-        },
-      });
-    case actions.SELECT_TASK:
-      return update(state, {
-        selectedTask: {
-          $set: action.selectedTask,
-        },
-      });
-    default:
-      return state;
-  }
-}
-
 export default function Execution() {
-  const [drawerState, dispatch] = useReducer(drawerReducer, initialDrawerState);
-  const selectedTask = drawerState.selectedTask;
-
-  const classes = useStyles(drawerState);
   const match = useRouteMatch();
-  const url = `/workflow/${match.params.id}`;
 
-  const { data: execution, isFetching, refetch: refresh } = useFetch(url);
+  const {
+    data: execution,
+    isFetching,
+    refetch: refresh,
+  } = useWorkflow(match.params.id);
+
+  const [isFullWidth, setIsFullWidth] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [drawerWidth, setDrawerWidth] = useState(INIT_DRAWER_WIDTH);
 
   const [tabIndex, setTabIndex] = useQueryState("tabIndex", 0);
+  const [selectedTaskRison, setSelectedTaskRison] = useQueryState("task", "");
 
-  const handleMousedown = (e) => {
-    dispatch({ type: actions.MOUSE_DOWN, clientX: e.clientX });
+  const dag = useMemo(
+    () => (execution ? new WorkflowDAG(execution) : null),
+    [execution]
+  );
+
+  const selectedTask = useMemo(
+    () => selectedTaskRison && rison.decode(selectedTaskRison),
+    [selectedTaskRison]
+  );
+
+  const setSelectedTask = (taskPointer) => {
+    setSelectedTaskRison(rison.encode(taskPointer));
   };
+
+  const classes = useStyles({
+    isFullWidth,
+    drawerWidth,
+  });
 
   const handleMousemove = useCallback(
     (e) => {
       // we don't want to do anything if we aren't resizing.
-      if (!drawerState.isResizing) {
+      if (!isResizing) {
         return;
       }
 
@@ -203,52 +163,41 @@ export default function Execution() {
       const minWidth = 0;
       const maxWidth = maxWindowWidth - 100;
       if (offsetRight > minWidth && offsetRight < maxWidth) {
-        dispatch({ type: actions.MOUSE_MOVE, offsetRight });
+        setDrawerWidth(offsetRight);
       }
     },
-    [drawerState.isResizing]
+    [isResizing]
   );
 
-  const handleMouseup = (e) => {
-    dispatch({ type: actions.MOUSE_UP });
-  };
-
-  const handleSelectTask = (task) => {
-    dispatch({ type: actions.SELECT_TASK, selectedTask: task });
-  };
+  const handleMousedown = (e) => setIsResizing(true);
 
   const handleClose = () => {
-    dispatch({ type: actions.CLOSE });
+    setSelectedTaskRison(null);
   };
 
   const handleFullScreen = () => {
-    dispatch({ type: actions.EXPAND_FULL });
+    setIsFullWidth(true);
   };
 
   const handleFullScreenExit = () => {
-    dispatch({ type: actions.RESET_EXPAND_FULL });
+    setIsFullWidth(false);
   };
 
+  // On load and destroy only
   useEffect(() => {
-    const mouseMove = (e) => handleMousemove(e);
-    const mouseUp = (e) => handleMouseup(e);
+    const mouseUp = (e) => setIsResizing(false);
 
-    document.addEventListener("mousemove", mouseMove);
+    document.addEventListener("mousemove", handleMousemove);
     document.addEventListener("mouseup", mouseUp);
 
     return () => {
-      document.removeEventListener("mousemove", mouseMove);
+      document.removeEventListener("mousemove", handleMousemove);
       document.removeEventListener("mouseup", mouseUp);
     };
   }, [handleMousemove]);
 
-  const dag = useMemo(
-    () => (execution ? new WorkflowDAG(execution) : null),
-    [execution]
-  );
-
   return (
-    <div className={classes.wrapper}>
+    <>
       <Helmet>
         <title>Conductor UI - Execution - {match.params.id}</title>
       </Helmet>
@@ -306,7 +255,7 @@ export default function Execution() {
                 <TaskDetails
                   dag={dag}
                   execution={execution}
-                  setSelectedTask={handleSelectTask}
+                  setSelectedTask={setSelectedTask}
                   selectedTask={selectedTask}
                 />
               )}
@@ -326,7 +275,7 @@ export default function Execution() {
           />
           <div className={classes.drawerMain}>
             <div className={classes.drawerHeader}>
-              {drawerState.isFullWidth ? (
+              {isFullWidth ? (
                 <Tooltip title="Restore sidebar">
                   <IconButton onClick={() => handleFullScreenExit()}>
                     <FullscreenExitIcon />
@@ -347,14 +296,15 @@ export default function Execution() {
             </div>
             <div className={classes.drawerContent}>
               <RightPanel
+                className={classes.rightPanel}
                 selectedTask={selectedTask}
                 dag={dag}
-                onTaskChange={handleSelectTask}
+                onTaskChange={setSelectedTask}
               />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

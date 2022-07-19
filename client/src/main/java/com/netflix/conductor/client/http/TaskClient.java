@@ -14,16 +14,18 @@ package com.netflix.conductor.client.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.netflix.conductor.client.config.ConductorClientConfiguration;
-import com.netflix.conductor.client.config.DefaultConductorClientConfiguration;
 import com.netflix.conductor.client.exception.ConductorClientException;
 import com.netflix.conductor.client.telemetry.MetricsContainer;
 import com.netflix.conductor.common.metadata.tasks.PollData;
@@ -35,81 +37,42 @@ import com.netflix.conductor.common.run.TaskSummary;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage.PayloadType;
 
-import com.google.common.base.Preconditions;
-import com.sun.jersey.api.client.ClientHandler;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.ClientFilter;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 /** Client for conductor task management including polling for task, updating task status etc. */
 public class TaskClient extends ClientBase {
 
-    private static final GenericType<List<Task>> taskList = new GenericType<List<Task>>() {};
+    private static final TypeReference<List<Task>> taskList = new TypeReference<List<Task>>() {};
 
-    private static final GenericType<List<TaskExecLog>> taskExecLogList =
-            new GenericType<List<TaskExecLog>>() {};
+    private static final TypeReference<List<TaskExecLog>> taskExecLogList =
+            new TypeReference<List<TaskExecLog>>() {};
 
-    private static final GenericType<List<PollData>> pollDataList =
-            new GenericType<List<PollData>>() {};
+    private static final TypeReference<List<PollData>> pollDataList =
+            new TypeReference<List<PollData>>() {};
 
-    private static final GenericType<SearchResult<TaskSummary>> searchResultTaskSummary =
-            new GenericType<SearchResult<TaskSummary>>() {};
+    private static final TypeReference<SearchResult<TaskSummary>> searchResultTaskSummary =
+            new TypeReference<SearchResult<TaskSummary>>() {};
 
-    private static final GenericType<SearchResult<Task>> searchResultTask =
-            new GenericType<SearchResult<Task>>() {};
+    private static final TypeReference<SearchResult<Task>> searchResultTask =
+            new TypeReference<SearchResult<Task>>() {};
 
-    private static final GenericType<Map<String, Integer>> queueSizeMap =
-            new GenericType<Map<String, Integer>>() {};
+    private static final TypeReference<Map<String, Integer>> queueSizeMap =
+            new TypeReference<Map<String, Integer>>() {};
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskClient.class);
 
     /** Creates a default task client */
     public TaskClient() {
-        this(new DefaultClientConfig(), new DefaultConductorClientConfiguration(), null);
+        this(null);
     }
 
-    /** @param config REST Client configuration */
-    public TaskClient(ClientConfig config) {
-        this(config, new DefaultConductorClientConfiguration(), null);
+    public TaskClient(RequestHandler requestHandler) {
+        this(requestHandler, null);
     }
 
-    /**
-     * @param config REST Client configuration
-     * @param handler Jersey client handler. Useful when plugging in various http client interaction
-     *     modules (e.g. ribbon)
-     */
-    public TaskClient(ClientConfig config, ClientHandler handler) {
-        this(config, new DefaultConductorClientConfiguration(), handler);
-    }
-
-    /**
-     * @param config REST Client configuration
-     * @param handler Jersey client handler. Useful when plugging in various http client interaction
-     *     modules (e.g. ribbon)
-     * @param filters Chain of client side filters to be applied per request
-     */
-    public TaskClient(ClientConfig config, ClientHandler handler, ClientFilter... filters) {
-        this(config, new DefaultConductorClientConfiguration(), handler, filters);
-    }
-
-    /**
-     * @param config REST Client configuration
-     * @param clientConfiguration Specific properties configured for the client, see {@link
-     *     ConductorClientConfiguration}
-     * @param handler Jersey client handler. Useful when plugging in various http client interaction
-     *     modules (e.g. ribbon)
-     * @param filters Chain of client side filters to be applied per request
-     */
     public TaskClient(
-            ClientConfig config,
-            ConductorClientConfiguration clientConfiguration,
-            ClientHandler handler,
-            ClientFilter... filters) {
-        super(config, clientConfiguration, handler);
-        for (ClientFilter filter : filters) {
-            super.client.addFilter(filter);
-        }
+            RequestHandler requestHandler, ConductorClientConfiguration clientConfiguration) {
+        super(requestHandler, clientConfiguration);
     }
 
     /**
@@ -121,14 +84,14 @@ public class TaskClient extends ClientBase {
      * @return Task waiting to be executed.
      */
     public Task pollTask(String taskType, String workerId, String domain) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        Preconditions.checkArgument(StringUtils.isNotBlank(workerId), "Worker id cannot be blank");
+        Validate.notBlank(taskType, "Task type cannot be blank");
+        Validate.notBlank(workerId, "Worker id cannot be blank");
 
         Object[] params = new Object[] {"workerid", workerId, "domain", domain};
         Task task =
-                Optional.ofNullable(
-                                getForEntity("tasks/poll/{taskType}", params, Task.class, taskType))
-                        .orElse(new Task());
+                ObjectUtils.defaultIfNull(
+                        getForEntity("tasks/poll/{taskType}", params, Task.class, taskType),
+                        new Task());
         populateTaskPayloads(task);
         return task;
     }
@@ -145,9 +108,9 @@ public class TaskClient extends ClientBase {
      */
     public List<Task> batchPollTasksByTaskType(
             String taskType, String workerId, int count, int timeoutInMillisecond) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        Preconditions.checkArgument(StringUtils.isNotBlank(workerId), "Worker id cannot be blank");
-        Preconditions.checkArgument(count > 0, "Count must be greater than 0");
+        Validate.notBlank(taskType, "Task type cannot be blank");
+        Validate.notBlank(workerId, "Worker id cannot be blank");
+        Validate.isTrue(count > 0, "Count must be greater than 0");
 
         Object[] params =
                 new Object[] {
@@ -171,9 +134,9 @@ public class TaskClient extends ClientBase {
      */
     public List<Task> batchPollTasksInDomain(
             String taskType, String domain, String workerId, int count, int timeoutInMillisecond) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        Preconditions.checkArgument(StringUtils.isNotBlank(workerId), "Worker id cannot be blank");
-        Preconditions.checkArgument(count > 0, "Count must be greater than 0");
+        Validate.notBlank(taskType, "Task type cannot be blank");
+        Validate.notBlank(workerId, "Worker id cannot be blank");
+        Validate.isTrue(count > 0, "Count must be greater than 0");
 
         Object[] params =
                 new Object[] {
@@ -231,18 +194,14 @@ public class TaskClient extends ClientBase {
      * @param taskResult the {@link TaskResult} of the executed task to be updated.
      */
     public void updateTask(TaskResult taskResult) {
-        Preconditions.checkNotNull(taskResult, "Task result cannot be null");
-        postForEntityWithRequestOnly("tasks", taskResult);
+        Validate.notNull(taskResult, "Task result cannot be null");
+        post("tasks", taskResult);
     }
 
-    public void evaluateAndUploadLargePayload(TaskResult taskResult, String taskType) {
-        Preconditions.checkNotNull(taskResult, "Task result cannot be null");
-        Preconditions.checkArgument(
-                StringUtils.isBlank(taskResult.getExternalOutputPayloadStoragePath()),
-                "External Storage Path must not be set");
-
+    public Optional<String> evaluateAndUploadLargePayload(
+            Map<String, Object> taskOutputData, String taskType) {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            objectMapper.writeValue(byteArrayOutputStream, taskResult.getOutputData());
+            objectMapper.writeValue(byteArrayOutputStream, taskOutputData);
             byte[] taskOutputBytes = byteArrayOutputStream.toByteArray();
             long taskResultSize = taskOutputBytes.length;
             MetricsContainer.recordTaskResultPayloadSize(taskType, taskResultSize);
@@ -254,30 +213,22 @@ public class TaskClient extends ClientBase {
                         || taskResultSize
                                 > conductorClientConfiguration.getTaskOutputMaxPayloadThresholdKB()
                                         * 1024L) {
-                    taskResult.setReasonForIncompletion(
+                    throw new IllegalArgumentException(
                             String.format(
                                     "The TaskResult payload size: %d is greater than the permissible %d bytes",
                                     taskResultSize, payloadSizeThreshold));
-                    taskResult.setStatus(TaskResult.Status.FAILED_WITH_TERMINAL_ERROR);
-                    taskResult.setOutputData(null);
-                } else {
-                    MetricsContainer.incrementExternalPayloadUsedCount(
-                            taskType,
-                            ExternalPayloadStorage.Operation.WRITE.name(),
-                            ExternalPayloadStorage.PayloadType.TASK_OUTPUT.name());
-                    String externalStoragePath =
-                            uploadToExternalPayloadStorage(
-                                    ExternalPayloadStorage.PayloadType.TASK_OUTPUT,
-                                    taskOutputBytes,
-                                    taskResultSize);
-                    taskResult.setExternalOutputPayloadStoragePath(externalStoragePath);
-                    taskResult.setOutputData(null);
                 }
+                MetricsContainer.incrementExternalPayloadUsedCount(
+                        taskType,
+                        ExternalPayloadStorage.Operation.WRITE.name(),
+                        ExternalPayloadStorage.PayloadType.TASK_OUTPUT.name());
+                return Optional.of(
+                        uploadToExternalPayloadStorage(
+                                PayloadType.TASK_OUTPUT, taskOutputBytes, taskResultSize));
             }
+            return Optional.empty();
         } catch (IOException e) {
-            String errorMsg =
-                    String.format(
-                            "Unable to update task: %s with task result", taskResult.getTaskId());
+            String errorMsg = String.format("Unable to update task: %s with task result", taskType);
             LOGGER.error(errorMsg, e);
             throw new ConductorClientException(errorMsg, e);
         }
@@ -292,15 +243,11 @@ public class TaskClient extends ClientBase {
      *     the server returns false, the client should NOT attempt to ack again.
      */
     public Boolean ack(String taskId, String workerId) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskId), "Task id cannot be blank");
+        Validate.notBlank(taskId, "Task id cannot be blank");
 
         String response =
-                postForEntity(
-                        "tasks/{taskId}/ack",
-                        null,
-                        new Object[] {"workerid", workerId},
-                        String.class,
-                        taskId);
+                postForString(
+                        "tasks/{taskId}/ack", null, new Object[] {"workerid", workerId}, taskId);
         return Boolean.valueOf(response);
     }
 
@@ -311,8 +258,8 @@ public class TaskClient extends ClientBase {
      * @param logMessage the message to be logged
      */
     public void logMessageForTask(String taskId, String logMessage) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskId), "Task id cannot be blank");
-        postForEntityWithRequestOnly("tasks/" + taskId + "/log", logMessage);
+        Validate.notBlank(taskId, "Task id cannot be blank");
+        post("tasks/" + taskId + "/log", logMessage);
     }
 
     /**
@@ -321,7 +268,7 @@ public class TaskClient extends ClientBase {
      * @param taskId id of the task.
      */
     public List<TaskExecLog> getTaskLogs(String taskId) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskId), "Task id cannot be blank");
+        Validate.notBlank(taskId, "Task id cannot be blank");
         return getForEntity("tasks/{taskId}/log", null, taskExecLogList, taskId);
     }
 
@@ -332,7 +279,7 @@ public class TaskClient extends ClientBase {
      * @return Task details
      */
     public Task getTaskDetails(String taskId) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskId), "Task id cannot be blank");
+        Validate.notBlank(taskId, "Task id cannot be blank");
         return getForEntity("tasks/{taskId}", null, Task.class, taskId);
     }
 
@@ -343,22 +290,52 @@ public class TaskClient extends ClientBase {
      * @param taskId the id of the task to be removed
      */
     public void removeTaskFromQueue(String taskType, String taskId) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskId), "Task id cannot be blank");
+        Validate.notBlank(taskType, "Task type cannot be blank");
+        Validate.notBlank(taskId, "Task id cannot be blank");
 
         delete("tasks/queue/{taskType}/{taskId}", taskType, taskId);
     }
 
     public int getQueueSizeForTask(String taskType) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
+        Validate.notBlank(taskType, "Task type cannot be blank");
 
-        Map<String, Integer> taskTypeToQueueSizeMap =
+        Integer queueSize =
                 getForEntity(
-                        "tasks/queue/sizes", new Object[] {"taskType", taskType}, queueSizeMap);
-        if (taskTypeToQueueSizeMap.containsKey(taskType)) {
-            return taskTypeToQueueSizeMap.get(taskType);
+                        "tasks/queue/size",
+                        new Object[] {"taskType", taskType},
+                        new TypeReference<Integer>() {});
+        return queueSize != null ? queueSize : 0;
+    }
+
+    public int getQueueSizeForTask(
+            String taskType, String domain, String isolationGroupId, String executionNamespace) {
+        Validate.notBlank(taskType, "Task type cannot be blank");
+
+        List<Object> params = new LinkedList<>();
+        params.add("taskType");
+        params.add(taskType);
+
+        if (StringUtils.isNotBlank(domain)) {
+            params.add("domain");
+            params.add(domain);
         }
-        return 0;
+
+        if (StringUtils.isNotBlank(isolationGroupId)) {
+            params.add("isolationGroupId");
+            params.add(isolationGroupId);
+        }
+
+        if (StringUtils.isNotBlank(executionNamespace)) {
+            params.add("executionNamespace");
+            params.add(executionNamespace);
+        }
+
+        Integer queueSize =
+                getForEntity(
+                        "tasks/queue/size",
+                        params.toArray(new Object[0]),
+                        new TypeReference<Integer>() {});
+        return queueSize != null ? queueSize : 0;
     }
 
     /**
@@ -368,7 +345,7 @@ public class TaskClient extends ClientBase {
      * @return returns the list of poll data for the task type
      */
     public List<PollData> getPollData(String taskType) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
+        Validate.notBlank(taskType, "Task type cannot be blank");
 
         Object[] params = new Object[] {"taskType", taskType};
         return getForEntity("tasks/queue/polldata", params, pollDataList);
@@ -389,7 +366,7 @@ public class TaskClient extends ClientBase {
      * @return returns the number of tasks that have been requeued
      */
     public String requeueAllPendingTasks() {
-        return postForEntity("tasks/queue/requeue", null, null, String.class);
+        return postForString("tasks/queue/requeue", null, null);
     }
 
     /**
@@ -398,8 +375,8 @@ public class TaskClient extends ClientBase {
      * @return returns the number of tasks that have been requeued
      */
     public String requeuePendingTasksByTaskType(String taskType) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(taskType), "Task type cannot be blank");
-        return postForEntity("tasks/queue/requeue/{taskType}", null, null, String.class, taskType);
+        Validate.notBlank(taskType, "Task type cannot be blank");
+        return postForString("tasks/queue/requeue/{taskType}", null, null, taskType);
     }
 
     /**

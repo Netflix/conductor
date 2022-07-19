@@ -22,9 +22,7 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.tasks.Task;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
-import com.netflix.conductor.core.dal.ModelMapper;
-import com.netflix.conductor.core.exception.ApplicationException;
-import com.netflix.conductor.core.exception.ApplicationException.Code;
+import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.TaskModel.Status;
@@ -53,18 +51,15 @@ public class DefaultEventQueueProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultEventQueueProcessor.class);
     private final Map<Status, ObservableQueue> queues;
     private final WorkflowExecutor workflowExecutor;
-    private final ModelMapper modelMapper;
     private static final TypeReference<Map<String, Object>> _mapType = new TypeReference<>() {};
     private final ObjectMapper objectMapper;
 
     public DefaultEventQueueProcessor(
             Map<Status, ObservableQueue> queues,
             WorkflowExecutor workflowExecutor,
-            ModelMapper modelMapper,
             ObjectMapper objectMapper) {
         this.queues = queues;
         this.workflowExecutor = workflowExecutor;
-        this.modelMapper = modelMapper;
         this.objectMapper = objectMapper;
         queues.forEach(this::startMonitor);
         LOGGER.info(
@@ -100,9 +95,9 @@ public class DefaultEventQueueProcessor {
                                 }
                                 WorkflowModel workflow =
                                         workflowExecutor.getWorkflow(workflowId, true);
-                                Optional<TaskModel> taskOptional;
+                                Optional<TaskModel> optionalTaskModel;
                                 if (StringUtils.isNotEmpty(taskId)) {
-                                    taskOptional =
+                                    optionalTaskModel =
                                             workflow.getTasks().stream()
                                                     .filter(
                                                             task ->
@@ -114,7 +109,7 @@ public class DefaultEventQueueProcessor {
                                     LOGGER.error(
                                             "No taskRefName found in the message. If there is only one WAIT task, will mark it as completed. {}",
                                             payload);
-                                    taskOptional =
+                                    optionalTaskModel =
                                             workflow.getTasks().stream()
                                                     .filter(
                                                             task ->
@@ -124,7 +119,7 @@ public class DefaultEventQueueProcessor {
                                                                                             TASK_TYPE_WAIT))
                                                     .findFirst();
                                 } else {
-                                    taskOptional =
+                                    optionalTaskModel =
                                             workflow.getTasks().stream()
                                                     .filter(
                                                             task ->
@@ -135,7 +130,7 @@ public class DefaultEventQueueProcessor {
                                                     .findFirst();
                                 }
 
-                                if (taskOptional.isEmpty()) {
+                                if (optionalTaskModel.isEmpty()) {
                                     LOGGER.error(
                                             "No matching tasks found to be marked as completed for workflow {}, taskRefName {}, taskId {}",
                                             workflowId,
@@ -145,8 +140,8 @@ public class DefaultEventQueueProcessor {
                                     return;
                                 }
 
-                                Task task = modelMapper.getTask(taskOptional.get());
-                                task.setStatus(modelMapper.mapToTaskStatus(status));
+                                Task task = optionalTaskModel.get().toTask();
+                                task.setStatus(TaskModel.mapToTaskStatus(status));
                                 task.getOutputData()
                                         .putAll(objectMapper.convertValue(payloadJSON, _mapType));
                                 workflowExecutor.updateTask(new TaskResult(task));
@@ -158,14 +153,10 @@ public class DefaultEventQueueProcessor {
                             } catch (JsonParseException e) {
                                 LOGGER.error("Bad message? : {} ", msg, e);
                                 queue.ack(Collections.singletonList(msg));
-
-                            } catch (ApplicationException e) {
-                                if (e.getCode().equals(Code.NOT_FOUND)) {
-                                    LOGGER.error(
-                                            "Workflow ID specified is not valid for this environment");
-                                    queue.ack(Collections.singletonList(msg));
-                                }
-                                LOGGER.error("Error processing message: {}", msg, e);
+                            } catch (NotFoundException nfe) {
+                                LOGGER.error(
+                                        "Workflow ID specified is not valid for this environment");
+                                queue.ack(Collections.singletonList(msg));
                             } catch (Exception e) {
                                 LOGGER.error("Error processing message: {}", msg, e);
                             }

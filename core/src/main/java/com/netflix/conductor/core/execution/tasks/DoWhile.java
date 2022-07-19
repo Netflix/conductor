@@ -21,16 +21,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.annotations.VisibleForTesting;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.events.ScriptEvaluator;
-import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
-import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DO_WHILE;
 
@@ -39,11 +36,8 @@ public class DoWhile extends WorkflowSystemTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DoWhile.class);
 
-    private final ParametersUtils parametersUtils;
-
-    public DoWhile(ParametersUtils parametersUtils) {
+    public DoWhile() {
         super(TASK_TYPE_DO_WHILE);
-        this.parametersUtils = parametersUtils;
     }
 
     @Override
@@ -53,33 +47,51 @@ public class DoWhile extends WorkflowSystemTask {
 
     @Override
     public boolean execute(
-            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
+            WorkflowModel workflow, TaskModel doWhileTaskModel, WorkflowExecutor workflowExecutor) {
 
-        boolean allDone = true;
         boolean hasFailures = false;
         StringBuilder failureReason = new StringBuilder();
         Map<String, Object> output = new HashMap<>();
-        task.getOutputData().put("iteration", task.getIteration());
 
         /*
          * Get the latest set of tasks (the ones that have the highest retry count). We don't want to evaluate any tasks
          * that have already failed if there is a more current one (a later retry count).
          */
         Map<String, TaskModel> relevantTasks = new LinkedHashMap<>();
-        TaskModel relevantTask = null;
+        TaskModel relevantTask;
         for (TaskModel t : workflow.getTasks()) {
-            if (task.getWorkflowTask()
+            if (doWhileTaskModel
+                            .getWorkflowTask()
                             .has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName()))
-                    && !task.getReferenceTaskName().equals(t.getReferenceTaskName())) {
+                    && !doWhileTaskModel.getReferenceTaskName().equals(t.getReferenceTaskName())
+                    && doWhileTaskModel.getIteration() == t.getIteration()) {
                 relevantTask = relevantTasks.get(t.getReferenceTaskName());
                 if (relevantTask == null || t.getRetryCount() > relevantTask.getRetryCount()) {
                     relevantTasks.put(t.getReferenceTaskName(), t);
                 }
             }
         }
-        Collection<TaskModel> loopOver = relevantTasks.values();
+        Collection<TaskModel> loopOverTasks = relevantTasks.values();
 
-        for (TaskModel loopOverTask : loopOver) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
+                    "Workflow {} waiting for tasks {} to complete iteration {}",
+                    workflow.getWorkflowId(),
+                    loopOverTasks.stream()
+                            .map(TaskModel::getReferenceTaskName)
+                            .collect(Collectors.toList()),
+                    doWhileTaskModel.getIteration());
+        }
+
+        // if the loopOverTasks collection is empty, no tasks inside the loop have been scheduled.
+        // so schedule it and exit the method.
+        if (loopOverTasks.isEmpty()) {
+            doWhileTaskModel.setIteration(1);
+            doWhileTaskModel.addOutput("iteration", doWhileTaskModel.getIteration());
+            return scheduleNextIteration(doWhileTaskModel, workflow, workflowExecutor);
+        }
+
+        for (TaskModel loopOverTask : loopOverTasks) {
             TaskModel.Status taskStatus = loopOverTask.getStatus();
             hasFailures = !taskStatus.isSuccessful();
             if (hasFailures) {
@@ -88,88 +100,122 @@ public class DoWhile extends WorkflowSystemTask {
             output.put(
                     TaskUtils.removeIterationFromTaskRefName(loopOverTask.getReferenceTaskName()),
                     loopOverTask.getOutputData());
-            allDone = taskStatus.isTerminal();
-            if (!allDone || hasFailures) {
+            if (hasFailures) {
                 break;
             }
         }
-        task.getOutputData().put(String.valueOf(task.getIteration()), output);
+        doWhileTaskModel
+                .getOutputData()
+                .put(String.valueOf(doWhileTaskModel.getIteration()), output);
+
         if (hasFailures) {
             LOGGER.debug(
-                    "taskid {} failed in {} iteration", task.getTaskId(), task.getIteration() + 1);
-            return updateLoopTask(task, TaskModel.Status.FAILED, failureReason.toString());
-        } else if (!allDone) {
+                    "Task {} failed in {} iteration",
+                    doWhileTaskModel.getTaskId(),
+                    doWhileTaskModel.getIteration() + 1);
+            return markTaskFailure(
+                    doWhileTaskModel, TaskModel.Status.FAILED, failureReason.toString());
+        }
+
+        if (!isIterationComplete(doWhileTaskModel, relevantTasks)) {
+            // current iteration is not complete (all tasks inside the loop are not terminal)
             return false;
         }
+
+        // if we are here, the iteration is complete, and we need to check if there is a next
+        // iteration by evaluating the loopCondition
         boolean shouldContinue;
         try {
-            shouldContinue = getEvaluatedCondition(workflow, task, workflowExecutor);
-            LOGGER.debug("taskid {} condition evaluated to {}", task.getTaskId(), shouldContinue);
+            shouldContinue = evaluateCondition(workflow, doWhileTaskModel);
+            LOGGER.debug(
+                    "Task {} condition evaluated to {}",
+                    doWhileTaskModel.getTaskId(),
+                    shouldContinue);
             if (shouldContinue) {
-                task.setIteration(task.getIteration() + 1);
-                return scheduleNextIteration(task, workflow, workflowExecutor);
+                doWhileTaskModel.setIteration(doWhileTaskModel.getIteration() + 1);
+                doWhileTaskModel.getOutputData().put("iteration", doWhileTaskModel.getIteration());
+                return scheduleNextIteration(doWhileTaskModel, workflow, workflowExecutor);
             } else {
                 LOGGER.debug(
-                        "taskid {} took {} iterations to complete",
-                        task.getTaskId(),
-                        task.getIteration() + 1);
-                return markLoopTaskSuccess(task);
+                        "Task {} took {} iterations to complete",
+                        doWhileTaskModel.getTaskId(),
+                        doWhileTaskModel.getIteration() + 1);
+                return markTaskSuccess(doWhileTaskModel);
             }
         } catch (ScriptException e) {
             String message =
                     String.format(
-                            "Unable to evaluate condition %s , exception %s",
-                            task.getWorkflowTask().getLoopCondition(), e.getMessage());
+                            "Unable to evaluate condition %s, exception %s",
+                            doWhileTaskModel.getWorkflowTask().getLoopCondition(), e.getMessage());
             LOGGER.error(message);
-            LOGGER.error("Marking task {} failed with error.", task.getTaskId());
-            return updateLoopTask(task, TaskModel.Status.FAILED_WITH_TERMINAL_ERROR, message);
+            return markTaskFailure(
+                    doWhileTaskModel, TaskModel.Status.FAILED_WITH_TERMINAL_ERROR, message);
         }
     }
 
+    /**
+     * Check if all tasks in the current iteration have reached terminal state.
+     *
+     * @param doWhileTaskModel The {@link TaskModel} of DO_WHILE.
+     * @param referenceNameToModel Map of taskReferenceName to {@link TaskModel}.
+     * @return true if all tasks in DO_WHILE.loopOver are in <code>referenceNameToModel</code> and
+     *     reached terminal state.
+     */
+    private boolean isIterationComplete(
+            TaskModel doWhileTaskModel, Map<String, TaskModel> referenceNameToModel) {
+        List<WorkflowTask> workflowTasksInsideDoWhile =
+                doWhileTaskModel.getWorkflowTask().getLoopOver();
+        int iteration = doWhileTaskModel.getIteration();
+        boolean allTasksTerminal = true;
+        for (WorkflowTask workflowTaskInsideDoWhile : workflowTasksInsideDoWhile) {
+            String taskReferenceName =
+                    TaskUtils.appendIteration(
+                            workflowTaskInsideDoWhile.getTaskReferenceName(), iteration);
+            if (referenceNameToModel.containsKey(taskReferenceName)) {
+                TaskModel taskModel = referenceNameToModel.get(taskReferenceName);
+                if (!taskModel.getStatus().isTerminal()) {
+                    allTasksTerminal = false;
+                    break;
+                }
+            } else {
+                allTasksTerminal = false;
+                break;
+            }
+        }
+        return allTasksTerminal;
+    }
+
     boolean scheduleNextIteration(
-            TaskModel task, WorkflowModel workflow, WorkflowExecutor workflowExecutor) {
+            TaskModel doWhileTaskModel, WorkflowModel workflow, WorkflowExecutor workflowExecutor) {
         LOGGER.debug(
-                "Scheduling loop tasks for taskid {} as condition {} evaluated to true",
-                task.getTaskId(),
-                task.getWorkflowTask().getLoopCondition());
-        workflowExecutor.scheduleNextIteration(task, workflow);
+                "Scheduling loop tasks for task {} as condition {} evaluated to true",
+                doWhileTaskModel.getTaskId(),
+                doWhileTaskModel.getWorkflowTask().getLoopCondition());
+        workflowExecutor.scheduleNextIteration(doWhileTaskModel, workflow);
         return true; // Return true even though status not changed. Iteration has to be updated in
         // execution DAO.
     }
 
-    boolean updateLoopTask(TaskModel task, TaskModel.Status status, String failureReason) {
-        task.setReasonForIncompletion(failureReason);
-        task.setStatus(status);
+    boolean markTaskFailure(TaskModel taskModel, TaskModel.Status status, String failureReason) {
+        LOGGER.error("Marking task {} failed with error.", taskModel.getTaskId());
+        taskModel.setReasonForIncompletion(failureReason);
+        taskModel.setStatus(status);
         return true;
     }
 
-    boolean markLoopTaskSuccess(TaskModel task) {
+    boolean markTaskSuccess(TaskModel taskModel) {
         LOGGER.debug(
-                "taskid {} took {} iterations to complete",
-                task.getTaskId(),
-                task.getIteration() + 1);
-        task.setStatus(TaskModel.Status.COMPLETED);
+                "Task {} took {} iterations to complete",
+                taskModel.getTaskId(),
+                taskModel.getIteration() + 1);
+        taskModel.setStatus(TaskModel.Status.COMPLETED);
         return true;
     }
 
     @VisibleForTesting
-    boolean getEvaluatedCondition(
-            WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor)
-            throws ScriptException {
-        TaskDef taskDefinition = null;
-        try {
-            taskDefinition = workflowExecutor.getTaskDefinition(task);
-        } catch (TerminateWorkflowException e) {
-            // It is ok to not have a task definition for a DO_WHILE task
-        }
-
-        Map<String, Object> taskInput =
-                parametersUtils.getTaskInputV2(
-                        task.getWorkflowTask().getInputParameters(),
-                        workflow,
-                        task.getTaskId(),
-                        taskDefinition);
-        taskInput.put(task.getReferenceTaskName(), task.getOutputData());
+    boolean evaluateCondition(WorkflowModel workflow, TaskModel task) throws ScriptException {
+        Map<String, Object> conditionInput = new HashMap<>(task.getInputData());
+        conditionInput.put(task.getReferenceTaskName(), task.getOutputData());
         List<TaskModel> loopOver =
                 workflow.getTasks().stream()
                         .filter(
@@ -185,17 +231,18 @@ public class DoWhile extends WorkflowSystemTask {
                         .collect(Collectors.toList());
 
         for (TaskModel loopOverTask : loopOver) {
-            taskInput.put(
+            conditionInput.put(
                     TaskUtils.removeIterationFromTaskRefName(loopOverTask.getReferenceTaskName()),
                     loopOverTask.getOutputData());
         }
+
         String condition = task.getWorkflowTask().getLoopCondition();
-        boolean shouldContinue = false;
+        boolean result = false;
         if (condition != null) {
             LOGGER.debug("Condition: {} is being evaluated", condition);
-            // Evaluate the expression by using the Nashhorn based script evaluator
-            shouldContinue = ScriptEvaluator.evalBool(condition, taskInput);
+            // Evaluate the expression by using the Nashorn based script evaluator
+            result = ScriptEvaluator.evalBool(condition, conditionInput);
         }
-        return shouldContinue;
+        return result;
     }
 }

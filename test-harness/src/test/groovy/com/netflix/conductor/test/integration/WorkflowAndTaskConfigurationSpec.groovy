@@ -194,12 +194,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
         when: "The the first task 'integration_task_1' is polled and acknowledged"
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
-        def task1Try1Acknowledgment = workflowExecutionService.ackTaskReceived(task1Try1)
 
         then: "Ensure that a task was polled"
         task1Try1
         task1Try1.workflowInstanceId == workflowInstanceId
-        task1Try1Acknowledgment
 
         and: "Ensure that the decider size queue is 1 to to enable the evaluation"
         queueDAO.getSize(Utils.DECIDER_QUEUE) == 1
@@ -220,12 +218,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
         when: "Poll for the task again and acknowledge"
         def task1Try2 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
-        def task1Try2Acknowledgment = workflowExecutionService.ackTaskReceived(task1Try2)
 
         then: "Ensure that a task was polled"
         task1Try2
         task1Try2.workflowInstanceId == workflowInstanceId
-        task1Try2Acknowledgment
 
         when: "There is a delay of 3 seconds introduced and the workflow is swept to run the evaluation"
         Thread.sleep(3000)
@@ -274,12 +270,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
         when: "The the first task 'integration_task_1' is polled and acknowledged"
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
-        def task1Try1Acknowledgment = workflowExecutionService.ackTaskReceived(task1Try1)
 
         then: "Ensure that a task was polled"
         task1Try1
         task1Try1.workflowInstanceId == workflowInstanceId
-        task1Try1Acknowledgment
 
         when: "There is a delay of 6 seconds introduced and the workflow is swept to run the evaluation"
         Thread.sleep(6000)
@@ -326,12 +320,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
         when: "The the first task 'integration_task_1' is polled and acknowledged"
         def task1Try1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
-        def task1Try1Acknowledgment = workflowExecutionService.ackTaskReceived(task1Try1)
 
         then: "Ensure that a task was polled"
         task1Try1
         task1Try1.workflowInstanceId == workflowInstanceId
-        task1Try1Acknowledgment
 
         when: "There is a delay of 6 seconds introduced and the workflow is swept to run the evaluation"
         Thread.sleep(6000)
@@ -393,12 +385,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
         when: "The the first task 'integration_task_1' is polled and acknowledged"
         def task1 = workflowExecutionService.poll('integration_task_1', 'task1.worker')
-        def task1Ack = workflowExecutionService.ackTaskReceived(task1)
 
         then: "Ensure that a task was polled"
         task1
         task1.workflowInstanceId == workflowInstanceId
-        task1Ack
 
         when: "There is a delay of 6 seconds introduced and the task is completed"
         Thread.sleep(6000)
@@ -963,6 +953,33 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
             tasks[0].inputData.get('http_request')['body']['inputPaths'][0] == 'file://path1'
             tasks[0].inputData.get('http_request')['body']['inputPaths'][1] == 'file://path2'
             tasks[0].inputData.get('http_request')['uri'] == '/get/something'
+        }
+    }
+
+    def "Test task def created if not exist"() {
+        setup: "Register a workflow definition with task def not registered"
+        def taskDefName = "task_not_registered"
+        WorkflowTask workflowTask = new WorkflowTask()
+        workflowTask.setName(taskDefName)
+        workflowTask.setWorkflowTaskType(TaskType.SIMPLE)
+        workflowTask.setTaskReferenceName("t0")
+
+        WorkflowDef testWorkflowDef = new WorkflowDef()
+        testWorkflowDef.setName("test_workflow")
+        testWorkflowDef.getTasks().add(workflowTask)
+        testWorkflowDef.setSchemaVersion(2)
+        testWorkflowDef.setOwnerEmail("test@harness.com")
+        metadataService.registerWorkflowDef(testWorkflowDef)
+
+        when: "the workflow is started"
+        def correlationId = 'workflow_taskdef_not_registered'
+        def workflowInstanceId = workflowExecutor.startWorkflow(testWorkflowDef, new HashMap(), null, correlationId, null, null)
+
+        then: "the workflow is in running state"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskDefName == taskDefName
         }
     }
 }

@@ -21,6 +21,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -30,10 +34,13 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.support.RetryTemplate;
 
 import com.netflix.conductor.dao.IndexDAO;
 import com.netflix.conductor.es6.dao.index.ElasticSearchDAOV6;
@@ -86,13 +93,31 @@ public class ElasticSearchV6Configuration {
                             requestConfigBuilder.setConnectionRequestTimeout(
                                     properties.getRestClientConnectionRequestTimeout()));
         }
+
         return restClientBuilder.build();
     }
 
     @Bean
     @Conditional(IsHttpProtocol.class)
     public RestClientBuilder restClientBuilder(ElasticSearchProperties properties) {
-        return RestClient.builder(convertToHttpHosts(properties.toURLs()));
+        RestClientBuilder builder = RestClient.builder(convertToHttpHosts(properties.toURLs()));
+
+        if (properties.getUsername() != null && properties.getPassword() != null) {
+            log.info(
+                    "Configure ElasticSearch with BASIC authentication. User:{}",
+                    properties.getUsername());
+            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(
+                    AuthScope.ANY,
+                    new UsernamePasswordCredentials(
+                            properties.getUsername(), properties.getPassword()));
+            builder.setHttpClientConfigCallback(
+                    httpClientBuilder ->
+                            httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+        } else {
+            log.info("Configure ElasticSearch with no authentication.");
+        }
+        return builder;
     }
 
     @Bean
@@ -100,15 +125,29 @@ public class ElasticSearchV6Configuration {
     public IndexDAO es6IndexRestDAO(
             RestClientBuilder restClientBuilder,
             ElasticSearchProperties properties,
+            @Qualifier("es6RetryTemplate") RetryTemplate retryTemplate,
             ObjectMapper objectMapper) {
-        return new ElasticSearchRestDAOV6(restClientBuilder, properties, objectMapper);
+        return new ElasticSearchRestDAOV6(
+                restClientBuilder, retryTemplate, properties, objectMapper);
     }
 
     @Bean
     @Conditional(IsTcpProtocol.class)
     public IndexDAO es6IndexDAO(
-            Client client, ElasticSearchProperties properties, ObjectMapper objectMapper) {
-        return new ElasticSearchDAOV6(client, properties, objectMapper);
+            Client client,
+            @Qualifier("es6RetryTemplate") RetryTemplate retryTemplate,
+            ElasticSearchProperties properties,
+            ObjectMapper objectMapper) {
+        return new ElasticSearchDAOV6(client, retryTemplate, properties, objectMapper);
+    }
+
+    @Bean
+    public RetryTemplate es6RetryTemplate() {
+        RetryTemplate retryTemplate = new RetryTemplate();
+        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+        fixedBackOffPolicy.setBackOffPeriod(1000L);
+        retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+        return retryTemplate;
     }
 
     private HttpHost[] convertToHttpHosts(List<URL> hosts) {

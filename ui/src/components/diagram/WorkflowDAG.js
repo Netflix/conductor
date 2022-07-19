@@ -7,21 +7,23 @@ export default class WorkflowDAG {
     this.workflowDef = workflowDef;
 
     this.graph = new graphlib.Graph({ directed: true, compound: false });
-    this.taskResults = new Map();
+    this.taskResultsByRef = new Map();
+    this.taskResultsById = new Map();
 
     this.constructGraph();
   }
 
   addTaskResult(ref, task) {
-    if (!this.taskResults.has(ref)) {
-      this.taskResults.set(ref, []);
+    if (!this.taskResultsByRef.has(ref)) {
+      this.taskResultsByRef.set(ref, []);
     }
-    this.taskResults.get(ref).push(task);
+    this.taskResultsByRef.get(ref).push(task);
+    this.taskResultsById.set(task.taskId, task);
   }
 
   getLastTaskResult(ref) {
-    if (this.taskResults.has(ref)) {
-      return _.last(this.taskResults.get(ref));
+    if (this.taskResultsByRef.has(ref)) {
+      return _.last(this.taskResultsByRef.get(ref));
     } else {
       return null;
     }
@@ -38,9 +40,9 @@ export default class WorkflowDAG {
     else if (execution) {
       let isTerminated = false;
       for (let task of execution.tasks) {
-        if (task.taskType === "TERMINATE") isTerminated = true;
+        if (task["taskType"] === "TERMINATE") isTerminated = true;
 
-        this.addTaskResult(task.referenceTaskName, task);
+        this.addTaskResult(task["referenceTaskName"], task);
       }
 
       if (execution.status) {
@@ -92,7 +94,7 @@ export default class WorkflowDAG {
   }
 
   switchBranchTaken(caseValue, decisionTaskRef, type) {
-    if (!this.taskResults.has(decisionTaskRef)) return false;
+    if (!this.taskResultsByRef.has(decisionTaskRef)) return false;
 
     const switchTaskResult = this.getLastTaskResult(decisionTaskRef);
     const cases = Object.keys(switchTaskResult.workflowTask.decisionCases);
@@ -112,7 +114,9 @@ export default class WorkflowDAG {
   }
 
   addVertex(taskConfig, antecedents) {
-    const taskResults = this.taskResults.get(taskConfig.taskReferenceName);
+    const taskResults = taskConfig.aliasForRef
+      ? this.taskResultsByRef.get(taskConfig.aliasForRef)
+      : this.taskResultsByRef.get(taskConfig.taskReferenceName);
     const lastTaskResult = _.last(taskResults);
     const vertex = {
       taskResults: taskResults || [
@@ -123,11 +127,8 @@ export default class WorkflowDAG {
       name: taskConfig.name,
       ref: taskConfig.taskReferenceName,
       type: taskConfig.type,
-      description: taskConfig.description,
+      aliasForRef: taskConfig.aliasForRef,
     };
-    if (taskConfig.dfTasks) {
-      vertex.dfTasks = taskConfig.dfTasks;
-    }
 
     if (lastTaskResult) {
       vertex.status = lastTaskResult.status;
@@ -136,7 +137,7 @@ export default class WorkflowDAG {
     this.graph.setNode(taskConfig.taskReferenceName, vertex);
     for (let antecedent of antecedents) {
       const antecedentExecuted = !!this.getExecutionStatus(
-        antecedent.taskReferenceName
+        antecedent.aliasForRef || antecedent.taskReferenceName
       );
       const edgeParams = {};
 
@@ -196,7 +197,7 @@ export default class WorkflowDAG {
       retval.push(decisionTask); // Empty default path
     } else {
       retval.push(
-        ...this.processTaskList(decisionTask.defaultCase, [decisionTask], null)
+        ...this.processTaskList(decisionTask.defaultCase, [decisionTask])
       );
     }
 
@@ -246,6 +247,73 @@ export default class WorkflowDAG {
     }
   }
 
+  processDoWhileTask(doWhileTask, antecedents) {
+    console.assert(Array.isArray(antecedents));
+
+    const hasDoWhileExecuted = !!this.getExecutionStatus(
+      doWhileTask.taskReferenceName
+    );
+
+    this.addVertex(doWhileTask, antecedents);
+
+    // Bottom bar
+    let endDoWhileTask = {
+      type: "DO_WHILE_END",
+      name: doWhileTask.name,
+      taskReferenceName: doWhileTask.taskReferenceName + "-END",
+      aliasForRef: doWhileTask.taskReferenceName,
+    };
+
+    const loopOverRefPrefixes = doWhileTask.loopOver.map(
+      (t) => t.taskReferenceName
+    );
+    if (hasDoWhileExecuted) {
+      const loopOverRefs = Array.from(this.taskResultsByRef.keys()).filter(
+        (key) => {
+          for (let prefix of loopOverRefPrefixes) {
+            if (key.startsWith(prefix + "__")) return true;
+          }
+          return false;
+        }
+      );
+
+      const loopTaskResults = [];
+      for (let ref of loopOverRefs) {
+        const refList = this.taskResultsByRef.get(ref);
+        loopTaskResults.push(...refList);
+      }
+
+      const loopTasks = loopTaskResults.map((task) => ({
+        name: task.taskDefName,
+        taskReferenceName: task.referenceTaskName,
+        type: task.taskType,
+      }));
+
+      for (let task of loopTasks) {
+        this.addVertex(task, [doWhileTask]);
+      }
+
+      this.addVertex(endDoWhileTask, [...loopTasks]);
+    } else {
+      // Definition view (or not executed)
+
+      this.processTaskList(doWhileTask.loopOver, [doWhileTask]);
+      this.addVertex(endDoWhileTask, [_.last(doWhileTask.loopOver)]);
+    }
+
+    // Create cosmetic LOOP edges between top and bottom bars
+    this.graph.setEdge(
+      doWhileTask.taskReferenceName,
+      doWhileTask.taskReferenceName + "-END",
+      {
+        type: "loop",
+        executed: hasDoWhileExecuted,
+      }
+    );
+
+    return [endDoWhileTask];
+  }
+
   processForkJoin(forkJoinTask, antecedents) {
     let outerForkTasks = forkJoinTask.forkTasks || [];
 
@@ -258,6 +326,50 @@ export default class WorkflowDAG {
         this.processTaskList(innerForkTasks, [forkJoinTask])
       )
     );
+  }
+
+  processJoin(joinTask, antecedents) {
+    // Process as a normal node UNLESS in special case of an externalized dynamic-fork. In which case - backfill spawned children.
+
+    const taskResult = _.last(
+      this.taskResultsByRef.get(joinTask.taskReferenceName)
+    );
+    const backfilled = [];
+    const antecedent = _.first(antecedents);
+
+    if (_.has(taskResult, "inputData.joinOn")) {
+      const backfillRefs = taskResult.inputData.joinOn;
+      if (_.get(antecedent, "type") === "DF_EMPTY_PLACEHOLDER") {
+        const twoBeforeRef = _.first(
+          this.graph.predecessors(antecedent.taskReferenceName)
+        );
+        const twoBefore = this.graph.node(twoBeforeRef);
+        if (_.get(twoBefore, "type") === "FORK_JOIN_DYNAMIC") {
+          console.log("Special case - backfill for externalized DYNAMIC_FORK");
+
+          const twoBeforeDef = _.first(twoBefore.taskResults).workflowTask;
+          for (let ref of backfillRefs) {
+            const tasks = this.taskResultsByRef.get(ref);
+            for (let task of tasks) {
+              this.addVertex(task.workflowTask, [twoBeforeDef]);
+              backfilled.push(task.workflowTask);
+            }
+          }
+        }
+      }
+    }
+
+    if (backfilled.length > 0) {
+      // Remove placeholder if needed
+      this.graph.removeNode(antecedent.taskReferenceName);
+
+      // backfilled nodes converge onto join
+      this.addVertex(joinTask, backfilled);
+    } else {
+      this.addVertex(joinTask, antecedents);
+    }
+
+    return [joinTask];
   }
 
   // returns tails = [...]
@@ -281,9 +393,15 @@ export default class WorkflowDAG {
         return [];
       }
 
+      case "DO_WHILE": {
+        return this.processDoWhileTask(task, antecedents);
+      }
+
+      case "JOIN": {
+        return this.processJoin(task, antecedents);
+      }
       /*
       case "TERMINAL":
-      case "JOIN":
       case "EVENT":
       case "SUB_WORKFLOW":
       case "EXCLUSIVE_JOIN":
@@ -295,20 +413,65 @@ export default class WorkflowDAG {
     }
   }
 
-  dfChildInfo(ref) {
-    const predecessors = this.graph.predecessors(ref);
+  getSiblings(taskPointer) {
+    let ref;
+    if (taskPointer.id) {
+      const taskResult = this.taskResultsById.get(taskPointer.id);
+      if (taskResult) {
+        ref = taskResult.referenceTaskName;
+      }
+    } else {
+      ref = taskPointer.ref;
+    }
 
+    if (!ref) return;
+
+    const predecessors = this.graph.predecessors(ref);
     // Nodes might have multiple predecessors e.g. following Decision node.
     // But when parent is FORK_JOIN_DYNAMIC there should only be one.
     if (_.size(predecessors) === 1) {
       const parent = this.graph.node(_.first(predecessors));
-      if (parent && parent.type === "FORK_JOIN_DYNAMIC") {
-        return this.graph
-          .successors(parent.ref)
-          .map((ref) => this.graph.node(ref));
+      if (parent && parent.status) {
+        if (parent.type === "FORK_JOIN_DYNAMIC") {
+          return this.graph
+            .successors(parent.ref)
+            .map((ref) => this.graph.node(ref));
+        } else if (parent.type === "DO_WHILE") {
+          return this.graph
+            .successors(parent.ref)
+            .map((ref) => this.graph.node(ref))
+            .filter((node) => node.type !== "DO_WHILE_END");
+        }
       }
     }
     // Returns undefined
+  }
+
+  findTaskResultById(id) {
+    return this.taskResultsById.get(id);
+  }
+
+  getRetries(taskPointer) {
+    if (taskPointer.id) {
+      const taskResult = this.taskResultsById.get(taskPointer.id);
+      if (taskResult) {
+        const ref = taskResult.referenceTaskName;
+        return this.taskResultsByRef.get(ref);
+      }
+    } else {
+      return this.taskResultsByRef.get(taskPointer.ref);
+    }
+  }
+
+  resolveTaskResult(taskPointer) {
+    if (!taskPointer) {
+      return null;
+    } else if (taskPointer.id) {
+      return this.taskResultsById.get(taskPointer.id);
+    } else {
+      const node = this.graph.node(taskPointer.ref);
+      return _.last(node.taskResults);
+    }
   }
 }
 
@@ -323,3 +486,18 @@ function getCaseValue(ref, decisionTask) {
 
   return null;
 }
+
+/*
+
+Node {
+  taskResults: [... TaskResult]
+}
+
+TaskResult {
+  ...[Task Result fields only present if executed],
+  workflowTask: {
+    ... Always populated
+  }
+}
+
+*/
