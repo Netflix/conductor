@@ -45,6 +45,7 @@ import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.SUB_WORKFLOW;
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TERMINATE;
 import static com.netflix.conductor.model.TaskModel.Status.*;
 
@@ -745,7 +746,7 @@ public class DeciderService {
             return false;
         }
 
-        if (task.getStatus().isTerminal() || task.getTaskType().equals(SUB_WORKFLOW.name()) {
+        if (task.getStatus().isTerminal() || task.getTaskType().equals(SUB_WORKFLOW.name())) {
             return false;
         }
 
