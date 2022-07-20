@@ -745,7 +745,7 @@ public class DeciderService {
             return false;
         }
 
-        if (task.getStatus().isTerminal() || isAyncCompleteSystemTask(task)) {
+        if (task.getStatus().isTerminal() || task.getTaskType().equals(SUB_WORKFLOW.name()) {
             return false;
         }
 
@@ -872,11 +872,6 @@ public class DeciderService {
         } catch (Exception e) {
             throw new TerminateWorkflowException(e.getMessage());
         }
-    }
-
-    private boolean isAyncCompleteSystemTask(TaskModel task) {
-        return systemTaskRegistry.isSystemTask(task.getTaskType())
-                && systemTaskRegistry.get(task.getTaskType()).isAsyncComplete(task);
     }
 
     public static class DeciderOutcome {
