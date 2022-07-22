@@ -1003,7 +1003,7 @@ public class TestDeciderService {
         assertFalse(deciderService.isResponseTimedOut(taskDef, task));
 
         task.setTaskType("asyncCompleteSystemTask");
-        assertFalse(deciderService.isResponseTimedOut(taskDef, task));
+        assertTrue(deciderService.isResponseTimedOut(taskDef, task));
     }
 
     @Test
