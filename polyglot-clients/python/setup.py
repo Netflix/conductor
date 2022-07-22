@@ -18,6 +18,7 @@ from setuptools import setup
 setup(
   name = 'conductor',
   packages = ['conductor'], # this must be the same as the name above
+  py_models=['conductor', 'ConductorWorker'],
   version = '1.0.0',
   description = 'Conductor python client',
   author = 'Viren Baraiya',
