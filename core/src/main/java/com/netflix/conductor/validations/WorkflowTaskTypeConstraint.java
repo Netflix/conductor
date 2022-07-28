@@ -16,6 +16,8 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.text.ParseException;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 
 import javax.validation.Constraint;
@@ -278,6 +280,18 @@ public @interface WorkflowTaskTypeConstraint {
                 } else if (StringUtils.isNotBlank(until) && !(until.startsWith("${") && until.endsWith("}"))) {
                     DateTimeUtils.parseDate(until);
                 }
+            } catch (DateTimeParseException e) {
+                String message = "Unable to parse date ";
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            } catch (IllegalArgumentException e) {
+                String message = "Either date or duration is passed as null ";
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
+            } catch(ParseException e) {
+                String message = "Unable to parse date ";
+                context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                valid = false;
             } catch (Exception e) {
                 String message = "Wait time specified is invalid.  The duration must be in ";
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
