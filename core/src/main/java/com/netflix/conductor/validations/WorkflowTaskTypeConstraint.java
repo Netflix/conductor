@@ -25,12 +25,12 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
-import com.netflix.conductor.core.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.core.utils.DateTimeUtils;
 
 import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationStatusParameter;
 import static com.netflix.conductor.core.execution.tasks.Terminate.validateInputStatus;
@@ -275,9 +275,11 @@ public @interface WorkflowTaskTypeConstraint {
             }
 
             try {
-                if (StringUtils.isNotBlank(duration) && !(duration.startsWith("${") && duration.endsWith("}"))) {
+                if (StringUtils.isNotBlank(duration)
+                        && !(duration.startsWith("${") && duration.endsWith("}"))) {
                     DateTimeUtils.parseDuration(duration);
-                } else if (StringUtils.isNotBlank(until) && !(until.startsWith("${") && until.endsWith("}"))) {
+                } else if (StringUtils.isNotBlank(until)
+                        && !(until.startsWith("${") && until.endsWith("}"))) {
                     DateTimeUtils.parseDate(until);
                 }
             } catch (DateTimeParseException e) {
@@ -288,7 +290,7 @@ public @interface WorkflowTaskTypeConstraint {
                 String message = "Either date or duration is passed as null ";
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
-            } catch(ParseException e) {
+            } catch (ParseException e) {
                 String message = "Unable to parse date ";
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
