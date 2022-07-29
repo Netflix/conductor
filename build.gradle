@@ -9,13 +9,13 @@ buildscript {
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.6.7'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.2'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
     }
 }
 
 plugins {
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.12.RELEASE'
     id 'java'
     id 'application'
     id 'jacoco'
@@ -126,6 +126,7 @@ allprojects {
         testImplementation('org.springframework.boot:spring-boot-starter-test')
         testImplementation('org.springframework.boot:spring-boot-starter-log4j2')
         testImplementation 'junit:junit'
+        testImplementation "org.junit.vintage:junit-vintage-engine"
     }
 
     // processes additional configuration metadata json file as described here
