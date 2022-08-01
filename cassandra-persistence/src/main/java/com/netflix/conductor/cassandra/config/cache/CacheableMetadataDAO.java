@@ -73,13 +73,14 @@ public class CacheableMetadataDAO implements MetadataDAO {
 
     @Override
     @CachePut(value = TASK_DEF_CACHE, key = "#taskDef.name")
-    public void createTaskDef(TaskDef taskDef) {
+    public TaskDef createTaskDef(TaskDef taskDef) {
         cassandraMetadataDAO.createTaskDef(taskDef);
+        return taskDef;
     }
 
     @Override
     @CachePut(value = TASK_DEF_CACHE, key = "#taskDef.name")
-    public String updateTaskDef(TaskDef taskDef) {
+    public TaskDef updateTaskDef(TaskDef taskDef) {
         return cassandraMetadataDAO.updateTaskDef(taskDef);
     }
 

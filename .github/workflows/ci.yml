@@ -39,7 +39,7 @@ jobs:
         run: |
           ./gradlew build --scan
       - name: Build and Publish snapshot
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/jxu/springcache'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           echo "Running build for commit ${{ github.sha }}"
           ./gradlew build snapshot --scan
