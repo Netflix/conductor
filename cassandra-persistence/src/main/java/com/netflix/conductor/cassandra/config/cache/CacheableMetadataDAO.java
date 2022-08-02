@@ -97,11 +97,9 @@ public class CacheableMetadataDAO implements MetadataDAO {
             ConcurrentHashMap cacheMap = (ConcurrentHashMap) nativeCache;
             if (!cacheMap.isEmpty()) {
                 List<TaskDef> taskDefs = new ArrayList<>();
-                for (Object element : cacheMap.values()) {
-                    if (element != null && element instanceof TaskDef) {
-                        taskDefs.add((TaskDef) element);
-                    }
-                }
+                cacheMap.values().stream()
+                        .filter(element -> element != null && element instanceof TaskDef)
+                        .forEach(element -> taskDefs.add((TaskDef) element));
                 return taskDefs;
             }
         }

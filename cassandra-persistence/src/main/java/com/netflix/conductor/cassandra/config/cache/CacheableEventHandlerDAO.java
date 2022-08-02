@@ -33,7 +33,6 @@ import com.netflix.conductor.annotations.Trace;
 import com.netflix.conductor.cassandra.config.CassandraProperties;
 import com.netflix.conductor.cassandra.dao.CassandraEventHandlerDAO;
 import com.netflix.conductor.common.metadata.events.EventHandler;
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.dao.EventHandlerDAO;
 import com.netflix.conductor.metrics.Monitors;
 
@@ -93,11 +92,9 @@ public class CacheableEventHandlerDAO implements EventHandlerDAO {
             ConcurrentHashMap cacheMap = (ConcurrentHashMap) nativeCache;
             if (!cacheMap.isEmpty()) {
                 List<EventHandler> eventHandlers = new ArrayList<>();
-                for (Object element : cacheMap.values()) {
-                    if (element != null && element instanceof TaskDef) {
-                        eventHandlers.add((EventHandler) element);
-                    }
-                }
+                cacheMap.values().stream()
+                        .filter(element -> element != null && element instanceof EventHandler)
+                        .forEach(element -> eventHandlers.add((EventHandler) element));
                 return eventHandlers;
             }
         }
