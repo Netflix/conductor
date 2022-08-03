@@ -20,7 +20,7 @@ import com.netflix.conductor.model.TaskModel;
 
 public interface TaskMapper {
 
-    TaskType getTaskType();
+    String getTaskType();
 
     List<TaskModel> getMappedTasks(TaskMapperContext taskMapperContext)
             throws TerminateWorkflowException;

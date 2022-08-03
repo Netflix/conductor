@@ -32,8 +32,8 @@ public class StartWorkflowTaskMapper implements TaskMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(StartWorkflowTaskMapper.class);
 
     @Override
-    public TaskType getTaskType() {
-        return START_WORKFLOW;
+    public String getTaskType() {
+        return START_WORKFLOW.name();
     }
 
     @Override

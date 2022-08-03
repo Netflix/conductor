@@ -49,8 +49,8 @@ public class SwitchTaskMapper implements TaskMapper {
     }
 
     @Override
-    public TaskType getTaskType() {
-        return TaskType.SWITCH;
+    public String getTaskType() {
+        return TaskType.SWITCH.name();
     }
 
     /**
