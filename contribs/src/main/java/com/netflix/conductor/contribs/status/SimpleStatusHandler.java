@@ -84,9 +84,10 @@ public class SimpleStatusHandler implements JavaEventAction {
         }
         TaskResult taskResult = new TaskResult(task);
 
-        if ("Complete".equalsIgnoreCase(statusName)) {
+        if ("Completed".equalsIgnoreCase(statusName) || "Complete".equalsIgnoreCase(statusName)) {
             taskResult.setStatus(TaskResult.Status.COMPLETED);
-        } else if ("Failed".equalsIgnoreCase(statusName)) {
+        }
+        else if ("Failed".equalsIgnoreCase(statusName)) {
             taskResult.setStatus(TaskResult.Status.FAILED);
             taskResult.setReasonForIncompletion(statusReason);
         } else if ("Cancelled".equalsIgnoreCase(statusName)) {
@@ -97,8 +98,10 @@ public class SimpleStatusHandler implements JavaEventAction {
         } else if ("Active".equalsIgnoreCase(statusName)) {
             taskResult.setStatus(TaskResult.Status.IN_PROGRESS);
             taskResult.setResetStartTime(true);
+        }else{
+            logger.debug("Handler for statusName value {} is not registered", statusName);
+            return Collections.singletonList(UUID.randomUUID().toString());
         }
-
 
         if (params.payloadToOutput) {
             taskResult.setUpdateOutput(true);
