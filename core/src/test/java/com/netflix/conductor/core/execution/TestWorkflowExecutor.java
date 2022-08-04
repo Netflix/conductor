@@ -169,9 +169,11 @@ public class TestWorkflowExecutor {
                 FORK_JOIN_DYNAMIC.name(),
                 new ForkJoinDynamicTaskMapper(
                         idGenerator, parametersUtils, objectMapper, metadataDAO));
-        taskMappers.put(USER_DEFINED.name(), new UserDefinedTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put(
+                USER_DEFINED.name(), new UserDefinedTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(SIMPLE.name(), new SimpleTaskMapper(parametersUtils));
-        taskMappers.put(SUB_WORKFLOW.name(), new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
+        taskMappers.put(
+                SUB_WORKFLOW.name(), new SubWorkflowTaskMapper(parametersUtils, metadataDAO));
         taskMappers.put(EVENT.name(), new EventTaskMapper(parametersUtils));
         taskMappers.put(WAIT.name(), new WaitTaskMapper(parametersUtils));
         taskMappers.put(HTTP.name(), new HTTPTaskMapper(parametersUtils, metadataDAO));
