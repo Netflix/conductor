@@ -47,9 +47,7 @@ public interface ExecutionDAO {
      */
     List<TaskModel> createTasks(List<TaskModel> tasks);
 
-    /**
-     * @param task Task to be updated
-     */
+    /** @param task Task to be updated */
     void updateTask(TaskModel task);
 
     /**
@@ -204,13 +202,9 @@ public interface ExecutionDAO {
      */
     boolean addEventExecution(EventExecution eventExecution);
 
-    /**
-     * @param eventExecution Event execution to be updated
-     */
+    /** @param eventExecution Event execution to be updated */
     void updateEventExecution(EventExecution eventExecution);
 
-    /**
-     * @param eventExecution Event execution to be removed
-     */
+    /** @param eventExecution Event execution to be removed */
     void removeEventExecution(EventExecution eventExecution);
 }

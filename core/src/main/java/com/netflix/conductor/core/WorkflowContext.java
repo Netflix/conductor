@@ -44,16 +44,12 @@ public class WorkflowContext {
         THREAD_LOCAL.remove();
     }
 
-    /**
-     * @return the clientApp
-     */
+    /** @return the clientApp */
     public String getClientApp() {
         return clientApp;
     }
 
-    /**
-     * @return the username
-     */
+    /** @return the username */
     public String getUserName() {
         return userName;
     }

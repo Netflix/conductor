@@ -214,8 +214,7 @@ public class ExecutionDAOFacade {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
-        return executionDAO
-                .getWorkflowsByCorrelationId(workflowName, correlationId, includeTasks)
+        return executionDAO.getWorkflowsByCorrelationId(workflowName, correlationId, includeTasks)
                 .stream()
                 .map(WorkflowModel::toWorkflow)
                 .collect(Collectors.toList());

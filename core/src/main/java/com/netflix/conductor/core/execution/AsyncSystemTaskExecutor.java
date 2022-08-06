@@ -102,10 +102,9 @@ public class AsyncSystemTaskExecutor {
         // if we are here the Task object is updated and needs to be persisted regardless of an
         // exception
         try {
-            WorkflowModel workflow = executionDAOFacade.getWorkflowModel(
-                    workflowId,
-                    systemTask.isTaskRetrievalRequired()
-            );
+            WorkflowModel workflow =
+                    executionDAOFacade.getWorkflowModel(
+                            workflowId, systemTask.isTaskRetrievalRequired());
 
             if (workflow.getStatus().isTerminal()) {
                 LOGGER.info(

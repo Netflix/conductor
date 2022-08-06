@@ -24,9 +24,7 @@ import com.netflix.conductor.model.WorkflowModel;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-/**
- * @author x-ultra
- */
+/** @author x-ultra */
 public class TestLambda {
 
     private final WorkflowModel workflow = new WorkflowModel();
