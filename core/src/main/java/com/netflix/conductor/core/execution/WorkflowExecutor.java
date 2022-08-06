@@ -1468,7 +1468,9 @@ public class WorkflowExecutor {
         return dedupedTasks;
     }
 
-    /** @throws ConflictException if the workflow is in terminal state. */
+    /**
+     * @throws ConflictException if the workflow is in terminal state.
+     */
     public void pauseWorkflow(String workflowId) {
         try {
             executionLockService.acquireLock(workflowId, 60000);

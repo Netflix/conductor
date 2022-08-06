@@ -521,7 +521,9 @@ public class ConductorProperties {
         this.taskExecLogSizeLimit = taskExecLogSizeLimit;
     }
 
-    /** @return Returns all the configurations in a map. */
+    /**
+     * @return Returns all the configurations in a map.
+     */
     public Map<String, Object> getAll() {
         Map<String, Object> map = new HashMap<>();
         Properties props = System.getProperties();

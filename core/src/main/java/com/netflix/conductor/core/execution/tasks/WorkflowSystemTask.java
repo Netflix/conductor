@@ -65,7 +65,9 @@ public abstract class WorkflowSystemTask {
      */
     public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {}
 
-    /** @return True if the task is supposed to be started asynchronously using internal queues. */
+    /**
+     * @return True if the task is supposed to be started asynchronously using internal queues.
+     */
     public boolean isAsync() {
         return false;
     }
@@ -86,16 +88,17 @@ public abstract class WorkflowSystemTask {
         }
     }
 
-    /** @return name of the system task */
+    /**
+     * @return name of the system task
+     */
     public String getTaskType() {
         return taskType;
     }
 
     /**
-     * Default to true for retrieving tasks when retrieving workflow data. Some cases (e.g.
-     * subworkflows) might not need the tasks at all, and by setting this to false in that case, you
-     * can get a solid performance gain.
-     *
+     * Default to true for retrieving tasks when retrieving workflow data.
+     * Some cases (e.g. subworkflows) might not need the tasks at all, and by setting
+     * this to false in that case, you can get a solid performance gain.
      * @return true for retrieving tasks when getting workflow
      */
     public boolean isTaskRetrievalRequired() {
