@@ -16,13 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.test.context.ContextConfiguration;
@@ -50,7 +49,6 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
 @ContextConfiguration(
         classes = {
             TestObjectMapperConfiguration.class,
@@ -59,14 +57,28 @@ import static org.mockito.Mockito.*;
 @RunWith(SpringRunner.class)
 public class TestSimpleActionProcessor {
 
-    @MockBean private WorkflowExecutor workflowExecutor;
-    @MockBean private ExternalPayloadStorageUtils externalPayloadStorageUtils;
+    private WorkflowExecutor workflowExecutor;
+    private ExternalPayloadStorageUtils externalPayloadStorageUtils;
+    private SimpleActionProcessor actionProcessor;
 
     @Autowired private ObjectMapper objectMapper;
 
     @EnableRetry
     @Configuration
     public static class TestConfiguration {}
+
+    @Before
+    public void setup() {
+        externalPayloadStorageUtils = mock(ExternalPayloadStorageUtils.class);
+
+        workflowExecutor = mock(WorkflowExecutor.class);
+
+        actionProcessor =
+                new SimpleActionProcessor(
+                        workflowExecutor,
+                        new ParametersUtils(objectMapper),
+                        new JsonUtils(objectMapper));
+    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Test
@@ -102,11 +114,6 @@ public class TestSimpleActionProcessor {
                         anyMap()))
                 .thenReturn("workflow_1");
 
-        SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor,
-                        new ParametersUtils(objectMapper),
-                        new JsonUtils(objectMapper));
         Map<String, Object> output =
                 actionProcessor.execute(action, payload, "testEvent", "testMessage");
 
@@ -163,11 +170,6 @@ public class TestSimpleActionProcessor {
                         anyMap()))
                 .thenReturn("workflow_1");
 
-        SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor,
-                        new ParametersUtils(objectMapper),
-                        new JsonUtils(objectMapper));
         Map<String, Object> output =
                 actionProcessor.execute(action, payload, "testEvent", "testMessage");
 
@@ -218,11 +220,6 @@ public class TestSimpleActionProcessor {
         when(workflowExecutor.getWorkflow(eq("workflow_1"), anyBoolean())).thenReturn(workflow);
         doNothing().when(externalPayloadStorageUtils).verifyAndUpload(any(), any());
 
-        SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor,
-                        new ParametersUtils(objectMapper),
-                        new JsonUtils(objectMapper));
         actionProcessor.execute(action, payload, "testEvent", "testMessage");
 
         ArgumentCaptor<TaskResult> argumentCaptor = ArgumentCaptor.forClass(TaskResult.class);
@@ -270,11 +267,6 @@ public class TestSimpleActionProcessor {
         when(workflowExecutor.getWorkflow(eq("workflow_1"), anyBoolean())).thenReturn(workflow);
         doNothing().when(externalPayloadStorageUtils).verifyAndUpload(any(), any());
 
-        SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor,
-                        new ParametersUtils(objectMapper),
-                        new JsonUtils(objectMapper));
         actionProcessor.execute(action, payload, "testEvent", "testMessage");
 
         ArgumentCaptor<TaskResult> argumentCaptor = ArgumentCaptor.forClass(TaskResult.class);
@@ -317,11 +309,6 @@ public class TestSimpleActionProcessor {
         when(workflowExecutor.getTask(eq("task_1"))).thenReturn(task);
         doNothing().when(externalPayloadStorageUtils).verifyAndUpload(any(), any());
 
-        SimpleActionProcessor actionProcessor =
-                new SimpleActionProcessor(
-                        workflowExecutor,
-                        new ParametersUtils(objectMapper),
-                        new JsonUtils(objectMapper));
         actionProcessor.execute(action, payload, "testEvent", "testMessage");
 
         ArgumentCaptor<TaskResult> argumentCaptor = ArgumentCaptor.forClass(TaskResult.class);
@@ -339,6 +326,7 @@ public class TestSimpleActionProcessor {
     @Test
     public void testExecuteTransientException() {
 
+        WorkflowExecutor workflowExec = mock(WorkflowExecutor.class);
         AtomicInteger executeInvoked = new AtomicInteger(0);
         doAnswer(
                         (Answer<String>)
@@ -346,7 +334,7 @@ public class TestSimpleActionProcessor {
                                     executeInvoked.incrementAndGet();
                                     throw new TransientException("some retriable error");
                                 })
-                .when(workflowExecutor)
+                .when(workflowExec)
                 .startWorkflow(
                         anyString(),
                         anyInt(),
@@ -356,9 +344,9 @@ public class TestSimpleActionProcessor {
                         anyString(),
                         anyMap());
 
-        SimpleActionProcessor actionProcessor =
+        SimpleActionProcessor actionProc =
                 new SimpleActionProcessor(
-                        workflowExecutor,
+                        workflowExec,
                         new ParametersUtils(objectMapper),
                         new JsonUtils(objectMapper));
 
@@ -370,7 +358,7 @@ public class TestSimpleActionProcessor {
         action.setAction(Type.start_workflow);
         action.setStart_workflow(startWorkflow);
 
-        actionProcessor.execute(action, "{\"key\": \"value\"}", "testEvent", "testMessage");
+        actionProc.execute(action, "{\"key\": \"value\"}", "testEvent", "testMessage");
         assertEquals(3, executeInvoked.get());
     }
 }
