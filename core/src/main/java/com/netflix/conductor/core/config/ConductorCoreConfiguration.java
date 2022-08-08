@@ -28,12 +28,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.support.RetryTemplate;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 import com.netflix.conductor.core.events.EventQueueProvider;
-import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.mapper.TaskMapper;
 import com.netflix.conductor.core.execution.tasks.WorkflowSystemTask;
 import com.netflix.conductor.core.listener.WorkflowStatusListener;
@@ -112,14 +110,5 @@ public class ConductorCoreConfiguration {
             List<EventQueueProvider> eventQueueProviders) {
         return eventQueueProviders.stream()
                 .collect(Collectors.toMap(EventQueueProvider::getQueueType, identity()));
-    }
-
-    @Bean
-    public RetryTemplate onTransientErrorRetryTemplate() {
-        return RetryTemplate.builder()
-                .retryOn(TransientException.class)
-                .maxAttempts(3)
-                .noBackoff()
-                .build();
     }
 }

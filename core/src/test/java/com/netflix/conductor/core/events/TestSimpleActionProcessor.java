@@ -14,12 +14,16 @@ package com.netflix.conductor.core.events;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -31,6 +35,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.metadata.tasks.TaskResult.Status;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
 import com.netflix.conductor.core.utils.JsonUtils;
@@ -40,20 +45,11 @@ import com.netflix.conductor.model.WorkflowModel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
+@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, TestSimpleActionProcessor.TestConfiguration.class})
 @RunWith(SpringRunner.class)
 public class TestSimpleActionProcessor {
 
@@ -62,6 +58,11 @@ public class TestSimpleActionProcessor {
     private SimpleActionProcessor actionProcessor;
 
     @Autowired private ObjectMapper objectMapper;
+
+    @EnableRetry
+    @Configuration
+    public static class TestConfiguration {
+    }
 
     @Before
     public void setup() {
@@ -317,5 +318,37 @@ public class TestSimpleActionProcessor {
                 "testEvent", argumentCaptor.getValue().getOutputData().get("conductor.event.name"));
         assertEquals("workflow_1", argumentCaptor.getValue().getOutputData().get("workflowId"));
         assertEquals("task_1", argumentCaptor.getValue().getOutputData().get("taskId"));
+    }
+
+    @Test
+    public void testExecuteTransientException() {
+
+        WorkflowExecutor workflowExec = mock(WorkflowExecutor.class);
+        AtomicInteger executeInvoked = new AtomicInteger(0);
+        doAnswer(
+                (Answer<String>)
+                        invocation -> {
+                            executeInvoked.incrementAndGet();
+                            throw new TransientException("some retriable error");
+                        })
+                .when(workflowExec)
+                .startWorkflow(anyString(), anyInt(), anyString(), anyMap(), anyString(), anyString(), anyMap());
+
+        SimpleActionProcessor actionProc =
+                new SimpleActionProcessor(
+                        workflowExec,
+                        new ParametersUtils(objectMapper),
+                        new JsonUtils(objectMapper));
+
+        StartWorkflow startWorkflow = new StartWorkflow();
+        startWorkflow.setName("testWorkflow");
+        startWorkflow.setVersion(1);
+
+        Action action = new Action();
+        action.setAction(Type.start_workflow);
+        action.setStart_workflow(startWorkflow);
+
+        actionProc.execute(action, "{\"key\": \"value\"}", "testEvent", "testMessage");
+        assertEquals(3, executeInvoked.get());
     }
 }

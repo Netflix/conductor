@@ -21,10 +21,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -82,10 +81,8 @@ public class TestDefaultEventProcessor {
 
     @Autowired private ObjectMapper objectMapper;
 
-    @Autowired
-    private @Qualifier("onTransientErrorRetryTemplate") RetryTemplate retryTemplate;
-
     @Configuration
+    @EnableRetry
     @ComponentScan(basePackageClasses = {Evaluator.class}) // load all Evaluator beans
     public static class TestConfiguration {}
 
@@ -199,8 +196,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
         assertTrue(completed.get());
@@ -266,8 +262,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
     }
@@ -331,8 +326,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         eventProcessor.handle(queue, message);
         assertTrue(started.get());
     }
@@ -367,8 +361,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         eventProcessor.handle(queue, message);
         verify(queue, never()).ack(any());
         verify(queue, never()).publish(any());
@@ -404,8 +397,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         eventProcessor.handle(queue, message);
         verify(queue, atMost(1)).ack(any());
         verify(queue, never()).publish(any());
@@ -431,8 +423,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setName("handler");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
@@ -466,8 +457,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");
@@ -502,8 +492,7 @@ public class TestDefaultEventProcessor {
                         jsonUtils,
                         properties,
                         objectMapper,
-                        evaluators,
-                        retryTemplate);
+                        evaluators);
         EventExecution eventExecution = new EventExecution("id", "messageId");
         eventExecution.setStatus(EventExecution.Status.IN_PROGRESS);
         eventExecution.setEvent("event");
@@ -511,7 +500,7 @@ public class TestDefaultEventProcessor {
         action.setAction(Type.start_workflow);
 
         eventProcessor.execute(eventExecution, action, "payload");
-        assertEquals(3, executeInvoked.get());
+        assertEquals(1, executeInvoked.get());
         assertNull(eventExecution.getOutput().get("exception"));
     }
 }

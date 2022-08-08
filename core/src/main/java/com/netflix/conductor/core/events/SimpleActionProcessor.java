@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.events.EventHandler.Action;
@@ -29,6 +30,7 @@ import com.netflix.conductor.common.metadata.events.EventHandler.StartWorkflow;
 import com.netflix.conductor.common.metadata.events.EventHandler.TaskDetails;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.conductor.common.utils.TaskUtils;
+import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.utils.JsonUtils;
 import com.netflix.conductor.core.utils.ParametersUtils;
@@ -58,6 +60,7 @@ public class SimpleActionProcessor implements ActionProcessor {
         this.jsonUtils = jsonUtils;
     }
 
+    @Retryable(value = {TransientException.class})
     public Map<String, Object> execute(
             Action action, Object payloadObject, String event, String messageId) {
 
