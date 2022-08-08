@@ -64,6 +64,7 @@ public class WorkflowSweeper {
 
     public void sweep(String workflowId) {
         try {
+            LOGGER.info("Running sweep 1");
             WorkflowContext workflowContext = new WorkflowContext(properties.getAppId());
             WorkflowContext.set(workflowContext);
             LOGGER.debug("Running sweeper for workflow {}", workflowId);
