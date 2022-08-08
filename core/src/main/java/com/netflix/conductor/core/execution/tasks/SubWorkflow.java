@@ -224,6 +224,6 @@ public class SubWorkflow extends WorkflowSystemTask {
      */
     @Override
     public boolean isTaskRetrievalRequired() {
-        return false;
+        return true;
     }
 }
