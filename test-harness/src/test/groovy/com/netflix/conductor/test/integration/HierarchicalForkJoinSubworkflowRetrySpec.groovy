@@ -781,7 +781,6 @@ class HierarchicalForkJoinSubworkflowRetrySpec extends AbstractSpecification {
         }
 
         when: "the mid level and root workflows are 'decided'"
-        LOGGER.info("Running sweep 1");
         sweep(midLevelWorkflowId)
         sweep(rootWorkflowId)
 
