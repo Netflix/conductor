@@ -296,6 +296,8 @@ job "conductor" {
         DD_SERVICE_MAPPING = "postgresql:conductor.server.postgresql"
         DD_TRACE_GLOBAL_TAGS = "env:${meta.tld}"
         DD_LOGS_INJECTION = "true"
+
+        FLYWAY_MIGRATE = "true"
       }
 
       service {
