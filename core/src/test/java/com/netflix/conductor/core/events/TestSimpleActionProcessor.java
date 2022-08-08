@@ -49,7 +49,11 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {TestObjectMapperConfiguration.class, TestSimpleActionProcessor.TestConfiguration.class})
+@ContextConfiguration(
+        classes = {
+            TestObjectMapperConfiguration.class,
+            TestSimpleActionProcessor.TestConfiguration.class
+        })
 @RunWith(SpringRunner.class)
 public class TestSimpleActionProcessor {
 
@@ -61,8 +65,7 @@ public class TestSimpleActionProcessor {
 
     @EnableRetry
     @Configuration
-    public static class TestConfiguration {
-    }
+    public static class TestConfiguration {}
 
     @Before
     public void setup() {
@@ -326,13 +329,20 @@ public class TestSimpleActionProcessor {
         WorkflowExecutor workflowExec = mock(WorkflowExecutor.class);
         AtomicInteger executeInvoked = new AtomicInteger(0);
         doAnswer(
-                (Answer<String>)
-                        invocation -> {
-                            executeInvoked.incrementAndGet();
-                            throw new TransientException("some retriable error");
-                        })
+                        (Answer<String>)
+                                invocation -> {
+                                    executeInvoked.incrementAndGet();
+                                    throw new TransientException("some retriable error");
+                                })
                 .when(workflowExec)
-                .startWorkflow(anyString(), anyInt(), anyString(), anyMap(), anyString(), anyString(), anyMap());
+                .startWorkflow(
+                        anyString(),
+                        anyInt(),
+                        anyString(),
+                        anyMap(),
+                        anyString(),
+                        anyString(),
+                        anyMap());
 
         SimpleActionProcessor actionProc =
                 new SimpleActionProcessor(
