@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         }
     },
     "compileClasspath": {
@@ -41,13 +41,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2"
+            "locked": "2.13.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2.1"
+            "locked": "2.13.3"
+        },
+        "com.fasterxml.jackson.module:jackson-module-afterburner": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.13.3"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -136,13 +142,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2"
+            "locked": "2.13.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2.1"
+            "locked": "2.13.3"
+        },
+        "com.fasterxml.jackson.module:jackson-module-afterburner": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.13.3"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -250,11 +262,14 @@
         "org.apache.logging.log4j:log4j-web": {
             "locked": "2.17.1"
         },
+        "org.junit.vintage:junit-vintage-engine": {
+            "locked": "5.8.2"
+        },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         }
     },
     "testCompileProtoPath": {
@@ -262,13 +277,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2"
+            "locked": "2.13.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2.1"
+            "locked": "2.13.3"
+        },
+        "com.fasterxml.jackson.module:jackson-module-afterburner": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.13.3"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -344,11 +365,14 @@
             ],
             "locked": "2.17.1"
         },
+        "org.junit.vintage:junit-vintage-engine": {
+            "locked": "5.8.2"
+        },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         }
     },
     "testRuntimeClasspath": {
@@ -356,13 +380,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2"
+            "locked": "2.13.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.2.1"
+            "locked": "2.13.3"
+        },
+        "com.fasterxml.jackson.module:jackson-module-afterburner": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-common"
+            ],
+            "locked": "2.13.3"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -438,11 +468,14 @@
             ],
             "locked": "2.17.1"
         },
+        "org.junit.vintage:junit-vintage-engine": {
+            "locked": "5.8.2"
+        },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.6.7"
+            "locked": "2.7.2"
         }
     }
 }
