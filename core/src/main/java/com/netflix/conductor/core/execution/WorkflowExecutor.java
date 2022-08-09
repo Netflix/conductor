@@ -566,7 +566,7 @@ public class WorkflowExecutor {
         }
 
         metadataMapperService.populateWorkflowWithDefinitions(workflow);
-        _decide(workflowId);
+        decide(workflowId);
 
         updateAndPushParents(workflow, "restarted");
     }
@@ -1188,7 +1188,7 @@ public class WorkflowExecutor {
         if (isLazyEvaluateWorkflow(workflowInstance.getWorkflowDefinition(), task)) {
             expediteLazyWorkflowEvaluation(workflowId);
         } else {
-            _decide(workflowId);
+            decide(workflowId);
         }
     }
 
@@ -1259,7 +1259,10 @@ public class WorkflowExecutor {
         return executionDAOFacade.getRunningWorkflowIds(workflowName, version);
     }
 
+    /** Records a metric for the "decide" process. */
     public WorkflowModel decide(String workflowId) {
+        StopWatch watch = new StopWatch();
+        watch.start();
         if (!executionLockService.acquireLock(workflowId)) {
             return null;
         }
@@ -1267,7 +1270,7 @@ public class WorkflowExecutor {
 
             WorkflowModel workflow = executionDAOFacade.getWorkflowModel(workflowId, true);
             if (workflow == null) {
-                // This can hapen if the workflowId is incorrect
+                // This can happen if the workflowId is incorrect
                 return null;
             }
             // FIXME Backwards compatibility for legacy workflows already running.
@@ -1278,16 +1281,6 @@ public class WorkflowExecutor {
 
         } finally {
             executionLockService.releaseLock(workflowId);
-        }
-    }
-
-    /** Records a metric for the "decide" process. */
-    private boolean _decide(String workflowId) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            return decide(workflowId);
-        } finally {
             watch.stop();
             Monitors.recordWorkflowDecisionTime(watch.getTime());
         }
@@ -1296,7 +1289,8 @@ public class WorkflowExecutor {
     /**
      * @param workflow the workflow to evaluate the state for
      * @return true if the workflow has completed (success or failed), false otherwise.
-     * @throws ApplicationException If there was an error - caller should retry in this case.
+     * Note: This method does not acquire the lock on the workflow and should ony be called / overridden if
+     * No locking is required or lock is acquired externally
      */
     public WorkflowModel decide(WorkflowModel workflow) {
 
@@ -1537,7 +1531,7 @@ public class WorkflowExecutor {
                 workflow.getPriority(),
                 properties.getWorkflowOffsetTimeout().getSeconds());
         executionDAOFacade.updateWorkflow(workflow);
-        _decide(workflowId);
+        decide(workflowId);
     }
 
     /**
@@ -1876,7 +1870,7 @@ public class WorkflowExecutor {
                     properties.getWorkflowOffsetTimeout().getSeconds());
             executionDAOFacade.updateWorkflow(workflow);
 
-            _decide(workflowId);
+            decide(workflowId);
             return true;
         }
 
