@@ -771,19 +771,17 @@ public class WorkflowExecutor {
         return taskToBeRetried;
     }
 
-    private void endExecution(WorkflowModel workflow, Optional<TaskModel> terminateTask) {
-        if (terminateTask.isPresent()) {
+    private void endExecution(WorkflowModel workflow, TaskModel terminateTask) {
+        if (terminateTask != null) {
             String terminationStatus =
                     (String)
                             terminateTask
-                                    .get()
                                     .getWorkflowTask()
                                     .getInputParameters()
                                     .get(Terminate.getTerminationStatusParameter());
             String reason =
                     (String)
                             terminateTask
-                                    .get()
                                     .getWorkflowTask()
                                     .getInputParameters()
                                     .get(Terminate.getTerminationReasonParameter());
@@ -791,7 +789,7 @@ public class WorkflowExecutor {
                 reason =
                         String.format(
                                 "Workflow is %s by TERMINATE task: %s",
-                                terminationStatus, terminateTask.get().getTaskId());
+                                terminationStatus, terminateTask.getTaskId());
             }
             if (WorkflowModel.Status.FAILED.name().equals(terminationStatus)) {
                 workflow.setStatus(WorkflowModel.Status.FAILED);
@@ -799,7 +797,7 @@ public class WorkflowExecutor {
                         terminate(
                                 workflow,
                                 new TerminateWorkflowException(
-                                        reason, workflow.getStatus(), terminateTask.get()));
+                                        reason, workflow.getStatus(), terminateTask));
             } else {
                 workflow.setReasonForIncompletion(reason);
                 workflow = completeWorkflow(workflow);
@@ -1349,7 +1347,7 @@ public class WorkflowExecutor {
             return workflow;
 
         } catch (TerminateWorkflowException twe) {
-            LOGGER.info("Execution terminated of workflow: {}", workflow.getWorkflowId(), twe);
+            LOGGER.info("Execution terminated of workflow: {}", workflow, twe);
             terminate(workflow, twe);
             return workflow;
         } catch (RuntimeException e) {
