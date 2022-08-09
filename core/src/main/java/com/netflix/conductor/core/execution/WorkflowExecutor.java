@@ -1288,9 +1288,9 @@ public class WorkflowExecutor {
 
     /**
      * @param workflow the workflow to evaluate the state for
-     * @return true if the workflow has completed (success or failed), false otherwise.
-     * Note: This method does not acquire the lock on the workflow and should ony be called / overridden if
-     * No locking is required or lock is acquired externally
+     * @return true if the workflow has completed (success or failed), false otherwise. Note: This
+     *     method does not acquire the lock on the workflow and should ony be called / overridden if
+     *     No locking is required or lock is acquired externally
      */
     public WorkflowModel decide(WorkflowModel workflow) {
 
