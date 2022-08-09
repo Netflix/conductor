@@ -1290,7 +1290,7 @@ public class WorkflowExecutor {
      *     method does not acquire the lock on the workflow and should ony be called / overridden if
      *     No locking is required or lock is acquired externally
      */
-    public WorkflowModel decide(WorkflowModel workflow) {
+    WorkflowModel decide(WorkflowModel workflow) {
 
         if (workflow.getStatus().isTerminal()) {
             if (!workflow.getStatus().isSuccessful()) {
