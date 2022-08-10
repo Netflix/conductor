@@ -18,7 +18,6 @@
  */
 package com.netflix.conductor.server;
 
-import com.netflix.conductor.aurora.FlywayService;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,7 @@ import java.util.Properties;
  * Entry point for the server
  */
 public class Main {
-	private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
-	private static Logger logger = LoggerFactory.getLogger(Main.class);
+	private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
 	static {
 		// Workaround to send java util logging to log4j
@@ -45,13 +43,6 @@ public class Main {
 	}
 
 	public static void main(String[] args) throws Exception {
-		boolean doMigration = "true".equalsIgnoreCase(System.getenv().get(FLYWAY_MIGRATE));
-		if (doMigration) {
-			FlywayService.migrate();
-		} else {
-			logger.info("Skipping Flyway migration (not enabled)");
-		}
-
 		if (args.length > 0) {
 			String propertyFile = args[0];
 			FileInputStream propFile = new FileInputStream(propertyFile);
