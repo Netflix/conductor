@@ -19,11 +19,11 @@ public class AuroraDataSourceProvider implements Provider<HikariDataSource> {
 
 	@Override
 	public HikariDataSource get() {
-		String db =   config.getProperty("aurora.db", null);
+		String db = config.getProperty("aurora.db", null);
 		String host = config.getProperty("aurora.host", null);
 		String port = config.getProperty("aurora.port", "5432");
 		String user = config.getProperty("aurora.user", null);
-		String pwd =  config.getProperty("aurora.password", null);
+		String pwd = config.getProperty("aurora.password", null);
 
 		String options = config.getProperty("aurora.options", "");
 		String url = String.format("jdbc:postgresql://%s:%s/%s?%s", host, port, db, options);
