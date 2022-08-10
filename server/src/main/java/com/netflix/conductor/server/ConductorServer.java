@@ -272,7 +272,7 @@ public class ConductorServer {
     }
 
     private void runMigrations() throws IOException {
-        boolean doMigration = "true".equalsIgnoreCase(System.getenv().get(FLYWAY_MIGRATE));
+        boolean doMigration = "true".equalsIgnoreCase(cc.getProperty(FLYWAY_MIGRATE,"false"));
         if (doMigration) {
             FlywayService.migrate(cc);
         } else {
