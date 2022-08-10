@@ -133,12 +133,6 @@
                 "org.springframework.boot:spring-boot-starter-validation"
             ]
         },
-        "org.aspectj:aspectjweaver": {
-            "locked": "1.9.7",
-            "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop"
-            ]
-        },
         "org.checkerframework:checker-qual": {
             "locked": "3.19.0",
             "transitive": [
@@ -193,12 +187,8 @@
         "org.springframework.boot:spring-boot-starter": {
             "locked": "2.7.2",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework.boot:spring-boot-starter-validation"
             ]
-        },
-        "org.springframework.boot:spring-boot-starter-aop": {
-            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-logging": {
             "locked": "2.7.2",
@@ -215,7 +205,6 @@
         "org.springframework:spring-aop": {
             "locked": "5.3.22",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework:spring-context"
             ]
         },
@@ -653,12 +642,6 @@
                 "org.junit.vintage:junit-vintage-engine"
             ]
         },
-        "org.aspectj:aspectjweaver": {
-            "locked": "1.9.7",
-            "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop"
-            ]
-        },
         "org.assertj:assertj-core": {
             "locked": "3.22.0",
             "transitive": [
@@ -1020,13 +1003,9 @@
         "org.springframework.boot:spring-boot-starter": {
             "locked": "2.7.2",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework.boot:spring-boot-starter-test",
                 "org.springframework.boot:spring-boot-starter-validation"
             ]
-        },
-        "org.springframework.boot:spring-boot-starter-aop": {
-            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "locked": "2.7.2"
@@ -1062,7 +1041,6 @@
         "org.springframework:spring-aop": {
             "locked": "5.3.22",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework:spring-context"
             ]
         },
@@ -1398,12 +1376,6 @@
             "locked": "9.0.65",
             "transitive": [
                 "org.springframework.boot:spring-boot-starter-validation"
-            ]
-        },
-        "org.aspectj:aspectjweaver": {
-            "locked": "1.9.7",
-            "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop"
             ]
         },
         "org.assertj:assertj-core": {
@@ -1786,13 +1758,9 @@
         "org.springframework.boot:spring-boot-starter": {
             "locked": "2.7.2",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework.boot:spring-boot-starter-test",
                 "org.springframework.boot:spring-boot-starter-validation"
             ]
-        },
-        "org.springframework.boot:spring-boot-starter-aop": {
-            "locked": "2.7.2"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "locked": "2.7.2"
@@ -1828,7 +1796,6 @@
         "org.springframework:spring-aop": {
             "locked": "5.3.22",
             "transitive": [
-                "org.springframework.boot:spring-boot-starter-aop",
                 "org.springframework:spring-context"
             ]
         },

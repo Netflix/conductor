@@ -25,7 +25,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -71,6 +73,7 @@ public class DefaultEventProcessor {
     private final JsonUtils jsonUtils;
     private final boolean isEventMessageIndexingEnabled;
     private final Map<String, Evaluator> evaluators;
+    private final RetryTemplate retryTemplate;
 
     public DefaultEventProcessor(
             ExecutionService executionService,
@@ -79,13 +82,15 @@ public class DefaultEventProcessor {
             JsonUtils jsonUtils,
             ConductorProperties properties,
             ObjectMapper objectMapper,
-            Map<String, Evaluator> evaluators) {
+            Map<String, Evaluator> evaluators,
+            @Qualifier("onTransientErrorRetryTemplate") RetryTemplate retryTemplate) {
         this.executionService = executionService;
         this.metadataService = metadataService;
         this.actionProcessor = actionProcessor;
         this.objectMapper = objectMapper;
         this.jsonUtils = jsonUtils;
         this.evaluators = evaluators;
+        this.retryTemplate = retryTemplate;
 
         if (properties.getEventProcessorThreadCount() <= 0) {
             throw new IllegalStateException(
@@ -262,12 +267,15 @@ public class DefaultEventProcessor {
                     eventExecution.getMessageId(),
                     payload);
 
+            // TODO: Switch to @Retryable annotation on SimpleActionProcessor.execute()
             Map<String, Object> output =
-                    actionProcessor.execute(
-                            action,
-                            payload,
-                            eventExecution.getEvent(),
-                            eventExecution.getMessageId());
+                    retryTemplate.execute(
+                            context ->
+                                    actionProcessor.execute(
+                                            action,
+                                            payload,
+                                            eventExecution.getEvent(),
+                                            eventExecution.getMessageId()));
             if (output != null) {
                 eventExecution.getOutput().putAll(output);
             }
