@@ -21,6 +21,7 @@ package com.netflix.conductor.server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.servlet.GuiceFilter;
+import com.netflix.conductor.aurora.FlywayService;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.dao.es6rest.Elasticsearch6Embedded;
 import com.netflix.conductor.redis.utils.JedisMock;
@@ -48,6 +49,7 @@ import redis.clients.jedis.JedisCommands;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -57,6 +59,7 @@ import java.util.*;
 public class ConductorServer {
 
 	private static Logger logger = LoggerFactory.getLogger(ConductorServer.class);
+	private static final String FLYWAY_MIGRATE = "FLYWAY_MIGRATE";
 
 	enum DB {
 		redis, dynomite, memory, elasticsearch, aurora
@@ -210,6 +213,9 @@ public class ConductorServer {
 			System.exit(-1);
 		}
 
+		//Run migrations
+		runMigrations();
+
 		// Holds handlers
 		final HandlerList handlers = new HandlerList();
 
@@ -263,6 +269,15 @@ public class ConductorServer {
 			server.join();
 		}
 
+	}
+
+	private static void runMigrations() throws IOException {
+		boolean doMigration = "true".equalsIgnoreCase(System.getenv().get(FLYWAY_MIGRATE));
+		if (doMigration) {
+			FlywayService.migrate();
+		} else {
+			logger.info("Skipping Flyway migration (not enabled)");
+		}
 	}
 
 	public synchronized void stop() throws Exception {
