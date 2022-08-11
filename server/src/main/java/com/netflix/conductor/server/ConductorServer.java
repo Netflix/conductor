@@ -214,8 +214,12 @@ public class ConductorServer {
         }
 
         //Run migrations
-        runMigrations();
-
+        try {
+            runMigrations();
+        }catch(Exception ex){
+            logger.error("Error during flyway migration " + ex.getMessage(), ex);
+            System.exit(-1);
+        }
         // Holds handlers
         final HandlerList handlers = new HandlerList();
 
@@ -271,9 +275,10 @@ public class ConductorServer {
 
     }
 
-    private void runMigrations() throws IOException {
+    private void runMigrations() throws Exception {
         boolean doMigration = "true".equalsIgnoreCase(cc.getProperty(FLYWAY_MIGRATE,"false"));
         if (doMigration) {
+            logger.info("Flyway migraton enabled.");
             FlywayService.migrate(cc);
         } else {
             logger.info("Skipping Flyway migration (not enabled)");
