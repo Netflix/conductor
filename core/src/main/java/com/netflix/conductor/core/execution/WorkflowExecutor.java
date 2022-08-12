@@ -1273,14 +1273,7 @@ public class WorkflowExecutor {
      *     method does not acquire the lock on the workflow and should ony be called / overridden if
      *     No locking is required or lock is acquired externally
      */
-    public WorkflowModel decide(WorkflowModel workflow) {
-        if (!executionLockService.acquireLock(workflowId)) {
-            return false;
-        }
-
-        // If it is a new workflow, the tasks will be still empty even though include tasks is true
-        WorkflowModel workflow = executionDAOFacade.getWorkflowModel(workflowId, true);
-
+    WorkflowModel decide(WorkflowModel workflow) {
         if (workflow.getStatus().isTerminal()) {
             if (!workflow.getStatus().isSuccessful()) {
                 cancelNonTerminalTasks(workflow);
