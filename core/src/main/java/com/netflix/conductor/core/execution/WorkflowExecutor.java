@@ -1254,10 +1254,6 @@ public class WorkflowExecutor {
                 // This can happen if the workflowId is incorrect
                 return null;
             }
-            // FIXME Backwards compatibility for legacy workflows already running.
-            // This code will be removed in a future version.
-            workflow = metadataMapperService.populateWorkflowWithDefinitions(workflow);
-
             return decide(workflow);
 
         } finally {
