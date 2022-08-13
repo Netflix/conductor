@@ -13,14 +13,12 @@
 package com.netflix.conductor.test.integration.http;
 
 import org.junit.Before;
-import org.junit.Ignore;
 
 import com.netflix.conductor.client.http.EventClient;
 import com.netflix.conductor.client.http.MetadataClient;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.http.WorkflowClient;
 
-@Ignore
 public class HttpEndToEndTest extends AbstractHttpEndToEndTest {
 
     @Before
