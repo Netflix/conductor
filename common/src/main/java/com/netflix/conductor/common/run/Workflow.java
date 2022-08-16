@@ -123,6 +123,9 @@ public class Workflow extends Auditable {
     @ProtoField(id = 24)
     private long lastRetriedTime;
 
+    @ProtoField(id = 25)
+    private Set<String> failedTaskNames = new HashSet<>();
+
     public Workflow() {}
 
     /**
@@ -319,8 +322,16 @@ public class Workflow extends Auditable {
         return failedReferenceTaskNames;
     }
 
-    public void setFailedReferenceTaskNames(Set<String> failedReferenceTaskNames) {
-        this.failedReferenceTaskNames = failedReferenceTaskNames;
+    public void setFailedReferenceTaskNames(Set<String> failedTaskNames) {
+        this.failedReferenceTaskNames = failedTaskNames;
+    }
+
+    public Set<String> getFailedTaskNames() {
+        return failedTaskNames;
+    }
+
+    public void setFailedTaskNames(Set<String> failedTaskNames) {
+        this.failedTaskNames = failedTaskNames;
     }
 
     public WorkflowDef getWorkflowDefinition() {
@@ -484,6 +495,7 @@ public class Workflow extends Auditable {
         copy.setLastRetriedTime(lastRetriedTime);
         copy.setTaskToDomain(taskToDomain);
         copy.setFailedReferenceTaskNames(failedReferenceTaskNames);
+        copy.setFailedTaskNames(failedTaskNames);
         copy.setExternalInputPayloadStoragePath(externalInputPayloadStoragePath);
         copy.setExternalOutputPayloadStoragePath(externalOutputPayloadStoragePath);
         return copy;
@@ -532,6 +544,7 @@ public class Workflow extends Auditable {
                 && Objects.equals(getTaskToDomain(), workflow.getTaskToDomain())
                 && Objects.equals(
                         getFailedReferenceTaskNames(), workflow.getFailedReferenceTaskNames())
+                && Objects.equals(getFailedTaskNames(), workflow.getFailedTaskNames())
                 && Objects.equals(
                         getExternalInputPayloadStoragePath(),
                         workflow.getExternalInputPayloadStoragePath())
@@ -563,6 +576,7 @@ public class Workflow extends Auditable {
                 getEvent(),
                 getTaskToDomain(),
                 getFailedReferenceTaskNames(),
+                getFailedTaskNames(),
                 getWorkflowDefinition(),
                 getExternalInputPayloadStoragePath(),
                 getExternalOutputPayloadStoragePath(),

@@ -1277,6 +1277,12 @@ public class TestWorkflowExecutor {
                         add("task1_ref1");
                     }
                 });
+        workflow.setFailedTaskNames(
+                new HashSet<>() {
+                        {
+                        add("task1");
+                        }
+                });
 
         TaskModel task_1_1 = new TaskModel();
         task_1_1.setTaskId(UUID.randomUUID().toString());
@@ -1317,6 +1323,8 @@ public class TestWorkflowExecutor {
         assertEquals(WorkflowModel.Status.RUNNING, workflow.getStatus());
         assertNull(workflow.getReasonForIncompletion());
         assertEquals(new HashSet<>(), workflow.getFailedReferenceTaskNames());
+        assertEquals(new HashSet<>(), workflow.getFailedTaskNames());
+
     }
 
     @Test
@@ -1426,7 +1434,12 @@ public class TestWorkflowExecutor {
                         add("task1_ref1");
                     }
                 });
-
+        workflow.setFailedTaskNames(
+                new HashSet<>() {
+                        {
+                        add("task1");
+                        }
+                });
         TaskModel task_1_1 = new TaskModel();
         task_1_1.setTaskId(UUID.randomUUID().toString());
         task_1_1.setSeq(20);
@@ -1467,6 +1480,7 @@ public class TestWorkflowExecutor {
         assertEquals(WorkflowModel.Status.RUNNING, workflow.getStatus());
         assertNull(workflow.getReasonForIncompletion());
         assertEquals(new HashSet<>(), workflow.getFailedReferenceTaskNames());
+        assertEquals(new HashSet<>(), workflow.getFailedTaskNames());
     }
 
     @Test
@@ -1509,6 +1523,12 @@ public class TestWorkflowExecutor {
                         add("task2_ref");
                     }
                 });
+        workflow.setFailedTaskNames(
+                new HashSet<>() {
+                        {
+                        add("task2");
+                        }
+                });
         workflow.getTasks().addAll(Arrays.asList(task1, task2));
         // end of setup
 
@@ -1526,6 +1546,7 @@ public class TestWorkflowExecutor {
         assertEquals(WorkflowModel.Status.RUNNING, workflow.getStatus());
         assertNull(workflow.getReasonForIncompletion());
         assertEquals(new HashSet<>(), workflow.getFailedReferenceTaskNames());
+        assertEquals(new HashSet<>(), workflow.getFailedTaskNames());
     }
 
     @Test

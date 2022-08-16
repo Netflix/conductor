@@ -353,6 +353,9 @@ public class TestElasticSearchDAOV6 extends ElasticSearchDaoBaseTest {
         assertEquals(
                 summary.getFailedReferenceTaskNames(),
                 indexDAO.get(workflowId, "failedReferenceTaskNames"));
+        assertEquals(
+                summary.getFailedTaskNames(),
+                indexDAO.get(workflowId, "failedTaskNames"));
     }
 
     private <T> List<T> tryFindResults(Supplier<List<T>> searchFunction) {
