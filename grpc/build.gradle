@@ -20,11 +20,11 @@ buildscript {
 plugins {
     id 'java'
     id 'idea'
-    id "com.google.protobuf" version "0.8.18"
+    id "com.google.protobuf" version "0.8.19"
 }
 
 repositories{
-    maven { url "https://dl.bintray.com/chaos-systems/mvn" }
+    maven { url "https://mvnrepository.com/artifact" }
 }
 
 dependencies {
