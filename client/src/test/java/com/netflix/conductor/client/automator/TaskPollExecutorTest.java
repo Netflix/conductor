@@ -18,7 +18,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
 
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -29,6 +28,7 @@ import com.netflix.conductor.client.exception.ConductorClientException;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.worker.Worker;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.discovery.EurekaClient;
 
@@ -551,11 +551,12 @@ public class TaskPollExecutorTest {
                         null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
-                invocation -> {
-                    assertTrue(taskPollExecutor.leaseExtendMap.containsKey(task.getTaskId()));
-                    latch.countDown();
-                    return null;
-                })
+                        invocation -> {
+                            assertTrue(
+                                    taskPollExecutor.leaseExtendMap.containsKey(task.getTaskId()));
+                            latch.countDown();
+                            return null;
+                        })
                 .when(taskClient)
                 .updateTask(any());
 

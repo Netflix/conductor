@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.commons.lang3.time.StopWatch;
@@ -34,6 +33,7 @@ import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.telemetry.MetricsContainer;
 import com.netflix.conductor.client.worker.Worker;
 import com.netflix.conductor.common.metadata.tasks.Task;
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.spectator.api.Registry;
@@ -180,8 +180,12 @@ class TaskPollExecutor {
                     ScheduledFuture<?> leaseExtendFuture =
                             leaseExtendExecutorService.scheduleWithFixedDelay(
                                     extendLease(task, taskCompletableFuture),
-                                    Math.round(task.getResponseTimeoutSeconds() * LEASE_EXTEND_DURATION_FACTOR),
-                                    Math.round(task.getResponseTimeoutSeconds() * LEASE_EXTEND_DURATION_FACTOR),
+                                    Math.round(
+                                            task.getResponseTimeoutSeconds()
+                                                    * LEASE_EXTEND_DURATION_FACTOR),
+                                    Math.round(
+                                            task.getResponseTimeoutSeconds()
+                                                    * LEASE_EXTEND_DURATION_FACTOR),
                                     TimeUnit.SECONDS);
                     leaseExtendMap.put(task.getTaskId(), leaseExtendFuture);
                 }

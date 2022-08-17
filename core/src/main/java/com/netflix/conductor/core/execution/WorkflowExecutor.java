@@ -1016,8 +1016,8 @@ public class WorkflowExecutor {
         if (taskResult == null) {
             throw new IllegalArgumentException("Task object is null");
         } else if (taskResult.isExtendLease()) {
-           extendLease(taskResult);
-           return;
+            extendLease(taskResult);
+            return;
         }
 
         String workflowId = taskResult.getWorkflowInstanceId();
@@ -1185,7 +1185,10 @@ public class WorkflowExecutor {
                                                 "No such task found by id: %s",
                                                 taskResult.getTaskId()));
 
-        LOGGER.debug("Extend lease for Task: {} belonging to Workflow: {}", task, task.getWorkflowInstanceId());
+        LOGGER.debug(
+                "Extend lease for Task: {} belonging to Workflow: {}",
+                task,
+                task.getWorkflowInstanceId());
         if (!task.getStatus().isTerminal()) {
             try {
                 executionDAOFacade.extendLease(task);
@@ -1199,7 +1202,9 @@ public class WorkflowExecutor {
                 throw new TransientException(errorMsg, e);
             }
 
-            taskResult.getLogs().forEach(taskExecLog -> taskExecLog.setTaskId(taskResult.getTaskId()));
+            taskResult
+                    .getLogs()
+                    .forEach(taskExecLog -> taskExecLog.setTaskId(taskResult.getTaskId()));
             executionDAOFacade.addTaskExecLog(taskResult.getLogs());
         }
     }
