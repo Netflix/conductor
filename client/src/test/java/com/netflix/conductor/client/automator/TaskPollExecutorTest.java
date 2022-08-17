@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -35,6 +36,7 @@ import static com.netflix.conductor.common.metadata.tasks.TaskResult.Status.IN_P
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -524,6 +526,44 @@ public class TaskPollExecutorTest {
 
         latch.await();
         verify(taskClient).pollTask(TEST_TASK_DEF_NAME, workerName, null);
+    }
+
+    @Test
+    public void testTaskLeaseExtend() throws InterruptedException {
+        Task task = testTask();
+        task.setResponseTimeoutSeconds(1);
+
+        Worker worker = mock(Worker.class);
+        when(worker.getPollingInterval()).thenReturn(3000);
+        when(worker.getTaskDefName()).thenReturn("test");
+        when(worker.execute(any())).thenReturn(new TaskResult(task));
+        when(worker.leaseExtendEnabled()).thenReturn(true);
+
+        TaskClient taskClient = Mockito.mock(TaskClient.class);
+        when(taskClient.pollTask(any(), any(), any())).thenReturn(task);
+
+        TaskResult result = new TaskResult(task);
+        result.getLogs().add(new TaskExecLog("lease extend"));
+        result.setExtendLease(true);
+
+        TaskPollExecutor taskPollExecutor =
+                new TaskPollExecutor(
+                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+        CountDownLatch latch = new CountDownLatch(1);
+        doAnswer(
+                invocation -> {
+                    assertTrue(taskPollExecutor.leaseExtendMap.containsKey(task.getTaskId()));
+                    latch.countDown();
+                    return null;
+                })
+                .when(taskClient)
+                .updateTask(any());
+
+        Executors.newSingleThreadScheduledExecutor()
+                .scheduleAtFixedRate(
+                        () -> taskPollExecutor.pollAndExecute(worker), 0, 5, TimeUnit.SECONDS);
+
+        latch.await();
     }
 
     private Task testTask() {
