@@ -14,6 +14,7 @@ package com.netflix.conductor.common.run;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
@@ -85,7 +86,7 @@ public class WorkflowSummary {
     private int priority;
 
     @ProtoField(id = 18)
-    private Set<String> failedTaskNames;
+    private Set<String> failedTaskNames = new HashSet<>();
 
     public WorkflowSummary() {}
 

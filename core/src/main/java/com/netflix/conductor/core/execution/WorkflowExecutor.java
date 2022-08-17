@@ -836,25 +836,27 @@ public class WorkflowExecutor {
 
         workflow.setStatus(WorkflowModel.Status.COMPLETED);
 
-
-
         // update the failed reference task names
-        List<TaskModel> failedTasks = workflow.getTasks().stream()
-                .filter(t -> FAILED.equals(t.getStatus()) || 
-                    FAILED_WITH_TERMINAL_ERROR.equals(t.getStatus()))
-                    .collect(Collectors.toList());
+        List<TaskModel> failedTasks =
+                workflow.getTasks().stream()
+                        .filter(
+                                t ->
+                                        FAILED.equals(t.getStatus())
+                                                || FAILED_WITH_TERMINAL_ERROR.equals(t.getStatus()))
+                        .collect(Collectors.toList());
 
         workflow.getFailedReferenceTaskNames()
-                .addAll(failedTasks.stream()
-                .map(TaskModel::getReferenceTaskName)
-                .collect(Collectors.toSet()));
+                .addAll(
+                        failedTasks.stream()
+                                .map(TaskModel::getReferenceTaskName)
+                                .collect(Collectors.toSet()));
 
         workflow.getFailedTaskNames()
-                .addAll(failedTasks.stream()
-                .map(TaskModel::getTaskDefName)
-                .collect(Collectors.toSet()));
+                .addAll(
+                        failedTasks.stream()
+                                .map(TaskModel::getTaskDefName)
+                                .collect(Collectors.toSet()));
 
-      
         executionDAOFacade.updateWorkflow(workflow);
         LOGGER.debug("Completed workflow execution for {}", workflow.getWorkflowId());
         workflowStatusListener.onWorkflowCompletedIfEnabled(workflow);
@@ -914,21 +916,26 @@ public class WorkflowExecutor {
             }
 
             // update the failed reference task names
-            List<TaskModel> failedTasks = workflow.getTasks().stream()
-                    .filter(t -> FAILED.equals(t.getStatus()) || 
-                        FAILED_WITH_TERMINAL_ERROR.equals(t.getStatus()))
-                        .collect(Collectors.toList());
+            List<TaskModel> failedTasks =
+                    workflow.getTasks().stream()
+                            .filter(
+                                    t ->
+                                            FAILED.equals(t.getStatus())
+                                                    || FAILED_WITH_TERMINAL_ERROR.equals(
+                                                            t.getStatus()))
+                            .collect(Collectors.toList());
 
             workflow.getFailedReferenceTaskNames()
-                    .addAll(failedTasks.stream()
-                    .map(TaskModel::getReferenceTaskName)
-                    .collect(Collectors.toSet()));
+                    .addAll(
+                            failedTasks.stream()
+                                    .map(TaskModel::getReferenceTaskName)
+                                    .collect(Collectors.toSet()));
 
             workflow.getFailedTaskNames()
-                    .addAll(failedTasks.stream()
-                    .map(TaskModel::getTaskDefName)
-                    .collect(Collectors.toSet()));
-
+                    .addAll(
+                            failedTasks.stream()
+                                    .map(TaskModel::getTaskDefName)
+                                    .collect(Collectors.toSet()));
 
             String workflowId = workflow.getWorkflowId();
             workflow.setReasonForIncompletion(reason);

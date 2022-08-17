@@ -1279,9 +1279,9 @@ public class TestWorkflowExecutor {
                 });
         workflow.setFailedTaskNames(
                 new HashSet<>() {
-                        {
+                    {
                         add("task1");
-                        }
+                    }
                 });
 
         TaskModel task_1_1 = new TaskModel();
@@ -1324,7 +1324,6 @@ public class TestWorkflowExecutor {
         assertNull(workflow.getReasonForIncompletion());
         assertEquals(new HashSet<>(), workflow.getFailedReferenceTaskNames());
         assertEquals(new HashSet<>(), workflow.getFailedTaskNames());
-
     }
 
     @Test
@@ -1436,9 +1435,9 @@ public class TestWorkflowExecutor {
                 });
         workflow.setFailedTaskNames(
                 new HashSet<>() {
-                        {
+                    {
                         add("task1");
-                        }
+                    }
                 });
         TaskModel task_1_1 = new TaskModel();
         task_1_1.setTaskId(UUID.randomUUID().toString());
@@ -1525,9 +1524,9 @@ public class TestWorkflowExecutor {
                 });
         workflow.setFailedTaskNames(
                 new HashSet<>() {
-                        {
+                    {
                         add("task2");
-                        }
+                    }
                 });
         workflow.getTasks().addAll(Arrays.asList(task1, task2));
         // end of setup
