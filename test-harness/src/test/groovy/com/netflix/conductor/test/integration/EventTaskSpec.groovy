@@ -48,14 +48,6 @@ class EventTaskSpec extends AbstractSpecification {
             tasks.size() == 2
             tasks[0].taskType == TaskType.EVENT.name()
             tasks[0].status == Task.Status.COMPLETED
-        }
-
-        then: "Retrieve the workflow"
-        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
-            status == Workflow.WorkflowStatus.RUNNING
-            tasks.size() == 2
-            tasks[0].taskType == TaskType.EVENT.name()
-            tasks[0].status == Task.Status.COMPLETED
             tasks[0].outputData['event_produced']
             tasks[1].taskType == 'integration_task_1'
             tasks[1].status == Task.Status.SCHEDULED
