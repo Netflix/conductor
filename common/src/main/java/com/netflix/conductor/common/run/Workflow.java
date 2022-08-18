@@ -322,8 +322,8 @@ public class Workflow extends Auditable {
         return failedReferenceTaskNames;
     }
 
-    public void setFailedReferenceTaskNames(Set<String> failedTaskNames) {
-        this.failedReferenceTaskNames = failedTaskNames;
+    public void setFailedReferenceTaskNames(Set<String> failedReferenceTaskNames) {
+        this.failedReferenceTaskNames = failedReferenceTaskNames;
     }
 
     public Set<String> getFailedTaskNames() {
