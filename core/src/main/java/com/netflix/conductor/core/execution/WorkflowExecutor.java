@@ -1201,11 +1201,6 @@ public class WorkflowExecutor {
                 Monitors.recordTaskExtendLeaseError(task.getTaskType(), task.getWorkflowType());
                 throw new TransientException(errorMsg, e);
             }
-
-            taskResult
-                    .getLogs()
-                    .forEach(taskExecLog -> taskExecLog.setTaskId(taskResult.getTaskId()));
-            executionDAOFacade.addTaskExecLog(taskResult.getLogs());
         }
     }
 

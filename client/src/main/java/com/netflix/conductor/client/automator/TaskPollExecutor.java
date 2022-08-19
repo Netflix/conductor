@@ -33,7 +33,6 @@ import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.telemetry.MetricsContainer;
 import com.netflix.conductor.client.worker.Worker;
 import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.tasks.TaskExecLog;
 import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.spectator.api.Registry;
@@ -410,7 +409,6 @@ class TaskPollExecutor {
             LOGGER.info("Attempting to extend lease for {}", task.getTaskId());
             try {
                 TaskResult result = new TaskResult(task);
-                result.getLogs().add(new TaskExecLog("lease extend"));
                 result.setExtendLease(true);
                 retryOperation(
                         (TaskResult taskResult) -> {
@@ -420,7 +418,9 @@ class TaskPollExecutor {
                         LEASE_EXTEND_RETRY_COUNT,
                         result,
                         "extend lease");
+                MetricsContainer.incrementTaskLeaseExtendCount(task.getTaskDefName(), 1);
             } catch (Exception e) {
+                MetricsContainer.incrementTaskLeaseExtendErrorCount(task.getTaskDefName(), e);
                 LOGGER.error("Failed to extend lease for {}", task.getTaskId(), e);
             }
         };
