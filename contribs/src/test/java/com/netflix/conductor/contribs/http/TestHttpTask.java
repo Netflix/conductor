@@ -141,6 +141,55 @@ public class TestHttpTask {
 		inputKeys.containsAll(responseKeys);
 		responseKeys.containsAll(inputKeys);
 	}
+
+	@Test
+	public void testPostWithCustomFailureReason() throws Exception {
+		// Arrange: set up task, mock handler input
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/failure_reason");
+		String expectedFailureReason = "some failure reason message";
+		Map<String, Object> body = new HashMap<>();
+		body.put("input_key1", "value1");
+		body.put("input_key2", 45.3d);
+		input.setBody(body);
+		input.setMethod("POST");
+		Map<String, String> failureReason = new HashMap<>();
+		failureReason.put("reason", "$.body.failureReason");
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+		task.getInputData().put(HttpTask.CUSTOM_FAILURE_REASON_PARAMETER_NAME, failureReason);
+
+		// Act: invoke an HTTP task
+		httpTask.start(workflow, task, executor);
+
+		// Assert: Ensure that the in-completion failure reason for this task is as configured
+		assertEquals(task.getReasonForIncompletion(), Status.FAILED, task.getStatus());
+		assertEquals(expectedFailureReason, task.getReasonForIncompletion());
+	}
+
+	@Test
+	public void testPostWithCustomFailureReason_whenBadConfiguration() throws Exception {
+		// Arrange: set up task, mock handler input
+		Task task = new Task();
+		Input input = new Input();
+		input.setUri("http://localhost:7009/failure_reason");
+		Map<String, Object> body = new HashMap<>();
+		body.put("input_key1", "value1");
+		body.put("input_key2", 45.3d);
+		input.setBody(body);
+		input.setMethod("POST");
+		Map<String, String> failureReason = new HashMap<>();
+		failureReason.put("reason", "$.body.FailureReason"); // used sentence case instead of camel-case
+		task.getInputData().put(HttpTask.REQUEST_PARAMETER_NAME, input);
+		task.getInputData().put(HttpTask.CUSTOM_FAILURE_REASON_PARAMETER_NAME, failureReason);
+
+		// Act: invoke an HTTP task
+		httpTask.start(workflow, task, executor);
+
+		// Assert: Ensure that the in-completion failure reason for this task is the full response body because of the bad configuration
+		assertEquals(task.getReasonForIncompletion(), Status.FAILED, task.getStatus());
+		assertEquals("{input_key1=input_key1, input_key2=input_key2, failureReason=some failure reason message}", task.getReasonForIncompletion());
+	}
 	
 
 	@Test
@@ -363,6 +412,20 @@ public class TestHttpTask {
 				response.setStatus(500);
 				PrintWriter writer = response.getWriter();
 				writer.print(ERROR_RESPONSE);
+				writer.flush();
+				writer.close();
+			} else if(request.getMethod().equals("POST") && request.getRequestURI().equals("/failure_reason")) {
+				response.addHeader("Content-Type", "application/json");
+				response.setStatus(404);
+				BufferedReader reader = request.getReader();
+				Map<String, Object> input = om.readValue(reader, mapOfObj);
+				Set<String> keys = input.keySet();
+				for(String key : keys) {
+					input.put(key, key);
+				}
+				input.put("failureReason", "some failure reason message");
+				PrintWriter writer = response.getWriter();
+				writer.print(om.writeValueAsString(input));
 				writer.flush();
 				writer.close();
 			} else if(request.getMethod().equals("POST") && request.getRequestURI().equals("/post")) {

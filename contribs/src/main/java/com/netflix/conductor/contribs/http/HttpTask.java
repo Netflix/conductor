@@ -37,11 +37,15 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.script.ScriptException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.Objects.isNull;
+
 /**
  * @author Viren Task that enables calling another http endpoint as part of its
  *         execution
@@ -302,13 +306,6 @@ public class HttpTask extends GenericHttpTask {
 		});
 
 		// If anything failed - fail the task
-		if (!overallStatus.get()) {
-			String overallReason = "Response validation failed";
-			if (StringUtils.isNotEmpty(validate.getReason())) {
-				overallReason = validate.getReason();
-			}
-			task.setReasonForIncompletion(overallReason);
-			task.setStatus(Status.FAILED);
-		}
+		genericTaskFailure(task, validate.getReason(), overallStatus);
 	}
 }
