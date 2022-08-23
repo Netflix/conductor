@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.core.utils.ParametersUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -36,8 +38,11 @@ public class DoWhile extends WorkflowSystemTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DoWhile.class);
 
-    public DoWhile() {
+    private final ParametersUtils parametersUtils;
+
+    public DoWhile(ParametersUtils parametersUtils) {
         super(TASK_TYPE_DO_WHILE);
+        this.parametersUtils = parametersUtils;
     }
 
     @Override
@@ -126,7 +131,7 @@ public class DoWhile extends WorkflowSystemTask {
         // iteration by evaluating the loopCondition
         boolean shouldContinue;
         try {
-            shouldContinue = evaluateCondition(workflow, doWhileTaskModel);
+            shouldContinue = evaluateCondition(workflowExecutor, workflow, doWhileTaskModel);
             LOGGER.debug(
                     "Task {} condition evaluated to {}",
                     doWhileTaskModel.getTaskId(),
@@ -213,8 +218,15 @@ public class DoWhile extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    boolean evaluateCondition(WorkflowModel workflow, TaskModel task) throws ScriptException {
-        Map<String, Object> conditionInput = new HashMap<>(task.getInputData());
+    boolean evaluateCondition(WorkflowExecutor workflowExecutor, WorkflowModel workflow, TaskModel task) throws ScriptException {
+        TaskDef taskDefinition = workflowExecutor.getTaskDefinition(task);
+        // Use paramUtils to compute the task input
+        Map<String, Object> conditionInput =
+                parametersUtils.getTaskInputV2(
+                        task.getWorkflowTask().getInputParameters(),
+                        workflow,
+                        task.getTaskId(),
+                        taskDefinition);
         conditionInput.put(task.getReferenceTaskName(), task.getOutputData());
         List<TaskModel> loopOver =
                 workflow.getTasks().stream()
