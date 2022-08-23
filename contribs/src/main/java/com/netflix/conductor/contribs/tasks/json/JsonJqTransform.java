@@ -58,7 +58,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
     }
 
     @Override
-    public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
+    public boolean execute(WorkflowModel workflow, TaskModel task, WorkflowExecutor executor) {
         final Map<String, Object> taskInput = task.getInputData();
         final Map<String, Object> taskOutput = task.getOutputData();
 
@@ -68,7 +68,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
             task.setReasonForIncompletion(
                     "Missing '" + QUERY_EXPRESSION_PARAMETER + "' in input parameters");
             task.setStatus(TaskModel.Status.FAILED);
-            return;
+            return true;
         }
 
         try {
@@ -101,6 +101,7 @@ public class JsonJqTransform extends WorkflowSystemTask {
             task.setReasonForIncompletion(message);
             taskOutput.put(OUTPUT_ERROR, message);
         }
+        return true;
     }
 
     private LoadingCache<String, JsonQuery> createQueryCache() {
