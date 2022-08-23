@@ -131,7 +131,7 @@ public class DoWhile extends WorkflowSystemTask {
         // iteration by evaluating the loopCondition
         boolean shouldContinue;
         try {
-            shouldContinue = evaluateCondition(workflowExecutor, workflow, doWhileTaskModel);
+            shouldContinue = evaluateCondition(workflow, doWhileTaskModel);
             LOGGER.debug(
                     "Task {} condition evaluated to {}",
                     doWhileTaskModel.getTaskId(),
@@ -218,10 +218,9 @@ public class DoWhile extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    boolean evaluateCondition(
-            WorkflowExecutor workflowExecutor, WorkflowModel workflow, TaskModel task)
+    boolean evaluateCondition(WorkflowModel workflow, TaskModel task)
             throws ScriptException {
-        TaskDef taskDefinition = workflowExecutor.getTaskDefinition(task);
+        TaskDef taskDefinition = task.getTaskDefinition().orElse(null);
         // Use paramUtils to compute the task input
         Map<String, Object> conditionInput =
                 parametersUtils.getTaskInputV2(
