@@ -218,8 +218,7 @@ public class DoWhile extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    boolean evaluateCondition(WorkflowModel workflow, TaskModel task)
-            throws ScriptException {
+    boolean evaluateCondition(WorkflowModel workflow, TaskModel task) throws ScriptException {
         TaskDef taskDefinition = task.getTaskDefinition().orElse(null);
         // Use paramUtils to compute the task input
         Map<String, Object> conditionInput =
