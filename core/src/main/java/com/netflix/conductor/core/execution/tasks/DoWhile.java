@@ -17,17 +17,17 @@ import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
-import com.netflix.conductor.core.utils.ParametersUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.annotations.VisibleForTesting;
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.utils.ParametersUtils;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
@@ -218,7 +218,9 @@ public class DoWhile extends WorkflowSystemTask {
     }
 
     @VisibleForTesting
-    boolean evaluateCondition(WorkflowExecutor workflowExecutor, WorkflowModel workflow, TaskModel task) throws ScriptException {
+    boolean evaluateCondition(
+            WorkflowExecutor workflowExecutor, WorkflowModel workflow, TaskModel task)
+            throws ScriptException {
         TaskDef taskDefinition = workflowExecutor.getTaskDefinition(task);
         // Use paramUtils to compute the task input
         Map<String, Object> conditionInput =
