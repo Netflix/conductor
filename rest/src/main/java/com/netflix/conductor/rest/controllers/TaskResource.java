@@ -83,6 +83,25 @@ public class TaskResource {
         return taskService.updateTask(taskResult);
     }
 
+    @PostMapping(value = "/{workflowId}/{taskRefName}/{status}", produces = TEXT_PLAIN_VALUE)
+    @Operation(summary = "Update a task By Ref Name")
+    public String updateTask(
+            @PathVariable("workflowId") String workflowId,
+            @PathVariable("taskRefName") String taskRefName,
+            @PathVariable("status") TaskResult.Status status,
+            @RequestBody Map<String, Object> output) {
+
+        Task pending = taskService.getPendingTaskForWorkflow(workflowId, taskRefName);
+        if (pending == null) {
+            return null;
+        }
+
+        TaskResult taskResult = new TaskResult(pending);
+        taskResult.setStatus(status);
+        taskResult.getOutputData().putAll(output);
+        return taskService.updateTask(taskResult);
+    }
+
     @PostMapping("/{taskId}/log")
     @Operation(summary = "Log Task Execution Details")
     public void log(@PathVariable("taskId") String taskId, @RequestBody String log) {
