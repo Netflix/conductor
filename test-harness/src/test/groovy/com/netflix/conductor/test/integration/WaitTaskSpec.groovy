@@ -26,9 +26,49 @@ class WaitTaskSpec extends AbstractSpecification {
 
     @Shared
     def WAIT_BASED_WORKFLOW = 'test_wait_workflow'
+    def SET_VARIABLE_WORKFLOW = 'set_variable_workflow_integration_test'
 
     def setup() {
-        workflowTestUtil.registerWorkflows('wait_workflow_integration_test.json')
+        workflowTestUtil.registerWorkflows('wait_workflow_integration_test.json',
+        'set_variable_workflow_integration_test.json')
+    }
+
+    def "Test workflow with set variable task"() {
+        given: "workflow input"
+        def workflowInput = new HashMap()
+        workflowInput['var'] = "var_test_value"
+
+        when: "Start the workflow which has the set variable task"
+        def workflowInstanceId = workflowExecutor.startWorkflow(SET_VARIABLE_WORKFLOW, 1,
+                '', workflowInput, null, null, null)
+
+        then: "verify that the task is completed and variables were set"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 2
+            tasks[0].taskType == 'SET_VARIABLE'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'WAIT'
+            tasks[1].status == Task.Status.IN_PROGRESS
+            variables as String == '[var:var_test_value]'
+        }
+
+        when: "The wait task is completed"
+        def waitTask = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).tasks[1]
+        waitTask.status = Task.Status.COMPLETED
+        workflowExecutor.updateTask(new TaskResult(waitTask))
+
+        then: "ensure that the wait task is completed and the next task is scheduled"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 2
+            tasks[0].taskType == 'SET_VARIABLE'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[1].taskType == 'WAIT'
+            tasks[1].status == Task.Status.COMPLETED
+            variables as String == '[var:var_test_value]'
+            output as String == '[variables:[var:var_test_value]]'
+        }
     }
 
     def "Verify that a wait based simple workflow is executed"() {

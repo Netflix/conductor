@@ -1370,7 +1370,8 @@ public class WorkflowExecutor {
             if (!outcome.tasksToBeUpdated.isEmpty() || !tasksToBeScheduled.isEmpty()) {
                 executionDAOFacade.updateWorkflow(workflow);
             }
-
+            // Update the workflow to save workflow attributes.
+            executionDAOFacade.updateWorkflow(workflow);
             return workflow;
 
         } catch (TerminateWorkflowException twe) {
