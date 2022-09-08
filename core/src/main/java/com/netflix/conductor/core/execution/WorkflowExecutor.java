@@ -413,7 +413,13 @@ public class WorkflowExecutor {
                     workflow.getWorkflowName(),
                     workflow.getWorkflowId());
             executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
-            decide(workflow);
+            int hashCode = workflow.hashCode();
+            WorkflowModel workflowModel = decide(workflow);
+            int hashCodeAfterDecider = workflowModel.hashCode();
+            if (hashCodeAfterDecider != hashCode) {
+                // Since hashCode is different there has been some update which needs to be saved.
+                executionDAOFacade.updateWorkflow(workflowModel);
+            }
         } finally {
             executionLockService.releaseLock(workflow.getWorkflowId());
         }
@@ -1367,11 +1373,6 @@ public class WorkflowExecutor {
                 return decide(workflow);
             }
 
-            if (!outcome.tasksToBeUpdated.isEmpty() || !tasksToBeScheduled.isEmpty()) {
-                executionDAOFacade.updateWorkflow(workflow);
-            }
-            // Update the workflow to save workflow attributes.
-            executionDAOFacade.updateWorkflow(workflow);
             return workflow;
 
         } catch (TerminateWorkflowException twe) {
