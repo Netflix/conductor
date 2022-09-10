@@ -19,7 +19,12 @@ import javax.script.ScriptException;
 
 public class ScriptEvaluator {
 
-    private static final ScriptEngine engine = new ScriptEngineManager().getEngineByName("nashorn");
+    private static final ScriptEngine engine =
+            new ScriptEngineManager().getEngineByName("graal.js");
+
+    static {
+        engine.put("polyglot.js.allowHostAccess", true);
+    }
 
     private ScriptEvaluator() {}
 

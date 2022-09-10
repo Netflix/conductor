@@ -240,7 +240,7 @@ public class DoWhile extends WorkflowSystemTask {
         boolean result = false;
         if (condition != null) {
             LOGGER.debug("Condition: {} is being evaluated", condition);
-            // Evaluate the expression by using the Nashorn based script evaluator
+            // Evaluate the expression by using the GraalVM based script evaluator
             result = ScriptEvaluator.evalBool(condition, conditionInput);
         }
         return result;

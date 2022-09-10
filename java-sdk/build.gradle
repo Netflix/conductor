@@ -10,6 +10,9 @@ dependencies {
     implementation "cglib:cglib:3.3.0"
     implementation "com.sun.jersey:jersey-client:${revJersey}"
 
+    implementation "org.graalvm.js:js:${revGraalVM}"
+    implementation "org.graalvm.js:js-scriptengine:${revGraalVM}"
+
     testImplementation "org.springframework:spring-web"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"

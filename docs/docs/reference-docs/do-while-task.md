@@ -30,10 +30,10 @@ Branching inside loopOver task is supported.
 
 ### Input Parameters:
 
-| name          | type       | description                                                                                                                                                                                                             |
-|---------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| loopCondition | String     | Condition to be evaluated after every iteration. This is a Javascript expression, evaluated using the Nashorn engine. If an exception occurs during evaluation, the DO_WHILE task is set to FAILED_WITH_TERMINAL_ERROR. |
-| loopOver      | List[Task] | List of tasks that needs to be executed as long as the condition is true.                                                                                                                                               |
+| name          | type       | description                                                                                                                                                                                                                |
+|---------------|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| loopCondition | String     | Condition to be evaluated after every iteration. This is a Javascript expression, evaluated using the GraalVM JS engine. If an exception occurs during evaluation, the DO_WHILE task is set to FAILED_WITH_TERMINAL_ERROR. |
+| loopOver      | List[Task] | List of tasks that needs to be executed as long as the condition is true.                                                                                                                                                  |
 
 ### Output Parameters
 
