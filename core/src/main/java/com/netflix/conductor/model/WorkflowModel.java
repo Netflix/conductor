@@ -15,8 +15,6 @@ package com.netflix.conductor.model;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.netflix.conductor.common.metadata.tasks.Task;
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 
@@ -542,12 +540,13 @@ public class WorkflowModel {
         for (TaskModel task : workflow.getTasks()) {
             hash = Objects.hash(hash, task.getStatus());
         }
-        hash = Objects.hash(
-                workflow.getStatus(),
-                hash,
-                workflow.getOutput(),
-                workflow.getReasonForIncompletion(),
-                workflow.getVariables());
+        hash =
+                Objects.hash(
+                        workflow.getStatus(),
+                        hash,
+                        workflow.getOutput(),
+                        workflow.getReasonForIncompletion(),
+                        workflow.getVariables());
 
         return hash;
     }
