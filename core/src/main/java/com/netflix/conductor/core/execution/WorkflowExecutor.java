@@ -427,7 +427,7 @@ public class WorkflowExecutor {
 
     // Weak hashCode method
     private int hashCode(WorkflowModel workflow) {
-        // Task attributes are not being considered here because that is take care in main decide method.
+        // Task attributes are not being considered here because that is taken care in main decide method.
         return Objects.hash(workflow.getStatus(), workflow.getOutput(), workflow.getVariables());
     }
 
