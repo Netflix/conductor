@@ -536,19 +536,7 @@ public class WorkflowModel {
 
     // Light weight hashCode method
     public static int hashCode(WorkflowModel workflow) {
-        int hash = 1;
-        for (TaskModel task : workflow.getTasks()) {
-            hash = Objects.hash(hash, task.getStatus());
-        }
-        hash =
-                Objects.hash(
-                        workflow.getStatus(),
-                        hash,
-                        workflow.getOutput(),
-                        workflow.getReasonForIncompletion(),
-                        workflow.getVariables());
-
-        return hash;
+        return Objects.hash(workflow.getStatus(), workflow.getOutput(), workflow.getVariables());
     }
 
     @Override
