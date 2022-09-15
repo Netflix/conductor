@@ -413,9 +413,9 @@ public class WorkflowExecutor {
                     workflow.getWorkflowName(),
                     workflow.getWorkflowId());
             executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
-            int hashCodeBeforeDecider = workflow.hashCode();
+            int hashCodeBeforeDecider = WorkflowModel.hashCode(workflow);
             WorkflowModel workflowModel = decide(workflow);
-            int hashCodeAfterDecider = workflowModel.hashCode();
+            int hashCodeAfterDecider = WorkflowModel.hashCode(workflow);
             if (hashCodeAfterDecider != hashCodeBeforeDecider) {
                 // Since hashCode is different there has been some update which needs to be saved.
                 executionDAOFacade.updateWorkflow(workflowModel);
@@ -1371,6 +1371,10 @@ public class WorkflowExecutor {
 
             if (stateChanged) {
                 return decide(workflow);
+            }
+
+            if (!outcome.tasksToBeUpdated.isEmpty() || !tasksToBeScheduled.isEmpty()) {
+                executionDAOFacade.updateWorkflow(workflow);
             }
 
             return workflow;

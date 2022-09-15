@@ -3,6 +3,19 @@
   "version": 1,
   "tasks": [
     {
+      "name": "json_jq_1",
+      "taskReferenceName": "json_jq_1",
+      "description": "json_jq_1",
+      "inputParameters": {
+        "data": [],
+        "queryExpression": "if(.data | length >0) then \"EXISTS\" else \"CREATE\" end"
+      },
+      "type": "JSON_JQ_TRANSFORM",
+      "startDelay": 0,
+      "optional": false,
+      "asyncComplete": false
+    },
+    {
       "name": "set_variable",
       "taskReferenceName": "set_variable_1",
       "inputParameters": {

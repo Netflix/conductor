@@ -45,27 +45,31 @@ class WaitTaskSpec extends AbstractSpecification {
         then: "verify that the task is completed and variables were set"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
-            tasks.size() == 2
-            tasks[0].taskType == 'SET_VARIABLE'
+            tasks.size() == 3
+            tasks[0].taskType == 'JSON_JQ_TRANSFORM'
             tasks[0].status == Task.Status.COMPLETED
-            tasks[1].taskType == 'WAIT'
-            tasks[1].status == Task.Status.IN_PROGRESS
+            tasks[1].taskType == 'SET_VARIABLE'
+            tasks[1].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'WAIT'
+            tasks[2].status == Task.Status.IN_PROGRESS
             variables as String == '[var:var_test_value]'
         }
 
         when: "The wait task is completed"
-        def waitTask = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).tasks[1]
+        def waitTask = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).tasks[2]
         waitTask.status = Task.Status.COMPLETED
         workflowExecutor.updateTask(new TaskResult(waitTask))
 
         then: "ensure that the wait task is completed and the next task is scheduled"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
-            tasks.size() == 2
-            tasks[0].taskType == 'SET_VARIABLE'
+            tasks.size() == 3
+            tasks[0].taskType == 'JSON_JQ_TRANSFORM'
             tasks[0].status == Task.Status.COMPLETED
-            tasks[1].taskType == 'WAIT'
+            tasks[1].taskType == 'SET_VARIABLE'
             tasks[1].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'WAIT'
+            tasks[2].status == Task.Status.COMPLETED
             variables as String == '[var:var_test_value]'
             output as String == '[variables:[var:var_test_value]]'
         }
