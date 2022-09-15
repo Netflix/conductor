@@ -413,9 +413,9 @@ public class WorkflowExecutor {
                     workflow.getWorkflowName(),
                     workflow.getWorkflowId());
             executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
-            int hashCodeBeforeDecider = WorkflowModel.hashCode(workflow);
+            int hashCodeBeforeDecider = hashCode(workflow);
             WorkflowModel workflowModel = decide(workflow);
-            int hashCodeAfterDecider = WorkflowModel.hashCode(workflow);
+            int hashCodeAfterDecider = hashCode(workflow);
             if (hashCodeAfterDecider != hashCodeBeforeDecider) {
                 // Since hashCode is different there has been some update which needs to be saved.
                 executionDAOFacade.updateWorkflow(workflowModel);
@@ -423,6 +423,11 @@ public class WorkflowExecutor {
         } finally {
             executionLockService.releaseLock(workflow.getWorkflowId());
         }
+    }
+
+    // Weak hashCode method
+    private int hashCode(WorkflowModel workflow) {
+        return Objects.hash(workflow.getStatus(), workflow.getOutput(), workflow.getVariables());
     }
 
     /**

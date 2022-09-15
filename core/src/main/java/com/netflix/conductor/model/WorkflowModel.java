@@ -534,11 +534,6 @@ public class WorkflowModel {
                 && Objects.equals(getUpdatedBy(), that.getUpdatedBy());
     }
 
-    // Light weight hashCode method
-    public static int hashCode(WorkflowModel workflow) {
-        return Objects.hash(workflow.getStatus(), workflow.getOutput(), workflow.getVariables());
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(
