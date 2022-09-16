@@ -137,7 +137,7 @@ __${SOURCE.input/output.JSONPath}__
 	Conductor supports [JSONPath](http://goessner.net/articles/JsonPath/) specification and uses Java implementation from [here](https://github.com/jayway/JsonPath).
 
 !!! note "Escaping expressions"
-	To escape an expression, prefix it with an extra _$_ character (ex.: ```$${workflow.input...}```).
+	To escape an expression, prefix it with an extra _$_ character (ex.: ```${workflow.input...}```).
 
 **Example**
 
