@@ -3,14 +3,12 @@
   "version": 1,
   "tasks": [
     {
-      "name": "json_jq_1",
-      "taskReferenceName": "json_jq_1",
-      "description": "json_jq_1",
+      "name": "simple",
+      "taskReferenceName": "simple",
+      "description": "simple",
       "inputParameters": {
-        "data": [],
-        "queryExpression": "if(.data | length >0) then \"EXISTS\" else \"CREATE\" end"
       },
-      "type": "JSON_JQ_TRANSFORM",
+      "type": "SIMPLE",
       "startDelay": 0,
       "optional": false,
       "asyncComplete": false

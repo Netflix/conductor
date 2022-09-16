@@ -20,6 +20,7 @@ import com.netflix.conductor.test.base.AbstractSpecification
 
 import spock.lang.Shared
 
+import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedLargePayloadTask
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
 
 class WaitTaskSpec extends AbstractSpecification {
@@ -30,7 +31,7 @@ class WaitTaskSpec extends AbstractSpecification {
 
     def setup() {
         workflowTestUtil.registerWorkflows('wait_workflow_integration_test.json',
-        'set_variable_workflow_integration_test.json')
+                'set_variable_workflow_integration_test.json')
     }
 
     def "Test workflow with set variable task"() {
@@ -42,11 +43,26 @@ class WaitTaskSpec extends AbstractSpecification {
         def workflowInstanceId = workflowExecutor.startWorkflow(SET_VARIABLE_WORKFLOW, 1,
                 '', workflowInput, null, null, null)
 
-        then: "verify that the task is completed and variables were set"
+        then: "verify that the simple task is scheduled"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'simple'
+            tasks[0].status == Task.Status.SCHEDULED
+        }
+
+        when: "poll and complete the 'simple' with external payload storage"
+        def pollAndCompleteLargePayloadTask = workflowTestUtil.pollAndCompleteTask('simple', 'simple.worker',
+                ['ok1': 'ov1'])
+
+        then: "verify that the 'simple' was polled and acknowledged"
+        verifyPolledAndAcknowledgedLargePayloadTask(pollAndCompleteLargePayloadTask)
+
+        then: "ensure that the wait task is completed and the next task is scheduled"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.RUNNING
             tasks.size() == 3
-            tasks[0].taskType == 'JSON_JQ_TRANSFORM'
+            tasks[0].taskType == 'simple'
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == 'SET_VARIABLE'
             tasks[1].status == Task.Status.COMPLETED
@@ -60,11 +76,11 @@ class WaitTaskSpec extends AbstractSpecification {
         waitTask.status = Task.Status.COMPLETED
         workflowExecutor.updateTask(new TaskResult(waitTask))
 
-        then: "ensure that the wait task is completed and the next task is scheduled"
+        then: "ensure that the wait task is completed and the workflow is completed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 3
-            tasks[0].taskType == 'JSON_JQ_TRANSFORM'
+            tasks[0].taskType == 'simple'
             tasks[0].status == Task.Status.COMPLETED
             tasks[1].taskType == 'SET_VARIABLE'
             tasks[1].status == Task.Status.COMPLETED

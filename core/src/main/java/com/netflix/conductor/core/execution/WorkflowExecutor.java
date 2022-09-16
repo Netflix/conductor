@@ -413,20 +413,14 @@ public class WorkflowExecutor {
                     workflow.getWorkflowName(),
                     workflow.getWorkflowId());
             executionDAOFacade.populateWorkflowAndTaskPayloadData(workflow);
-            int hashCodeBeforeDecider = hashCode(workflow);
-            WorkflowModel workflowModel = decide(workflow);
-            int hashCodeAfterDecider = hashCode(workflow);
-            if (hashCodeAfterDecider != hashCodeBeforeDecider) {
-                // Since hashCode is different there has been some update which needs to be saved.
-                executionDAOFacade.updateWorkflow(workflowModel);
-            }
+            decide(workflow);
         } finally {
             executionLockService.releaseLock(workflow.getWorkflowId());
         }
     }
 
-    // Weak hashCode method
-    public int hashCode(WorkflowModel workflow) {
+    // Weak computeHash method
+    public int computeHash(WorkflowModel workflow) {
         // Task attributes are not being considered here because that is taken care in main decide
         // method.
         return Objects.hash(workflow.getStatus(), workflow.getOutput(), workflow.getVariables());
@@ -1326,12 +1320,22 @@ public class WorkflowExecutor {
     }
 
     /**
-     * @param workflow the workflow to evaluate the state for
+     * @param workflowModel the workflow to evaluate the state for
      * @return true if the workflow has completed (success or failed), false otherwise. Note: This
      *     method does not acquire the lock on the workflow and should ony be called / overridden if
      *     No locking is required or lock is acquired externally
      */
-    WorkflowModel decide(WorkflowModel workflow) {
+    WorkflowModel decide(WorkflowModel workflowModel) {
+        int hashBefore = this.computeHash(workflowModel);
+        WorkflowModel workflow = _decide(workflowModel);
+        int hashAfter = this.computeHash(workflow);
+        if (hashBefore != hashAfter) {
+            executionDAOFacade.updateWorkflow(workflow);
+        }
+        return workflow;
+    }
+
+    private WorkflowModel _decide(WorkflowModel workflow) {
         if (workflow.getStatus().isTerminal()) {
             if (!workflow.getStatus().isSuccessful()) {
                 cancelNonTerminalTasks(workflow);
@@ -1377,7 +1381,7 @@ public class WorkflowExecutor {
             }
 
             if (stateChanged) {
-                return decide(workflow);
+                return _decide(workflow);
             }
 
             if (!outcome.tasksToBeUpdated.isEmpty() || !tasksToBeScheduled.isEmpty()) {
