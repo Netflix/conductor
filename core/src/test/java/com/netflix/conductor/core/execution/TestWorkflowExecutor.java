@@ -2616,8 +2616,5 @@ public class TestWorkflowExecutor {
         workflow.setStatus(WorkflowModel.Status.COMPLETED);
         int hashCodeAfter = workflowExecutor.hashCode(workflow);
         Assert.assertNotEquals(hashCodeAfter, hashCodeBefore);
-        workflow.getTasks().get(0).setStatus(TaskModel.Status.FAILED);
-        int hashCodeAfterTaskStatusChange = workflowExecutor.hashCode(workflow);
-        Assert.assertNotEquals(hashCodeAfter, hashCodeAfterTaskStatusChange);
     }
 }
