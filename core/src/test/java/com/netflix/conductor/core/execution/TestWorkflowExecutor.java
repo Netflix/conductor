@@ -2612,12 +2612,12 @@ public class TestWorkflowExecutor {
 
         workflow.getTasks().addAll(Arrays.asList(subWorkflowTask, lambdaTask, simpleTask));
 
-        int hashCodeBefore = WorkflowModel.hashCode(workflow);
+        int hashCodeBefore = workflowExecutor.hashCode(workflow);
         workflow.setStatus(WorkflowModel.Status.COMPLETED);
-        int hashCodeAfter = WorkflowModel.hashCode(workflow);
+        int hashCodeAfter = workflowExecutor.hashCode(workflow);
         Assert.assertNotEquals(hashCodeAfter, hashCodeBefore);
         workflow.getTasks().get(0).setStatus(TaskModel.Status.FAILED);
-        int hashCodeAfterTaskStatusChange = WorkflowModel.hashCode(workflow);
+        int hashCodeAfterTaskStatusChange = workflowExecutor.hashCode(workflow);
         Assert.assertNotEquals(hashCodeAfter, hashCodeAfterTaskStatusChange);
     }
 }
