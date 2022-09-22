@@ -151,6 +151,22 @@ public class DefaultEventQueueManager extends LifecycleAwareComponent implements
                     .peek(Lifecycle::start)
                     .forEach(this::listen);
 
+            Set<String> removed = new HashSet<>(eventToQueueMap.keySet());
+            removed.removeAll(events);
+            removed.forEach(key -> {
+                ObservableQueue queue = eventToQueueMap.remove(key);
+                try {
+                    queue.stop();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to stop queue: " + queue, e);
+                }
+            });
+
+            LOGGER.debug("Event queues: {}", eventToQueueMap.keySet());
+            LOGGER.debug("Stored queue: {}", events);
+            LOGGER.debug("Removed queue: {}", removed);
+
+
         } catch (Exception e) {
             Monitors.error(getClass().getSimpleName(), "refresh");
             LOGGER.error("refresh event queues failed", e);
