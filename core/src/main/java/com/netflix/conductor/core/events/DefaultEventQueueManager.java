@@ -131,6 +131,7 @@ public class DefaultEventQueueManager extends LifecycleAwareComponent implements
         try {
             Set<String> events =
                     eventHandlerDAO.getAllEventHandlers().stream()
+                            .filter(EventHandler::isActive)
                             .map(EventHandler::getEvent)
                             .collect(Collectors.toSet());
 
