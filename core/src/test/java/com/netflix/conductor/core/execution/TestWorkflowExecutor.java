@@ -17,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -2590,31 +2589,5 @@ public class TestWorkflowExecutor {
         }
 
         return tasks;
-    }
-
-    @Test
-    public void testLightWeightHashCode() {
-        WorkflowModel workflow = generateSampleWorkflow();
-        TaskModel subWorkflowTask = new TaskModel();
-        subWorkflowTask.setTaskId(UUID.randomUUID().toString());
-        subWorkflowTask.setTaskType(TaskType.SUB_WORKFLOW.name());
-        subWorkflowTask.setStatus(TaskModel.Status.IN_PROGRESS);
-
-        TaskModel lambdaTask = new TaskModel();
-        lambdaTask.setTaskId(UUID.randomUUID().toString());
-        lambdaTask.setTaskType(TaskType.LAMBDA.name());
-        lambdaTask.setStatus(TaskModel.Status.SCHEDULED);
-
-        TaskModel simpleTask = new TaskModel();
-        simpleTask.setTaskId(UUID.randomUUID().toString());
-        simpleTask.setTaskType(TaskType.SIMPLE.name());
-        simpleTask.setStatus(TaskModel.Status.COMPLETED);
-
-        workflow.getTasks().addAll(Arrays.asList(subWorkflowTask, lambdaTask, simpleTask));
-
-        int hashCodeBefore = workflowExecutor.computeHash(workflow);
-        workflow.setStatus(WorkflowModel.Status.COMPLETED);
-        int hashCodeAfter = workflowExecutor.computeHash(workflow);
-        Assert.assertNotEquals(hashCodeAfter, hashCodeBefore);
     }
 }
