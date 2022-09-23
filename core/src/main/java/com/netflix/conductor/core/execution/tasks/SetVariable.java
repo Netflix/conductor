@@ -18,12 +18,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.core.config.ConductorProperties;
+import com.netflix.conductor.core.dal.ExecutionDAOFacade;
 import com.netflix.conductor.core.exception.NonTransientException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.model.TaskModel;
@@ -43,7 +43,10 @@ public class SetVariable extends WorkflowSystemTask {
 
     private final ExecutionDAOFacade executionDAOFacade;
 
-    public SetVariable(ConductorProperties properties, ObjectMapper objectMapper, ExecutionDAOFacade executionDAOFacade) {
+    public SetVariable(
+            ConductorProperties properties,
+            ObjectMapper objectMapper,
+            ExecutionDAOFacade executionDAOFacade) {
         super(TASK_TYPE_SET_VARIABLE);
         this.properties = properties;
         this.objectMapper = objectMapper;
