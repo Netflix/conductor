@@ -15,6 +15,7 @@ package com.netflix.conductor.client.automator;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -139,12 +140,12 @@ class TaskPollExecutor {
         String taskType = worker.getTaskDefName();
         PollingSemaphore pollingSemaphore = getPollingSemaphore(taskType);
 
-        Task task;
+        int slotsToAcquire = pollingSemaphore.availableSlots();
+        if (slotsToAcquire <= 0 || !pollingSemaphore.acquireSlots(slotsToAcquire)) {
+            return;
+        }
+        int acquiredTasks = 0;
         try {
-            if (!pollingSemaphore.canPoll()) {
-                return;
-            }
-
             String domain =
                     Optional.ofNullable(PropertyFactory.getString(taskType, DOMAIN, null))
                             .orElseGet(
@@ -155,52 +156,60 @@ class TaskPollExecutor {
                                                     .orElse(taskToDomain.get(taskType)));
 
             LOGGER.debug("Polling task of type: {} in domain: '{}'", taskType, domain);
-            task =
+
+            List<Task> tasks =
                     MetricsContainer.getPollTimer(taskType)
                             .record(
                                     () ->
-                                            taskClient.pollTask(
-                                                    taskType, worker.getIdentity(), domain));
+                                            taskClient.batchPollTasksInDomain(
+                                                    taskType,
+                                                    worker.getIdentity(),
+                                                    domain,
+                                                    slotsToAcquire,
+                                                    worker.getBatchPollTimeoutInMS()));
+            acquiredTasks = tasks.size();
+            for (Task task : tasks) {
+                if (Objects.nonNull(task) && StringUtils.isNotBlank(task.getTaskId())) {
+                    MetricsContainer.incrementTaskPollCount(taskType, 1);
+                    LOGGER.debug(
+                            "Polled task: {} of type: {} in domain: '{}', from worker: {}",
+                            task.getTaskId(),
+                            taskType,
+                            domain,
+                            worker.getIdentity());
 
-            if (Objects.nonNull(task) && StringUtils.isNotBlank(task.getTaskId())) {
-                MetricsContainer.incrementTaskPollCount(taskType, 1);
-                LOGGER.debug(
-                        "Polled task: {} of type: {} in domain: '{}', from worker: {}",
-                        task.getTaskId(),
-                        taskType,
-                        domain,
-                        worker.getIdentity());
+                    CompletableFuture<Task> taskCompletableFuture =
+                            CompletableFuture.supplyAsync(
+                                    () -> processTask(task, worker, pollingSemaphore),
+                                    executorService);
 
-                CompletableFuture<Task> taskCompletableFuture =
-                        CompletableFuture.supplyAsync(
-                                () -> processTask(task, worker, pollingSemaphore), executorService);
+                    if (task.getResponseTimeoutSeconds() > 0 && worker.leaseExtendEnabled()) {
+                        ScheduledFuture<?> leaseExtendFuture =
+                                leaseExtendExecutorService.scheduleWithFixedDelay(
+                                        extendLease(task, taskCompletableFuture),
+                                        Math.round(
+                                                task.getResponseTimeoutSeconds()
+                                                        * LEASE_EXTEND_DURATION_FACTOR),
+                                        Math.round(
+                                                task.getResponseTimeoutSeconds()
+                                                        * LEASE_EXTEND_DURATION_FACTOR),
+                                        TimeUnit.SECONDS);
+                        leaseExtendMap.put(task.getTaskId(), leaseExtendFuture);
+                    }
 
-                if (task.getResponseTimeoutSeconds() > 0 && worker.leaseExtendEnabled()) {
-                    ScheduledFuture<?> leaseExtendFuture =
-                            leaseExtendExecutorService.scheduleWithFixedDelay(
-                                    extendLease(task, taskCompletableFuture),
-                                    Math.round(
-                                            task.getResponseTimeoutSeconds()
-                                                    * LEASE_EXTEND_DURATION_FACTOR),
-                                    Math.round(
-                                            task.getResponseTimeoutSeconds()
-                                                    * LEASE_EXTEND_DURATION_FACTOR),
-                                    TimeUnit.SECONDS);
-                    leaseExtendMap.put(task.getTaskId(), leaseExtendFuture);
+                    taskCompletableFuture.whenComplete(this::finalizeTask);
+                } else {
+                    // no task was returned in the poll, release the permit
+                    pollingSemaphore.complete(1);
                 }
-
-                taskCompletableFuture.whenComplete(this::finalizeTask);
-            } else {
-                // no task was returned in the poll, release the permit
-                pollingSemaphore.complete();
             }
         } catch (Exception e) {
-            // release the permit if exception is thrown during polling, because the thread would
-            // not be busy
-            pollingSemaphore.complete();
             MetricsContainer.incrementTaskPollErrorCount(worker.getTaskDefName(), e);
             LOGGER.error("Error when polling for tasks", e);
         }
+
+        // immediately release unused permits
+        pollingSemaphore.complete(slotsToAcquire - acquiredTasks);
     }
 
     void shutdown(int timeout) {
@@ -247,7 +256,7 @@ class TaskPollExecutor {
             TaskResult result = new TaskResult(task);
             handleException(t, result, worker, task);
         } finally {
-            pollingSemaphore.complete();
+            pollingSemaphore.complete(1);
         }
         return task;
     }

@@ -35,6 +35,7 @@ import static com.netflix.conductor.common.metadata.tasks.TaskResult.Status.COMP
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -169,17 +170,17 @@ public class TaskRunnerConfigurerTest {
                         .withUpdateRetryCount(1)
                         .withWorkerNamePrefix("test-worker-")
                         .build();
-        when(taskClient.pollTask(any(), any(), any()))
+        when(taskClient.batchPollTasksInDomain(any(), any(), any(), anyInt(), anyInt()))
                 .thenAnswer(
                         invocation -> {
                             Object[] args = invocation.getArguments();
                             String taskName = args[0].toString();
                             if (taskName.equals(task1Name)) {
-                                return task1;
+                                return Arrays.asList(task1);
                             } else if (taskName.equals(task2Name)) {
-                                return task2;
+                                return Arrays.asList(task2);
                             } else {
-                                return null;
+                                return Collections.emptyList();
                             }
                         });
         when(taskClient.ack(any(), any())).thenReturn(true);
