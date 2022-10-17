@@ -740,10 +740,8 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
 
             SearchResult<String> taskSearchResult =
                     searchTasks(
-                            QueryBuilders.boolQuery()
-                                    .must(QueryBuilders.termQuery("workflowId", workflowId))
-                                    .must(QueryBuilders.termQuery("taskId", taskId))
-                                    .toString(),
+                            String.format(
+                                    "(taskId='%s') AND (workflowId='%s')", taskId, workflowId),
                             "*",
                             0,
                             1,
@@ -751,17 +749,21 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
 
             if (taskSearchResult.getTotalHits() == 0) {
                 LOGGER.error("Task: {} does not belong to workflow: {}", taskId, workflowId);
+                Monitors.error(CLASS_NAME, "removeTask");
+                return;
             }
 
             DeleteRequest request = new DeleteRequest(taskIndexName, docType, taskId);
             DeleteResponse response = elasticSearchClient.delete(request).actionGet();
             long endTime = Instant.now().toEpochMilli();
 
-            if (response.getResult() == DocWriteResponse.Result.DELETED) {
+            if (response.getResult() != DocWriteResponse.Result.DELETED) {
                 LOGGER.error(
                         "Index removal failed - task not found by id: {} of workflow: {}",
                         taskId,
                         workflowId);
+                Monitors.error(CLASS_NAME, "removeTask");
+                return;
             }
             LOGGER.debug(
                     "Time taken {} for removing task:{} of workflow: {}",
@@ -774,7 +776,7 @@ public class ElasticSearchDAOV6 extends ElasticSearchBaseDAO implements IndexDAO
         } catch (Exception e) {
             LOGGER.error(
                     "Failed to remove task: {} of workflow: {} from index", taskId, workflowId, e);
-            Monitors.error(CLASS_NAME, "remove");
+            Monitors.error(CLASS_NAME, "removeTask");
         }
     }
 

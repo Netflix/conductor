@@ -817,10 +817,7 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
 
         SearchResult<String> taskSearchResult =
                 searchTasks(
-                        QueryBuilders.boolQuery()
-                                .must(QueryBuilders.termQuery("workflowId", workflowId))
-                                .must(QueryBuilders.termQuery("taskId", taskId))
-                                .toString(),
+                        String.format("(taskId='%s') AND (workflowId='%s')", taskId, workflowId),
                         "*",
                         0,
                         1,
@@ -828,6 +825,8 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
 
         if (taskSearchResult.getTotalHits() == 0) {
             LOGGER.error("Task: {} does not belong to workflow: {}", taskId, workflowId);
+            Monitors.error(className, "removeTask");
+            return;
         }
 
         DeleteRequest request = new DeleteRequest(taskIndexName, docType, taskId);
@@ -835,8 +834,10 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
         try {
             DeleteResponse response = elasticSearchClient.delete(request);
 
-            if (response.getResult() == DocWriteResponse.Result.NOT_FOUND) {
+            if (response.getResult() != DocWriteResponse.Result.DELETED) {
                 LOGGER.error("Index removal failed - task not found by id: {}", workflowId);
+                Monitors.error(className, "removeTask");
+                return;
             }
             long endTime = Instant.now().toEpochMilli();
             LOGGER.debug(
@@ -850,7 +851,7 @@ public class ElasticSearchRestDAOV6 extends ElasticSearchBaseDAO implements Inde
         } catch (IOException e) {
             LOGGER.error(
                     "Failed to remove task {} of workflow: {} from index", taskId, workflowId, e);
-            Monitors.error(className, "remove");
+            Monitors.error(className, "removeTask");
         }
     }
 
