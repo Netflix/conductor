@@ -111,8 +111,10 @@ public class WorkflowResource {
     public void delete(
             @PathVariable("workflowId") String workflowId,
             @RequestParam(value = "archiveWorkflow", defaultValue = "true", required = false)
-                    boolean archiveWorkflow) {
-        workflowService.deleteWorkflow(workflowId, archiveWorkflow);
+                    boolean archiveWorkflow,
+            @RequestParam(value = "removeTask", defaultValue = "false", required = false)
+                    boolean removeTasks) {
+        workflowService.deleteWorkflow(workflowId, archiveWorkflow, removeTasks);
     }
 
     @GetMapping("/running/{name}")

@@ -44,6 +44,7 @@ import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.utils.ExternalPayloadStorageUtils;
+import com.netflix.conductor.core.utils.QueueUtils;
 import com.netflix.conductor.dao.*;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
@@ -333,10 +334,26 @@ public class ExecutionDAOFacade {
      *
      * @param workflowId the id of the workflow to be removed
      * @param archiveWorkflow if true, the workflow will be archived in the {@link IndexDAO} after
-     *     removal from {@link ExecutionDAO}
+     *     removal from {@link ExecutionDAO}. Next to this if removeTasks is true, the tasks
+     *     associated with the workflow will also be archived in the {@link IndexDAO} after removal
+     *     from {@link ExecutionDAO}.
+     * @param removeTasks if true, the tasks associated with the workflow will be removed
      */
-    public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
+    public void removeWorkflow(String workflowId, boolean archiveWorkflow, boolean removeTasks) {
+        if (!removeTasks) {
+            LOGGER.info("Not removing tasks of workflow: {}", workflowId);
+        }
+
         WorkflowModel workflow = getWorkflowModelFromDataStore(workflowId, true);
+        List<TaskModel> tasks = workflow.getTasks();
+
+        executionDAO.removeWorkflow(workflowId);
+        if (removeTasks) {
+            tasks.forEach(
+                    task -> {
+                        executionDAO.removeTask(task.getTaskId());
+                    });
+        }
 
         try {
             removeWorkflowIndex(workflow, archiveWorkflow);
@@ -344,12 +361,41 @@ public class ExecutionDAOFacade {
             throw new TransientException("Workflow can not be serialized to json", e);
         }
 
-        executionDAO.removeWorkflow(workflowId);
+        if (removeTasks) {
+            tasks.forEach(
+                    task -> {
+                        try {
+                            removeTaskIndex(workflow, task, archiveWorkflow);
+                        } catch (JsonProcessingException e) {
+                            throw new TransientException(
+                                    String.format(
+                                            "Task %s of workflow %s can not be serialized to json",
+                                            task.getTaskId(), workflow.getWorkflowId()),
+                                    e);
+                        }
+                    });
+        }
 
         try {
             queueDAO.remove(DECIDER_QUEUE, workflowId);
         } catch (Exception e) {
             LOGGER.info("Error removing workflow: {} from decider queue", workflowId, e);
+        }
+
+        if (removeTasks) {
+            tasks.forEach(
+                    task -> {
+                        try {
+                            queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
+                        } catch (Exception e) {
+                            LOGGER.info(
+                                    "Error removing task: {} of workflow: {} from {} queue",
+                                    workflowId,
+                                    task.getTaskId(),
+                                    QueueUtils.getQueueName(task),
+                                    e);
+                        }
+                    });
         }
     }
 
@@ -507,6 +553,29 @@ public class ExecutionDAOFacade {
 
     public void removeTask(String taskId) {
         executionDAO.removeTask(taskId);
+    }
+
+    private void removeTaskIndex(WorkflowModel workflow, TaskModel task, boolean archiveTask)
+            throws JsonProcessingException {
+        if (archiveTask) {
+            if (task.getStatus().isTerminal()) {
+                // Only allow archival if task is in terminal state
+                // DO NOT archive async, since if archival errors out, task data will be lost
+                indexDAO.updateTask(
+                        workflow.getWorkflowId(),
+                        task.getTaskId(),
+                        new String[] {RAW_JSON_FIELD, ARCHIVED_FIELD},
+                        new Object[] {objectMapper.writeValueAsString(task), true});
+            } else {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Cannot archive task: %s of workflow: %s with status: %s",
+                                task.getTaskId(), workflow.getWorkflowId(), task.getStatus()));
+            }
+        } else {
+            // Not archiving, remove task from index
+            indexDAO.asyncRemoveTask(workflow.getWorkflowId(), task.getTaskId());
+        }
     }
 
     public void extendLease(TaskModel taskModel) {

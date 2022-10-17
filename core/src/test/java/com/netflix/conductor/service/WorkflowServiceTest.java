@@ -41,13 +41,7 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import static com.netflix.conductor.TestUtils.getConstraintViolationMessages;
 
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -244,15 +238,33 @@ public class WorkflowServiceTest {
     }
 
     @Test
-    public void testDeleteWorkflow() {
-        workflowService.deleteWorkflow("w123", true);
-        verify(executionService, times(1)).removeWorkflow(anyString(), anyBoolean());
+    public void testDeleteWorkflowWithoutTask() {
+        workflowService.deleteWorkflow("w123", true, false);
+        verify(executionService, times(1)).removeWorkflow(anyString(), anyBoolean(), eq(false));
+    }
+
+    @Test
+    public void testDeleteWorkflowWithTask() {
+        workflowService.deleteWorkflow("w123", true, true);
+        verify(executionService, times(1)).removeWorkflow(anyString(), anyBoolean(), eq(true));
     }
 
     @Test(expected = ConstraintViolationException.class)
-    public void testInvalidDeleteWorkflow() {
+    public void testInvalidDeleteWorkflowWithoutTask() {
         try {
-            workflowService.deleteWorkflow(null, true);
+            workflowService.deleteWorkflow(null, true, false);
+        } catch (ConstraintViolationException ex) {
+            assertEquals(1, ex.getConstraintViolations().size());
+            Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
+            assertTrue(messages.contains("WorkflowId cannot be null or empty."));
+            throw ex;
+        }
+    }
+
+    @Test(expected = ConstraintViolationException.class)
+    public void testInvalidDeleteWorkflowWithTask() {
+        try {
+            workflowService.deleteWorkflow(null, true, true);
         } catch (ConstraintViolationException ex) {
             assertEquals(1, ex.getConstraintViolations().size());
             Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
