@@ -30,13 +30,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
-import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
 import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
+import com.netflix.conductor.core.operation.StartWorkflowOperation;
 
 import static com.netflix.conductor.TestUtils.getConstraintViolationMessages;
 
@@ -61,6 +61,11 @@ public class WorkflowServiceTest {
         }
 
         @Bean
+        public StartWorkflowOperation startWorkflowOperation() {
+            return mock(StartWorkflowOperation.class);
+        }
+
+        @Bean
         public ExecutionService executionService() {
             return mock(ExecutionService.class);
         }
@@ -74,8 +79,10 @@ public class WorkflowServiceTest {
         public WorkflowService workflowService(
                 WorkflowExecutor workflowExecutor,
                 ExecutionService executionService,
-                MetadataService metadataService) {
-            return new WorkflowServiceImpl(workflowExecutor, executionService, metadataService);
+                MetadataService metadataService,
+                StartWorkflowOperation startWorkflowOperation) {
+            return new WorkflowServiceImpl(
+                    workflowExecutor, executionService, metadataService, startWorkflowOperation);
         }
     }
 
@@ -97,73 +104,6 @@ public class WorkflowServiceTest {
             assertTrue(messages.contains("StartWorkflowRequest cannot be null"));
             throw ex;
         }
-    }
-
-    @Test(expected = ConstraintViolationException.class)
-    public void testStartWorkflowName() {
-        try {
-            Map<String, Object> input = new HashMap<>();
-            input.put("1", "abc");
-            workflowService.startWorkflow(null, 1, "abc", input);
-        } catch (ConstraintViolationException ex) {
-            assertEquals(1, ex.getConstraintViolations().size());
-            Set<String> messages = getConstraintViolationMessages(ex.getConstraintViolations());
-            assertTrue(messages.contains("Workflow name cannot be null or empty"));
-            throw ex;
-        }
-    }
-
-    @Test
-    public void testStartWorkflow() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test");
-        workflowDef.setVersion(1);
-
-        StartWorkflowRequest startWorkflowRequest = new StartWorkflowRequest();
-        startWorkflowRequest.setName("test");
-        startWorkflowRequest.setVersion(1);
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("1", "abc");
-        startWorkflowRequest.setInput(input);
-        String workflowID = "w112";
-
-        when(metadataService.getWorkflowDef("test", 1)).thenReturn(workflowDef);
-        when(workflowExecutor.startWorkflow(
-                        anyString(),
-                        anyInt(),
-                        isNull(),
-                        anyInt(),
-                        anyMap(),
-                        isNull(),
-                        isNull(),
-                        anyMap()))
-                .thenReturn(workflowID);
-        assertEquals("w112", workflowService.startWorkflow(startWorkflowRequest));
-    }
-
-    @Test
-    public void testStartWorkflowParam() {
-        WorkflowDef workflowDef = new WorkflowDef();
-        workflowDef.setName("test");
-        workflowDef.setVersion(1);
-
-        Map<String, Object> input = new HashMap<>();
-        input.put("1", "abc");
-        String workflowID = "w112";
-
-        when(metadataService.getWorkflowDef("test", 1)).thenReturn(workflowDef);
-        when(workflowExecutor.startWorkflow(
-                        anyString(), anyInt(), anyString(), anyInt(), anyMap(), isNull()))
-                .thenReturn(workflowID);
-        assertEquals("w112", workflowService.startWorkflow("test", 1, "c123", input));
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testNotFoundExceptionStartWorkflowMessageParam() {
-        when(metadataService.getWorkflowDef("test", 1)).thenReturn(null);
-
-        workflowService.startWorkflow("test", 1, "c123", Map.of("1", "abc"));
     }
 
     @Test(expected = ConstraintViolationException.class)

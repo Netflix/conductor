@@ -12,8 +12,12 @@
  */
 package com.netflix.conductor.test.integration
 
+import org.springframework.beans.factory.annotation.Autowired
+
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.run.Workflow
+import com.netflix.conductor.core.execution.tasks.Join
+import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.test.base.AbstractSpecification
 
 import spock.lang.Shared
@@ -22,6 +26,9 @@ import spock.lang.Unroll
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
 
 class DecisionTaskSpec extends AbstractSpecification {
+
+    @Autowired
+    Join joinTask
 
     @Shared
     def DECISION_WF = "DecisionWorkflow"
@@ -47,9 +54,9 @@ class DecisionTaskSpec extends AbstractSpecification {
         input['case'] = 'c'
 
         when: "A decision workflow is started with the workflow input"
-        def workflowInstanceId = workflowExecutor.startWorkflow(DECISION_WF, 1,
+        def workflowInstanceId = startWorkflow(DECISION_WF, 1,
                 'decision_workflow', input,
-                null, null, null)
+                null)
 
         then: "verify that the workflow is in running state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -118,9 +125,9 @@ class DecisionTaskSpec extends AbstractSpecification {
         input['case'] = 'c'
 
         when: "A decision workflow is started with the workflow input"
-        def workflowInstanceId = workflowExecutor.startWorkflow(FORK_JOIN_DECISION_WF, 1,
+        def workflowInstanceId = startWorkflow(FORK_JOIN_DECISION_WF, 1,
                 'decision_forkjoin', input,
-                null, null, null)
+                null)
 
         then: "verify that the workflow is in running state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -139,6 +146,7 @@ class DecisionTaskSpec extends AbstractSpecification {
         }
 
         when: "the tasks 'integration_task_1' and 'integration_task_10' are polled and completed"
+        def joinTaskId = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).getTaskByRefName("joinTask").taskId
         def polledAndCompletedTask1Try1 = workflowTestUtil.pollAndCompleteTask('integration_task_1', 'task1.integration.worker')
         def polledAndCompletedTask10Try1 = workflowTestUtil.pollAndCompleteTask('integration_task_10', 'task1.integration.worker')
 
@@ -189,7 +197,10 @@ class DecisionTaskSpec extends AbstractSpecification {
         then: "verify that the task is completed and acknowledged"
         verifyPolledAndAcknowledgedTask(polledAndCompletedTask20Try1)
 
-        and: "verify that the 'integration_task_2' is COMPLETED and the workflow has progressed"
+        when: "JOIN task is polled and executed"
+        asyncSystemTaskExecutor.execute(joinTask, joinTaskId)
+
+        then: "verify that JOIN is COMPLETED and the workflow has progressed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
             tasks.size() == 7
@@ -208,9 +219,9 @@ class DecisionTaskSpec extends AbstractSpecification {
         input['param2'] = 'two'
 
         when: "A conditional workflow is started with the workflow input"
-        def workflowInstanceId = workflowExecutor.startWorkflow(COND_TASK_WF, 1,
+        def workflowInstanceId = startWorkflow(COND_TASK_WF, 1,
                 'conditional_default', input,
-                null, null, null)
+                null)
 
         then: "verify that the workflow is running and the default condition case was executed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -249,9 +260,9 @@ class DecisionTaskSpec extends AbstractSpecification {
         input['param2'] = caseValue
 
         when: "A conditional workflow is started with the workflow input"
-        def workflowInstanceId = workflowExecutor.startWorkflow(COND_TASK_WF, 1,
+        def workflowInstanceId = startWorkflow(COND_TASK_WF, 1,
                 workflowCorrelationId, input,
-                null, null, null)
+                null)
 
         then: "verify that the workflow is running and the 'nested' and '#caseValue' condition case was executed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -298,9 +309,9 @@ class DecisionTaskSpec extends AbstractSpecification {
         input['finalCase'] = 'notify'
 
         when: "A conditional workflow is started with the workflow input"
-        def workflowInstanceId = workflowExecutor.startWorkflow(COND_TASK_WF, 1,
+        def workflowInstanceId = startWorkflow(COND_TASK_WF, 1,
                 'conditional_three', input,
-                null, null, null)
+                null)
 
         then: "verify that the workflow is running and the 'three' condition case was executed"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {

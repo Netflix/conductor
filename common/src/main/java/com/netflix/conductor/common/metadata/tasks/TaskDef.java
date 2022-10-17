@@ -30,12 +30,12 @@ import com.netflix.conductor.annotations.protogen.ProtoField;
 import com.netflix.conductor.annotations.protogen.ProtoMessage;
 import com.netflix.conductor.common.constraints.OwnerEmailMandatoryConstraint;
 import com.netflix.conductor.common.constraints.TaskTimeoutConstraint;
-import com.netflix.conductor.common.metadata.Auditable;
+import com.netflix.conductor.common.metadata.BaseDef;
 
 @ProtoMessage
 @TaskTimeoutConstraint
 @Valid
-public class TaskDef extends Auditable {
+public class TaskDef extends BaseDef {
 
     @ProtoEnum
     public enum TimeoutPolicy {
@@ -51,7 +51,7 @@ public class TaskDef extends Auditable {
         LINEAR_BACKOFF
     }
 
-    private static final int ONE_HOUR = 60 * 60;
+    public static final int ONE_HOUR = 60 * 60;
 
     /** Unique name identifying the task. The name is unique across */
     @NotEmpty(message = "TaskDef name cannot be null or empty")

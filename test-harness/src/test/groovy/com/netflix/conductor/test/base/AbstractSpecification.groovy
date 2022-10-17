@@ -17,7 +17,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
 
 import com.netflix.conductor.core.execution.AsyncSystemTaskExecutor
+import com.netflix.conductor.core.execution.StartWorkflowInput
 import com.netflix.conductor.core.execution.WorkflowExecutor
+import com.netflix.conductor.core.operation.StartWorkflowOperation
 import com.netflix.conductor.core.reconciliation.WorkflowSweeper
 import com.netflix.conductor.service.ExecutionService
 import com.netflix.conductor.service.MetadataService
@@ -47,11 +49,20 @@ abstract class AbstractSpecification extends Specification {
     @Autowired
     AsyncSystemTaskExecutor asyncSystemTaskExecutor
 
+    @Autowired
+    StartWorkflowOperation startWorkflowOperation
+
     def cleanup() {
         workflowTestUtil.clearWorkflows()
     }
 
     void sweep(String workflowId) {
         workflowSweeper.sweep(workflowId)
+    }
+
+    protected String startWorkflow(String name, Integer version, String correlationId, Map<String, Object> workflowInput, String workflowInputPath) {
+        StartWorkflowInput input = new StartWorkflowInput(name: name, version: version, correlationId: correlationId, workflowInput: workflowInput, externalInputPayloadStoragePath: workflowInputPath)
+
+        startWorkflowOperation.execute(input)
     }
 }

@@ -190,7 +190,7 @@ public class ExternalPayloadStorageUtils {
                         break;
                 }
             }
-        } catch (TransientException te) {
+        } catch (TransientException | TerminateWorkflowException te) {
             throw te;
         } catch (Exception e) {
             LOGGER.error(
@@ -221,7 +221,6 @@ public class ExternalPayloadStorageUtils {
         } else {
             task.setOutputData(new HashMap<>());
         }
-        throw new TerminateWorkflowException(errorMsg, WorkflowModel.Status.FAILED, task);
     }
 
     @VisibleForTesting
