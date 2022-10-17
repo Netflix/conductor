@@ -239,7 +239,7 @@ class QueueResiliencySpec extends AbstractResiliencySpecification {
         notThrown(Exception)
     }
 
-    def "Verify remove workflow without tasks succeeds when QueueDAO is unavailable"() {
+    def "Verify remove workflow succeeds when QueueDAO is unavailable"() {
         when: "Start a simple workflow"
         def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
                 .withName(SIMPLE_TWO_TASK_WORKFLOW)
@@ -254,7 +254,7 @@ class QueueResiliencySpec extends AbstractResiliencySpecification {
         }
 
         when: "We get a workflow when QueueDAO is unavailable"
-        workflowResource.delete(workflowInstanceId, false, false)
+        workflowResource.delete(workflowInstanceId, false)
 
         then: "Verify queueDAO is called to remove from _deciderQueue"
         1 * queueDAO.remove(Utils.DECIDER_QUEUE, _)
@@ -272,7 +272,7 @@ class QueueResiliencySpec extends AbstractResiliencySpecification {
         thrown(NotFoundException.class)
     }
 
-    def "Verify remove workflow with tasks succeeds when QueueDAO is unavailable"() {
+    def "Verify archive workflow succeeds when QueueDAO is unavailable"() {
         when: "Start a simple workflow"
         def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
                 .withName(SIMPLE_TWO_TASK_WORKFLOW)
@@ -287,7 +287,7 @@ class QueueResiliencySpec extends AbstractResiliencySpecification {
         }
 
         when: "We get a workflow when QueueDAO is unavailable"
-        workflowResource.delete(workflowInstanceId, false, true)
+        workflowResource.delete(workflowInstanceId, true)
 
         then: "Verify queueDAO is called to remove from _deciderQueue"
         1 * queueDAO.remove(Utils.DECIDER_QUEUE, _)
