@@ -135,7 +135,7 @@ public class StartWorkflowOperation implements WorkflowOperation<StartWorkflowIn
             // It's possible the remove workflow call hits an exception as well, in that case we
             // want to log both errors to help diagnosis.
             try {
-                executionDAOFacade.removeWorkflow(workflowId, false, false);
+                executionDAOFacade.removeWorkflow(workflowId, false);
             } catch (Exception rwe) {
                 LOGGER.error("Could not remove the workflowId: " + workflowId, rwe);
             }

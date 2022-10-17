@@ -137,7 +137,7 @@ public class ExecutionDAOFacadeTest {
     }
 
     @Test
-    public void testRemoveWorkflowWithoutTasks() {
+    public void testRemoveWorkflow() {
         WorkflowModel workflow = new WorkflowModel();
         workflow.setWorkflowId("workflowId");
         workflow.setStatus(WorkflowModel.Status.COMPLETED);
@@ -147,25 +147,7 @@ public class ExecutionDAOFacadeTest {
         workflow.setTasks(Collections.singletonList(task));
 
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", false, false);
-        verify(indexDAO, never()).updateWorkflow(anyString(), any(), any());
-        verify(indexDAO, never()).updateTask(anyString(), anyString(), any(), any());
-        verify(indexDAO, times(1)).asyncRemoveWorkflow(anyString());
-        verify(indexDAO, never()).asyncRemoveTask(anyString(), anyString());
-    }
-
-    @Test
-    public void testRemoveWorkflowWithTasks() {
-        WorkflowModel workflow = new WorkflowModel();
-        workflow.setWorkflowId("workflowId");
-        workflow.setStatus(WorkflowModel.Status.COMPLETED);
-
-        TaskModel task = new TaskModel();
-        task.setTaskId("taskId");
-        workflow.setTasks(Collections.singletonList(task));
-
-        when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", false, true);
+        executionDAOFacade.removeWorkflow("workflowId", false);
         verify(indexDAO, never()).updateWorkflow(anyString(), any(), any());
         verify(indexDAO, never()).updateTask(anyString(), anyString(), any(), any());
         verify(indexDAO, times(1)).asyncRemoveWorkflow(anyString());
@@ -173,25 +155,12 @@ public class ExecutionDAOFacadeTest {
     }
 
     @Test
-    public void testArchiveWorkflowWithoutTasks() throws Exception {
+    public void testArchiveWorkflow() throws Exception {
         InputStream stream = TestDeciderService.class.getResourceAsStream("/completed.json");
         WorkflowModel workflow = objectMapper.readValue(stream, WorkflowModel.class);
 
         when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", true, false);
-        verify(indexDAO, times(1)).updateWorkflow(anyString(), any(), any());
-        verify(indexDAO, never()).updateTask(anyString(), anyString(), any(), any());
-        verify(indexDAO, never()).removeWorkflow(anyString());
-        verify(indexDAO, never()).removeTask(anyString(), anyString());
-    }
-
-    @Test
-    public void testArchiveWorkflowWithTasks() throws Exception {
-        InputStream stream = TestDeciderService.class.getResourceAsStream("/completed.json");
-        WorkflowModel workflow = objectMapper.readValue(stream, WorkflowModel.class);
-
-        when(executionDAO.getWorkflow(anyString(), anyBoolean())).thenReturn(workflow);
-        executionDAOFacade.removeWorkflow("workflowId", true, true);
+        executionDAOFacade.removeWorkflow("workflowId", true);
         verify(indexDAO, times(1)).updateWorkflow(anyString(), any(), any());
         verify(indexDAO, times(15)).updateTask(anyString(), anyString(), any(), any());
         verify(indexDAO, never()).removeWorkflow(anyString());

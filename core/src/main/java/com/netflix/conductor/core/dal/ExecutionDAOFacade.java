@@ -333,27 +333,18 @@ public class ExecutionDAOFacade {
      * Removes the workflow from the data store.
      *
      * @param workflowId the id of the workflow to be removed
-     * @param archiveWorkflow if true, the workflow will be archived in the {@link IndexDAO} after
-     *     removal from {@link ExecutionDAO}. Next to this if removeTasks is true, the tasks
-     *     associated with the workflow will also be archived in the {@link IndexDAO} after removal
-     *     from {@link ExecutionDAO}.
-     * @param removeTasks if true, the tasks associated with the workflow will be removed
+     * @param archiveWorkflow if true, the workflow and associated tasks will be archived in the
+     *     {@link IndexDAO} after removal from {@link ExecutionDAO}.
      */
-    public void removeWorkflow(String workflowId, boolean archiveWorkflow, boolean removeTasks) {
-        if (!removeTasks) {
-            LOGGER.info("Not removing tasks of workflow: {}", workflowId);
-        }
-
+    public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         WorkflowModel workflow = getWorkflowModelFromDataStore(workflowId, true);
         List<TaskModel> tasks = workflow.getTasks();
 
         executionDAO.removeWorkflow(workflowId);
-        if (removeTasks) {
-            tasks.forEach(
-                    task -> {
-                        executionDAO.removeTask(task.getTaskId());
-                    });
-        }
+        tasks.forEach(
+                task -> {
+                    executionDAO.removeTask(task.getTaskId());
+                });
 
         try {
             removeWorkflowIndex(workflow, archiveWorkflow);
@@ -361,20 +352,18 @@ public class ExecutionDAOFacade {
             throw new TransientException("Workflow can not be serialized to json", e);
         }
 
-        if (removeTasks) {
-            tasks.forEach(
-                    task -> {
-                        try {
-                            removeTaskIndex(workflow, task, archiveWorkflow);
-                        } catch (JsonProcessingException e) {
-                            throw new TransientException(
-                                    String.format(
-                                            "Task %s of workflow %s can not be serialized to json",
-                                            task.getTaskId(), workflow.getWorkflowId()),
-                                    e);
-                        }
-                    });
-        }
+        tasks.forEach(
+                task -> {
+                    try {
+                        removeTaskIndex(workflow, task, archiveWorkflow);
+                    } catch (JsonProcessingException e) {
+                        throw new TransientException(
+                                String.format(
+                                        "Task %s of workflow %s can not be serialized to json",
+                                        task.getTaskId(), workflow.getWorkflowId()),
+                                e);
+                    }
+                });
 
         try {
             queueDAO.remove(DECIDER_QUEUE, workflowId);
@@ -382,21 +371,19 @@ public class ExecutionDAOFacade {
             LOGGER.info("Error removing workflow: {} from decider queue", workflowId, e);
         }
 
-        if (removeTasks) {
-            tasks.forEach(
-                    task -> {
-                        try {
-                            queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
-                        } catch (Exception e) {
-                            LOGGER.info(
-                                    "Error removing task: {} of workflow: {} from {} queue",
-                                    workflowId,
-                                    task.getTaskId(),
-                                    QueueUtils.getQueueName(task),
-                                    e);
-                        }
-                    });
-        }
+        tasks.forEach(
+                task -> {
+                    try {
+                        queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
+                    } catch (Exception e) {
+                        LOGGER.info(
+                                "Error removing task: {} of workflow: {} from {} queue",
+                                workflowId,
+                                task.getTaskId(),
+                                QueueUtils.getQueueName(task),
+                                e);
+                    }
+                });
     }
 
     private void removeWorkflowIndex(WorkflowModel workflow, boolean archiveWorkflow)
