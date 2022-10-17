@@ -564,8 +564,8 @@ public class ExecutionDAOFacade {
                 indexDAO.updateTask(
                         workflow.getWorkflowId(),
                         task.getTaskId(),
-                        new String[] {RAW_JSON_FIELD, ARCHIVED_FIELD},
-                        new Object[] {objectMapper.writeValueAsString(task), true});
+                        new String[] {ARCHIVED_FIELD},
+                        new Object[] {true});
             } else {
                 throw new IllegalArgumentException(
                         String.format(
