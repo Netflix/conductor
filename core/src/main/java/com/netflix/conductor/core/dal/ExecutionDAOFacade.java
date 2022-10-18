@@ -338,20 +338,15 @@ public class ExecutionDAOFacade {
      */
     public void removeWorkflow(String workflowId, boolean archiveWorkflow) {
         WorkflowModel workflow = getWorkflowModelFromDataStore(workflowId, true);
-        List<TaskModel> tasks = workflow.getTasks();
 
         executionDAO.removeWorkflow(workflowId);
-        tasks.forEach(
-                task -> {
-                    executionDAO.removeTask(task.getTaskId());
-                });
 
+        List<TaskModel> tasks = workflow.getTasks();
         try {
             removeWorkflowIndex(workflow, archiveWorkflow);
         } catch (JsonProcessingException e) {
             throw new TransientException("Workflow can not be serialized to json", e);
         }
-
         tasks.forEach(
                 task -> {
                     try {
@@ -364,12 +359,6 @@ public class ExecutionDAOFacade {
                                 e);
                     }
                 });
-
-        try {
-            queueDAO.remove(DECIDER_QUEUE, workflowId);
-        } catch (Exception e) {
-            LOGGER.info("Error removing workflow: {} from decider queue", workflowId, e);
-        }
 
         tasks.forEach(
                 task -> {
@@ -384,6 +373,12 @@ public class ExecutionDAOFacade {
                                 e);
                     }
                 });
+
+        try {
+            queueDAO.remove(DECIDER_QUEUE, workflowId);
+        } catch (Exception e) {
+            LOGGER.info("Error removing workflow: {} from decider queue", workflowId, e);
+        }
     }
 
     private void removeWorkflowIndex(WorkflowModel workflow, boolean archiveWorkflow)
