@@ -272,39 +272,6 @@ class QueueResiliencySpec extends AbstractResiliencySpecification {
         thrown(NotFoundException.class)
     }
 
-    def "Verify archive workflow succeeds when QueueDAO is unavailable"() {
-        when: "Start a simple workflow"
-        def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
-                .withName(SIMPLE_TWO_TASK_WORKFLOW)
-                .withVersion(1))
-        then: "Verify workflow is started"
-
-        with(workflowResource.getExecutionStatus(workflowInstanceId, true)) {
-            status == Workflow.WorkflowStatus.RUNNING
-            tasks.size() == 1
-            tasks[0].taskType == 'integration_task_1'
-            tasks[0].status == Task.Status.SCHEDULED
-        }
-
-        when: "We get a workflow when QueueDAO is unavailable"
-        workflowResource.delete(workflowInstanceId, true)
-
-        then: "Verify queueDAO is called to remove from _deciderQueue"
-        1 * queueDAO.remove(Utils.DECIDER_QUEUE, _)
-
-        when: "We try to get deleted workflow, verify the status and check if tasks are removed from queue"
-        with(workflowResource.getExecutionStatus(workflowInstanceId, true)) {
-            status == Workflow.WorkflowStatus.TERMINATED
-            tasks.size() == 1
-            tasks[0].taskType == 'integration_task_1'
-            tasks[0].status == Task.Status.CANCELED
-            1 * queueDAO.remove(QueueUtils.getQueueName(tasks[0]), _)
-        }
-
-        then:
-        thrown(NotFoundException.class)
-    }
-
     def "Verify decide succeeds when QueueDAO is unavailable"() {
         when: "Start a simple workflow"
         def workflowInstanceId = workflowResource.startWorkflow(new StartWorkflowRequest()
