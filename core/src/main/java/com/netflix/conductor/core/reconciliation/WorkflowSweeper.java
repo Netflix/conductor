@@ -154,6 +154,13 @@ public class WorkflowSweeper {
                 DECIDER_QUEUE, workflowModel.getWorkflowId(), postponeDurationSeconds * 1000);
     }
 
+    /**
+     * jitter will be +- (1/3) workflowOffsetTimeout for example, if workflowOffsetTimeout is 45
+     * seconds, this function returns values between [30-60] seconds
+     *
+     * @param workflowOffsetTimeout
+     * @return
+     */
     @VisibleForTesting
     long workflowOffsetWithJitter(long workflowOffsetTimeout) {
         long range = workflowOffsetTimeout / 3;
