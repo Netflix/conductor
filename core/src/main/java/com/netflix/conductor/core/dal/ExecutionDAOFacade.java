@@ -340,39 +340,36 @@ public class ExecutionDAOFacade {
         WorkflowModel workflow = getWorkflowModelFromDataStore(workflowId, true);
 
         executionDAO.removeWorkflow(workflowId);
-
-        List<TaskModel> tasks = workflow.getTasks();
         try {
             removeWorkflowIndex(workflow, archiveWorkflow);
         } catch (JsonProcessingException e) {
             throw new TransientException("Workflow can not be serialized to json", e);
         }
-        tasks.forEach(
-                task -> {
-                    try {
-                        removeTaskIndex(workflow, task, archiveWorkflow);
-                    } catch (JsonProcessingException e) {
-                        throw new TransientException(
-                                String.format(
-                                        "Task %s of workflow %s can not be serialized to json",
-                                        task.getTaskId(), workflow.getWorkflowId()),
-                                e);
-                    }
-                });
 
-        tasks.forEach(
-                task -> {
-                    try {
-                        queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
-                    } catch (Exception e) {
-                        LOGGER.info(
-                                "Error removing task: {} of workflow: {} from {} queue",
-                                workflowId,
-                                task.getTaskId(),
-                                QueueUtils.getQueueName(task),
-                                e);
-                    }
-                });
+        workflow.getTasks()
+                .forEach(
+                        task -> {
+                            try {
+                                removeTaskIndex(workflow, task, archiveWorkflow);
+                            } catch (JsonProcessingException e) {
+                                throw new TransientException(
+                                        String.format(
+                                                "Task %s of workflow %s can not be serialized to json",
+                                                task.getTaskId(), workflow.getWorkflowId()),
+                                        e);
+                            }
+
+                            try {
+                                queueDAO.remove(QueueUtils.getQueueName(task), task.getTaskId());
+                            } catch (Exception e) {
+                                LOGGER.info(
+                                        "Error removing task: {} of workflow: {} from {} queue",
+                                        workflowId,
+                                        task.getTaskId(),
+                                        QueueUtils.getQueueName(task),
+                                        e);
+                            }
+                        });
 
         try {
             queueDAO.remove(DECIDER_QUEUE, workflowId);
