@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.core.reconciliation;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
@@ -102,9 +103,14 @@ public class WorkflowRepairService {
     /** Verify and repair tasks in a workflow. */
     public void verifyAndRepairWorkflowTasks(String workflowId) {
         WorkflowModel workflow = executionDAO.getWorkflow(workflowId, true);
-        workflow.getTasks().forEach(this::verifyAndRepairTask);
-        // repair the parent workflow if needed
-        verifyAndRepairWorkflow(workflow.getParentWorkflowId());
+        // check if workflow is not null, it can be null if it has ended and deleted from store.
+        Optional.ofNullable(workflow)
+                .ifPresent(
+                        workflowModel -> {
+                            workflowModel.getTasks().forEach(this::verifyAndRepairTask);
+                            // repair the parent workflow if needed
+                            verifyAndRepairWorkflow(workflowModel.getParentWorkflowId());
+                        });
     }
 
     /**

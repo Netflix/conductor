@@ -232,6 +232,18 @@ public class TestWorkflowRepairService {
     }
 
     @Test
+    public void verifyAndRepairParentWorkflow_WorkflowNotPresent() {
+
+        when(properties.getWorkflowOffsetTimeout()).thenReturn(Duration.ofSeconds(10));
+        when(executionDAO.getWorkflow("abcd", true)).thenReturn(null);
+        when(queueDAO.containsMessage(anyString(), anyString())).thenReturn(false);
+
+        workflowRepairService.verifyAndRepairWorkflowTasks("abcd");
+        verify(queueDAO, times(0)).containsMessage(anyString(), anyString());
+        verify(queueDAO, times(0)).push(anyString(), anyString(), anyLong());
+    }
+
+    @Test
     public void assertInProgressSubWorkflowSystemTasksAreCheckedAndRepaired() {
         String subWorkflowId = "subWorkflowId";
         String taskId = "taskId";
