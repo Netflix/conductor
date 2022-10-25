@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.core.config.ConductorProperties;
 import com.netflix.conductor.core.execution.tasks.SystemTaskRegistry;
@@ -33,6 +32,9 @@ import com.netflix.conductor.dao.QueueDAO;
 import com.netflix.conductor.metrics.Monitors;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
+
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * A helper service that tries to keep ExecutionDAO and QueueDAO in sync, based on the task or
  * workflow state.
