@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.postgres.storage;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,6 +38,7 @@ import com.netflix.conductor.postgres.config.PostgresPayloadProperties;
 public class PostgresPayloadStorage implements ExternalPayloadStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresPayloadStorage.class);
+    public static final byte[] DEFAULT_VALUE = "{}".getBytes();
 
     private final DataSource postgresDataSource;
     private final String tableName;
@@ -114,7 +116,16 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
                         conn.prepareStatement("SELECT data FROM " + tableName + " WHERE id = ?")) {
             stmt.setString(1, key);
             ResultSet rs = stmt.executeQuery();
-            rs.next();
+            if (!rs.next()) {
+                // Payload not available (anymore)
+                // Return empty map ??? is this OK ? does this service always store just maps ? if so then it is ok
+                // if not, maybe the defaul value needs to be configured
+                // TODO add unit test here
+                // TODO add unit test to externalPayloadStorageUtils
+                // TODO check if this is always expected to be a map
+                // TODO consider fixing it in users of this service i.e. ExternalPayloadStorageUtils ?
+                return new ByteArrayInputStream(DEFAULT_VALUE);
+            }
             inputStream = rs.getBinaryStream(1);
             rs.close();
             LOGGER.debug("External PostgreSQL downloaded key: {}", key);
