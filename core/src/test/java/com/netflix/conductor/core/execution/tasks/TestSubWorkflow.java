@@ -15,6 +15,8 @@ package com.netflix.conductor.core.execution.tasks;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.common.run.Workflow;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -300,6 +302,9 @@ public class TestSubWorkflow {
         Map<String, Object> outputData = new HashMap<>();
         task.setOutputData(outputData);
         task.setSubWorkflowId("sub-workflow-id");
+        WorkflowTask workflowTask = new WorkflowTask();
+        workflowTask.setOptional(false);
+        task.setWorkflowTask(workflowTask);
 
         Map<String, Object> inputData = new HashMap<>();
         inputData.put("subWorkflowName", "UnitWorkFlow");
@@ -337,6 +342,13 @@ public class TestSubWorkflow {
         assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
         assertEquals(TaskModel.Status.FAILED, task.getStatus());
         assertTrue(task.getReasonForIncompletion().contains("unit1"));
+
+        subWorkflowInstance.setStatus(WorkflowModel.Status.FAILED);
+        subWorkflowInstance.setReasonForIncompletion("optional failure");
+        workflowTask.setOptional(true);
+        assertTrue(subWorkflow.execute(workflowInstance, task, workflowExecutor));
+        assertEquals(TaskModel.Status.COMPLETED_WITH_ERRORS, task.getStatus());
+        workflowTask.setOptional(false);
 
         subWorkflowInstance.setStatus(WorkflowModel.Status.TIMED_OUT);
         subWorkflowInstance.setReasonForIncompletion("unit2");

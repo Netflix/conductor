@@ -14,6 +14,7 @@ package com.netflix.conductor.core.execution.tasks;
 
 import java.util.Map;
 
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,7 +177,13 @@ public class SubWorkflow extends WorkflowSystemTask {
                 task.setStatus(TaskModel.Status.COMPLETED);
                 break;
             case FAILED:
-                task.setStatus(TaskModel.Status.FAILED);
+                WorkflowTask workflowTask = task.getWorkflowTask();
+                if(workflowTask != null && workflowTask.isOptional()){
+                    task.setStatus(TaskModel.Status.COMPLETED_WITH_ERRORS);
+                }else {
+                    task.setStatus(TaskModel.Status.FAILED);
+                }
+
                 break;
             case TERMINATED:
                 task.setStatus(TaskModel.Status.CANCELED);
