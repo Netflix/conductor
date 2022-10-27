@@ -33,7 +33,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskResult;
 import static com.netflix.conductor.common.metadata.tasks.TaskResult.Status.COMPLETED;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
@@ -69,15 +69,21 @@ public class TaskRunnerConfigurerTest {
                 .build();
     }
 
-    @Test(expected = ConductorClientException.class)
+    @Test
     public void testMissingTaskThreadConfig() {
         Worker worker1 = Worker.create("task1", TaskResult::new);
         Worker worker2 = Worker.create("task2", TaskResult::new);
         Map<String, Integer> taskThreadCount = new HashMap<>();
         taskThreadCount.put(worker1.getTaskDefName(), 2);
-        new TaskRunnerConfigurer.Builder(client, Arrays.asList(worker1, worker2))
-                .withTaskThreadCount(taskThreadCount)
-                .build();
+        TaskRunnerConfigurer configurer =
+                new TaskRunnerConfigurer.Builder(client, Arrays.asList(worker1, worker2))
+                        .withTaskThreadCount(taskThreadCount)
+                        .build();
+
+        assertFalse(configurer.getTaskThreadCount().isEmpty());
+        assertEquals(2, configurer.getTaskThreadCount().size());
+        assertEquals(2, configurer.getTaskThreadCount().get("task1").intValue());
+        assertEquals(1, configurer.getTaskThreadCount().get("task2").intValue());
     }
 
     @Test
@@ -108,7 +114,9 @@ public class TaskRunnerConfigurerTest {
         assertEquals(500, configurer.getSleepWhenRetry());
         assertEquals(3, configurer.getUpdateRetryCount());
         assertEquals(10, configurer.getShutdownGracePeriodSeconds());
-        assertTrue(configurer.getTaskThreadCount().isEmpty());
+        assertFalse(configurer.getTaskThreadCount().isEmpty());
+        assertEquals(1, configurer.getTaskThreadCount().size());
+        assertEquals(3, configurer.getTaskThreadCount().get(TEST_TASK_DEF_NAME).intValue());
 
         configurer =
                 new TaskRunnerConfigurer.Builder(client, Collections.singletonList(worker))
@@ -125,7 +133,9 @@ public class TaskRunnerConfigurerTest {
         assertEquals(10, configurer.getUpdateRetryCount());
         assertEquals(15, configurer.getShutdownGracePeriodSeconds());
         assertEquals("test-worker-", configurer.getWorkerNamePrefix());
-        assertTrue(configurer.getTaskThreadCount().isEmpty());
+        assertFalse(configurer.getTaskThreadCount().isEmpty());
+        assertEquals(1, configurer.getTaskThreadCount().size());
+        assertEquals(100, configurer.getTaskThreadCount().get(TEST_TASK_DEF_NAME).intValue());
     }
 
     @Test

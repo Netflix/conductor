@@ -69,7 +69,6 @@ class TaskPollExecutor {
     TaskPollExecutor(
             EurekaClient eurekaClient,
             TaskClient taskClient,
-            int threadCount,
             int updateRetryCount,
             Map<String, String> taskToDomain,
             String workerNamePrefix,
@@ -81,17 +80,11 @@ class TaskPollExecutor {
 
         this.pollingSemaphoreMap = new HashMap<>();
         int totalThreadCount = 0;
-        if (!taskThreadCount.isEmpty()) {
-            for (Map.Entry<String, Integer> entry : taskThreadCount.entrySet()) {
-                String taskType = entry.getKey();
-                int count = entry.getValue();
-                totalThreadCount += count;
-                pollingSemaphoreMap.put(taskType, new PollingSemaphore(count));
-            }
-        } else {
-            totalThreadCount = threadCount;
-            // shared poll for all workers
-            pollingSemaphoreMap.put(ALL_WORKERS, new PollingSemaphore(threadCount));
+        for (Map.Entry<String, Integer> entry : taskThreadCount.entrySet()) {
+            String taskType = entry.getKey();
+            int count = entry.getValue();
+            totalThreadCount += count;
+            pollingSemaphoreMap.put(taskType, new PollingSemaphore(count));
         }
 
         LOGGER.info("Initialized the TaskPollExecutor with {} threads", totalThreadCount);
@@ -163,8 +156,8 @@ class TaskPollExecutor {
                                     () ->
                                             taskClient.batchPollTasksInDomain(
                                                     taskType,
-                                                    worker.getIdentity(),
                                                     domain,
+                                                    worker.getIdentity(),
                                                     slotsToAcquire,
                                                     worker.getBatchPollTimeoutInMS()));
             acquiredTasks = tasks.size();
@@ -400,11 +393,7 @@ class TaskPollExecutor {
     }
 
     private PollingSemaphore getPollingSemaphore(String taskType) {
-        if (pollingSemaphoreMap.containsKey(taskType)) {
-            return pollingSemaphoreMap.get(taskType);
-        } else {
-            return pollingSemaphoreMap.get(ALL_WORKERS);
-        }
+        return pollingSemaphoreMap.get(taskType);
     }
 
     private Runnable extendLease(Task task, CompletableFuture<Task> taskCompletableFuture) {

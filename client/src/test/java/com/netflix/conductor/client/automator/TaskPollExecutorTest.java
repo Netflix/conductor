@@ -14,6 +14,7 @@ package com.netflix.conductor.client.automator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,9 @@ public class TaskPollExecutorTest {
 
     private static final String TEST_TASK_DEF_NAME = "test";
 
+    private static final Map<String, Integer> TASK_THREAD_MAP =
+            Collections.singletonMap(TEST_TASK_DEF_NAME, 1);
+
     @Test
     public void testTaskExecutionException() throws InterruptedException {
         Worker worker =
@@ -59,7 +63,7 @@ public class TaskPollExecutorTest {
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-%d", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-%d", TASK_THREAD_MAP);
 
         when(taskClient.batchPollTasksInDomain(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(Arrays.asList(testTask()));
@@ -113,7 +117,7 @@ public class TaskPollExecutorTest {
         TaskClient taskClient = Mockito.mock(TaskClient.class);
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         when(taskClient.batchPollTasksInDomain(any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(Arrays.asList(task));
         when(taskClient.ack(any(), any())).thenReturn(true);
@@ -173,7 +177,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 3, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -212,7 +216,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 3, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
 
         doAnswer(
@@ -243,7 +247,7 @@ public class TaskPollExecutorTest {
 
         Worker worker = mock(Worker.class);
         when(worker.getPollingInterval()).thenReturn(3000);
-        when(worker.getTaskDefName()).thenReturn("test");
+        when(worker.getTaskDefName()).thenReturn(TEST_TASK_DEF_NAME);
         when(worker.execute(any())).thenReturn(new TaskResult(task));
 
         TaskClient taskClient = Mockito.mock(TaskClient.class);
@@ -253,7 +257,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -290,7 +294,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -320,7 +324,7 @@ public class TaskPollExecutorTest {
         taskToDomain.put(TEST_TASK_DEF_NAME, testDomain);
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, taskToDomain, "test-worker-", new HashMap<>());
+                        null, taskClient, 1, taskToDomain, "test-worker-", TASK_THREAD_MAP);
 
         String workerName = "test-worker";
         Worker worker = mock(Worker.class);
@@ -363,7 +367,12 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        client, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        client,
+                        taskClient,
+                        1,
+                        new HashMap<>(),
+                        "test-worker-",
+                        Collections.singletonMap("task_run_always", 1));
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -404,7 +413,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        client, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        client, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -446,7 +455,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        client, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        client, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -487,7 +496,12 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        client, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        client,
+                        taskClient,
+                        1,
+                        new HashMap<>(),
+                        "test-worker-",
+                        Collections.singletonMap("task_ignore_override", 1));
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -518,7 +532,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, -1, 1, new HashMap<>(), "test-worker-", taskThreadCount);
+                        null, taskClient, -1, new HashMap<>(), "test-worker-", taskThreadCount);
 
         String workerName = "test-worker";
         Worker worker = mock(Worker.class);
@@ -563,7 +577,7 @@ public class TaskPollExecutorTest {
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, 1, 1, new HashMap<>(), "test-worker-", new HashMap<>());
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", TASK_THREAD_MAP);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(
                         invocation -> {
@@ -619,13 +633,13 @@ public class TaskPollExecutorTest {
                             });
         }
         when(taskClient.batchPollTasksInDomain(
-                        TEST_TASK_DEF_NAME, workerName, null, threadCount, 1000))
+                        TEST_TASK_DEF_NAME, null, workerName, threadCount, 1000))
                 .thenReturn(tasks);
         when(taskClient.ack(any(), any())).thenReturn(true);
 
         TaskPollExecutor taskPollExecutor =
                 new TaskPollExecutor(
-                        null, taskClient, -1, 1, new HashMap<>(), "test-worker-", taskThreadCount);
+                        null, taskClient, 1, new HashMap<>(), "test-worker-", taskThreadCount);
 
         CountDownLatch latch = new CountDownLatch(threadCount);
         doAnswer(
