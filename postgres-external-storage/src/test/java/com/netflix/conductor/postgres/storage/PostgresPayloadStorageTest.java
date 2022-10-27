@@ -45,6 +45,7 @@ public class PostgresPayloadStorageTest {
     private final String inputString =
             "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
                     + " Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.";
+    private final String errorMessage = "{\"Error\": \"Data does not exist.\"}";
     private final InputStream inputData;
     private final String key = "dummyKey.json";
 
@@ -61,7 +62,7 @@ public class PostgresPayloadStorageTest {
         testPostgres = new PostgresPayloadTestUtil(postgreSQLContainer);
         executionPostgres =
                 new PostgresPayloadStorage(
-                        testPostgres.getTestProperties(), testPostgres.getDataSource());
+                        testPostgres.getTestProperties(), testPostgres.getDataSource(), errorMessage);
     }
 
     @Test
@@ -72,8 +73,7 @@ public class PostgresPayloadStorageTest {
                 testPostgres
                         .getDataSource()
                         .getConnection()
-                        .prepareStatement(
-                                "SELECT data FROM external.external_payload WHERE id = 'dummyKey.json'");
+                        .prepareStatement("SELECT data FROM external.external_payload WHERE id = 'dummyKey.json'");
         ResultSet rs = stmt.executeQuery();
         rs.next();
         assertEquals(
@@ -92,9 +92,22 @@ public class PostgresPayloadStorageTest {
         stmt.setBinaryStream(2, inputData, inputData.available());
         stmt.executeUpdate();
 
-        assertEquals(
-                inputString,
-                new String(executionPostgres.download(key).readAllBytes(), StandardCharsets.UTF_8));
+        assertEquals(inputString, new String(executionPostgres.download(key).readAllBytes(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testReadNonExistentInputStreamFromDb() throws IOException, SQLException {
+        PreparedStatement stmt =
+                testPostgres
+                        .getDataSource()
+                        .getConnection()
+                        .prepareStatement("INSERT INTO external.external_payload  VALUES (?, ?)");
+        stmt.setString(1, key);
+        stmt.setBinaryStream(2, inputData, inputData.available());
+        stmt.executeUpdate();
+
+        assertEquals(errorMessage, new String(executionPostgres.download("non_existent_key.json").readAllBytes(),
+                StandardCharsets.UTF_8));
     }
 
     @Test

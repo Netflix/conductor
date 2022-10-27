@@ -38,24 +38,26 @@ import com.netflix.conductor.postgres.config.PostgresPayloadProperties;
 public class PostgresPayloadStorage implements ExternalPayloadStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresPayloadStorage.class);
-    public static final byte[] DEFAULT_VALUE = "{}".getBytes();
+    private final String defaultMessageToUser;
 
     private final DataSource postgresDataSource;
     private final String tableName;
     private final String conductorUrl;
 
-    public PostgresPayloadStorage(PostgresPayloadProperties properties, DataSource dataSource) {
+    public PostgresPayloadStorage(PostgresPayloadProperties properties, DataSource dataSource,
+                                  String defaultMessageToUser) {
         tableName = properties.getTableName();
         conductorUrl = properties.getConductorUrl();
         this.postgresDataSource = dataSource;
+        this.defaultMessageToUser = defaultMessageToUser;
         LOGGER.info("PostgreSQL Extenal Payload Storage initialized.");
     }
 
     /**
-     * @param operation the type of {@link Operation} to be performed
+     * @param operation   the type of {@link Operation} to be performed
      * @param payloadType the {@link PayloadType} that is being accessed
      * @return a {@link ExternalStorageLocation} object which contains the pre-signed URL and the
-     *     PostgreSQL object key for the json payload
+     * PostgreSQL object key for the json payload
      */
     @Override
     public ExternalStorageLocation getLocation(
@@ -80,15 +82,15 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
      * retrieves the object key using {@link #getLocation(Operation, PayloadType, String)} before
      * making this call.
      *
-     * @param key the PostgreSQL key of the object to be uploaded
-     * @param payload an {@link InputStream} containing the json payload which is to be uploaded
+     * @param key         the PostgreSQL key of the object to be uploaded
+     * @param payload     an {@link InputStream} containing the json payload which is to be uploaded
      * @param payloadSize the size of the json payload in bytes
      */
     @Override
     public void upload(String key, InputStream payload, long payloadSize) {
         try (Connection conn = postgresDataSource.getConnection();
-                PreparedStatement stmt =
-                        conn.prepareStatement("INSERT INTO " + tableName + " VALUES (?, ?)")) {
+             PreparedStatement stmt =
+                     conn.prepareStatement("INSERT INTO " + tableName + " VALUES (?, ?)")) {
             stmt.setString(1, key);
             stmt.setBinaryStream(2, payload, payloadSize);
             stmt.executeUpdate();
@@ -106,25 +108,18 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
      *
      * @param key the PostgreSQL key of the object
      * @return an input stream containing the contents of the object. Caller is expected to close
-     *     the input stream.
+     * the input stream.
      */
     @Override
     public InputStream download(String key) {
         InputStream inputStream;
         try (Connection conn = postgresDataSource.getConnection();
-                PreparedStatement stmt =
-                        conn.prepareStatement("SELECT data FROM " + tableName + " WHERE id = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT data FROM " + tableName + " WHERE id = ?")) {
             stmt.setString(1, key);
             ResultSet rs = stmt.executeQuery();
             if (!rs.next()) {
-                // Payload not available (anymore)
-                // Return empty map ??? is this OK ? does this service always store just maps ? if so then it is ok
-                // if not, maybe the defaul value needs to be configured
-                // TODO add unit test here
-                // TODO add unit test to externalPayloadStorageUtils
-                // TODO check if this is always expected to be a map
-                // TODO consider fixing it in users of this service i.e. ExternalPayloadStorageUtils ?
-                return new ByteArrayInputStream(DEFAULT_VALUE);
+                LOGGER.debug("External PostgreSQL data with this ID: {} does not exist", key);
+                return new ByteArrayInputStream(defaultMessageToUser.getBytes());
             }
             inputStream = rs.getBinaryStream(1);
             rs.close();
