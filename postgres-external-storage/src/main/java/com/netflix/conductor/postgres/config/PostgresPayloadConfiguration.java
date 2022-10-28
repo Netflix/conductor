@@ -38,7 +38,7 @@ public class PostgresPayloadConfiguration {
     PostgresPayloadProperties properties;
     DataSource dataSource;
     private static final String DEFAULT_MESSAGE_TO_USER =
-    "{\"Error\": \"Data with this ID does not exist or has been deleted from the external storage.\"}";
+            "{\"Error\": \"Data with this ID does not exist or has been deleted from the external storage.\"}";
 
     public PostgresPayloadConfiguration(
             PostgresPayloadProperties properties, DataSource dataSource) {
@@ -72,7 +72,8 @@ public class PostgresPayloadConfiguration {
 
     @Bean
     @DependsOn({"flywayForExternalDb"})
-    public ExternalPayloadStorage postgresExternalPayloadStorage(PostgresPayloadProperties properties) {
+    public ExternalPayloadStorage postgresExternalPayloadStorage(
+            PostgresPayloadProperties properties) {
         return new PostgresPayloadStorage(properties, dataSource, DEFAULT_MESSAGE_TO_USER);
     }
 }
