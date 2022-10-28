@@ -24,6 +24,7 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
