@@ -201,8 +201,8 @@ public class ExternalPayloadStorageUtilsTest {
         TaskModel task = new TaskModel();
         task.setInputData(new HashMap<>());
 
-        externalPayloadStorageUtils.failTask(
-                task, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error");
+        assertThrows(TerminateWorkflowException.class, ()-> externalPayloadStorageUtils.failTask(
+                task, ExternalPayloadStorage.PayloadType.TASK_INPUT, "error"));
         assertNotNull(task);
         assertTrue(task.getInputData().isEmpty());
         assertEquals(FAILED_WITH_TERMINAL_ERROR, task.getStatus());
@@ -213,8 +213,8 @@ public class ExternalPayloadStorageUtilsTest {
         TaskModel task = new TaskModel();
         task.setOutputData(new HashMap<>());
 
-        externalPayloadStorageUtils.failTask(
-                task, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error");
+        assertThrows(TerminateWorkflowException.class, ()-> externalPayloadStorageUtils.failTask(
+                task, ExternalPayloadStorage.PayloadType.TASK_OUTPUT, "error"));
         assertNotNull(task);
         assertTrue(task.getOutputData().isEmpty());
         assertEquals(FAILED_WITH_TERMINAL_ERROR, task.getStatus());
