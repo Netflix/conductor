@@ -132,10 +132,11 @@ public class SimpleActionProcessor implements ActionProcessor {
             List<TaskModel> loopOverTaskList =
                     workflow.getTasks().stream()
                             .filter(
-                                    t -> t.isLoopOverTask() &&
-                                            TaskUtils.removeIterationFromTaskRefName(
-                                                            t.getReferenceTaskName())
-                                                    .equals(taskRefName))
+                                    t ->
+                                            t.isLoopOverTask()
+                                                    && TaskUtils.removeIterationFromTaskRefName(
+                                                                    t.getReferenceTaskName())
+                                                            .equals(taskRefName))
                             .collect(Collectors.toList());
             if (!loopOverTaskList.isEmpty()) {
                 // Find loopover task with the highest iteration value
