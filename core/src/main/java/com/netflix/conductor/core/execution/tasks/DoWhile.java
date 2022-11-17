@@ -96,11 +96,15 @@ public class DoWhile extends WorkflowSystemTask {
             return scheduleNextIteration(doWhileTaskModel, workflow, workflowExecutor);
         }
 
+        boolean allTasksTerminal = true;
         for (TaskModel loopOverTask : loopOverTasks) {
             TaskModel.Status taskStatus = loopOverTask.getStatus();
             hasFailures = !taskStatus.isSuccessful();
             if (hasFailures) {
                 failureReason.append(loopOverTask.getReasonForIncompletion()).append(" ");
+            }
+            if (!loopOverTask.getStatus().isTerminal()) {
+                allTasksTerminal = false;
             }
             output.put(
                     TaskUtils.removeIterationFromTaskRefName(loopOverTask.getReferenceTaskName()),
@@ -120,7 +124,7 @@ public class DoWhile extends WorkflowSystemTask {
                     doWhileTaskModel, TaskModel.Status.FAILED, failureReason.toString());
         }
 
-        if (!isIterationComplete(doWhileTaskModel, relevantTasks)) {
+        if (!allTasksTerminal) {
             // current iteration is not complete (all tasks inside the loop are not terminal)
             return false;
         }
@@ -154,38 +158,6 @@ public class DoWhile extends WorkflowSystemTask {
             return markTaskFailure(
                     doWhileTaskModel, TaskModel.Status.FAILED_WITH_TERMINAL_ERROR, message);
         }
-    }
-
-    /**
-     * Check if all tasks in the current iteration have reached terminal state.
-     *
-     * @param doWhileTaskModel The {@link TaskModel} of DO_WHILE.
-     * @param referenceNameToModel Map of taskReferenceName to {@link TaskModel}.
-     * @return true if all tasks in DO_WHILE.loopOver are in <code>referenceNameToModel</code> and
-     *     reached terminal state.
-     */
-    private boolean isIterationComplete(
-            TaskModel doWhileTaskModel, Map<String, TaskModel> referenceNameToModel) {
-        List<WorkflowTask> workflowTasksInsideDoWhile =
-                doWhileTaskModel.getWorkflowTask().getLoopOver();
-        int iteration = doWhileTaskModel.getIteration();
-        boolean allTasksTerminal = true;
-        for (WorkflowTask workflowTaskInsideDoWhile : workflowTasksInsideDoWhile) {
-            String taskReferenceName =
-                    TaskUtils.appendIteration(
-                            workflowTaskInsideDoWhile.getTaskReferenceName(), iteration);
-            if (referenceNameToModel.containsKey(taskReferenceName)) {
-                TaskModel taskModel = referenceNameToModel.get(taskReferenceName);
-                if (!taskModel.getStatus().isTerminal()) {
-                    allTasksTerminal = false;
-                    break;
-                }
-            } else {
-                allTasksTerminal = false;
-                break;
-            }
-        }
-        return allTasksTerminal;
     }
 
     boolean scheduleNextIteration(
