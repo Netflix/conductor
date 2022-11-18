@@ -17,13 +17,13 @@ import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
-import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
+import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.common.utils.TaskUtils;
 import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -191,7 +191,8 @@ public class DoWhile extends WorkflowSystemTask {
         }
 
         // Check all the tasks in referenceNameToModel are completed or not.
-        return referenceNameToModel.values().stream().noneMatch(taskModel -> !taskModel.getStatus().isTerminal());
+        return referenceNameToModel.values().stream()
+                .noneMatch(taskModel -> !taskModel.getStatus().isTerminal());
     }
 
     boolean scheduleNextIteration(
