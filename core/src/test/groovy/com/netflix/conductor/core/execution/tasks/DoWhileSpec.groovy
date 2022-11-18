@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 import spock.lang.Subject
 
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DO_WHILE
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_HTTP
 
@@ -335,17 +334,6 @@ class DoWhileSpec extends Specification {
 
     private static createTaskModel(WorkflowTask workflowTask, TaskModel.Status status = TaskModel.Status.COMPLETED, int iteration = 1) {
         TaskModel taskModel1 = new TaskModel(workflowTask: workflowTask, taskType: TASK_TYPE_HTTP)
-
-        taskModel1.status = status
-        taskModel1.outputData = ['k1': 'v1']
-        taskModel1.iteration = iteration
-        taskModel1.referenceTaskName = TaskUtils.appendIteration(workflowTask.taskReferenceName, iteration)
-
-        return taskModel1
-    }
-
-    private static createDecisionTaskModel(WorkflowTask workflowTask, TaskModel.Status status = TaskModel.Status.COMPLETED, int iteration = 1) {
-        TaskModel taskModel1 = new TaskModel(workflowTask: workflowTask, taskType: TASK_TYPE_DECISION)
 
         taskModel1.status = status
         taskModel1.outputData = ['k1': 'v1']
