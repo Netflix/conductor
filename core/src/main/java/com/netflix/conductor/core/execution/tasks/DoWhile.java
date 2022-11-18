@@ -192,8 +192,8 @@ public class DoWhile extends WorkflowSystemTask {
             return false;
         }
 
-        // Check all the tasks in referenceNameToModel are completed or not. These are set of tasks which are not
-        // directly inside loopOver tasks, but they are under hierarchy
+        // Check all the tasks in referenceNameToModel are completed or not. These are set of tasks
+        // which are not directly inside loopOver tasks, but they are under hierarchy
         // loopOver -> [decisionTask -> COMPLETED [ task1 -> COMPLETED, task2 -> IN_PROGRESS]]
         return referenceNameToModel.values().stream()
                 .noneMatch(taskModel -> !taskModel.getStatus().isTerminal());
