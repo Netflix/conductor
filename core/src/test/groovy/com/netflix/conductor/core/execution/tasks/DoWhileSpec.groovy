@@ -111,43 +111,6 @@ class DoWhileSpec extends Specification {
         0 * workflowExecutor.scheduleNextIteration(doWhileTaskModel, workflowModel)
     }
 
-    def "an iteration - one task is complete and other is not scheduled where these tasks are part of decision task"() {
-        given: "WorkflowModel consists of one iteration of one task inside DO_WHILE already completed"
-        taskModel1 = createTaskModel(task1)
-        WorkflowTask decisionTask = new WorkflowTask(name: 'decision_task', taskReferenceName: 'decision_task');
-        decisionTask.setDecisionCases(Map.of("1", Arrays.asList(task1, task2)));
-        decisionTask.setExpression("return 1;");
-        TaskModel decisionTaskModel = createDecisionTaskModel(decisionTask)
-
-        and: "loop over contains two tasks"
-        WorkflowTask doWhileWorkflowTask = new WorkflowTask(taskReferenceName: 'doWhileTask', type: TASK_TYPE_DO_WHILE)
-        doWhileWorkflowTask.loopCondition = "if (\$.doWhileTask['iteration'] < 2) { true; } else { false; }"
-        doWhileWorkflowTask.loopOver = [decisionTask] // two tasks
-
-        doWhileTaskModel = new TaskModel(workflowTask: doWhileWorkflowTask, taskId: UUID.randomUUID().toString(),
-                taskType: TASK_TYPE_DO_WHILE, referenceTaskName: doWhileWorkflowTask.taskReferenceName)
-        doWhileTaskModel.iteration = 1
-        doWhileTaskModel.outputData['iteration'] = 1
-        doWhileTaskModel.status = TaskModel.Status.IN_PROGRESS
-
-        def workflowModel = new WorkflowModel(workflowDefinition: new WorkflowDef(name: 'test_workflow'))
-        // setup the WorkflowModel
-        workflowModel.tasks = [doWhileTaskModel, decisionTaskModel, taskModel1]
-
-        // this is the expected format of iteration 1's output data
-        def iteration1OutputData = [:]
-        iteration1OutputData[task1.taskReferenceName] = taskModel1.outputData
-
-        when:
-        def retVal = doWhile.execute(workflowModel, doWhileTaskModel, workflowExecutor)
-
-        then: "verify that the return value is false, since the iteration is not complete"
-        !retVal
-
-        and: "verify that the next iteration is NOT scheduled"
-        0 * workflowExecutor.scheduleNextIteration(doWhileTaskModel, workflowModel)
-    }
-
     def "next iteration - one iteration of all tasks inside DO_WHILE are complete"() {
         given: "WorkflowModel consists of one iteration of tasks inside DO_WHILE already completed"
         taskModel1 = createTaskModel(task1)
