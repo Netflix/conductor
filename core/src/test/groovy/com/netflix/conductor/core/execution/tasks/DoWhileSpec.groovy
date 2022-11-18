@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import spock.lang.Specification
 import spock.lang.Subject
 
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DECISION
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_DO_WHILE
 import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_HTTP
 
@@ -95,6 +96,43 @@ class DoWhileSpec extends Specification {
         def workflowModel = new WorkflowModel(workflowDefinition: new WorkflowDef(name: 'test_workflow'))
         // setup the WorkflowModel
         workflowModel.tasks = [doWhileTaskModel, taskModel1]
+
+        // this is the expected format of iteration 1's output data
+        def iteration1OutputData = [:]
+        iteration1OutputData[task1.taskReferenceName] = taskModel1.outputData
+
+        when:
+        def retVal = doWhile.execute(workflowModel, doWhileTaskModel, workflowExecutor)
+
+        then: "verify that the return value is false, since the iteration is not complete"
+        !retVal
+
+        and: "verify that the next iteration is NOT scheduled"
+        0 * workflowExecutor.scheduleNextIteration(doWhileTaskModel, workflowModel)
+    }
+
+    def "an iteration - one task is complete and other is not scheduled where these tasks are part of decision task"() {
+        given: "WorkflowModel consists of one iteration of one task inside DO_WHILE already completed"
+        taskModel1 = createTaskModel(task1)
+        WorkflowTask decisionTask = new WorkflowTask(name: 'decision_task', taskReferenceName: 'decision_task');
+        decisionTask.setDecisionCases(Map.of("1", Arrays.asList(task1, task2)));
+        decisionTask.setExpression("return 1;");
+        TaskModel decisionTaskModel = createDecisionTaskModel(decisionTask)
+
+        and: "loop over contains two tasks"
+        WorkflowTask doWhileWorkflowTask = new WorkflowTask(taskReferenceName: 'doWhileTask', type: TASK_TYPE_DO_WHILE)
+        doWhileWorkflowTask.loopCondition = "if (\$.doWhileTask['iteration'] < 2) { true; } else { false; }"
+        doWhileWorkflowTask.loopOver = [decisionTask] // two tasks
+
+        doWhileTaskModel = new TaskModel(workflowTask: doWhileWorkflowTask, taskId: UUID.randomUUID().toString(),
+                taskType: TASK_TYPE_DO_WHILE, referenceTaskName: doWhileWorkflowTask.taskReferenceName)
+        doWhileTaskModel.iteration = 1
+        doWhileTaskModel.outputData['iteration'] = 1
+        doWhileTaskModel.status = TaskModel.Status.IN_PROGRESS
+
+        def workflowModel = new WorkflowModel(workflowDefinition: new WorkflowDef(name: 'test_workflow'))
+        // setup the WorkflowModel
+        workflowModel.tasks = [doWhileTaskModel, decisionTaskModel, taskModel1]
 
         // this is the expected format of iteration 1's output data
         def iteration1OutputData = [:]
@@ -334,6 +372,17 @@ class DoWhileSpec extends Specification {
 
     private static createTaskModel(WorkflowTask workflowTask, TaskModel.Status status = TaskModel.Status.COMPLETED, int iteration = 1) {
         TaskModel taskModel1 = new TaskModel(workflowTask: workflowTask, taskType: TASK_TYPE_HTTP)
+
+        taskModel1.status = status
+        taskModel1.outputData = ['k1': 'v1']
+        taskModel1.iteration = iteration
+        taskModel1.referenceTaskName = TaskUtils.appendIteration(workflowTask.taskReferenceName, iteration)
+
+        return taskModel1
+    }
+
+    private static createDecisionTaskModel(WorkflowTask workflowTask, TaskModel.Status status = TaskModel.Status.COMPLETED, int iteration = 1) {
+        TaskModel taskModel1 = new TaskModel(workflowTask: workflowTask, taskType: TASK_TYPE_DECISION)
 
         taskModel1.status = status
         taskModel1.outputData = ['k1': 'v1']
