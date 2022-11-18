@@ -12,11 +12,11 @@
  */
 package com.netflix.conductor.test.integration
 
-import com.netflix.conductor.common.metadata.tasks.TaskResult
 import org.springframework.beans.factory.annotation.Autowired
 
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskDef
+import com.netflix.conductor.common.metadata.tasks.TaskResult
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.common.utils.TaskUtils
 import com.netflix.conductor.core.execution.tasks.Join
