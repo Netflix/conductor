@@ -10,13 +10,13 @@ sidebar_position: 1
 ### Introduction
 
 A `JOIN` task is used in conjunction with a `FORK_JOIN` or `FORK_JOIN_DYNAMIC` task. When `JOIN` is used along with
-a `FORK_JOIN` task, tt waits for a list of zero or more of the forked tasks to be completed. However, when used with
+a `FORK_JOIN` task, it waits for a list of zero or more of the forked tasks to be completed. However, when used with
 a `FORK_JOIN_DYNAMIC` task, it implicitly waits for all of the dynamically forked tasks to complete.
 
 ### Use Cases
 
 [FORK_JOIN](/reference-docs/fork-task.html) and [FORK_JOIN_DYNAMIC](/reference-docs/dynamic-fork-task.html) task are used to execute a collection of other tasks or sub workflows in parallel. In
-such cases, there is a need for these forked tasks to complete before moving to the next stage in the workflow. 
+such cases, there is a need for these forked tasks to complete before moving to the next stage in the workflow.
 
 ### Configuration
 
@@ -127,4 +127,3 @@ references that were being `joinOn`. The corresponding values are the outputs of
 }
 
 ```
-
