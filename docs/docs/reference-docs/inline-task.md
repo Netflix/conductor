@@ -42,21 +42,21 @@ evaluations using an evaluator engine.
 
 Following are the parameters in the above example :
 
-1. `"evaluatorType"` - Type of the evaluator. 
-Supported evaluators: value-param, javascript which evaluates 
-javascript expression.	
+1. `"evaluatorType"` - Type of the evaluator.
+Supported evaluators: value-param, javascript which evaluates
+javascript expression.
 
-2. `"expression"` - Expression associated with the type of evaluator. 
-For javascript evaluator, Javascript evaluation engine is used to 
-evaluate expression defined as a string. Must return a value.	
+2. `"expression"` - Expression associated with the type of evaluator.
+For javascript evaluator, Javascript evaluation engine is used to
+evaluate expression defined as a string. Must return a value.
 
 Besides expression, any of the properties in the input values is accessible as `$.value` for the expression
-to evaluate. 
+to evaluate.
 
-The task output can then be referenced in downstream tasks 
-like: `"${inline_test.output.result}"`
+The task output can then be referenced in downstream tasks
+like: `"${inline_task_example.output.result}"`
 
-### Example 2 
+### Example 2
 
 Perhaps a weather API sometimes returns Celcius, and sometimes returns Farenheit temperature values.  This task ensures that the downstream tasks ONLY receive Celcius values:
 
@@ -69,7 +69,7 @@ Perhaps a weather API sometimes returns Celcius, and sometimes returns Farenheit
       "scale": "${workflow.input.tempScale}",
 	  "temperature": "${workflow.input.temperature}",
       "evaluatorType": "javascript",
-      "expression": "function SIvaluesOnly(){if ($.scale === "F"){ centigrade = ($.temperature -32)*5/9; return {temperature: centigrade} } else { return 
+      "expression": "function SIvaluesOnly(){if ($.scale === "F"){ centigrade = ($.temperature -32)*5/9; return {temperature: centigrade} } else { return
       {temperature: $.temperature} }} SIvaluesOnly();"
   }
 }
