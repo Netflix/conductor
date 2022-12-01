@@ -1711,6 +1711,12 @@ public class WorkflowExecutor {
     void updateParentWorkflowTask(WorkflowModel subWorkflow) {
         TaskModel subWorkflowTask =
                 executionDAOFacade.getTaskModel(subWorkflow.getParentWorkflowTaskId());
+
+        // For large forks this can occur because of inconsistent state between parent and sub_workflows
+        if (subWorkflowTask == null) {
+            return;
+        }
+
         executeSubworkflowTaskAndSyncData(subWorkflow, subWorkflowTask);
         executionDAOFacade.updateTask(subWorkflowTask);
     }
