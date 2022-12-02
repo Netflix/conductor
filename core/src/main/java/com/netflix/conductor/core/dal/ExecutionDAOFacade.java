@@ -433,7 +433,7 @@ public class ExecutionDAOFacade {
         if (taskModel != null) {
             return modelMapper.getFullCopy(taskModel);
         }
-        return null;
+        return taskModel;
     }
 
     public Task getTask(String taskId) {
