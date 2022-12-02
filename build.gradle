@@ -126,6 +126,7 @@ allprojects {
     compileJava.inputs.files(processResources)
 
     test {
+        maxParallelForks = 2
         useJUnitPlatform()
         testLogging {
             events = ["SKIPPED", "FAILED"]
