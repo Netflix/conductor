@@ -14,7 +14,7 @@ COPY . /conductor
 WORKDIR /conductor
 
 # Build the server on run
-RUN ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x :conductor-contribs:test -x :conductor-cassandra-persistence:test -x :conductor-azureblob-storage:test -x :conductor-es7-persistence:test -x :conductor-redis-persistence:test -x :conductor-mysql-persistence:test -x :conductor-redis-lock:test -x :conductor-redis-concurrency-limit:test -x :conductor-zookeeper-lock:test
+RUN ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x test
 
 # ===========================================================================================================
 # 1. Bin stage
