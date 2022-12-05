@@ -21,6 +21,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'org.flywaydb:flyway-core'
     implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
+    implementation "commons-codec:commons-codec:${revCodec}"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation "org.testcontainers:postgresql:${revTestContainer}"

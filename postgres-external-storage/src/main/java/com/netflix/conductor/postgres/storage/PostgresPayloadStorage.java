@@ -18,9 +18,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,9 @@ import com.netflix.conductor.postgres.config.PostgresPayloadProperties;
 public class PostgresPayloadStorage implements ExternalPayloadStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PostgresPayloadStorage.class);
+    public static final String URI_SUFFIX_HASHED = ".hashed.json";
+    public static final String URI_SUFFIX = ".json";
+    public static final String URI_PREFIX_EXTERNAL = "/api/external/postgres/";
     private final String defaultMessageToUser;
 
     private final DataSource postgresDataSource;
@@ -65,14 +70,27 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
     public ExternalStorageLocation getLocation(
             Operation operation, PayloadType payloadType, String path) {
 
+        return getLocationInternal(path, () -> IDGenerator.generate() + URI_SUFFIX);
+    }
+
+    @Override
+    public ExternalStorageLocation getLocation(
+            Operation operation, PayloadType payloadType, String path, byte[] payloadBytes) {
+
+        return getLocationInternal(
+                path, () -> DigestUtils.sha256Hex(payloadBytes) + URI_SUFFIX_HASHED);
+    }
+
+    private ExternalStorageLocation getLocationInternal(
+            String path, Supplier<String> calculateKey) {
         ExternalStorageLocation externalStorageLocation = new ExternalStorageLocation();
         String objectKey;
         if (StringUtils.isNotBlank(path)) {
             objectKey = path;
         } else {
-            objectKey = IDGenerator.generate() + ".json";
+            objectKey = calculateKey.get();
         }
-        String uri = conductorUrl + "/api/external/postgres/" + objectKey;
+        String uri = conductorUrl + URI_PREFIX_EXTERNAL + objectKey;
         externalStorageLocation.setUri(uri);
         externalStorageLocation.setPath(objectKey);
         LOGGER.debug("External storage location URI: {}, location path: {}", uri, objectKey);
@@ -92,7 +110,11 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
     public void upload(String key, InputStream payload, long payloadSize) {
         try (Connection conn = postgresDataSource.getConnection();
                 PreparedStatement stmt =
-                        conn.prepareStatement("INSERT INTO " + tableName + " VALUES (?, ?)")) {
+                        conn.prepareStatement(
+                                "INSERT INTO "
+                                        + tableName
+                                        + " (id, data) VALUES (?, ?) ON CONFLICT(id) "
+                                        + "DO UPDATE SET created_on=CURRENT_TIMESTAMP")) {
             stmt.setString(1, key);
             stmt.setBinaryStream(2, payload, payloadSize);
             stmt.executeUpdate();
@@ -119,14 +141,14 @@ public class PostgresPayloadStorage implements ExternalPayloadStorage {
                 PreparedStatement stmt =
                         conn.prepareStatement("SELECT data FROM " + tableName + " WHERE id = ?")) {
             stmt.setString(1, key);
-            ResultSet rs = stmt.executeQuery();
-            if (!rs.next()) {
-                LOGGER.debug("External PostgreSQL data with this ID: {} does not exist", key);
-                return new ByteArrayInputStream(defaultMessageToUser.getBytes());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    LOGGER.debug("External PostgreSQL data with this ID: {} does not exist", key);
+                    return new ByteArrayInputStream(defaultMessageToUser.getBytes());
+                }
+                inputStream = rs.getBinaryStream(1);
+                LOGGER.debug("External PostgreSQL downloaded key: {}", key);
             }
-            inputStream = rs.getBinaryStream(1);
-            rs.close();
-            LOGGER.debug("External PostgreSQL downloaded key: {}", key);
         } catch (SQLException e) {
             String msg = "Error downloading data from external PostgreSQL";
             LOGGER.error(msg, e);

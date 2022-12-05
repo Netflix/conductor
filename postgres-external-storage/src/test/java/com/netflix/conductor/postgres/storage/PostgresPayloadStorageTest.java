@@ -16,9 +16,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.junit.After;
 import org.junit.Before;
@@ -30,8 +38,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.netflix.conductor.common.config.TestObjectMapperConfiguration;
+import com.netflix.conductor.common.utils.ExternalPayloadStorage;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -86,6 +96,13 @@ public class PostgresPayloadStorageTest {
 
     @Test
     public void testReadInputStreamFromDb() throws IOException, SQLException {
+        insertData();
+        assertEquals(
+                inputString,
+                new String(executionPostgres.download(key).readAllBytes(), StandardCharsets.UTF_8));
+    }
+
+    private void insertData() throws SQLException, IOException {
         PreparedStatement stmt =
                 testPostgres
                         .getDataSource()
@@ -94,10 +111,50 @@ public class PostgresPayloadStorageTest {
         stmt.setString(1, key);
         stmt.setBinaryStream(2, inputData, inputData.available());
         stmt.executeUpdate();
+    }
 
-        assertEquals(
-                inputString,
-                new String(executionPostgres.download(key).readAllBytes(), StandardCharsets.UTF_8));
+    @Test(timeout = 60 * 1000)
+    public void testMultithreadDownload()
+            throws ExecutionException, InterruptedException, SQLException, IOException {
+        AtomicInteger threadCounter = new AtomicInteger(0);
+        insertData();
+        int numberOfThread = 12;
+        int taskInThread = 100;
+        ArrayList<CompletableFuture<?>> completableFutures = new ArrayList<>();
+        Executor executor = Executors.newFixedThreadPool(numberOfThread);
+        IntStream.range(0, numberOfThread * taskInThread)
+                .forEach(
+                        i ->
+                                createFutureForDownloadOperation(
+                                        threadCounter, completableFutures, executor));
+        for (CompletableFuture<?> completableFuture : completableFutures) {
+            completableFuture.get();
+        }
+        assertCount(1);
+        assertEquals(numberOfThread * taskInThread, threadCounter.get());
+    }
+
+    private void createFutureForDownloadOperation(
+            AtomicInteger threadCounter,
+            ArrayList<CompletableFuture<?>> completableFutures,
+            Executor executor) {
+        CompletableFuture<Void> objectCompletableFuture =
+                CompletableFuture.supplyAsync(() -> downloadData(threadCounter), executor);
+        completableFutures.add(objectCompletableFuture);
+    }
+
+    private Void downloadData(AtomicInteger threadCounter) {
+        try {
+            assertEquals(
+                    inputString,
+                    new String(
+                            executionPostgres.download(key).readAllBytes(),
+                            StandardCharsets.UTF_8));
+            threadCounter.getAndIncrement();
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -128,15 +185,110 @@ public class PostgresPayloadStorageTest {
         executionPostgres.upload("dummyKey6.json", inputData, inputData.available());
         executionPostgres.upload("dummyKey7.json", inputData, inputData.available());
 
-        PreparedStatement stmt =
-                testPostgres
-                        .getDataSource()
-                        .getConnection()
-                        .prepareStatement("SELECT count(id) FROM external.external_payload");
-        ResultSet rs = stmt.executeQuery();
-        rs.next();
-        assertEquals(5, rs.getInt(1));
-        stmt.close();
+        assertCount(5);
+    }
+
+    @Test(timeout = 60 * 1000)
+    public void testMultithreadInsert()
+            throws SQLException, ExecutionException, InterruptedException {
+        AtomicInteger threadCounter = new AtomicInteger(0);
+        int numberOfThread = 12;
+        int taskInThread = 100;
+        ArrayList<CompletableFuture<?>> completableFutures = new ArrayList<>();
+        Executor executor = Executors.newFixedThreadPool(numberOfThread);
+        IntStream.range(0, numberOfThread * taskInThread)
+                .forEach(
+                        i ->
+                                createFutureForUploadOperation(
+                                        threadCounter, completableFutures, executor));
+        for (CompletableFuture<?> completableFuture : completableFutures) {
+            completableFuture.get();
+        }
+        assertCount(1);
+        assertEquals(numberOfThread * taskInThread, threadCounter.get());
+    }
+
+    private void createFutureForUploadOperation(
+            AtomicInteger threadCounter,
+            ArrayList<CompletableFuture<?>> completableFutures,
+            Executor executor) {
+        CompletableFuture<Void> objectCompletableFuture =
+                CompletableFuture.supplyAsync(() -> uploadData(threadCounter), executor);
+        completableFutures.add(objectCompletableFuture);
+    }
+
+    private Void uploadData(AtomicInteger threadCounter) {
+        try {
+            uploadData();
+            threadCounter.getAndIncrement();
+            return null;
+        } catch (IOException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testHashEnsuringNoDuplicates()
+            throws IOException, SQLException, InterruptedException {
+        final String createdOn = uploadData();
+        Thread.sleep(500);
+        final String createdOnAfterUpdate = uploadData();
+        assertCount(1);
+        assertNotEquals(createdOnAfterUpdate, createdOn);
+    }
+
+    private String uploadData() throws SQLException, IOException {
+        final String location = getKey(inputString);
+        ByteArrayInputStream inputStream =
+                new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+        executionPostgres.upload(location, inputStream, inputStream.available());
+        return getCreatedOn(location);
+    }
+
+    @Test
+    public void testDistinctHashedKey() {
+        final String location = getKey(inputString);
+        final String location2 = getKey(inputString);
+        final String location3 = getKey(inputString + "A");
+
+        assertNotEquals(location3, location);
+        assertEquals(location2, location);
+    }
+
+    private String getKey(String input) {
+        return executionPostgres
+                .getLocation(
+                        ExternalPayloadStorage.Operation.READ,
+                        ExternalPayloadStorage.PayloadType.TASK_INPUT,
+                        "",
+                        input.getBytes(StandardCharsets.UTF_8))
+                .getUri();
+    }
+
+    private void assertCount(int expected) throws SQLException {
+        try (PreparedStatement stmt =
+                        testPostgres
+                                .getDataSource()
+                                .getConnection()
+                                .prepareStatement(
+                                        "SELECT count(id) FROM external.external_payload");
+                ResultSet rs = stmt.executeQuery()) {
+            rs.next();
+            assertEquals(expected, rs.getInt(1));
+        }
+    }
+
+    private String getCreatedOn(String key) throws SQLException {
+        try (Connection conn = testPostgres.getDataSource().getConnection();
+                PreparedStatement stmt =
+                        conn.prepareStatement(
+                                "SELECT created_on FROM external.external_payload WHERE id = ?")) {
+            stmt.setString(1, key);
+            try (ResultSet rs = stmt.executeQuery()) {
+                rs.next();
+                return rs.getString(1);
+            }
+        }
     }
 
     @After

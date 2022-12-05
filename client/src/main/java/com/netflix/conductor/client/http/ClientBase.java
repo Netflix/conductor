@@ -274,7 +274,8 @@ public abstract class ClientBase {
                         || payloadType.equals(ExternalPayloadStorage.PayloadType.TASK_OUTPUT),
                 "Payload type must be workflow input or task output");
         ExternalStorageLocation externalStorageLocation =
-                payloadStorage.getLocation(ExternalPayloadStorage.Operation.WRITE, payloadType, "");
+                payloadStorage.getLocation(
+                        ExternalPayloadStorage.Operation.WRITE, payloadType, "", payloadBytes);
         payloadStorage.upload(
                 externalStorageLocation.getUri(),
                 new ByteArrayInputStream(payloadBytes),
