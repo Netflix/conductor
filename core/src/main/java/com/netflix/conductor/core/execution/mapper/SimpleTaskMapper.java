@@ -68,18 +68,12 @@ public class SimpleTaskMapper implements TaskMapper {
         WorkflowModel workflowModel = taskMapperContext.getWorkflowModel();
         int retryCount = taskMapperContext.getRetryCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
-
-        TaskDef taskDefinition =
-                Optional.ofNullable(workflowTask.getTaskDefinition())
-                        .orElseThrow(
-                                () -> {
-                                    String reason =
-                                            String.format(
-                                                    "Invalid task. Task %s does not have a definition",
-                                                    workflowTask.getName());
-                                    return new TerminateWorkflowException(reason);
-                                });
-
+        TaskDef taskDefinition = workflowTask.getTaskDefinition();
+        if(taskDefinition == null) {
+            String reason = String.format("Invalid task. Task %s does not have a definition", workflowTask.getName());
+            LOGGER.warn(reason);
+            taskDefinition = new TaskDef(workflowTask.getName());
+        }
         Map<String, Object> input =
                 parametersUtils.getTaskInput(
                         workflowTask.getInputParameters(),
