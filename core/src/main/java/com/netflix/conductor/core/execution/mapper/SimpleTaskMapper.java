@@ -14,7 +14,6 @@ package com.netflix.conductor.core.execution.mapper;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +68,11 @@ public class SimpleTaskMapper implements TaskMapper {
         int retryCount = taskMapperContext.getRetryCount();
         String retriedTaskId = taskMapperContext.getRetryTaskId();
         TaskDef taskDefinition = workflowTask.getTaskDefinition();
-        if(taskDefinition == null) {
-            String reason = String.format("Invalid task. Task %s does not have a definition", workflowTask.getName());
+        if (taskDefinition == null) {
+            String reason =
+                    String.format(
+                            "Invalid task. Task %s does not have a definition",
+                            workflowTask.getName());
             LOGGER.warn(reason);
             taskDefinition = new TaskDef(workflowTask.getName());
         }
