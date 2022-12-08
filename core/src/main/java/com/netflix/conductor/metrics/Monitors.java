@@ -246,8 +246,7 @@ public class Monitors {
                 StringUtils.defaultIfBlank(ownerApp, "unknown"));
     }
 
-    public static void recordRunningWorkflows(
-            long count, String name, String ownerApp) {
+    public static void recordRunningWorkflows(long count, String name, String ownerApp) {
         gauge(
                 classQualifier,
                 "workflow_running",

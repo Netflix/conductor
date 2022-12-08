@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.netflix.conductor.common.metadata.Auditable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -27,6 +26,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.netflix.conductor.common.metadata.Auditable;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
@@ -83,10 +83,10 @@ public class WorkflowMonitor {
 
             // Pending workflow data does not contain information about version. We only need the
             // owner app and workflow name, and we only need to query for the workflow once.
-            Map<String, String> workflowNameToOwnerMap = workflowDefs.stream().collect(Collectors.toMap(
-                    WorkflowDef::getName,
-                    Auditable::getOwnerApp)
-            );
+            Map<String, String> workflowNameToOwnerMap =
+                    workflowDefs.stream()
+                            .collect(
+                                    Collectors.toMap(WorkflowDef::getName, Auditable::getOwnerApp));
 
             workflowNameToOwnerMap.forEach(
                     (workflowName, ownerApp) -> {
