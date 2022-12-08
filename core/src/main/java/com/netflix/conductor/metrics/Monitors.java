@@ -247,15 +247,13 @@ public class Monitors {
     }
 
     public static void recordRunningWorkflows(
-            long count, String name, String version, String ownerApp) {
+            long count, String name, String ownerApp) {
         gauge(
                 classQualifier,
                 "workflow_running",
                 count,
                 "workflowName",
                 name,
-                "version",
-                version,
                 "ownerApp",
                 StringUtils.defaultIfBlank(ownerApp, "unknown"));
     }

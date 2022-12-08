@@ -14,8 +14,11 @@ package com.netflix.conductor.metrics;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.netflix.conductor.common.metadata.Auditable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -78,13 +81,17 @@ public class WorkflowMonitor {
                 refreshCounter = metadataRefreshInterval;
             }
 
-            workflowDefs.forEach(
-                    workflowDef -> {
-                        String name = workflowDef.getName();
-                        String version = String.valueOf(workflowDef.getVersion());
-                        String ownerApp = workflowDef.getOwnerApp();
-                        long count = executionDAOFacade.getPendingWorkflowCount(name);
-                        Monitors.recordRunningWorkflows(count, name, version, ownerApp);
+            // Pending workflow data does not contain information about version. We only need the
+            // owner app and workflow name, and we only need to query for the workflow once.
+            Map<String, String> workflowNameToOwnerMap = workflowDefs.stream().collect(Collectors.toMap(
+                    WorkflowDef::getName,
+                    Auditable::getOwnerApp)
+            );
+
+            workflowNameToOwnerMap.forEach(
+                    (workflowName, ownerApp) -> {
+                        long count = executionDAOFacade.getPendingWorkflowCount(workflowName);
+                        Monitors.recordRunningWorkflows(count, workflowName, ownerApp);
                     });
 
             taskDefs.forEach(
