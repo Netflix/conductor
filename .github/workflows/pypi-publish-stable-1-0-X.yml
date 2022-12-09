@@ -1,19 +1,19 @@
-name: PyPi Conductor-client update
+name: PyPi Conductor-client update stable-1.0.X
 
 on:
   push:
     # Publish `master` as Docker `latest` image.
     branches:
-      - master
+      - stable-1.0.X
 
     # Publish `v1.2.3` tags as releases.
     tags:
-      - v2*
+      - v1*
   
   workflow_dispatch:
 
 jobs:
-  build-n-publish-v2:
+  build-n-publish-v1:
     name: Build and publish frinx conductor client
     runs-on: ubuntu-18.04
     defaults:
@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Check package version
       run: |
-        grep -q "version = '2." setup.py
+        grep -q "version = '1." setup.py
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:

@@ -1,23 +1,22 @@
-name: Docker
+name: Docker stable-1.0.X
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
+    # Publish `stable-1.0.X` as Docker `1.0.X-latest` image.
     branches:
-      - master
+      - stable-1.0.X
 
-    # Publish `v2.0.3` tags as releases.
+    # Publish `v1.0.3` tags as releases.
     tags:
-      - v2*
+      - v1*
 
 env:
-  # TODO: Change variable to your image's name.
   IMAGE_NAME: frinx/conductor-server
 
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
-  push-v2:
+  push-v1:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
 
@@ -45,8 +44,8 @@ jobs:
           # Strip "v" prefix from tag name
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
+          # Use Docker `1.0.X-latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=1.0.X-latest
 
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION

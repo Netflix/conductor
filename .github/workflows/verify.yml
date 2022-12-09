@@ -1,22 +1,142 @@
 name: Verify
 
 on:
-  push:
-    # Publish `master` as Docker `latest` image.
-    branches:
-      - master
-
   # Run tests for any PRs.
   pull_request:
+    branches:    
+      - master
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-v2:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+          submodules: recursive
 
-      - name: Build image
-        run: ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x :conductor-contribs:test -x :conductor-cassandra-persistence:test -x :conductor-azureblob-storage:test -x :conductor-es7-persistence:test -x :conductor-redis-persistence:test -x :conductor-mysql-persistence:test -x :conductor-redis-lock:test -x :conductor-redis-concurrency-limit:test -x :conductor-zookeeper-lock:test
+      - name: Build and test
+        run: ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000
+
+  test-v2:
+    runs-on: ubuntu-latest
+    needs: build-v2
+    
+    services:
+      postgres:
+        image: postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Build conductor
+        run: ./gradlew build -x test
+
+      - name: Run conductor
+        run: nohup ./gradlew :conductor-server:bootRun > logs.txt &
+
+      - uses: nick-fields/retry@v2
+        with:
+          timeout_seconds: 10
+          max_attempts: 10
+          retry_on: error
+          command: |
+            curl -X 'GET' 'http://localhost:8080/health' -H 'accept: */*' | grep '"healthy":true'
+
+      - name: Run conductor test worker
+        run: nohup python3 polyglot-clients/python/test_worker.py > worker_logs.txt &
+
+      - name: Create WF
+        run: |
+          curl -X 'PUT' \
+            'http://localhost:8080/api/metadata/workflow' \
+            -H 'accept: */*' \
+            -H 'Content-Type: application/json' \
+            -d '[{
+                  "name": "test",
+                  "description": "test workflow",
+                  "version": 1,
+                  "tasks": [
+                    {
+                      "name": "health",
+                      "taskReferenceName": "health",
+                      "inputParameters": {
+                        "http_request": {
+                          "uri": "http://localhost:8080/health",
+                          "method": "GET"
+                        }
+                      },
+                      "type": "HTTP"
+                    },
+                    {
+                      "name": "jq_example_task",
+                      "taskReferenceName": "my_jq_example_task",
+                      "type": "JSON_JQ_TRANSFORM",
+                      "inputParameters": {
+                        "body": "${health.output.response.body}",
+                        "queryExpression": "{ healthy: (.body.healthy) }"
+                      }
+                    },
+                    {
+                      "name": "echo",
+                      "taskReferenceName": "echo",
+                      "type": "SIMPLE",
+                      "inputParameters": {
+                        "msg": "${my_jq_example_task.output}"
+                      }
+                    }
+                  ],
+                  "schemaVersion": 2
+                }]'
+
+      - name: Execute WF
+        run: |
+          curl -X 'POST' \
+            'http://localhost:8080/api/workflow' \
+          -H 'accept: text/plain' \
+          -H 'Content-Type: application/json' \
+            -d '{
+            "name": "test"
+            }'
+
+      - uses: nick-fields/retry@v2
+        name: Assert WF
+        with:
+          timeout_seconds: 2
+          max_attempts: 10
+          retry_on: error
+          command: |
+            curl -X 'GET' \
+            'http://localhost:8080/api/workflow/search-v2?start=0&size=100&freeText=%2A' \
+            -H 'accept: */*' \
+            | grep workflowId
+
+      - name: Search WFs
+        if: always()
+        run: |
+          curl -X 'GET' \
+          'http://localhost:8080/api/workflow/search-v2?start=0&size=100&freeText=%2A' \
+          -H 'accept: */*' \
+          | jq
+
+      - name: Print Conductor logs
+        if: always()
+        run: cat logs.txt
+
+      - name: Print Worker logs
+        if: always()
+        run: cat worker_logs.txt

@@ -1,0 +1,20 @@
+name: Verify stable-1.0.X
+
+on:
+  # Run tests for any PRs.
+  pull_request:
+    branches:    
+      - stable-1.0.X
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Build image
+        run: ./gradlew build -Dhttp.socketTimeout=60000 -Dhttp.connectionTimeout=60000 -x :conductor-contribs:test -x :conductor-cassandra-persistence:test -x :conductor-azureblob-storage:test -x :conductor-es7-persistence:test -x :conductor-redis-persistence:test -x :conductor-mysql-persistence:test -x :conductor-redis-lock:test -x :conductor-redis-concurrency-limit:test -x :conductor-zookeeper-lock:test
