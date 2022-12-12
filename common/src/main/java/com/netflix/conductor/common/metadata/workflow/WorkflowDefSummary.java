@@ -35,23 +35,17 @@ public class WorkflowDefSummary implements Comparable<WorkflowDefSummary> {
     @ProtoField(id = 3)
     private Long createTime;
 
-    /**
-     * @return the version
-     */
+    /** @return the version */
     public int getVersion() {
         return version;
     }
 
-    /**
-     * @return the workflow name
-     */
+    /** @return the workflow name */
     public String getName() {
         return name;
     }
 
-    /**
-     * @return the createTime
-     */
+    /** @return the createTime */
     public Long getCreateTime() {
         return createTime;
     }

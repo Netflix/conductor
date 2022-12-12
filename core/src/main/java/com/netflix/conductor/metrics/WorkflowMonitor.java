@@ -21,7 +21,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.netflix.conductor.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,7 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.netflix.conductor.common.metadata.Auditable;
+import com.netflix.conductor.annotations.VisibleForTesting;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
@@ -85,11 +84,13 @@ public class WorkflowMonitor {
                 refreshCounter = metadataRefreshInterval;
             }
 
-            getPendingWorkflowToOwnerAppMap(workflowDefs).forEach(
-                    (workflowName, ownerApp) -> {
-                        long count = executionDAOFacade.getPendingWorkflowCount(workflowName);
-                        Monitors.recordRunningWorkflows(count, workflowName, ownerApp);
-                    });
+            getPendingWorkflowToOwnerAppMap(workflowDefs)
+                    .forEach(
+                            (workflowName, ownerApp) -> {
+                                long count =
+                                        executionDAOFacade.getPendingWorkflowCount(workflowName);
+                                Monitors.recordRunningWorkflows(count, workflowName, ownerApp);
+                            });
 
             taskDefs.forEach(
                     taskDef -> {
@@ -121,22 +122,24 @@ public class WorkflowMonitor {
     }
 
     /**
-     * Pending workflow data does not contain information about version. We only need the
-     * owner app and workflow name, and we only need to query for the workflow once.
+     * Pending workflow data does not contain information about version. We only need the owner app
+     * and workflow name, and we only need to query for the workflow once.
      */
     @VisibleForTesting
     Map<String, String> getPendingWorkflowToOwnerAppMap(List<WorkflowDef> workflowDefs) {
-        final Map<String, List<WorkflowDef>> groupedWorkflowDefs = workflowDefs.stream()
-                .collect(Collectors.groupingBy(WorkflowDef::getName));
+        final Map<String, List<WorkflowDef>> groupedWorkflowDefs =
+                workflowDefs.stream().collect(Collectors.groupingBy(WorkflowDef::getName));
 
         Map<String, String> workflowNameToOwnerMap = new HashMap<>();
-        groupedWorkflowDefs.forEach((key, value) -> {
-            final WorkflowDef workflowDef = value.stream()
-                    .max(Comparator.comparing(WorkflowDef::getVersion))
-                    .orElseThrow(NoSuchElementException::new);
+        groupedWorkflowDefs.forEach(
+                (key, value) -> {
+                    final WorkflowDef workflowDef =
+                            value.stream()
+                                    .max(Comparator.comparing(WorkflowDef::getVersion))
+                                    .orElseThrow(NoSuchElementException::new);
 
-            workflowNameToOwnerMap.put(key, workflowDef.getOwnerApp());
-        });
+                    workflowNameToOwnerMap.put(key, workflowDef.getOwnerApp());
+                });
         return workflowNameToOwnerMap;
     }
 }
