@@ -13,11 +13,15 @@
 package com.netflix.conductor.metrics;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.netflix.conductor.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -81,14 +85,7 @@ public class WorkflowMonitor {
                 refreshCounter = metadataRefreshInterval;
             }
 
-            // Pending workflow data does not contain information about version. We only need the
-            // owner app and workflow name, and we only need to query for the workflow once.
-            Map<String, String> workflowNameToOwnerMap =
-                    workflowDefs.stream()
-                            .collect(
-                                    Collectors.toMap(WorkflowDef::getName, Auditable::getOwnerApp));
-
-            workflowNameToOwnerMap.forEach(
+            getPendingWorkflowToOwnerAppMap(workflowDefs).forEach(
                     (workflowName, ownerApp) -> {
                         long count = executionDAOFacade.getPendingWorkflowCount(workflowName);
                         Monitors.recordRunningWorkflows(count, workflowName, ownerApp);
@@ -121,5 +118,25 @@ public class WorkflowMonitor {
         } catch (Exception e) {
             LOGGER.error("Error while publishing scheduled metrics", e);
         }
+    }
+
+    /**
+     * Pending workflow data does not contain information about version. We only need the
+     * owner app and workflow name, and we only need to query for the workflow once.
+     */
+    @VisibleForTesting
+    Map<String, String> getPendingWorkflowToOwnerAppMap(List<WorkflowDef> workflowDefs) {
+        final Map<String, List<WorkflowDef>> groupedWorkflowDefs = workflowDefs.stream()
+                .collect(Collectors.groupingBy(WorkflowDef::getName));
+
+        Map<String, String> workflowNameToOwnerMap = new HashMap<>();
+        groupedWorkflowDefs.forEach((key, value) -> {
+            final WorkflowDef workflowDef = value.stream()
+                    .max(Comparator.comparing(WorkflowDef::getVersion))
+                    .orElseThrow(NoSuchElementException::new);
+
+            workflowNameToOwnerMap.put(key, workflowDef.getOwnerApp());
+        });
+        return workflowNameToOwnerMap;
     }
 }
