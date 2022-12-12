@@ -102,7 +102,9 @@ public class TaskResult {
 
     public TaskResult() {}
 
-    /** @return Workflow instance id for which the task result is produced */
+    /**
+     * @return Workflow instance id for which the task result is produced
+     */
     public String getWorkflowInstanceId() {
         return workflowInstanceId;
     }
@@ -157,7 +159,9 @@ public class TaskResult {
         this.workerId = workerId;
     }
 
-    /** @return the status */
+    /**
+     * @return the status
+     */
     public Status getStatus() {
         return status;
     }
@@ -179,7 +183,9 @@ public class TaskResult {
         return outputData;
     }
 
-    /** @param outputData output data to be set for the task execution result */
+    /**
+     * @param outputData output data to be set for the task execution result
+     */
     public void setOutputData(Map<String, Object> outputData) {
         this.outputData = outputData;
     }
@@ -204,12 +210,16 @@ public class TaskResult {
         this.outputMessage = outputMessage;
     }
 
-    /** @return Task execution logs */
+    /**
+     * @return Task execution logs
+     */
     public List<TaskExecLog> getLogs() {
         return logs;
     }
 
-    /** @param logs Task execution logs */
+    /**
+     * @param logs Task execution logs
+     */
     public void setLogs(List<TaskExecLog> logs) {
         this.logs = logs;
     }
@@ -223,7 +233,9 @@ public class TaskResult {
         return this;
     }
 
-    /** @return the path where the task output is stored in external storage */
+    /**
+     * @return the path where the task output is stored in external storage
+     */
     public String getExternalOutputPayloadStoragePath() {
         return externalOutputPayloadStoragePath;
     }
