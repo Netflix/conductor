@@ -72,7 +72,11 @@ public class SubWorkflow extends WorkflowSystemTask {
         if (wfInput == null || wfInput.isEmpty()) {
             wfInput = input;
         }
+
         String correlationId = workflow.getCorrelationId();
+        if (input.get("correlationId") != null) {
+            correlationId = (String) input.get("correlationId");
+        }
 
         try {
             StartWorkflowInput startWorkflowInput = new StartWorkflowInput();

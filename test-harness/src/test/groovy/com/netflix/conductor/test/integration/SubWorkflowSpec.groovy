@@ -19,6 +19,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.metadata.tasks.TaskType
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef
 import com.netflix.conductor.common.run.Workflow
+import com.netflix.conductor.core.execution.tasks.StartWorkflow
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
 import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.test.base.AbstractSpecification
@@ -36,8 +37,14 @@ class SubWorkflowSpec extends AbstractSpecification {
     @Autowired
     SubWorkflow subWorkflowTask
 
+    @Autowired
+    StartWorkflow startWorkflowTask
+
     @Shared
     def WORKFLOW_WITH_SUBWORKFLOW = 'integration_test_wf_with_sub_wf'
+
+    @Shared
+    def WORKFLOW_WITH_CORRELATION_ID = 'workflow_with_sub_workflow_correlation_id'
 
     @Shared
     def SUB_WORKFLOW = "sub_workflow"
@@ -46,9 +53,12 @@ class SubWorkflowSpec extends AbstractSpecification {
     def SIMPLE_WORKFLOW = "integration_test_wf"
 
     def setup() {
-        workflowTestUtil.registerWorkflows('simple_one_task_sub_workflow_integration_test.json',
+        workflowTestUtil.registerWorkflows(
+                'simple_one_task_sub_workflow_integration_test.json',
+                'workflow_with_sub_workflow_correlation_id.json',
                 'simple_workflow_1_integration_test.json',
-                'workflow_with_sub_workflow_1_integration_test.json')
+                'workflow_with_sub_workflow_1_integration_test.json'
+        )
     }
 
     def "Test retrying a subworkflow where parent workflow timed out due to workflowTimeout"() {
@@ -485,5 +495,54 @@ class SubWorkflowSpec extends AbstractSpecification {
 
         cleanup: "Ensure that changes to the task def are reverted"
         metadataService.updateTaskDef(persistedTask2Definition)
+    }
+
+    def "test proving a correlationId input parameter to subworkflow" () {
+        setup: 'create the top level correlationId for the starter workflow'
+        def topLevelCorrelationId = 'top_level_correlation_id'
+        def subWfCorrelationId = UUID.randomUUID().toString()
+        def input = new HashMap()
+        input["correlationId"] = subWfCorrelationId
+        input["subwf"] = "sub_workflow"
+
+        when: "starter workflow is started"
+        def workflowInstanceId = startWorkflow(
+                WORKFLOW_WITH_CORRELATION_ID,
+                1,
+                topLevelCorrelationId,
+                input,
+                null
+        )
+
+        then: "verify that the workflow is in a running state"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 1
+            tasks[0].taskType == 'SUB_WORKFLOW'
+            tasks[0].status == Task.Status.SCHEDULED
+        }
+
+        then: "Complete the task"
+        List<String> polledTaskIds = queueDAO.pop("SUB_WORKFLOW", 1, 200)
+        println polledTaskIds
+        String startWorkflowTaskId = polledTaskIds.get(0)
+        asyncSystemTaskExecutor.execute(subWorkflowTask, startWorkflowTaskId)
+        sweep(workflowInstanceId)
+
+
+        and: "Poll and complete"
+        def pollAndComplete = workflowTestUtil.pollAndCompleteTask('sub_workflow_task', 'sub_workflow_task.integration.worker', null)
+
+        then: "verify that the 'task' was polled and acknowledged"
+        verifyPolledAndAcknowledgedTask(pollAndComplete)
+
+        and: "verify that the subworkflow was started with the provided correlationId and not the correlationId of the parent workflow"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.COMPLETED
+            tasks.size() == 1
+            tasks[0].taskType == 'SUB_WORKFLOW'
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[0].correlationId == subWfCorrelationId
+        }
     }
 }

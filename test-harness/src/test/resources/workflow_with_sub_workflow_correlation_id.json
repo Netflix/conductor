@@ -1,0 +1,40 @@
+{
+  "name": "workflow_with_sub_workflow_correlation_id",
+  "description": "integration_test_wf_with_sub_wf",
+  "version": 1,
+  "tasks": [
+    {
+      "name": "sub_workflow_task",
+      "taskReferenceName": "task_1",
+      "inputParameters": {
+        "subwf": "${workflow.input.subwf}",
+        "correlationId": "${workflow.input.subWfCorrelationId}"
+      },
+      "type": "SUB_WORKFLOW",
+      "subWorkflowParam": {
+        "name": "${workflow.input.subwf}",
+        "version": 1
+      },
+      "startDelay": 0,
+      "joinOn": [],
+      "optional": false,
+      "defaultExclusiveJoinTask": [],
+      "asyncComplete": false,
+      "loopOver": [],
+      "retryCount": 0
+    }
+  ],
+  "inputParameters": [
+    "param1",
+    "param2"
+  ],
+  "inputTemplate": {
+    "subWfCorrelationId": "example-sbwf-correlation-id"
+  },
+  "schemaVersion": 2,
+  "restartable": true,
+  "workflowStatusListenerEnabled": false,
+  "timeoutPolicy": "ALERT_ONLY",
+  "timeoutSeconds": 0,
+  "ownerEmail": "test@harness.com"
+}
