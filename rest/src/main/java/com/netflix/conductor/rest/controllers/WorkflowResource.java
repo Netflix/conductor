@@ -274,4 +274,15 @@ public class WorkflowResource {
             @RequestParam("payloadType") String payloadType) {
         return workflowService.getExternalStorageLocation(path, operation, payloadType);
     }
+
+    @PostMapping("/{workflowId}/reset")
+    @Operation(summary = "Resets tasks for a workflow")
+    @ResponseStatus(
+            value = HttpStatus.NO_CONTENT) // for backwards compatibility with 2.x client which
+    // expects a 204 for this request
+    public void resetTasks(
+            @PathVariable("workflowId") String workflowId,
+            @RequestParam(value = "taskIds", required = true) List<String> taskIds) {
+        workflowService.resetTasks(workflowId, taskIds);
+    }
 }

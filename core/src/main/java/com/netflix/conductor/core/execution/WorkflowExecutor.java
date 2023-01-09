@@ -1482,6 +1482,7 @@ public class WorkflowExecutor {
         // On addTaskToQueue failures, ignore the exceptions and let WorkflowRepairService take care
         // of republishing the messages to the queue.
         try {
+            tasksToBeQueued = getActualTasksToBeQueued(tasksToBeQueued, workflow);
             addTaskToQueue(tasksToBeQueued);
         } catch (Exception e) {
             List<String> taskIds =
@@ -1494,6 +1495,180 @@ public class WorkflowExecutor {
             Monitors.error(CLASS_NAME, "scheduleTask");
         }
         return startedSystemTasks;
+    }
+
+    List<TaskModel> getActualTasksToBeQueued(
+            List<TaskModel> tasksToBeQueued, WorkflowModel workflowModel) {
+        /* Logic is find out the tasks to be queued in order of execution.
+        // If the task that gets reset is completed earlier then the tasks to be executed then
+        // it will get scheduled and tasks which were there in the queue will be removed.
+        // Follow below table for understanding purpose.
+        // Consider workflow t1->t2->t3->t4->t5
+        | Task Completed | Task scheduled | Task reset    | Final output                  |
+        | t1,t2,t3       |    t4          |    t2         |  t2 scheduled, t4 removed     |
+        | t1,t2,t3       |    t4          |    t2,t3      |  t2 scheduled, t4 removed     |
+        | t1,[t2, t3],t4 |    t4          |    t2,t3      |  t2, t3 scheduled, t4 removed |
+        * [] represents tasks are part of fork.
+        */
+        if (!tasksToBeQueued.isEmpty()) {
+            List<TaskModel> scheduledTasks =
+                    workflowModel.getTasks().stream()
+                            .filter(taskModel -> taskModel.getStatus().equals(SCHEDULED))
+                            .collect(Collectors.toList());
+            Map<String, Integer> refNameToSequenceNumber = new HashMap<>();
+            for (TaskModel taskModel : workflowModel.getTasks()) {
+                String taskReferenceName =
+                        TaskUtils.removeIterationFromTaskRefName(taskModel.getReferenceTaskName());
+                if (refNameToSequenceNumber.get(taskReferenceName) == null) {
+                    refNameToSequenceNumber.put(taskReferenceName, taskModel.getSeq());
+                } else if (refNameToSequenceNumber.get(taskReferenceName) > taskModel.getSeq()) {
+                    refNameToSequenceNumber.put(taskReferenceName, taskModel.getSeq());
+                }
+            }
+            // Find the task with the smallest sequence number. sorting is needed in case reset task
+            // are sent unordered
+            tasksToBeQueued.sort(
+                    Comparator.comparingInt(
+                            task ->
+                                    refNameToSequenceNumber.get(
+                                            TaskUtils.removeIterationFromTaskRefName(
+                                                    task.getReferenceTaskName()))));
+            TaskModel smallest = tasksToBeQueued.get(0);
+            // Find the parent of this task if it is fork then get all siblings and scheduled
+            // uncompleted
+            TaskModel parent = getParent(smallest, workflowModel);
+            if (parent == null) {
+                // Task is not part of any fork or dynamic fork
+                // Schedule only smallest task and remove all scheduled tasks from the queue.
+                List<TaskModel> finalTasksToBeQueued = Arrays.asList(smallest);
+                scheduledTasks.stream()
+                        .filter(scheduledTask -> !finalTasksToBeQueued.contains(scheduledTask))
+                        .forEach(
+                                taskModel ->
+                                        queueDAO.remove(
+                                                QueueUtils.getQueueName(taskModel),
+                                                taskModel.getTaskId()));
+                return finalTasksToBeQueued;
+            } else if (parent.getTaskType().equals(TaskType.TASK_TYPE_FORK)
+                    || parent.getTaskType().equals(TaskType.TASK_TYPE_FORK_JOIN)) {
+                // Find sibling from tasksToBeQueued and schedule all of them if they are part of
+                // reset tasks.
+                Set<TaskModel> finalTasksToBeQueued = new HashSet<>();
+                finalTasksToBeQueued.add(smallest);
+                // The parent fork can be inside another fork. So populate all tasks till parent
+                // becomes null.
+                while (parent != null) {
+                    TaskModel finalParent = parent;
+                    tasksToBeQueued.forEach(
+                            taskModel -> {
+                                String childTaskReferenceName =
+                                        TaskUtils.removeIterationFromTaskRefName(
+                                                taskModel.getReferenceTaskName());
+                                if (finalParent.getWorkflowTask() != null
+                                        && finalParent
+                                        .getWorkflowTask()
+                                        .has(childTaskReferenceName)) {
+                                    finalTasksToBeQueued.add(taskModel);
+                                } else if (isTaskInsideDynamicFork(finalParent, taskModel)) {
+                                    finalTasksToBeQueued.add(taskModel);
+                                }
+                            });
+                    scheduledTasks.forEach(
+                            taskModel -> {
+                                String childTaskReferenceName =
+                                        TaskUtils.removeIterationFromTaskRefName(
+                                                taskModel.getReferenceTaskName());
+                                if (finalParent.getWorkflowTask() != null
+                                        && finalParent
+                                        .getWorkflowTask()
+                                        .has(childTaskReferenceName)) {
+                                    finalTasksToBeQueued.add(taskModel);
+                                } else if (isTaskInsideDynamicFork(finalParent, taskModel)) {
+                                    finalTasksToBeQueued.add(taskModel);
+                                }
+                            });
+                    parent = getParent(parent, workflowModel);
+                }
+                // Remove scheduled tasks from the queue if they are not going to fet scheduled
+                scheduledTasks.stream()
+                        .filter(scheduledTask -> !finalTasksToBeQueued.contains(scheduledTask))
+                        .forEach(
+                                taskModel ->
+                                        queueDAO.remove(
+                                                QueueUtils.getQueueName(taskModel),
+                                                taskModel.getTaskId()));
+                return new ArrayList<>(finalTasksToBeQueued);
+            }
+            return tasksToBeQueued;
+        }
+        return tasksToBeQueued;
+    }
+
+    // Get parent of any task. Returns null if parent does not exist.
+    private TaskModel getParent(TaskModel child, WorkflowModel workflowModel) {
+        List<TaskModel> allTasks = workflowModel.getTasks();
+        TaskModel parent = null;
+        for (TaskModel taskModel : allTasks) {
+            String childTaskReferenceName =
+                    TaskUtils.removeIterationFromTaskRefName(child.getReferenceTaskName());
+            String parentTaskReferenceName =
+                    TaskUtils.removeIterationFromTaskRefName(taskModel.getReferenceTaskName());
+            if (taskModel.getWorkflowTask() != null
+                    && taskModel.getWorkflowTask().has(childTaskReferenceName)
+                    && !childTaskReferenceName.equals(parentTaskReferenceName)) {
+                parent = taskModel;
+            } else if (isTaskInsideDynamicFork(taskModel, child)) {
+                parent = taskModel;
+            }
+        }
+        return parent;
+    }
+
+    private boolean isTaskInsideDynamicFork(TaskModel taskModel, TaskModel smallest) {
+        if (taskModel.getWorkflowTask() != null
+                && taskModel.getWorkflowTask().getType() != null
+                && taskModel
+                .getWorkflowTask()
+                .getType()
+                .equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
+            // Check task is a part of dynamic fork input
+            String childTaskReferenceName =
+                    TaskUtils.removeIterationFromTaskRefName(smallest.getReferenceTaskName());
+            if (taskModel.getInputData().get("forkedTasks") != null
+                    && taskModel.getInputData().get("forkedTasks") instanceof List) {
+                List<String> taskNames = (List) taskModel.getInputData().get("forkedTasks");
+                return taskNames.contains(childTaskReferenceName);
+            }
+        }
+        return false;
+    }
+
+    public void retryTaskForRunningWorkflow(WorkflowModel workflow, List<String> taskIds) {
+        workflow.setStatus(WorkflowModel.Status.RUNNING);
+        workflow.setLastRetriedTime(System.currentTimeMillis());
+        // Add to decider queue
+        queueDAO.push(
+                DECIDER_QUEUE,
+                workflow.getWorkflowId(),
+                workflow.getPriority(),
+                properties.getWorkflowOffsetTimeout().getSeconds());
+        executionDAOFacade.updateWorkflow(workflow);
+
+        // taskToBeRescheduled would set task `retried` to true, and hence it's important to
+        // updateTasks after obtaining task copy from taskToBeRescheduled.
+        final WorkflowModel finalWorkflow = workflow;
+        List<TaskModel> retriableMap =
+                taskIds.stream().map(executionDAOFacade::getTaskModel).collect(Collectors.toList());
+        List<TaskModel> retriableTasks =
+                retriableMap.stream()
+                        .map(task -> taskToBeRescheduled(finalWorkflow, task))
+                        .collect(Collectors.toList());
+
+        dedupAndAddTasks(workflow, retriableTasks);
+        // Note: updateTasks before updateWorkflow might fail when Workflow is archived and doesn't
+        // exist in primary store.
+        executionDAOFacade.updateTasks(workflow.getTasks());
+        scheduleTask(workflow, retriableTasks);
     }
 
     private void addTaskToQueue(final List<TaskModel> tasks) {

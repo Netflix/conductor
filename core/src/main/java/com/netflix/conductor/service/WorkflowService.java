@@ -397,4 +397,12 @@ public interface WorkflowService {
      */
     ExternalStorageLocation getExternalStorageLocation(
             String path, String operation, String payloadType);
+
+    /**
+     * Reset tasks in the workflow
+     *
+     * @param workflowId  workflowId
+     * @param taskIds List of taskIds to be reset
+     */
+    void resetTasks(String workflowId, List<String> taskIds);
 }
