@@ -87,7 +87,9 @@ public class WorkflowServiceTest {
         }
 
         @Bean
-        public ExecutionDAOFacade executionDAOFacade() {return mock(ExecutionDAOFacade.class);}
+        public ExecutionDAOFacade executionDAOFacade() {
+            return mock(ExecutionDAOFacade.class);
+        }
 
         @Bean
         public WorkflowService workflowService(
