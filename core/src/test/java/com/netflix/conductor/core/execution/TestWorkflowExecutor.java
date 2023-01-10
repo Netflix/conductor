@@ -2579,7 +2579,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel22 = getTaskModel("t2", SIMPLE.name(), TaskModel.Status.SCHEDULED, 5);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11, taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
@@ -2601,7 +2601,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel22 = getTaskModel("t2", SIMPLE.name(), TaskModel.Status.SCHEDULED, 6);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11, taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
@@ -2628,7 +2628,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel22 = getTaskModel("t2", SIMPLE.name(), TaskModel.Status.SCHEDULED, 6);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11, taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 2);
@@ -2661,7 +2661,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel22 = getTaskModel("t2", SIMPLE.name(), TaskModel.Status.SCHEDULED, 7);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11, taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 2);
@@ -2688,7 +2688,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel11 = getTaskModel("t3", SIMPLE.name(), TaskModel.Status.SCHEDULED, 5);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
@@ -2701,7 +2701,7 @@ public class TestWorkflowExecutor {
         taskModel22.setTaskType(SIMPLE.name());
         taskModel22.setStatus(TaskModel.Status.SCHEDULED);
         taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
@@ -2729,7 +2729,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel22 = getTaskModel("t2", SIMPLE.name(), TaskModel.Status.SCHEDULED, 6);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel11, taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 2);
@@ -2743,7 +2743,7 @@ public class TestWorkflowExecutor {
         // Now T1 got reset, it should get chance and T2 and t3 should be removed from the queue.
         TaskModel taskModel21 = getTaskModel("t1", SIMPLE.name(), TaskModel.Status.SCHEDULED, 7);
         taskModels =
-                workflowExecutor.getActualTasksToBeQueued(
+                workflowExecutor.getTasksToBeQueued(
                         Arrays.asList(taskModel21), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);

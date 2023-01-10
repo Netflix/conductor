@@ -1482,7 +1482,7 @@ public class WorkflowExecutor {
         // On addTaskToQueue failures, ignore the exceptions and let WorkflowRepairService take care
         // of republishing the messages to the queue.
         try {
-            tasksToBeQueued = getActualTasksToBeQueued(tasksToBeQueued, workflow);
+            tasksToBeQueued = getTasksToBeQueued(tasksToBeQueued, workflow);
             addTaskToQueue(tasksToBeQueued);
         } catch (Exception e) {
             List<String> taskIds =
@@ -1497,7 +1497,7 @@ public class WorkflowExecutor {
         return startedSystemTasks;
     }
 
-    List<TaskModel> getActualTasksToBeQueued(
+    List<TaskModel> getTasksToBeQueued(
             List<TaskModel> tasksToBeQueued, WorkflowModel workflowModel) {
         /* Logic is find out the tasks to be queued in order of execution.
         // If the task that gets reset is completed earlier then the tasks to be executed then
