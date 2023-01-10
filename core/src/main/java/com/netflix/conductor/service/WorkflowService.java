@@ -401,7 +401,7 @@ public interface WorkflowService {
     /**
      * Reset tasks in the workflow
      *
-     * @param workflowId  workflowId
+     * @param workflowId workflowId
      * @param taskIds List of taskIds to be reset
      */
     void resetTasks(String workflowId, List<String> taskIds);
