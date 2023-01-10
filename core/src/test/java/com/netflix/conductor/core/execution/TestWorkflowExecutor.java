@@ -2688,8 +2688,7 @@ public class TestWorkflowExecutor {
         TaskModel taskModel11 = getTaskModel("t3", SIMPLE.name(), TaskModel.Status.SCHEDULED, 5);
 
         List<TaskModel> taskModels =
-                workflowExecutor.getTasksToBeQueued(
-                        Arrays.asList(taskModel11), workflowModel);
+                workflowExecutor.getTasksToBeQueued(Arrays.asList(taskModel11), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
         Assert.assertEquals(taskModels.get(0).getReferenceTaskName(), "t3");
@@ -2700,9 +2699,7 @@ public class TestWorkflowExecutor {
         taskModel22.setReferenceTaskName("t2");
         taskModel22.setTaskType(SIMPLE.name());
         taskModel22.setStatus(TaskModel.Status.SCHEDULED);
-        taskModels =
-                workflowExecutor.getTasksToBeQueued(
-                        Arrays.asList(taskModel22), workflowModel);
+        taskModels = workflowExecutor.getTasksToBeQueued(Arrays.asList(taskModel22), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
         Assert.assertEquals(taskModels.get(0).getReferenceTaskName(), "t2");
@@ -2742,9 +2739,7 @@ public class TestWorkflowExecutor {
 
         // Now T1 got reset, it should get chance and T2 and t3 should be removed from the queue.
         TaskModel taskModel21 = getTaskModel("t1", SIMPLE.name(), TaskModel.Status.SCHEDULED, 7);
-        taskModels =
-                workflowExecutor.getTasksToBeQueued(
-                        Arrays.asList(taskModel21), workflowModel);
+        taskModels = workflowExecutor.getTasksToBeQueued(Arrays.asList(taskModel21), workflowModel);
 
         Assert.assertEquals(taskModels.size(), 1);
         Assert.assertTrue(

@@ -1566,8 +1566,8 @@ public class WorkflowExecutor {
                                                 taskModel.getReferenceTaskName());
                                 if (finalParent.getWorkflowTask() != null
                                         && finalParent
-                                        .getWorkflowTask()
-                                        .has(childTaskReferenceName)) {
+                                                .getWorkflowTask()
+                                                .has(childTaskReferenceName)) {
                                     finalTasksToBeQueued.add(taskModel);
                                 } else if (isTaskInsideDynamicFork(finalParent, taskModel)) {
                                     finalTasksToBeQueued.add(taskModel);
@@ -1580,8 +1580,8 @@ public class WorkflowExecutor {
                                                 taskModel.getReferenceTaskName());
                                 if (finalParent.getWorkflowTask() != null
                                         && finalParent
-                                        .getWorkflowTask()
-                                        .has(childTaskReferenceName)) {
+                                                .getWorkflowTask()
+                                                .has(childTaskReferenceName)) {
                                     finalTasksToBeQueued.add(taskModel);
                                 } else if (isTaskInsideDynamicFork(finalParent, taskModel)) {
                                     finalTasksToBeQueued.add(taskModel);
@@ -1628,9 +1628,9 @@ public class WorkflowExecutor {
         if (taskModel.getWorkflowTask() != null
                 && taskModel.getWorkflowTask().getType() != null
                 && taskModel
-                .getWorkflowTask()
-                .getType()
-                .equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
+                        .getWorkflowTask()
+                        .getType()
+                        .equals(TaskType.TASK_TYPE_FORK_JOIN_DYNAMIC)) {
             // Check task is a part of dynamic fork input
             String childTaskReferenceName =
                     TaskUtils.removeIterationFromTaskRefName(smallest.getReferenceTaskName());
