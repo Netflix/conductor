@@ -338,8 +338,21 @@ class WorkflowGraph extends React.Component {
     inner.selectAll("g.node").on("click", this.handleClick);
   };
 
+  /**
+   * Get the taskRef id base on browsers
+   * @param e
+   * @returns {string | undefined} The id of the task ref
+   */
+  getTaskRef = (e) => {
+    const isFirefox = navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+    if (isFirefox) {
+      return e.target?.parentNode?.id;
+    }
+    return e?.path[1]?.id || e?.path[2]?.id; // could be 2 layers down
+  };
+
   handleClick = (e) => {
-    const taskRef = e.path[1].id || e.path[2].id; // could be 2 layers down
+    const taskRef = this.getTaskRef(e);
     const node = this.graph.node(taskRef);
     if (node.type === "DF_TASK_PLACEHOLDER") {
       if (this.props.onClick) this.props.onClick({ ref: node.firstDfRef });
