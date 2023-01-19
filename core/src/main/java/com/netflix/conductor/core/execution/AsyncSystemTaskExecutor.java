@@ -61,7 +61,9 @@ public class AsyncSystemTaskExecutor {
      * @param taskId The id of the {@link TaskModel} object.
      */
     public void execute(WorkflowSystemTask systemTask, String taskId) {
-        TaskModel task = loadTaskQuietly(taskId);
+        // TaskModel task = loadTaskQuietly(taskId);
+        TaskModel task = loadLeanTaskQuietly(taskId);
+
         if (task == null) {
             LOGGER.error("TaskId: {} could not be found while executing {}", taskId, systemTask);
             return;
@@ -137,13 +139,17 @@ public class AsyncSystemTaskExecutor {
                 task.incrementPollCount();
             }
 
+            // Load the full task including externalized payloads for execution
             if (task.getStatus() == TaskModel.Status.SCHEDULED) {
+                populateLeanTaskQuietly(task);
                 task.setStartTime(System.currentTimeMillis());
                 Monitors.recordQueueWaitTime(task.getTaskDefName(), task.getQueueWaitTime());
                 // az tu asi treba cely workflow
                 systemTask.start(workflow, task, workflowExecutor);
             } else if (task.getStatus() == TaskModel.Status.IN_PROGRESS) {
-                // tu netreba input/output data(cize full copy)
+                if (systemTask.isTaskRetrievalRequired()) {
+                    populateLeanTaskQuietly(task);
+                }
                 systemTask.execute(workflow, task, workflowExecutor);
             }
 
@@ -196,9 +202,18 @@ public class AsyncSystemTaskExecutor {
         }
     }
 
-    private TaskModel loadTaskQuietly(String taskId) {
+    private TaskModel loadLeanTaskQuietly(String taskId) {
         try {
-            return executionDAOFacade.getTaskModel(taskId);
+            return executionDAOFacade.getTaskModelLean(taskId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private TaskModel populateLeanTaskQuietly(TaskModel task) {
+        try {
+            executionDAOFacade.populateTaskData(task);
+            return task;
         } catch (Exception e) {
             return null;
         }
