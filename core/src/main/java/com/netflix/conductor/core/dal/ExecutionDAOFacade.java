@@ -431,6 +431,7 @@ public class ExecutionDAOFacade {
     public TaskModel getTaskModel(String taskId) {
         TaskModel taskModel = getTaskFromDatastore(taskId);
         if (taskModel != null) {
+            // nie vzdy potrebujeme full copy!
             return modelMapper.getFullCopy(taskModel);
         }
         return taskModel;

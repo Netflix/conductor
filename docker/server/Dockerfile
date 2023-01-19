@@ -25,6 +25,9 @@ LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
+RUN wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2022.9-docker.zip -P /tmp/ && \
+  unzip /tmp/YourKit-JavaProfiler-2022.9-docker.zip -d /usr/local && \
+  rm /tmp/YourKit-JavaProfiler-2022.9-docker.zip
 
 # Copy the compiled output to new image
 COPY --from=builder /conductor/docker/server/bin /app
@@ -35,7 +38,7 @@ RUN groupadd -r conductor && \
     useradd -m conductor -r -g conductor && \
     chown -R conductor:conductor /app
 
-USER conductor
+# USER conductor
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh

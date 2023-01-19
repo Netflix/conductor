@@ -42,4 +42,5 @@ if [ -f "/set_env_secrets.sh" ]; then
 . /set_env_secrets.sh
 fi
 
-java ${JAVA_OPTS} -jar ${LOG4J_CONF:-} -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar
+# java ${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -agentpath:/usr/local/YourKit-JavaProfiler-2022.9/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all -jar ${LOG4J_CONF:-} -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar
+java ${JAVA_OPTS} -agentpath:/usr/local/YourKit-JavaProfiler-2022.9/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all -jar ${LOG4J_CONF:-} -DCONDUCTOR_CONFIG_FILE=$config_file conductor-server-*-boot.jar

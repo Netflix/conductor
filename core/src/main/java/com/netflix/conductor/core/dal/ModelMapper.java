@@ -156,7 +156,7 @@ public class ModelMapper {
             workflowModel.setOutput(workflowOutputParams);
             workflowModel.setExternalOutputPayloadStoragePath(null);
         }
-
+        // tu zase stahuje data
         workflowModel.getTasks().forEach(this::populateTaskData);
     }
 
