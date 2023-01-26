@@ -39,7 +39,10 @@
             "locked": "2.17.2"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.1"
+            "locked": "2.17.2"
+        },
+        "org.glassfish.jersey.core:jersey-common": {
+            "locked": "2.22.2"
         }
     },
     "runtimeClasspath": {
