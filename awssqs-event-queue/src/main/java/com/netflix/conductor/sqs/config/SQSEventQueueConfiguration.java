@@ -15,6 +15,7 @@ package com.netflix.conductor.sqs.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,6 +38,11 @@ import rx.Scheduler;
 @EnableConfigurationProperties(SQSEventQueueProperties.class)
 @ConditionalOnProperty(name = "conductor.event-queues.sqs.enabled", havingValue = "true")
 public class SQSEventQueueConfiguration {
+
+    @Bean
+    AWSCredentialsProvider createAWSCredentialsProvider() {
+        return new DefaultAWSCredentialsProviderChain();
+    }
 
     @ConditionalOnMissingBean
     @Bean
