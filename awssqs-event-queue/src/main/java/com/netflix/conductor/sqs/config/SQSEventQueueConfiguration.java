@@ -15,7 +15,11 @@ package com.netflix.conductor.sqs.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.amazonaws.client.builder.AwsClientBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -38,10 +42,21 @@ import rx.Scheduler;
 @ConditionalOnProperty(name = "conductor.event-queues.sqs.enabled", havingValue = "true")
 public class SQSEventQueueConfiguration {
 
+    @Autowired private SQSEventQueueProperties sqsProperties;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQSEventQueueConfiguration.class);
+
     @ConditionalOnMissingBean
     @Bean
     public AmazonSQS getSQSClient(AWSCredentialsProvider credentialsProvider) {
-        return AmazonSQSClientBuilder.standard().withCredentials(credentialsProvider).build();
+        AmazonSQSClientBuilder builder =
+                AmazonSQSClientBuilder.standard().withCredentials(credentialsProvider);
+        if (!sqsProperties.getEndpoint().isEmpty()) {
+            LOGGER.info("Setting custom SQS endpoint to {}", sqsProperties.getEndpoint());
+            builder.withEndpointConfiguration(
+                    new AwsClientBuilder.EndpointConfiguration(sqsProperties.getEndpoint(), null));
+        }
+        return builder.build();
     }
 
     @Bean
