@@ -34,8 +34,8 @@ import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.run.SearchResult;
 import com.netflix.conductor.common.run.Workflow;
 import com.netflix.conductor.common.run.WorkflowSummary;
-import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.dal.ExecutionDAOFacade;
+import com.netflix.conductor.core.exception.NotFoundException;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.core.operation.StartWorkflowOperation;
 
@@ -94,7 +94,11 @@ public class WorkflowServiceTest {
                 ExecutionDAOFacade executionDAOFacade,
                 StartWorkflowOperation startWorkflowOperation) {
             return new WorkflowServiceImpl(
-                    workflowExecutor, executionService, metadataService, executionDAOFacade, startWorkflowOperation);
+                    workflowExecutor,
+                    executionService,
+                    metadataService,
+                    executionDAOFacade,
+                    startWorkflowOperation);
         }
     }
 
