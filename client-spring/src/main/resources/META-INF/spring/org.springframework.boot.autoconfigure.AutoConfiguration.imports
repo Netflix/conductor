@@ -1,0 +1,3 @@
+# Please keep this list up to date with org.springframework.boot.autoconfigure.EnableAutoConfiguration in spring.factories 
+# until minimum supported spring boot version is 2.7+
+com.netflix.conductor.client.spring.ConductorClientAutoConfiguration

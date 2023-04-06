@@ -1,2 +1,4 @@
+# Please keep org.springframework.boot.autoconfigure.EnableAutoConfiguration list up to date at all times with org.springframework.boot.autoconfigure.AutoConfiguration.imports.
+# As of spring boot 2.7 EnableAutoConfiguration is deprecated. Please consider removing this section when Spring Boot 2.7 is the minimum supported version.
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
   com.netflix.conductor.client.spring.ConductorClientAutoConfiguration
