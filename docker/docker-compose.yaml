@@ -43,6 +43,9 @@ services:
     networks:
       - internal
     ports:
+      # if you are on macOS 12(Monterey) or higher you may want to choose another port
+      # or turn off AirPlay Receiver to freeup port 5000 
+      # https://developer.apple.com/forums/thread/682332
       - 5000:5000
     links:
       - conductor-server
@@ -60,9 +63,11 @@ services:
       test: [ "CMD", "redis-cli","ping" ]
 
   elasticsearch:
-    image: elasticsearch:6.8.15
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.23
     container_name: elasticsearch
     environment:
+      #https://www.elastic.co/guide/en/elasticsearch/reference/master/_system_call_filter_check.html
+      - bootstrap.system_call_filter=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - transport.host=0.0.0.0
       - discovery.type=single-node
