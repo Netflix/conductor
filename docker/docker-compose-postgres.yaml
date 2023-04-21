@@ -92,6 +92,22 @@ services:
         max-size: "1k"
         max-file: "3"
 
+  conductor-ui:
+    environment:
+      - WF_SERVER=http://conductor-server:8080
+    image: conductor:ui
+    container_name: conductor-ui
+    build:
+      context: ../
+      dockerfile: docker/ui/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 5000:5000
+    links:
+      - conductor-server
+    stdin_open: true
+
 volumes:
   pgdata-conductor:
     driver: local
