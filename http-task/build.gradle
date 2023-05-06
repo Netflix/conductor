@@ -17,6 +17,7 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
 
     implementation "javax.ws.rs:jsr311-api:${revJsr311Api}"
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation "org.testcontainers:mockserver:${revTestContainer}"
