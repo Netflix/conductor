@@ -19,6 +19,7 @@ import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.common.metadata.tasks.TaskResult
 import com.netflix.conductor.common.metadata.tasks.TaskType
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest
+import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask
 import com.netflix.conductor.common.run.Workflow
@@ -27,6 +28,8 @@ import com.netflix.conductor.core.utils.Utils
 import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.test.base.AbstractSpecification
 
+import com.google.protobuf.Any
+import com.google.protobuf.ByteString
 import spock.lang.Shared
 
 import static com.netflix.conductor.test.util.WorkflowTestUtil.verifyPolledAndAcknowledgedTask
@@ -53,8 +56,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
 
     def setup() {
         //Register LINEAR_WORKFLOW_T1_T2, TEST_WORKFLOW, RTOWF, WORKFLOW_WITH_OPTIONAL_TASK
-        workflowTestUtil.registerWorkflows(
-                'simple_workflow_1_integration_test.json',
+        workflowTestUtil.registerWorkflows('simple_workflow_1_integration_test.json',
                 'simple_workflow_1_input_template_integration_test.json',
                 'simple_workflow_3_integration_test.json',
                 'simple_workflow_with_optional_task_integration_test.json',
@@ -151,12 +153,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         verifyPolledAndAcknowledgedTask(pollAndCompleteTask1Try1)
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.COMPLETED
-            output == [
-                    output: "task1.done",
-                    param3: 'external string',
-                    param2: ['list', 'of', 'strings'],
-                    param1: [nested_object: [nested_key: "nested_value"]]
-            ]
+            output == [output: "task1.done",
+                       param3: 'external string',
+                       param2: ['list', 'of', 'strings'],
+                       param1: [nested_object: [nested_key: "nested_value"]]]
         }
     }
 
@@ -578,7 +578,17 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         }
 
         when: "The second task in the workflow is skipped"
-        workflowExecutor.skipTaskFromWorkflow(workflowInstanceId, 't2', null)
+        def skipTaskRequest = new SkipTaskRequest();
+        skipTaskRequest.setTaskInputMessage(Any.newBuilder()
+                .setValue(ByteString.copyFromUtf8("Task is running"))
+                .build());
+        skipTaskRequest.setTaskOutputMessage(Any.newBuilder()
+                .setValue(ByteString.copyFromUtf8("Task is skipped"))
+                .build());
+        skipTaskRequest.setTaskInput(Map.of("k1", "v1"))
+        skipTaskRequest.setTaskOutput(Map.of("k2", "v2"))
+
+        workflowExecutor.skipTaskFromWorkflow(workflowInstanceId, 't2', skipTaskRequest)
 
         then: "Ensure that the second task in the workflow is skipped and the first one is still in scheduled state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
@@ -586,6 +596,10 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
             tasks.size() == 2
             tasks[0].taskType == 'integration_task_2'
             tasks[0].status == Task.Status.SKIPPED
+            tasks[0].inputMessage.getValue().toStringUtf8() == "Task is running"
+            tasks[0].outputMessage.getValue().toStringUtf8() == "Task is skipped"
+            tasks[0].inputData == Map.of("k1", "v1")
+            tasks[0].outputData == Map.of("k2", "v2")
             tasks[1].taskType == 'integration_task_1'
             tasks[1].status == Task.Status.SCHEDULED
         }

@@ -266,7 +266,7 @@ public abstract class AbstractHttpEndToEndTest extends AbstractEndToEndTest {
         assertEquals(WorkflowStatus.RUNNING, workflow.getStatus());
         assertEquals(1, workflow.getTasks().size());
 
-        workflowClient.skipTaskFromWorkflow(workflowId, "t1");
+        workflowClient.skipTaskFromWorkflow(workflowId, "t1", null);
     }
 
     @Test(expected = ConductorClientException.class)

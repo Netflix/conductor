@@ -43,4 +43,5 @@ dependencies {
     testImplementation "org.codehaus.groovy:groovy-all:${revGroovy}"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"
+    testImplementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
 }

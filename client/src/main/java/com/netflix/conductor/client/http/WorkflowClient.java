@@ -26,6 +26,7 @@ import com.netflix.conductor.client.config.DefaultConductorClientConfiguration;
 import com.netflix.conductor.client.exception.ConductorClientException;
 import com.netflix.conductor.client.telemetry.MetricsContainer;
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest;
+import com.netflix.conductor.common.metadata.workflow.SkipTaskRequest;
 import com.netflix.conductor.common.metadata.workflow.StartWorkflowRequest;
 import com.netflix.conductor.common.model.BulkResponse;
 import com.netflix.conductor.common.run.SearchResult;
@@ -357,6 +358,7 @@ public class WorkflowClient extends ClientBase {
      * @param workflowId the id of the workflow instance
      * @param taskReferenceName the reference name of the task to be skipped
      */
+    @Deprecated
     public void skipTaskFromWorkflow(String workflowId, String taskReferenceName) {
         Validate.notBlank(workflowId, "workflow id cannot be blank");
         Validate.notBlank(taskReferenceName, "Task reference name cannot be blank");
@@ -365,6 +367,19 @@ public class WorkflowClient extends ClientBase {
                 "workflow/{workflowId}/skiptask/{taskReferenceName}",
                 null,
                 null,
+                workflowId,
+                taskReferenceName);
+    }
+
+    public void skipTaskFromWorkflow(
+            String workflowId, String taskReferenceName, SkipTaskRequest skipTaskRequest) {
+        Validate.notBlank(workflowId, "workflow id cannot be blank");
+        Validate.notBlank(taskReferenceName, "Task reference name cannot be blank");
+
+        put(
+                "workflow/{workflowId}/skiptask/{taskReferenceName}",
+                null,
+                skipTaskRequest,
                 workflowId,
                 taskReferenceName);
     }
