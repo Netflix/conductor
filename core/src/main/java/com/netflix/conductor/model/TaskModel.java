@@ -591,6 +591,7 @@ public class TaskModel {
      * If the task is in a failed state, we need to make sure that all retries have been attempted
      * for the task. If not, then the task is not in a "final" terminal state yet.
      */
+    @JsonIgnore
     public boolean isStillInNeedOfProcessing() {
         if (Status.FAILED.equals(getStatus())) {
             final int taskDefRetryCount = getTaskDefinition().map(TaskDef::getRetryCount).orElse(0);
