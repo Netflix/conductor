@@ -13,6 +13,7 @@
 package com.netflix.conductor.core.execution.tasks;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.core.exception.NonTransientException;
+import com.netflix.conductor.core.exception.TerminateWorkflowException;
 import com.netflix.conductor.core.exception.TransientException;
 import com.netflix.conductor.core.execution.StartWorkflowInput;
 import com.netflix.conductor.core.execution.WorkflowExecutor;
@@ -51,8 +53,8 @@ public class SubWorkflow extends WorkflowSystemTask {
     @Override
     public void start(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
         Map<String, Object> input = task.getInputData();
-        String name = input.get("subWorkflowName").toString();
-        int version = (int) input.get("subWorkflowVersion");
+        String name = null;
+        Integer version = null;
 
         WorkflowDef workflowDefinition = null;
         if (input.get("subWorkflowDefinition") != null) {
@@ -61,6 +63,16 @@ public class SubWorkflow extends WorkflowSystemTask {
                     objectMapper.convertValue(
                             input.get("subWorkflowDefinition"), WorkflowDef.class);
             name = workflowDefinition.getName();
+        } else {
+            name =
+                    Optional.ofNullable(input.get("subWorkflowName"))
+                            .map(Object::toString)
+                            .orElse(null);
+            version = (Integer) input.get("subWorkflowVersion");
+            if (name == null) {
+                throw new TerminateWorkflowException(
+                        "SubWorkflow name is null, but no workflowDefinition supplied");
+            }
         }
 
         Map<String, String> taskToDomain = workflow.getTaskToDomain();

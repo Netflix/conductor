@@ -137,7 +137,7 @@ public class MockExternalPayloadStorage implements ExternalPayloadStorage {
             SubWorkflowParams subWorkflowParams = new SubWorkflowParams();
             subWorkflowParams.setName("one_task_workflow");
             subWorkflowParams.setVersion(1);
-            subWorkflowParams.setWorkflowDef(subWorkflowDef);
+            subWorkflowParams.setWorkflowDefinition(subWorkflowDef);
 
             WorkflowTask subWorkflowTask = new WorkflowTask();
             subWorkflowTask.setName("large_payload_subworkflow");

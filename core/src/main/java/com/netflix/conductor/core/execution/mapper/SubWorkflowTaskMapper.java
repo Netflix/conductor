@@ -63,8 +63,12 @@ public class SubWorkflowTaskMapper implements TaskMapper {
         Map<String, Object> resolvedParams =
                 getSubWorkflowInputParameters(workflowModel, subWorkflowParams);
 
-        String subWorkflowName = resolvedParams.get("name").toString();
-        Integer subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
+        String subWorkflowName =
+                Optional.ofNullable(resolvedParams.get("name")).map(Object::toString).orElse(null);
+        Integer subWorkflowVersion = null;
+        if (subWorkflowParams.getWorkflowDefinition() == null && subWorkflowName != null) {
+            subWorkflowVersion = getSubWorkflowVersion(resolvedParams, subWorkflowName);
+        }
 
         Object subWorkflowDefinition = resolvedParams.get("workflowDefinition");
 
@@ -105,7 +109,9 @@ public class SubWorkflowTaskMapper implements TaskMapper {
     private Map<String, Object> getSubWorkflowInputParameters(
             WorkflowModel workflowModel, SubWorkflowParams subWorkflowParams) {
         Map<String, Object> params = new HashMap<>();
-        params.put("name", subWorkflowParams.getName());
+        if (subWorkflowParams.getName() != null) {
+            params.put("name", subWorkflowParams.getName());
+        }
 
         Integer version = subWorkflowParams.getVersion();
         if (version != null) {
@@ -116,12 +122,18 @@ public class SubWorkflowTaskMapper implements TaskMapper {
             params.put("taskToDomain", taskToDomain);
         }
 
-        params = parametersUtils.getTaskInputV2(params, workflowModel, null, null);
-
-        // do not resolve params inside subworkflow definition
-        Object subWorkflowDefinition = subWorkflowParams.getWorkflowDefinition();
-        if (subWorkflowDefinition != null) {
-            params.put("workflowDefinition", subWorkflowDefinition);
+        if (subWorkflowParams.getWorkflowDefinition() == null) {
+            params.put("workflowDefinition", null);
+            params = parametersUtils.getTaskInputV2(params, workflowModel, null, null);
+        } else {
+            Object subWorkflowDefinition = subWorkflowParams.getWorkflowDefinition();
+            if (!(subWorkflowDefinition instanceof String)) { // not a DSL string
+                params = parametersUtils.getTaskInputV2(params, workflowModel, null, null);
+                params.put("workflowDefinition", subWorkflowParams.getWorkflowDefinition());
+            } else {
+                params.put("workflowDefinition", subWorkflowParams.getWorkflowDefinition());
+                params = parametersUtils.getTaskInputV2(params, workflowModel, null, null);
+            }
         }
 
         return params;

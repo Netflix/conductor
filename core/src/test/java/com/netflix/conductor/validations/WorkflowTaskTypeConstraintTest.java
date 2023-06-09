@@ -405,23 +405,13 @@ public class WorkflowTaskTypeConstraintTest {
                         "subWorkflowParam field is required for taskType: SUB_WORKFLOW taskName: encode"));
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testWorkflowTaskTypeSubworkflow() {
         WorkflowTask workflowTask = createSampleWorkflowTask();
         workflowTask.setType("SUB_WORKFLOW");
 
         SubWorkflowParams subWorkflowTask = new SubWorkflowParams();
         workflowTask.setSubWorkflowParam(subWorkflowTask);
-
-        Set<ConstraintViolation<WorkflowTask>> result = validator.validate(workflowTask);
-        assertEquals(2, result.size());
-
-        List<String> validationErrors = new ArrayList<>();
-
-        result.forEach(e -> validationErrors.add(e.getMessage()));
-
-        assertTrue(validationErrors.contains("SubWorkflowParams name cannot be null"));
-        assertTrue(validationErrors.contains("SubWorkflowParams name cannot be empty"));
     }
 
     @Test

@@ -12,7 +12,13 @@
  */
 package com.netflix.conductor.common.utils;
 
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class TaskUtils {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String LOOP_TASK_DELIMITER = "__";
 
@@ -27,5 +33,9 @@ public class TaskUtils {
     public static String removeIterationFromTaskRefName(String referenceTaskName) {
         String[] tokens = referenceTaskName.split(TaskUtils.LOOP_TASK_DELIMITER);
         return tokens.length > 0 ? tokens[0] : referenceTaskName;
+    }
+
+    public static WorkflowDef convertToWorkflowDef(Object workflowDef) {
+        return objectMapper.convertValue(workflowDef, WorkflowDef.class);
     }
 }

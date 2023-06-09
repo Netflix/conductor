@@ -12,16 +12,8 @@
  */
 package com.netflix.conductor.common.workflow;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @ContextConfiguration(classes = {TestObjectMapperConfiguration.class})
 @RunWith(SpringRunner.class)
@@ -47,20 +38,12 @@ public class SubWorkflowParamsTest {
 
     @Autowired private ObjectMapper objectMapper;
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testWorkflowTaskName() {
-        SubWorkflowParams subWorkflowParams = new SubWorkflowParams(); // name is null
-        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-        Validator validator = factory.getValidator();
-
-        Set<ConstraintViolation<Object>> result = validator.validate(subWorkflowParams);
-        assertEquals(2, result.size());
-
-        List<String> validationErrors = new ArrayList<>();
-        result.forEach(e -> validationErrors.add(e.getMessage()));
-
-        assertTrue(validationErrors.contains("SubWorkflowParams name cannot be null"));
-        assertTrue(validationErrors.contains("SubWorkflowParams name cannot be empty"));
+        WorkflowTask t = new WorkflowTask();
+        SubWorkflowParams subWorkflowParams =
+                new SubWorkflowParams(); // name is null, definition is null
+        t.setSubWorkflowParam(subWorkflowParams);
     }
 
     @Test
@@ -92,7 +75,6 @@ public class SubWorkflowParamsTest {
         def.getTasks().add(task);
         subWorkflowParams.setWorkflowDefinition(def);
         assertEquals(def, subWorkflowParams.getWorkflowDefinition());
-        assertEquals(def, subWorkflowParams.getWorkflowDef());
     }
 
     @Test
@@ -117,6 +99,7 @@ public class SubWorkflowParamsTest {
         SubWorkflowParams deserializedParams =
                 objectMapper.readValue(serializedParams, SubWorkflowParams.class);
         assertEquals(def, deserializedParams.getWorkflowDefinition());
-        assertEquals(def, deserializedParams.getWorkflowDef());
+        var x = (WorkflowDef) deserializedParams.getWorkflowDefinition();
+        assertEquals(def, x);
     }
 }

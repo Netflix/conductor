@@ -25,6 +25,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.PositiveOrZero;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.netflix.conductor.annotations.protogen.ProtoField;
 import com.netflix.conductor.annotations.protogen.ProtoMessage;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -399,6 +401,10 @@ public class WorkflowTask {
      * @param subWorkflow the subWorkflowParam to set
      */
     public void setSubWorkflowParam(SubWorkflowParams subWorkflow) {
+        if (subWorkflow.getWorkflowDefinition() == null
+                && (StringUtils.isBlank(subWorkflow.getName()))) {
+            throw new IllegalArgumentException("SubWorkflowParams name cannot be null or empty");
+        }
         this.subWorkflowParam = subWorkflow;
     }
 

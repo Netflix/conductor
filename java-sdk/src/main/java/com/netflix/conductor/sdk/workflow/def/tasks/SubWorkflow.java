@@ -14,6 +14,7 @@ package com.netflix.conductor.sdk.workflow.def.tasks;
 
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.SubWorkflowParams;
+import com.netflix.conductor.common.metadata.workflow.WorkflowDef;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
 import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
 
@@ -54,9 +55,11 @@ public class SubWorkflow extends Task<SubWorkflow> {
         SubWorkflowParams subworkflowParam = workflowTask.getSubWorkflowParam();
         this.workflowName = subworkflowParam.getName();
         this.workflowVersion = subworkflowParam.getVersion();
-        if (subworkflowParam.getWorkflowDef() != null) {
+        if (subworkflowParam.getWorkflowDefinition() != null
+                && subworkflowParam.getWorkflowDefinition() instanceof WorkflowDef) {
             this.conductorWorkflow =
-                    ConductorWorkflow.fromWorkflowDef(subworkflowParam.getWorkflowDef());
+                    ConductorWorkflow.fromWorkflowDef(
+                            (WorkflowDef) subworkflowParam.getWorkflowDefinition());
         }
     }
 
@@ -77,7 +80,7 @@ public class SubWorkflow extends Task<SubWorkflow> {
         SubWorkflowParams subWorkflowParam = new SubWorkflowParams();
 
         if (conductorWorkflow != null) {
-            subWorkflowParam.setWorkflowDef(conductorWorkflow.toWorkflowDef());
+            subWorkflowParam.setWorkflowDefinition(conductorWorkflow.toWorkflowDef());
         } else {
             subWorkflowParam.setName(workflowName);
             subWorkflowParam.setVersion(workflowVersion);
