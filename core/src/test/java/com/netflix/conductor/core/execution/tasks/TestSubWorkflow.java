@@ -38,8 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -443,7 +442,9 @@ public class TestSubWorkflow {
         startWorkflowInput.setWorkflowDefinition(subWorkflowDef);
         startWorkflowInput.setTaskToDomain(workflowInstance.getTaskToDomain());
 
-        when(startWorkflowOperation.execute(startWorkflowInput)).thenReturn("workflow_1");
+        when(startWorkflowOperation.execute(
+                        argThat(s -> s.getWorkflowDefinition().equals(subWorkflowDef))))
+                .thenReturn("workflow_1");
 
         subWorkflow.start(workflowInstance, task, workflowExecutor);
         assertEquals("workflow_1", task.getSubWorkflowId());
