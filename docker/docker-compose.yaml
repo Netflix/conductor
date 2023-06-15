@@ -43,7 +43,7 @@ services:
     networks:
       - internal
     ports:
-      - 5000:5000
+      - 5001:5000
     links:
       - conductor-server
     stdin_open: true
