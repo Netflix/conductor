@@ -1,5 +1,7 @@
 import { format, formatDuration, intervalToDuration } from "date-fns";
 import _ from "lodash";
+import { isEmpty as _isEmpty } from 'lodash';
+import packageJson from '../../package.json';
 
 export function timestampRenderer(date) {
   if (_.isNil(date)) return null;
@@ -87,4 +89,12 @@ export function isEmptyIterable(iterable) {
     return false;
   }
   return true;
+}
+
+export function getBasename() {
+  let basename = '/';
+  try{
+    basename = new URL(packageJson.homepage).pathname;
+  } catch(e) {}
+  return _isEmpty(basename) ? '/' : basename;
 }
