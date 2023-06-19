@@ -872,7 +872,10 @@ public class WorkflowExecutor {
                     task.getTaskDefName(), lastDuration, false, task.getStatus());
         }
 
-        if (!isLazyEvaluateWorkflow(workflowInstance.getWorkflowDefinition(), task)) {
+        // sync evaluate workflow only if the task is not within a forked branch
+        if (isLazyEvaluateWorkflow(workflowInstance.getWorkflowDefinition(), task)) {
+            expediteLazyWorkflowEvaluation(workflowId);
+        } else {
             decide(workflowId);
         }
     }
