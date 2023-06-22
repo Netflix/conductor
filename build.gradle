@@ -1,17 +1,18 @@
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 buildscript {
-    repositories {
-        mavenCentral()
-        maven {
-            url "https://plugins.gradle.org/m2/"
+        repositories {
+            mavenCentral()
+            maven {
+                url "https://plugins.gradle.org/m2/"
+            }
         }
-    }
-    dependencies {
-        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.3'
-        classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
-    }
+        dependencies {
+            classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
+            classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.3'
+            classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
+            classpath 'org.ajoberstar.grgit:grgit-core:4.1.1'
+        }
 }
 
 plugins {
