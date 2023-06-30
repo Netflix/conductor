@@ -872,7 +872,9 @@ public class WorkflowExecutor {
                     task.getTaskDefName(), lastDuration, false, task.getStatus());
         }
 
-        decide(workflowId);
+        if (!isLazyEvaluateWorkflow(workflowInstance.getWorkflowDefinition(), task) || task.getStatus().isTerminal()) {
+            decide(workflowId);
+        }
     }
 
     private void notifyTaskStatusListener(TaskModel task) {
