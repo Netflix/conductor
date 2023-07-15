@@ -18,9 +18,6 @@ services:
       interval: 60s
       timeout: 30s
       retries: 12
-    links:
-      - elasticsearch:es
-      - redis:rs
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -44,8 +41,6 @@ services:
       - internal
     ports:
       - 5000:5000
-    links:
-      - conductor-server
     stdin_open: true
 
   redis:
@@ -53,24 +48,28 @@ services:
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     networks:
-      - internal
+      internal:
+        aliases:
+          - rs
     ports:
       - 6379:6379
     healthcheck:
       test: [ "CMD", "redis-cli","ping" ]
 
   elasticsearch:
-    image: elasticsearch:6.8.15
+    image: jazzdev/elasticsearch:6.8.15-arm
     container_name: elasticsearch
     environment:
-      - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
       - transport.host=0.0.0.0
       - discovery.type=single-node
       - xpack.security.enabled=false
     volumes:
       - esdata-conductor:/usr/share/elasticsearch/data
     networks:
-      - internal
+      internal:
+        aliases:
+          - es
     ports:
       - 9200:9200
       - 9300:9300
