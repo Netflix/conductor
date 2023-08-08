@@ -12,6 +12,7 @@
  */
 package com.netflix.conductor.rest.controllers;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,25 +56,31 @@ public class WorkflowResource {
         this.workflowTestService = workflowTestService;
     }
 
-    @PostMapping(produces = TEXT_PLAIN_VALUE)
+    @PostMapping
     @Operation(
             summary =
                     "Start a new workflow with StartWorkflowRequest, which allows task to be executed in a domain")
-    public String startWorkflow(@RequestBody StartWorkflowRequest request) {
-        return workflowService.startWorkflow(request);
+    public Map<String, String> startWorkflow(@RequestBody StartWorkflowRequest request) {
+        String workflowId = workflowService.startWorkflow(request);
+        Map<String, String> responseObject = new HashMap<>();
+        responseObject.put("id", workflowId);
+        return responseObject;
     }
 
-    @PostMapping(value = "/{name}", produces = TEXT_PLAIN_VALUE)
+    @PostMapping(value = "/{name}")
     @Operation(
             summary =
                     "Start a new workflow. Returns the ID of the workflow instance that can be later used for tracking")
-    public String startWorkflow(
+    public Map<String, String> startWorkflow(
             @PathVariable("name") String name,
             @RequestParam(value = "version", required = false) Integer version,
             @RequestParam(value = "correlationId", required = false) String correlationId,
             @RequestParam(value = "priority", defaultValue = "0", required = false) int priority,
             @RequestBody Map<String, Object> input) {
-        return workflowService.startWorkflow(name, version, correlationId, priority, input);
+        String workflowId = workflowService.startWorkflow(name, version, correlationId, priority, input);
+        Map<String, String> responseObject = new HashMap<>();
+        responseObject.put("id", workflowId);
+        return responseObject;
     }
 
     @GetMapping("/{name}/correlated/{correlationId}")
