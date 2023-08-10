@@ -9,10 +9,10 @@
             "locked": "1.11.86"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
@@ -68,25 +68,25 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -177,10 +177,10 @@
             "locked": "1.11.86"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
@@ -260,25 +260,25 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [

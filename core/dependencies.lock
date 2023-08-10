@@ -6,13 +6,13 @@
     },
     "compileClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "locked": "2.9.3"
@@ -77,25 +77,25 @@
     },
     "runtimeClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "locked": "2.9.3"
@@ -186,13 +186,13 @@
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "locked": "2.9.3"
@@ -278,25 +278,25 @@
     },
     "testRuntimeClasspath": {
         "com.fasterxml.jackson.core:jackson-annotations": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "locked": "2.9.3"

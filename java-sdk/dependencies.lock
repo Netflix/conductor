@@ -9,7 +9,7 @@
             "locked": "3.3.0"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -59,31 +59,31 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -210,10 +210,10 @@
             "locked": "3.3.0"
         },
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"
@@ -290,31 +290,31 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.guava:guava": {
             "locked": "30.0-jre"

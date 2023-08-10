@@ -82,13 +82,13 @@
     },
     "compileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.7"
@@ -129,13 +129,13 @@
     },
     "runtimeClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.7"
@@ -182,13 +182,13 @@
     },
     "testCompileClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.7"
@@ -235,13 +235,13 @@
     },
     "testRuntimeClasspath": {
         "com.fasterxml.jackson.core:jackson-core": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
-            "locked": "2.13.3"
+            "locked": "2.13.4"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.7"
