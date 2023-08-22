@@ -15,7 +15,11 @@ The docker compose will bring up the following:
 ## Steps
 
 ### 1. Clone the Conductor Code
-
+> **NOTE for Windows users**: If you are using Windows OS then run these git commands to change line separator from CRLF to LF and then clone the project: 
+```shell
+git config --global core.autocrlf false;
+git config --global core.eol lf; #(Small l and f)
+```
 ```shell
 $ git clone https://github.com/Netflix/conductor.git
 ```
@@ -152,15 +156,6 @@ Reference: [Issue 2262][issue2262]
 
 #### Changes in config-*.properties do not take effect
 Config is copy into image during docker build. You have to rebuild the image or better, link a volume to it to reflect new changes.
-
-#### ./gradlew: not found when running on Windows 
-1. Switch the line endings to "LF" from "CLRF" in gradlew file. 
-In IntelliJ - From the main menu, select File | File Properties | Line Separators, and then select LF - Unix and MacOS(\n).
-In Eclipse - Go to Window | Preferences | General | Workspace | New Text file line delimiter -> Other -> Unix
-2. From the `docker` directory,
-    ```
-    docker build --no-cache -t conductor:server -f server/Dockerfile ../
-    ```
 
 #### To troubleshoot a failed startup
 Check the log of the server, which is located at `/app/logs` (default directory in dockerfile)
