@@ -14,6 +14,8 @@ package com.netflix.conductor;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,11 +58,40 @@ public class Conductor {
                 Properties properties = new Properties();
                 properties.load(resource.getInputStream());
                 properties.forEach(
-                        (key, value) -> System.setProperty((String) key, (String) value));
+                        (key, value) -> {
+                            String resolved = resolveValueWithEnvVars((String) value);
+                            System.setProperty((String) key, resolved);
+                        });
                 log.info("Loaded {} properties from {}", properties.size(), configFile);
             } else {
                 log.warn("Ignoring {} since it does not exist", configFile);
             }
         }
+    }
+
+    /**
+     * Resolve environment variables in a property value.
+     *
+     * <p>idea taken from here
+     * https://www.rgagnon.com/javadetails/java-resolve-environment-variable-in-property-value.html
+     *
+     * <p>this will replace "${TEMP}" with the environment variables (if exists)
+     */
+    private static String resolveValueWithEnvVars(String value) {
+        if (null == value) {
+            return null;
+        }
+
+        Pattern p = Pattern.compile("\\$\\{(\\w+)\\}|\\$(\\w+)");
+        Matcher m = p.matcher(value);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String envVarName = null == m.group(1) ? m.group(2) : m.group(1);
+            String envVarValue = System.getenv(envVarName);
+            m.appendReplacement(
+                    sb, null == envVarValue ? "" : Matcher.quoteReplacement(envVarValue));
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 }
