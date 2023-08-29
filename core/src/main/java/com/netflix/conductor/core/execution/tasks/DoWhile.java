@@ -68,21 +68,35 @@ public class DoWhile extends WorkflowSystemTask {
             if (doWhileTaskModel
                             .getWorkflowTask()
                             .has(TaskUtils.removeIterationFromTaskRefName(t.getReferenceTaskName()))
-                    && !task.getReferenceTaskName().equals(t.getReferenceTaskName())
-                    && task.getIteration() == t.getIteration()) {
+                    && !doWhileTaskModel.getReferenceTaskName().equals(t.getReferenceTaskName())
+                    && doWhileTaskModel.getIteration() == t.getIteration()) {
                 relevantTask = relevantTasks.get(t.getReferenceTaskName());
                 if (relevantTask == null || t.getRetryCount() > relevantTask.getRetryCount()) {
                     relevantTasks.put(t.getReferenceTaskName(), t);
                 }
             }
         }
-        Collection<TaskModel> loopOver = relevantTasks.values();
-        LOGGER.debug(
-                "Workflow {} waiting for tasks {} to complete iteration {}",
-                workflow.getWorkflowId(),
-                loopOver.stream().map(TaskModel::getReferenceTaskName).collect(Collectors.toList()),
-                task.getIteration());
-        for (TaskModel loopOverTask : loopOver) {
+        Collection<TaskModel> loopOverTasks = relevantTasks.values();
+
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(
+                    "Workflow {} waiting for tasks {} to complete iteration {}",
+                    workflow.getWorkflowId(),
+                    loopOverTasks.stream()
+                            .map(TaskModel::getReferenceTaskName)
+                            .collect(Collectors.toList()),
+                    doWhileTaskModel.getIteration());
+        }
+
+        // if the loopOverTasks collection is empty, no tasks inside the loop have been scheduled.
+        // so schedule it and exit the method.
+        if (loopOverTasks.isEmpty()) {
+            doWhileTaskModel.setIteration(1);
+            doWhileTaskModel.addOutput("iteration", doWhileTaskModel.getIteration());
+            return scheduleNextIteration(doWhileTaskModel, workflow, workflowExecutor);
+        }
+
+        for (TaskModel loopOverTask : loopOverTasks) {
             TaskModel.Status taskStatus = loopOverTask.getStatus();
             hasFailures = !taskStatus.isSuccessful();
             if (hasFailures) {
