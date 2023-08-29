@@ -10,5 +10,5 @@ Run the following commands from the project root.
 
 ## Running the conductor server
 Conductor server requires redis, postgres and elastic search.
-In order to build and run using Redis and Elastic Search `docker-compose -f docker-compose.yaml up`
-Postgres and Elastic Search check [community](community-link)
+In order to build and run using Redis and Elastic Search 6 run from the docker directory, `docker-compose -f docker-compose.yaml up`
+Postgres and Elastic Search 7 check [community](community-link)
