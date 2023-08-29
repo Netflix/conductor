@@ -1,5 +1,5 @@
 #
-# conductor:serverAndUI - Combined Netflix conductor server & UI 
+# conductor:server - Combined Netflix conductor server & UI
 #
 # ===========================================================================================================
 # 0. Builder stage
@@ -44,15 +44,15 @@ LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Copy the compiled output to new image
-COPY --from=builder /conductor/docker/serverAndUI/bin /app
-COPY --from=builder /conductor/docker/serverAndUI/config /app/config
+COPY --from=builder /conductor/docker/server/bin /app
+COPY --from=builder /conductor/docker/server/config /app/config
 COPY --from=builder /conductor/server/build/libs/conductor-server-*-boot.jar /app/libs
 
 # Copy compiled UI assets to nginx www directory
 WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 COPY --from=builder /conductor/ui/build .
-COPY --from=builder /conductor/docker/serverAndUI/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
