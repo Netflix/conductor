@@ -19,16 +19,9 @@ dependencies {
 
     implementation project(':conductor-rest')
     implementation project(':conductor-core')
-    implementation project(':conductor-redis-persistence')
-    implementation project(':conductor-cassandra-persistence')
-    implementation project(':conductor-es6-persistence')
-    implementation project(':conductor-grpc-server')
-    implementation project(':conductor-redis-lock')
     implementation project(':conductor-redis-concurrency-limit')
     implementation project(':conductor-http-task')
     implementation project(':conductor-json-jq-task')
-    implementation project(':conductor-awss3-storage')
-    implementation project(':conductor-awssqs-event-queue')
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -37,21 +30,12 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.apache.logging.log4j:log4j-web'
-
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation "io.orkes.queues:orkes-conductor-queues:${revOrkesQueues}"
-
     implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
-
     runtimeOnly "org.glassfish.jaxb:jaxb-runtime:${revJAXB}"
-
     testImplementation project(':conductor-rest')
     testImplementation project(':conductor-common')
-    testImplementation "io.grpc:grpc-testing:${revGrpc}"
-    testImplementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
-    testImplementation "io.grpc:grpc-protobuf:${revGrpc}"
-    testImplementation "io.grpc:grpc-stub:${revGrpc}"
-    
+
 }
 
 jar {

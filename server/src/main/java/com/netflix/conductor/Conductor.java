@@ -37,6 +37,7 @@ public class Conductor {
         loadExternalConfig();
 
         SpringApplication.run(Conductor.class, args);
+        log.info("Citizens conductor up and running");
     }
 
     /**

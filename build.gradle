@@ -168,7 +168,7 @@ allprojects {
 ["annotations", "common", "client", "client-spring", "grpc", "grpc-client"].each {
     project(":conductor-$it") {
         compileJava {
-            options.release = 11
+            options.release = 17
         }
     }
 }
