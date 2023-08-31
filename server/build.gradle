@@ -51,6 +51,7 @@ dependencies {
     testImplementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
     testImplementation "io.grpc:grpc-protobuf:${revGrpc}"
     testImplementation "io.grpc:grpc-stub:${revGrpc}"
+    
 }
 
 jar {
