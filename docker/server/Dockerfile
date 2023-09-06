@@ -1,7 +1,6 @@
 #
-# conductor:server - Netflix conductor server
+# conductor:server - Combined Netflix conductor server & UI
 #
-
 # ===========================================================================================================
 # 0. Builder stage
 # ===========================================================================================================
@@ -43,10 +42,12 @@ WORKDIR /server-build
 RUN ls -ltr
 RUN pwd
 
+
 # ===========================================================================================================
 # 1. Bin stage
 # ===========================================================================================================
 FROM alpine:3.18
+
 LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 
 RUN apk add openjdk11
@@ -65,6 +66,12 @@ WORKDIR /usr/share/nginx/html
 RUN rm -rf ./*
 COPY --from=builder /conductor/ui/build .
 COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/http.d/default.conf
+
+# Copy compiled UI assets to nginx www directory
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY --from=builder /conductor/ui/build .
+COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh

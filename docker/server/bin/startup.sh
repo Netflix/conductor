@@ -15,6 +15,7 @@
 # startup.sh - startup script for the server docker image
 
 echo "Starting Conductor server"
+
 echo "Running Nginx in background"
 # Start nginx as daemon
 nginx
