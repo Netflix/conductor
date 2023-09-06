@@ -7,8 +7,8 @@ services:
       - CONFIG_PROP=config-mysql-grpc.properties
     image: conductor:server
     build:
-      context: ../../
-      dockerfile: docker/server/Dockerfile
+      context: ..
+      dockerfile: server/Dockerfile
     networks:
       - internal
     ports:
@@ -30,8 +30,8 @@ services:
       - WF_SERVER=http://conductor-server:8080
     image: conductor:ui
     build:
-      context: ../../
-      dockerfile: docker/ui/Dockerfile
+      context: ..
+      dockerfile: ui/Dockerfile
     networks:
       - internal
     ports:

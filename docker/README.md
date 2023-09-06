@@ -49,3 +49,15 @@ We welcome community contributions for other indexing backends.
 TODO: Link to the helm charts
 
 ## Run Docker Compose Locally
+### Use the docker-compose to bring up the local conductor server.
+
+| Docker Compose                                               | Description                |
+|--------------------------------------------------------------|----------------------------|
+| [docker-compose.yaml](docker-compose.yaml)                   | Redis + Elasticsearch 7    |
+| [docker-compose-postgres.yaml](docker-compose-postgres.yaml) | Postgres + Elasticsearch 7 |
+
+### Other Docker compose files
+#### Run prometheus and grafana 
+[docker-compose-prometheus.yaml](docker-compose-prometheus.yaml)
+#### Dynomite Server (deprecated)
+[docker-compose-dynomite.yaml](docker-compose-dynomite.yaml)
