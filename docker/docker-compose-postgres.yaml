@@ -80,7 +80,7 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     restart: unless-stopped
     ports:
-      - 3000:300
+      - 3000:3000
 
   postgres:
     image: postgres

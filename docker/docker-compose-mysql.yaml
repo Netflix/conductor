@@ -4,11 +4,11 @@ services:
 
   conductor-server:
     environment:
-      - CONFIG_PROP=config-mysql-grpc.properties
+      - CONFIG_PROP=config-mysql.properties
     image: conductor:server
     build:
-      context: ..
-      dockerfile: server/Dockerfile
+      context: ../
+      dockerfile: docker/server/Dockerfile
     networks:
       - internal
     ports:
@@ -30,8 +30,8 @@ services:
       - WF_SERVER=http://conductor-server:8080
     image: conductor:ui
     build:
-      context: ..
-      dockerfile: ui/Dockerfile
+      context: ../
+      dockerfile: docker/ui/Dockerfile
     networks:
       - internal
     ports:
@@ -40,7 +40,7 @@ services:
       - conductor-server
 
   mysql:
-    image: mysql:5.7
+    image: arm64v8/mysql:oracle
     environment:
       MYSQL_ROOT_PASSWORD: 12345
       MYSQL_DATABASE: conductor
@@ -94,8 +94,42 @@ services:
         max-size: "1k"
         max-file: "3"
 
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    volumes:
+      - ./apps/prometheus/configs/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    external_links:
+      - conductor-server:conductor-server
+    networks:
+      - internal
+    restart: always
+
+  grafana:
+    image: grafana/grafana:6.7.2
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+
 volumes:
   conductor_mysql:
+  prometheus_data: { }
+  grafana_data: { }
 
 networks:
   internal:
