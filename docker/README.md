@@ -1,13 +1,64 @@
-# Docker
-## Conductor UI
-This Dockerfile create the conductor:ui image
 
-## Building the image
+# Conductor Docker Builds
 
-Run the following commands from the project root.
+## Pre-built docker images
 
-`docker build -f docker/ui/Dockerfile -t conductor:ui .`
+Conductor server with support for the following backend:
+1. Redis
+2. Postgres
+3. Mysql
+4. Cassandra
 
-## Running the conductor server
- - With localhost conductor server: `docker run -p 5000:5000 -d -t conductor:ui`
- - With external conductor server: `docker run -p 5000:5000 -d -t -e "WF_SERVER=http://conductor-server:8080" conductor:ui`
+```shell
+docker pull docker.orkes.io/conductor:latest
+```
+
+### Docker File for Server and UI
+
+[Docker Image Source for Server with UI](serverAndUI/Dockerfile)
+
+#### Pre-requisites for building
+1. [Docker](https://www.docker.com/)
+2. [Node](https://nodejs.org/en)
+3. [JDK](https://openjdk.org/)
+
+### Configuration Guide for Conductor Server
+Conductor uses a persistent store for managing state.  
+The choice of backend is quite flexible and can be configured at runtime using `conductor.db.type` property.
+
+Refer to the table below for various supported backend and required configurations to enable each of them.
+
+| Backend    | Property                           | Required Configuration |
+|------------|------------------------------------|------------------------|
+| postgres   | conductor.db.type=postgres         |                        |
+| redis      | conductor.db.type=redis_standalone |                        |
+| mysql      | conductor.db.type=mysql            |                        |
+| cassandra  | conductor.db.type=cassandra        |                        |    
+
+Conductor using Elasticsearch for indexing the workflow data.  
+Currently, Elasticsearch 6 and 7 are supported.
+We welcome community contributions for other indexing backends.
+
+**Note:** Docker images use Elasticsearch 7.
+
+### Recommended Configuration for the server
+```properties
+
+```
+
+## Helm Charts
+TODO: Link to the helm charts
+
+## Run Docker Compose Locally
+### Use the docker-compose to bring up the local conductor server.
+
+| Docker Compose                                               | Description                |
+|--------------------------------------------------------------|----------------------------|
+| [docker-compose.yaml](docker-compose.yaml)                   | Redis + Elasticsearch 7    |
+| [docker-compose-postgres.yaml](docker-compose-postgres.yaml) | Postgres + Elasticsearch 7 |
+
+### Other Docker compose files
+#### Run prometheus and grafana 
+[docker-compose-prometheus.yaml](docker-compose-prometheus.yaml)
+#### Dynomite Server (deprecated)
+[docker-compose-dynomite.yaml](docker-compose-dynomite.yaml)

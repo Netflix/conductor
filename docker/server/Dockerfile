@@ -4,49 +4,68 @@
 # ===========================================================================================================
 # 0. Builder stage
 # ===========================================================================================================
-FROM openjdk:11-jdk AS builder
+FROM alpine:3.18 AS builder
+
 LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 
-# Install Node
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
-  && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-  && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-  && apt-get update -qq \
-  && apt-get install -qq --no-install-recommends \
-    build-essential \
-    nodejs \
-    yarn \
-  && apt-get upgrade -qq \
-  && rm -rf /var/lib/apt/lists/*
+# ===========================================================================================================
+# 0. Build Conductor Server
+# ===========================================================================================================
 
-# Copy the project onto the builder image
+
+# Install dependencies
+RUN apk add openjdk11
+RUN apk add git
+RUN apk add --update nodejs npm yarn
+
 COPY . /conductor
-
-# Build the server
-WORKDIR /conductor
-RUN ./gradlew build -x test
-
-# Build the client
 WORKDIR /conductor/ui
 RUN yarn install && yarn build
+RUN ls -ltr
+RUN echo "Done building UI"
+
+# Checkout the community project
+WORKDIR /
+RUN mkdir server-build
+WORKDIR  server-build
+RUN ls -ltr
+
+RUN git clone https://github.com/Netflix/conductor-community.git
+
+# Copy the project directly onto the image
+WORKDIR conductor-community
+RUN ls -ltr
+
+# Build the server on run
+RUN ./gradlew build -x test --stacktrace
+WORKDIR /server-build
+RUN ls -ltr
+RUN pwd
+
 
 # ===========================================================================================================
 # 1. Bin stage
 # ===========================================================================================================
-
-FROM nginx:alpine
-RUN apk add openjdk11-jre
+FROM alpine:3.18
 
 LABEL maintainer="Netflix OSS <conductor@netflix.com>"
+
+RUN apk add openjdk11
+RUN apk add nginx
 
 # Make app folders
 RUN mkdir -p /app/config /app/logs /app/libs
 
 # Copy the compiled output to new image
-COPY --from=builder /conductor/docker/server/bin /app
-COPY --from=builder /conductor/docker/server/config /app/config
-COPY --from=builder /conductor/server/build/libs/conductor-server-*-boot.jar /app/libs
+COPY docker/server/bin /app
+COPY docker/server/config /app/config
+COPY --from=builder /server-build/conductor-community/community-server/build/libs/*boot*.jar /app/libs/conductor-server.jar
+
+# Copy compiled UI assets to nginx www directory
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+COPY --from=builder /conductor/ui/build .
+COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/http.d/default.conf
 
 # Copy compiled UI assets to nginx www directory
 WORKDIR /usr/share/nginx/html
