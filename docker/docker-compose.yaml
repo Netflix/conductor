@@ -60,7 +60,7 @@ services:
       test: [ "CMD", "redis-cli","ping" ]
 
   elasticsearch:
-    image: elasticsearch:6.8.15
+    image: elasticsearch:7.17.6
     container_name: elasticsearch
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
@@ -75,7 +75,7 @@ services:
       - 9200:9200
       - 9300:9300
     healthcheck:
-      test: wget http://localhost:9200/ -O /dev/null
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 5s
       timeout: 5s
       retries: 12

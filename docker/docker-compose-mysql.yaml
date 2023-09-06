@@ -72,7 +72,7 @@ services:
       test: [ "CMD", "redis-cli","ping" ]
 
   elasticsearch:
-    image: elasticsearch:6.8.15
+    image: elasticsearch:7.17.6
     environment:
       - "ES_JAVA_OPTS=-Xms512m -Xmx1024m"
       - transport.host=0.0.0.0
