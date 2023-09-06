@@ -21,6 +21,8 @@ services:
     links:
       - elasticsearch:es
       - redis:rs
+      - prometheus:prometheus
+      - grafana:grafana
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -47,6 +49,38 @@ services:
     links:
       - conductor-server
     stdin_open: true
+
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    volumes:
+      - ./apps/prometheus/configs/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    external_links:
+      - conductor-server:conductor-server
+    networks:
+      - internal
+    restart: always
+
+  grafana:
+    image: grafana/grafana:6.7.2
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - 3000:3000
 
   redis:
     image: redis:6.2.3-alpine
@@ -88,6 +122,8 @@ services:
 volumes:
   esdata-conductor:
     driver: local
+  prometheus_data: { }
+  grafana_data: { }
 
 networks:
   internal:

@@ -20,12 +20,11 @@ services:
       retries: 12
     links:
       - elasticsearch:es
-      - redis:rs
       - postgres:postgresdb
+      - prometheus:prometheus
+      - grafana:grafana
     depends_on:
       elasticsearch:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -34,6 +33,54 @@ services:
       options:
         max-size: "1k"
         max-file: "3"
+
+  conductor-ui:
+    environment:
+      - WF_SERVER=http://conductor-server:8080
+    image: conductor:ui
+    container_name: conductor-ui
+    build:
+      context: ../
+      dockerfile: docker/ui/Dockerfile
+    networks:
+      - internal
+    ports:
+      - 5000:5000
+    links:
+      - conductor-server
+    stdin_open: true
+
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    volumes:
+      - ./apps/prometheus/configs/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+    external_links:
+      - conductor-server:conductor-server
+    networks:
+      - internal
+    restart: always
+
+  grafana:
+    image: grafana/grafana:6.7.2
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    ports:
+      - 3000:300
 
   postgres:
     image: postgres
@@ -57,17 +104,6 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  redis:
-    image: redis:6.2.3-alpine
-    volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - internal
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: [ "CMD", "redis-cli","ping" ]
-
   elasticsearch:
     image: elasticsearch:7.17.6
     container_name: elasticsearch
@@ -82,7 +118,7 @@ services:
       - 9200:9200
       - 9300:9300
     healthcheck:
-      test: wget http://localhost:9200/ -O /dev/null
+      test: curl -s http://localhost:9200 >/dev/null || exit 1
       interval: 5s
       timeout: 5s
       retries: 12
@@ -95,6 +131,8 @@ services:
 volumes:
   pgdata-conductor:
     driver: local
+  prometheus_data: { }
+  grafana_data: { }
 
 networks:
   internal:
