@@ -60,5 +60,3 @@ TODO: Link to the helm charts
 ### Other Docker compose files
 #### Run prometheus and grafana 
 [docker-compose-prometheus.yaml](docker-compose-prometheus.yaml)
-#### Dynomite Server (deprecated)
-[docker-compose-dynomite.yaml](docker-compose-dynomite.yaml)
