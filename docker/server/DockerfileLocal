@@ -19,7 +19,8 @@ RUN apk add --update nodejs npm yarn
 
 COPY . /conductor
 WORKDIR /conductor/ui
-RUN yarn install && yarn build
+#RUN yarn install && yarn build
+RUN mkdir build
 RUN ls -ltr
 RUN echo "Done building UI"
 
@@ -52,7 +53,6 @@ LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 RUN apk add openjdk11
 RUN apk add curl
 RUN apk add nginx
-RUN apk add redis
 RUN apk add postgresql14
 
 # Make app folders
@@ -62,9 +62,7 @@ RUN mkdir -p /app/elasticsearch
 # Copy the compiled output to new image
 COPY docker/server/bin /app
 COPY docker/server/config /app/config
-COPY docker/server/config/redis.conf /app/config/redis.conf
-COPY docker/server/bin/start_all.sh /app/start_all.sh
-COPY docker/server/bin/health.sh /app/health.sh
+COPY docker/server/bin/start_all_local.sh /app/start_all_local.sh
 COPY --from=builder /server-build/conductor-community/community-server/build/libs/*boot*.jar /app/libs/conductor-server.jar
 
 # Copy compiled UI assets to nginx www directory

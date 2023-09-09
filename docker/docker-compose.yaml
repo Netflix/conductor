@@ -3,7 +3,7 @@ version: '2.3'
 services:
   conductor-server:
     environment:
-      - CONFIG_PROP=config-local.properties
+      -
     image: conductor:server
     container_name: conductor-server
     build:

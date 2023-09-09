@@ -4,7 +4,8 @@ services:
 
   conductor-server:
     environment:
-      - CONFIG_PROP=config-mysql-grpc.properties
+      - conductor.db.type=redis_standalone
+      - conductor.redis.hosts=rs:6379:us-east-1c
     image: conductor:server
     build:
       context: ..

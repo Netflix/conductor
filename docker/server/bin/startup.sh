@@ -28,7 +28,7 @@ export config_file=
 
 if [ -z "$CONFIG_PROP" ];
   then
-    echo "Using an in-memory instance of conductor";
+    echo "Using default configuration file";
     export config_file=/app/config/config.properties
   else
     echo "Using '$CONFIG_PROP'";
