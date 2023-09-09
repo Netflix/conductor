@@ -19,8 +19,7 @@ RUN apk add --update nodejs npm yarn
 
 COPY . /conductor
 WORKDIR /conductor/ui
-#RUN yarn install && yarn build
-RUN mkdir build
+RUN yarn install && yarn build
 RUN ls -ltr
 RUN echo "Done building UI"
 
