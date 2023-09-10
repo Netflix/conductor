@@ -67,12 +67,6 @@ RUN rm -rf ./*
 COPY --from=builder /conductor/ui/build .
 COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/http.d/default.conf
 
-# Copy compiled UI assets to nginx www directory
-WORKDIR /usr/share/nginx/html
-RUN rm -rf ./*
-COPY --from=builder /conductor/ui/build .
-COPY --from=builder /conductor/docker/server/nginx/nginx.conf /etc/nginx/conf.d/default.conf
-
 # Copy the files for the server into the app folders
 RUN chmod +x /app/startup.sh
 
