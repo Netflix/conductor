@@ -6,36 +6,36 @@
     },
     "compileClasspath": {
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         }
     },
     "runtimeClasspath": {
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         }
     },
     "testCompileClasspath": {
@@ -100,19 +100,19 @@
             "locked": "3.12.0"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.codehaus.groovy:groovy-all": {
             "locked": "2.5.13"
@@ -427,27 +427,27 @@
                 "com.netflix.conductor:conductor-grpc-client",
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.56.1"
+            "locked": "1.58.0"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client"
             ],
-            "locked": "1.56.1"
+            "locked": "1.58.0"
         },
         "io.grpc:grpc-services": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.56.1"
+            "locked": "1.58.0"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-client"
             ],
-            "locked": "1.56.1"
+            "locked": "1.58.0"
         },
         "io.orkes.queues:orkes-conductor-queues": {
             "firstLevelTransitive": [
@@ -545,7 +545,7 @@
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
@@ -568,7 +568,7 @@
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
             "firstLevelTransitive": [
@@ -591,7 +591,7 @@
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
             "firstLevelTransitive": [
@@ -614,7 +614,7 @@
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.apache.logging.log4j:log4j-web": {
             "firstLevelTransitive": [
@@ -637,7 +637,7 @@
                 "com.netflix.conductor:conductor-rest",
                 "com.netflix.conductor:conductor-server"
             ],
-            "locked": "2.17.2"
+            "locked": "2.20.0"
         },
         "org.codehaus.groovy:groovy-all": {
             "locked": "2.5.13"
