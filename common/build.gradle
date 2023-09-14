@@ -2,6 +2,16 @@ configurations {
     annotationsProcessorCodegen
 }
 
+dependencyLock {
+    skippedDependencies = [
+            "org.apache.logging.log4j:log4j-api",
+            "org.apache.logging.log4j:log4j-core",
+            "org.apache.logging.log4j:log4j-jul",
+            "org.apache.logging.log4j:log4j-slf4j-impl",
+            "org.apache.logging.log4j:log4j-web",
+    ]
+}
+
 dependencies {
     implementation project(':conductor-annotations')
     annotationsProcessorCodegen project(':conductor-annotations-processor')
