@@ -12,6 +12,9 @@ dependencies {
     implementation "javax.ws.rs:javax.ws.rs-api:${revJAXRS}"
     implementation "org.glassfish.jersey.core:jersey-common:${revJerseyCommon}"
 
+    implementation "org.graalvm.js:js:${revGraalVM}"
+    implementation "org.graalvm.js:js-scriptengine:${revGraalVM}"
+
     testImplementation "org.springframework:spring-web"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"

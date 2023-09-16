@@ -41,6 +41,9 @@ dependencies {
 
     implementation "com.github.ben-manes.caffeine:caffeine"
 
+    implementation "org.graalvm.js:js:${revGraalVM}"
+    implementation "org.graalvm.js:js-scriptengine:${revGraalVM}"
+
     // JAXB is not bundled with Java 11, dependencies added explicitly
     // These are needed by Apache BVAL
     implementation "jakarta.xml.bind:jakarta.xml.bind-api:${revJAXB}"

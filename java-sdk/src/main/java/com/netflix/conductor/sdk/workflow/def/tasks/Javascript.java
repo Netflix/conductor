@@ -43,7 +43,9 @@ public class Javascript extends Task<Javascript> {
 
     private static final String EVALUATOR_TYPE_PARAMETER = "evaluatorType";
 
-    private static final String ENGINE = "nashorn";
+    private static final String ENGINE = "graal.js";
+
+    private static final String POLYGLOT_JS_ALLOW_HOST_ACCESS = "polyglot.js.allowHostAccess";
 
     /**
      * Javascript tasks are executed on the Conductor server without having to write worker code
@@ -105,6 +107,7 @@ public class Javascript extends Task<Javascript> {
             LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running supported JVM");
             return this;
         }
+        scriptEngine.put(POLYGLOT_JS_ALLOW_HOST_ACCESS, true);
 
         try {
 
@@ -133,6 +136,7 @@ public class Javascript extends Task<Javascript> {
             LOGGER.error("missing " + ENGINE + " engine.  Ensure you are running supported JVM");
             return this;
         }
+        scriptEngine.put(POLYGLOT_JS_ALLOW_HOST_ACCESS, true);
 
         try {
 
