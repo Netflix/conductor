@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.3'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.14'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
     }
 }
@@ -62,6 +62,10 @@ allprojects {
         exclude group: 'ch.qos.logback', module: 'logback-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        resolutionStrategy {
+            force 'org.codehaus.jettison:jettison:1.5.4'
+            force "org.apache.commons:commons-compress:${revCommonsCompress}"
+        }
     }
 
     repositories {
@@ -141,9 +145,115 @@ allprojects {
                 strictly '[2.17.2,3.0)'
             }
         }
+        implementation('com.google.guava:guava') {
+            version {
+                // this is the preferred version this library will use
+                prefer '32.0.0-jre'
+                // the strict bounds, effectively allowing any 32.x version between 32.0.0 and 32.1.1
+                strictly '[32.0.0-jre,32.1.1-jre)'
+            }
+        }
+        implementation('org.yaml:snakeyaml') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.0'
+                // the strict bounds, effectively allowing any 2.x version between 2.0 and 2.1
+                strictly '[2.0,2.1)'
+            }
+        }
+        implementation('com.fasterxml.jackson.core:jackson-core') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.core:jackson-databind') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-yaml') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.core:jackson-annotations') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-smile') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.dataformat:jackson-dataformat-cbor') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.datatype:jackson-datatype-jdk8') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.datatype:jackson-datatype-joda') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.datatype:jackson-datatype-jsr310') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
+        implementation('com.fasterxml.jackson.module:jackson-module-afterburner') {
+            version {
+                // this is the preferred version this library will use
+                prefer '2.15.0'
+                // the strict bounds, effectively allowing any 2.15.x version between 2.15.0 and 2.15.2
+                strictly '[2.15.0,2.15.2)'
+            }
+        }
         annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
-        testImplementation('org.springframework.boot:spring-boot-starter-test')
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.yaml', module: 'snakeyaml'
+        }
         testImplementation('org.springframework.boot:spring-boot-starter-log4j2')
         testImplementation 'junit:junit'
         testImplementation "org.junit.vintage:junit-vintage-engine"
