@@ -29,14 +29,14 @@ Refer to the table below for various supported backend and required configuratio
 > [!IMPORTANT]
 > 
 > See [config.properties](docker/server/config/config.properties) for the required properties for each of the backends.
-> 
-
-| Backend    | Property                           |
-|------------|------------------------------------|
-| postgres   | conductor.db.type=postgres         |
-| redis      | conductor.db.type=redis_standalone |
-| mysql      | conductor.db.type=mysql            |
-| cassandra  | conductor.db.type=cassandra        |    
+>
+> | Backend    | Property                           |
+> |------------|------------------------------------|
+> | postgres   | conductor.db.type=postgres         |
+> | redis      | conductor.db.type=redis_standalone |
+> | mysql      | conductor.db.type=mysql            |
+> | cassandra  | conductor.db.type=cassandra        |    
+>
 
 Conductor using Elasticsearch for indexing the workflow data.  
 Currently, Elasticsearch 6 and 7 are supported.
