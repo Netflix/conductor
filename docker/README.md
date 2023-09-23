@@ -18,9 +18,7 @@ docker pull docker.orkes.io/conductor:latest
 [Docker Image Source for Server with UI](serverAndUI/Dockerfile)
 
 #### Pre-requisites for building
-1. [Docker](https://www.docker.com/)
-2. [Node](https://nodejs.org/en)
-3. [JDK](https://openjdk.org/)
+[Docker](https://www.docker.com/)
 
 ### Configuration Guide for Conductor Server
 Conductor uses a persistent store for managing state.  
@@ -28,12 +26,17 @@ The choice of backend is quite flexible and can be configured at runtime using `
 
 Refer to the table below for various supported backend and required configurations to enable each of them.
 
-| Backend    | Property                           | Required Configuration |
-|------------|------------------------------------|------------------------|
-| postgres   | conductor.db.type=postgres         |                        |
-| redis      | conductor.db.type=redis_standalone |                        |
-| mysql      | conductor.db.type=mysql            |                        |
-| cassandra  | conductor.db.type=cassandra        |                        |    
+> [!IMPORTANT]
+> 
+> See [config.properties](server/config/config.properties) for the required properties for each of the backends.
+> 
+
+| Backend    | Property                           |
+|------------|------------------------------------|
+| postgres   | conductor.db.type=postgres         |
+| redis      | conductor.db.type=redis_standalone |
+| mysql      | conductor.db.type=mysql            |
+| cassandra  | conductor.db.type=cassandra        |    
 
 Conductor using Elasticsearch for indexing the workflow data.  
 Currently, Elasticsearch 6 and 7 are supported.

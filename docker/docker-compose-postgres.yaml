@@ -27,7 +27,7 @@ services:
         condition: service_healthy
       conductor-redis:
         condition: service_healthy
-      postgres:
+      conductor-postgres:
         condition: service_healthy
     logging:
       driver: "json-file"
@@ -35,7 +35,7 @@ services:
         max-size: "1k"
         max-file: "3"
 
-  postgres:
+  conductor-postgres:
     image: postgres
     environment:
       - POSTGRES_USER=conductor
@@ -93,6 +93,8 @@ services:
 
 volumes:
   pgdata-conductor:
+    driver: local
+  esdata-conductor:
     driver: local
 
 networks:
