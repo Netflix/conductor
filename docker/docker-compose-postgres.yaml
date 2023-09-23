@@ -13,6 +13,7 @@ services:
       - internal
     ports:
       - 8080:8080
+      - 5000:5000
     healthcheck:
       test: [ "CMD", "curl","-I" ,"-XGET", "http://localhost:8080/health" ]
       interval: 60s
@@ -20,12 +21,9 @@ services:
       retries: 12
     links:
       - conductor-elasticsearch:es
-      - conductor-redis:rs
-      - postgres:postgresdb
+      - conductor-postgres:postgresdb
     depends_on:
       conductor-elasticsearch:
-        condition: service_healthy
-      conductor-redis:
         condition: service_healthy
       conductor-postgres:
         condition: service_healthy
@@ -45,7 +43,7 @@ services:
     networks:
       - internal
     ports:
-      - 5432:5432
+      - 6432:5432
     healthcheck:
       test: timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/5432'
       interval: 5s
@@ -56,17 +54,6 @@ services:
       options:
         max-size: "1k"
         max-file: "3"
-
-  conductor-redis:
-    image: redis:6.2.3-alpine
-    volumes:
-      - ./redis.conf:/usr/local/etc/redis/redis.conf
-    networks:
-      - internal
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: [ "CMD", "redis-cli","ping" ]
 
   conductor-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.11
