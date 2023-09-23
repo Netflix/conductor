@@ -28,7 +28,7 @@ Refer to the table below for various supported backend and required configuratio
 
 > [!IMPORTANT]
 > 
-> See [config.properties](server/config/config.properties) for the required properties for each of the backends.
+> See [config.properties](docker/server/config/config.properties) for the required properties for each of the backends.
 > 
 
 | Backend    | Property                           |
@@ -44,11 +44,6 @@ We welcome community contributions for other indexing backends.
 
 **Note:** Docker images use Elasticsearch 7.
 
-### Recommended Configuration for the server
-```properties
-
-```
-
 ## Helm Charts
 TODO: Link to the helm charts
 
@@ -59,7 +54,4 @@ TODO: Link to the helm charts
 |--------------------------------------------------------------|----------------------------|
 | [docker-compose.yaml](docker-compose.yaml)                   | Redis + Elasticsearch 7    |
 | [docker-compose-postgres.yaml](docker-compose-postgres.yaml) | Postgres + Elasticsearch 7 |
-
-### Other Docker compose files
-#### Run prometheus and grafana 
-[docker-compose-prometheus.yaml](docker-compose-prometheus.yaml)
+| [docker-compose-postgres.yaml](docker-compose-mysql.yaml)    | Mysql + Elasticsearch 7    |
