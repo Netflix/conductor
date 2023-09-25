@@ -9,16 +9,9 @@ Conductor server with support for the following backend:
 3. Mysql
 4. Cassandra
 
-```shell
-docker pull docker.orkes.io/conductor:latest
-```
-
 ### Docker File for Server and UI
 
-[Docker Image Source for Server with UI](serverAndUI/Dockerfile)
-
-#### Pre-requisites for building
-[Docker](https://www.docker.com/)
+[Docker Image Source for Server with UI](docker/server/DockerFile)
 
 ### Configuration Guide for Conductor Server
 Conductor uses a persistent store for managing state.  
@@ -40,6 +33,7 @@ Refer to the table below for various supported backend and required configuratio
 
 Conductor using Elasticsearch for indexing the workflow data.  
 Currently, Elasticsearch 6 and 7 are supported.
+
 We welcome community contributions for other indexing backends.
 
 **Note:** Docker images use Elasticsearch 7.
