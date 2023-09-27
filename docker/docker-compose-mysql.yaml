@@ -4,11 +4,12 @@ services:
 
   conductor-server:
     environment:
-      - CONFIG_PROP=config-mysql-grpc.properties
+      - conductor.db.type=redis_standalone
+      - conductor.redis.hosts=rs:6379:us-east-1c
     image: conductor:server
     build:
-      context: ../../
-      dockerfile: docker/server/Dockerfile
+      context: ..
+      dockerfile: server/Dockerfile
     networks:
       - internal
     ports:
@@ -30,8 +31,8 @@ services:
       - WF_SERVER=http://conductor-server:8080
     image: conductor:ui
     build:
-      context: ../../
-      dockerfile: docker/ui/Dockerfile
+      context: ..
+      dockerfile: ui/Dockerfile
     networks:
       - internal
     ports:
