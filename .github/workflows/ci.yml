@@ -1,6 +1,6 @@
 name: CI
 
-on: [ push, pull_request, workflow_dispatch ]
+on: [ push, pull_request ]
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 17
+          java-version: '17'
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
@@ -32,6 +32,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
       - name: Build with Gradle
+        if: github.ref != 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -79,15 +80,15 @@ jobs:
 
       - name: Run E2E Tests
         uses: cypress-io/github-action@v4
-        with: 
+        with:
           working-directory: ui
           install: false
           start: yarn run serve-build
           wait-on: 'http://localhost:5000'
-      
+
       - name: Run Component Tests
         uses: cypress-io/github-action@v4
-        with: 
+        with:
           working-directory: ui
           install: false
           component: true
@@ -98,11 +99,10 @@ jobs:
         with:
           name: cypress-screenshots
           path: ui/cypress/screenshots
-      
+
       - name: Archive test videos
         uses: actions/upload-artifact@v2
         if: always()
         with:
           name: cypress-videos
           path: ui/cypress/videos
-
