@@ -14,7 +14,7 @@ LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 
 
 # Install dependencies
-RUN apk add openjdk11
+RUN apk add openjdk17
 RUN apk add git
 RUN apk add --update nodejs npm yarn
 
@@ -50,7 +50,7 @@ FROM alpine:3.18
 
 LABEL maintainer="Netflix OSS <conductor@netflix.com>"
 
-RUN apk add openjdk11
+RUN apk add openjdk17
 RUN apk add nginx
 
 # Make app folders
