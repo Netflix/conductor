@@ -459,19 +459,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.glassfish.jaxb:jaxb-runtime": {
             "locked": "2.3.3"
@@ -907,19 +907,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.glassfish.jaxb:jaxb-runtime": {
             "locked": "2.3.3"
@@ -1462,19 +1462,19 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:elasticsearch-rest-high-level-client": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.elasticsearch.client:transport": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "6.8.23"
+            "locked": "6.8.12"
         },
         "org.glassfish.jaxb:jaxb-runtime": {
             "locked": "2.3.3"
