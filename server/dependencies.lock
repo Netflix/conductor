@@ -392,7 +392,7 @@
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "3.24.0"
+            "locked": "3.24.3"
         },
         "com.jayway.jsonpath:json-path": {
             "firstLevelTransitive": [
@@ -1066,7 +1066,7 @@
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "3.24.0"
+            "locked": "3.24.3"
         },
         "com.jayway.jsonpath:json-path": {
             "firstLevelTransitive": [
@@ -1506,7 +1506,7 @@
             "locked": "32.0.0-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.24.3"
         },
         "com.netflix.conductor:conductor-awss3-storage": {
             "project": true
@@ -1880,7 +1880,7 @@
                 "com.netflix.conductor:conductor-core",
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "3.21.7"
+            "locked": "3.24.3"
         },
         "com.jayway.jsonpath:json-path": {
             "firstLevelTransitive": [
