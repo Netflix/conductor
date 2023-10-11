@@ -144,7 +144,7 @@ public class MetadataServiceImpl implements MetadataService {
                 try {
                     if (task.getCaseExpression() != null) {
                         Object returnValue = ScriptEvaluator.eval(task.getCaseExpression(), map);
-                    } else if (task.getEvaluatorType().equalsIgnoreCase("javascript")) {
+                    } else if ("javascript".equalsIgnoreCase(task.getEvaluatorType())) {
                         Object returnValue = ScriptEvaluator.eval(task.getExpression(), map);
                     }
                 } catch (ScriptException e) {
