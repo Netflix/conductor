@@ -242,7 +242,7 @@ public @interface WorkflowTaskTypeConstraint {
                     && workflowTask.getExpression() != null) {
                 try {
                     validateScriptExpression(
-                            workflowTask.getCaseExpression(), workflowTask.getInputParameters());
+                            workflowTask.getExpression(), workflowTask.getInputParameters());
                 } catch (Exception ee) {
                     String message =
                             String.format(
