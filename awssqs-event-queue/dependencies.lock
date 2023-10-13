@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         }
     },
     "compileClasspath": {
@@ -72,7 +72,7 @@
             "locked": "2.17.2"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.yaml:snakeyaml": {
             "locked": "2.0"
@@ -369,6 +369,9 @@
         "junit:junit": {
             "locked": "4.13.2"
         },
+        "net.java.dev.jna:jna": {
+            "locked": "5.13.0"
+        },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
         },
@@ -391,13 +394,13 @@
             "locked": "5.8.2"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.yaml:snakeyaml": {
             "locked": "2.0"
@@ -576,6 +579,9 @@
         "junit:junit": {
             "locked": "4.13.2"
         },
+        "net.java.dev.jna:jna": {
+            "locked": "5.13.0"
+        },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
@@ -640,13 +646,13 @@
             "locked": "15.4"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.7.14"
+            "locked": "2.7.16"
         },
         "org.yaml:snakeyaml": {
             "firstLevelTransitive": [

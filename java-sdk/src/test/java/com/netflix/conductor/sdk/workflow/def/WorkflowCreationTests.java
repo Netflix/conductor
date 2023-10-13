@@ -97,7 +97,8 @@ public class WorkflowCreationTests {
         return forks;
     }
 
-    private ConductorWorkflow<TestWorkflowInput> registerTestWorkflow() throws InterruptedException {
+    private ConductorWorkflow<TestWorkflowInput> registerTestWorkflow()
+            throws InterruptedException {
         InputStream script = getClass().getResourceAsStream("/script.js");
         SimpleTask getUserInfo = new SimpleTask("get_user_info", "get_user_info");
         getUserInfo.input("name", ConductorWorkflow.input.get("name"));

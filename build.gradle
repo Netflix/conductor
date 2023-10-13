@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.14'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.16'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
     }
 }
@@ -262,6 +262,9 @@ allprojects {
         testImplementation('org.springframework.boot:spring-boot-starter-log4j2')
         testImplementation 'junit:junit'
         testImplementation "org.junit.vintage:junit-vintage-engine"
+
+        // Needed for build to work on m1/m2 macs
+        testImplementation 'net.java.dev.jna:jna:5.13.0'
     }
 
     // processes additional configuration metadata json file as described here
