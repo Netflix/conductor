@@ -1027,6 +1027,25 @@ public class WorkflowExecutor {
         }
     }
 
+    public WorkflowModel decideWithLock(WorkflowModel workflow) {
+        if (workflow == null) {
+            return null;
+        }
+        StopWatch watch = new StopWatch();
+        watch.start();
+        if (!executionLockService.acquireLock(workflow.getWorkflowId())) {
+            return null;
+        }
+        try {
+            return decide(workflow);
+
+        } finally {
+            executionLockService.releaseLock(workflow.getWorkflowId());
+            watch.stop();
+            Monitors.recordWorkflowDecisionTime(watch.getTime());
+        }
+    }
+
     /**
      * @param workflow the workflow to evaluate the state for
      * @return true if the workflow has completed (success or failed), false otherwise. Note: This
