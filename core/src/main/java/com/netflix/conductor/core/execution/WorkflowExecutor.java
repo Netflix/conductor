@@ -1028,7 +1028,7 @@ public class WorkflowExecutor {
     }
 
     /**
-     * This method overloads the com.netflix.conductor.core.execution.WorkflowExecutor#decide(java.lang.String).
+     * This method overloads the {@link #decide(String)}.
      * It will acquire a lock and evaluate the state of the workflow.
      *
      * @param workflow the workflow to evaluate the state for
