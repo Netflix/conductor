@@ -59,7 +59,7 @@ jar {
 
 bootJar {
     mainClass = 'com.netflix.conductor.Conductor'
-    classifier = 'boot'
+    archiveClassifier = 'boot'
 }
 
 springBoot {
