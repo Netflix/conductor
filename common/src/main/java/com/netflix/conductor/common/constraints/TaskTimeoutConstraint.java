@@ -17,12 +17,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import com.netflix.conductor.common.metadata.tasks.TaskDef;
+
 import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
-
-import com.netflix.conductor.common.metadata.tasks.TaskDef;
 
 import static java.lang.annotation.ElementType.TYPE;
 

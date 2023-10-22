@@ -15,13 +15,13 @@ package com.netflix.conductor.common.metadata.workflow;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.netflix.conductor.annotations.protogen.ProtoField;
+import com.netflix.conductor.annotations.protogen.ProtoMessage;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-
-import com.netflix.conductor.annotations.protogen.ProtoField;
-import com.netflix.conductor.annotations.protogen.ProtoMessage;
 
 @ProtoMessage
 public class StartWorkflowRequest {

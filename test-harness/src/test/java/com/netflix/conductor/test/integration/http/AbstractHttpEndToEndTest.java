@@ -59,8 +59,7 @@ import static org.junit.Assert.fail;
 @TestPropertySource(locations = "classpath:application-integrationtest.properties")
 public abstract class AbstractHttpEndToEndTest extends AbstractEndToEndTest {
 
-    @LocalServerPort
-    protected int port;
+    @LocalServerPort protected int port;
 
     protected static String apiRoot;
 
