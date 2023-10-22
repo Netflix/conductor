@@ -15,8 +15,8 @@ package com.netflix.conductor.common.run;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import org.apache.commons.lang3.StringUtils;
 

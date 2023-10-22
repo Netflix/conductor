@@ -20,10 +20,10 @@ import java.text.ParseException;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 
-import javax.validation.Constraint;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.validation.Payload;
+import jakarta.validation.Constraint;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.Payload;
 
 import org.apache.commons.lang3.StringUtils;
 

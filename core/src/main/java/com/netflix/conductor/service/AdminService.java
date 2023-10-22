@@ -15,7 +15,7 @@ package com.netflix.conductor.service;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.springframework.validation.annotation.Validated;
 

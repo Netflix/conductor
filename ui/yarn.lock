@@ -5035,9 +5035,9 @@ eslint-import-resolver-node@^0.3.6:
     debug "^3.2.7"
     resolve "^1.20.0"
 
-eslint-module-utils@^2.7.3:
-  version "2.7.3"
-  resolved "https://registry.yarnpkg.com/eslint-module-utils/-/eslint-module-utils-2.7.3.tgz#ad7e3a10552fdd0642e1e55292781bd6e34876ee"
+eslint-module-utils@^3.1.4:
+  version "3.1.4"
+  resolved "https://registry.yarnpkg.com/eslint-module-utils/-/eslint-module-utils-3.1.4.tgz#ad7e3a10552fdd0642e1e55292781bd6e34876ee"
   integrity sha512-088JEC7O3lDZM9xGe0RerkOMd0EjFl+Yvd1jPWIkMT5u3H9+HC34mWWPnqPrN13gieT9pBOO+Qt07Nb/6TresQ==
   dependencies:
     debug "^3.2.7"
@@ -5068,7 +5068,7 @@ eslint-plugin-import@^2.25.3:
     debug "^2.6.9"
     doctrine "^2.1.0"
     eslint-import-resolver-node "^0.3.6"
-    eslint-module-utils "^2.7.3"
+    eslint-module-utils "^3.1.4"
     has "^1.0.3"
     is-core-module "^2.8.1"
     is-glob "^4.0.3"

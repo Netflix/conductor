@@ -15,7 +15,7 @@ package com.netflix.conductor.core.execution.tasks;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.validation.Validator;
+import jakarta.validation.Validator;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

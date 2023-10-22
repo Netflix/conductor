@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.junit.After;
 import org.junit.Assert;

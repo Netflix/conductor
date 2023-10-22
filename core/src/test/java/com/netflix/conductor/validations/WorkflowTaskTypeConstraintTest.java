@@ -20,13 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.executable.ExecutableValidator;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.executable.ExecutableValidator;
 
-import org.apache.bval.jsr.ApacheValidationProvider;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -54,10 +53,7 @@ public class WorkflowTaskTypeConstraintTest {
 
     @BeforeClass
     public static void init() {
-        validatorFactory =
-                Validation.byProvider(ApacheValidationProvider.class)
-                        .configure()
-                        .buildValidatorFactory();
+        validatorFactory = Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }
 

@@ -15,7 +15,7 @@ package com.netflix.conductor.service;
 import java.util.List;
 import java.util.Set;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         }
     },
     "compileClasspath": {
@@ -15,25 +15,25 @@
             "locked": "1.1.4"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.springdoc:springdoc-openapi-ui": {
             "locked": "1.6.15"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         }
     },
     "runtimeClasspath": {
@@ -156,7 +156,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
@@ -164,7 +164,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
             "firstLevelTransitive": [
@@ -172,7 +172,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
             "firstLevelTransitive": [
@@ -180,7 +180,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-web": {
             "firstLevelTransitive": [
@@ -188,13 +188,19 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
+        },
+        "org.openjdk.nashorn:nashorn-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "15.4"
         },
         "org.springdoc:springdoc-openapi-ui": {
             "locked": "1.6.15"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         }
     },
     "testCompileClasspath": {
@@ -211,19 +217,19 @@
             "locked": "4.13.2"
         },
         "org.apache.logging.log4j:log4j-api": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-core": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-web": {
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.junit.vintage:junit-vintage-engine": {
             "locked": "5.8.2"
@@ -232,13 +238,13 @@
             "locked": "1.6.15"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         }
     },
     "testRuntimeClasspath": {
@@ -364,7 +370,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-core": {
             "firstLevelTransitive": [
@@ -372,7 +378,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-jul": {
             "firstLevelTransitive": [
@@ -380,7 +386,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-slf4j-impl": {
             "firstLevelTransitive": [
@@ -388,7 +394,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.apache.logging.log4j:log4j-web": {
             "firstLevelTransitive": [
@@ -396,22 +402,28 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.17.2"
+            "locked": "2.21.0"
         },
         "org.junit.vintage:junit-vintage-engine": {
             "locked": "5.8.2"
+        },
+        "org.openjdk.nashorn:nashorn-core": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "15.4"
         },
         "org.springdoc:springdoc-openapi-ui": {
             "locked": "1.6.15"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "2.7.3"
+            "locked": "3.1.4"
         }
     }
 }

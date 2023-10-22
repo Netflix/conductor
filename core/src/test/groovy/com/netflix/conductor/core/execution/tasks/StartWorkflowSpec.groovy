@@ -12,8 +12,8 @@
  */
 package com.netflix.conductor.core.execution.tasks
 
-import javax.validation.ConstraintViolation
-import javax.validation.Validator
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.Validator
 
 import com.netflix.conductor.common.config.ObjectMapperProvider
 import com.netflix.conductor.core.exception.NotFoundException
