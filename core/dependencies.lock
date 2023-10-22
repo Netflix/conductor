@@ -68,6 +68,9 @@
         "org.openjdk.nashorn:nashorn-core": {
             "locked": "15.4"
         },
+        "org.openjdk.nashorn:nashorn-core": {
+            "locked": "15.4"
+        },
         "org.springframework.boot:spring-boot-starter": {
             "locked": "3.1.4"
         },
