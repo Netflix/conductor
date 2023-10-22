@@ -228,15 +228,6 @@
         "org.bouncycastle:bcpkix-jdk15on": {
             "locked": "1.70"
         },
-        "org.bouncycastle:bcprov-jdk15on": {
-            "locked": "1.70"
-        },
-        "org.bouncycastle:bcpkix-jdk15on": {
-            "locked": "1.70"
-        },
-        "org.bouncycastle:bcprov-jdk15on": {
-            "locked": "1.70"
-        },
         "org.junit.vintage:junit-vintage-engine": {
             "locked": "5.8.2"
         },
@@ -414,15 +405,6 @@
             "locked": "2.21.0"
         },
         "org.bouncycastle:bcpkix-jdk15on": {
-            "locked": "1.70"
-        },
-        "org.bouncycastle:bcprov-jdk15on": {
-            "locked": "1.70"
-        },
-        "org.bouncycastle:bcpkix-jdk15on": {
-            "locked": "1.70"
-        },
-        "org.bouncycastle:bcprov-jdk15on": {
             "locked": "1.70"
         },
         "org.junit.vintage:junit-vintage-engine": {

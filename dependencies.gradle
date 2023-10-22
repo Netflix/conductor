@@ -26,7 +26,7 @@ ext {
     revElasticSearch6 = '6.8.12'
     revEmbeddedRedis = '0.6'
     revEurekaClient = '1.10.10'
-    revGroovy = '4.0.9'
+    revGroovy = '4.0.15'
     revGrpc = '1.+'
     revGuava = '30.0-jre'
     revHamcrestAllMatchers = '1.8'

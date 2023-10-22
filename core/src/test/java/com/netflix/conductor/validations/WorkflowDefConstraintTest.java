@@ -50,9 +50,7 @@ public class WorkflowDefConstraintTest {
     @BeforeClass
     public static void init() {
         validatorFactory =
-                Validation.byProvider(ApacheValidationProvider.class)
-                        .configure()
-                        .buildValidatorFactory();
+                Validation.buildDefaultValidatorFactory();
         validator = validatorFactory.getValidator();
     }
 
