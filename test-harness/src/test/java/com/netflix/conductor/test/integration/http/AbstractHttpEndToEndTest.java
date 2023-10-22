@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -59,7 +59,8 @@ import static org.junit.Assert.fail;
 @TestPropertySource(locations = "classpath:application-integrationtest.properties")
 public abstract class AbstractHttpEndToEndTest extends AbstractEndToEndTest {
 
-    @LocalServerPort protected int port;
+    @LocalServerPort
+    protected int port;
 
     protected static String apiRoot;
 
