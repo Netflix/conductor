@@ -151,7 +151,7 @@
             "locked": "1.15.3"
         },
         "redis.clients:jedis": {
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     },
     "testRuntimeClasspath": {
@@ -764,7 +764,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     }
 }
