@@ -525,7 +525,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     },
     "runtimeClasspath": {
@@ -972,7 +972,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     },
     "testCompileClasspath": {
@@ -1532,7 +1532,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     }
 }
