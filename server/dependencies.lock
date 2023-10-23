@@ -79,6 +79,9 @@
         },
         "org.springframework.retry:spring-retry": {
             "locked": "2.0.3"
+        },
+        "redis.clients:jedis": {
+            "locked": "3.3.0"
         }
     },
     "productionRuntimeClasspath": {
@@ -525,7 +528,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     },
     "runtimeClasspath": {
@@ -972,7 +975,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     },
     "testCompileClasspath": {
@@ -1074,6 +1077,9 @@
         },
         "org.springframework.retry:spring-retry": {
             "locked": "2.0.3"
+        },
+        "redis.clients:jedis": {
+            "locked": "3.3.0"
         }
     },
     "testRuntimeClasspath": {
@@ -1532,7 +1538,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "4.3.2"
+            "locked": "3.3.0"
         }
     }
 }
