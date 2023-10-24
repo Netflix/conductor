@@ -12,12 +12,13 @@
  */
 package com.netflix.conductor.core.execution.tasks
 
+import java.time.Duration
+
 import com.netflix.conductor.common.metadata.tasks.TaskDef
 import com.netflix.conductor.service.MetadataService
+
 import spock.lang.Specification
 import spock.lang.Subject
-
-import java.time.Duration
 
 class IsolatedTaskQueueProducerSpec extends Specification {
 
