@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Netflix, Inc.
+ * Copyright 2023 Netflix, Inc.
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -18,40 +18,19 @@ import com.netflix.conductor.core.execution.WorkflowExecutor;
 import com.netflix.conductor.model.TaskModel;
 import com.netflix.conductor.model.WorkflowModel;
 
-import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_WAIT;
-import static com.netflix.conductor.model.TaskModel.Status.*;
+import static com.netflix.conductor.common.metadata.tasks.TaskType.TASK_TYPE_NOOP;
 
-@Component(TASK_TYPE_WAIT)
-public class Wait extends WorkflowSystemTask {
+@Component(TASK_TYPE_NOOP)
+public class Noop extends WorkflowSystemTask {
 
-    public static final String DURATION_INPUT = "duration";
-    public static final String UNTIL_INPUT = "until";
-
-    public Wait() {
-        super(TASK_TYPE_WAIT);
-    }
-
-    @Override
-    public void cancel(WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
-        task.setStatus(TaskModel.Status.CANCELED);
+    public Noop() {
+        super(TASK_TYPE_NOOP);
     }
 
     @Override
     public boolean execute(
             WorkflowModel workflow, TaskModel task, WorkflowExecutor workflowExecutor) {
-        long timeOut = task.getWaitTimeout();
-        if (timeOut == 0) {
-            return false;
-        }
-        if (System.currentTimeMillis() > timeOut) {
-            task.setStatus(COMPLETED);
-            return true;
-        }
-
-        return false;
-    }
-
-    public boolean isAsync() {
+        task.setStatus(TaskModel.Status.COMPLETED);
         return true;
     }
 }
