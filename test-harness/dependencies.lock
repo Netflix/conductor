@@ -115,7 +115,7 @@
             "locked": "2.17.2"
         },
         "org.codehaus.groovy:groovy-all": {
-            "locked": "2.5.22"
+            "locked": "3.0.19"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "locked": "6.8.12"
@@ -130,10 +130,10 @@
             "locked": "5.8.2"
         },
         "org.spockframework:spock-core": {
-            "locked": "1.3-groovy-2.5"
+            "locked": "2.3-groovy-3.0"
         },
         "org.spockframework:spock-spring": {
-            "locked": "1.3-groovy-2.5"
+            "locked": "2.3-groovy-3.0"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "locked": "2.7.3"
@@ -640,7 +640,7 @@
             "locked": "2.17.2"
         },
         "org.codehaus.groovy:groovy-all": {
-            "locked": "2.5.22"
+            "locked": "3.0.19"
         },
         "org.elasticsearch.client:elasticsearch-rest-client": {
             "firstLevelTransitive": [
@@ -701,10 +701,10 @@
             "locked": "1.7.36"
         },
         "org.spockframework:spock-core": {
-            "locked": "1.3-groovy-2.5"
+            "locked": "2.3-groovy-3.0"
         },
         "org.spockframework:spock-spring": {
-            "locked": "1.3-groovy-2.5"
+            "locked": "2.3-groovy-3.0"
         },
         "org.springdoc:springdoc-openapi-ui": {
             "firstLevelTransitive": [
