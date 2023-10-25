@@ -14,6 +14,9 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
         },
+        "org.apache.httpcomponents.client5:httpclient5": {
+           "locked": "5.2.1"
+        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.20.0"
         },
@@ -136,6 +139,9 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
         },
+        "org.apache.httpcomponents.client5:httpclient5": {
+           "locked": "5.2.1"
+        },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
@@ -206,6 +212,9 @@
         },
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
+        },
+        "org.apache.httpcomponents.client5:httpclient5": {
+           "locked": "5.2.1"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -349,6 +358,9 @@
         },
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
+        },
+        "org.apache.httpcomponents.client5:httpclient5": {
+           "locked": "5.2.1"
         },
         "junit:junit": {
             "locked": "4.13.2"
