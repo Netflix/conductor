@@ -318,11 +318,11 @@
             ],
             "locked": "4.0.1"
         },
-        "javax.annotation:javax.annotation-api": {
+        "jakarta.annotation:jakarta.annotation-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.3.2"
+            "locked": "2.1.1"
         },
         "javax.ws.rs:jsr311-api": {
             "firstLevelTransitive": [
@@ -765,11 +765,11 @@
             ],
             "locked": "4.0.1"
         },
-        "javax.annotation:javax.annotation-api": {
+        "jakarta.annotation:jakarta.annotation-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.3.2"
+            "locked": "2.1.1"
         },
         "javax.ws.rs:jsr311-api": {
             "firstLevelTransitive": [
@@ -1319,11 +1319,11 @@
             ],
             "locked": "4.0.1"
         },
-        "javax.annotation:javax.annotation-api": {
+        "jakarta.annotation:jakarta.annotation-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.3.2"
+            "locked": "2.1.1"
         },
         "javax.ws.rs:jsr311-api": {
             "firstLevelTransitive": [

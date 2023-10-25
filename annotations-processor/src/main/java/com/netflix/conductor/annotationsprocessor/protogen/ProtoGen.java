@@ -20,7 +20,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
-import javax.annotation.Generated;
+import jakarta.annotation.Generated;
 import javax.lang.model.element.Modifier;
 
 import com.netflix.conductor.annotations.protogen.ProtoMessage;

@@ -17,8 +17,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.20.0"
@@ -76,8 +76,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
@@ -177,8 +177,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
@@ -241,8 +241,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -312,8 +312,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -415,8 +415,8 @@
         "io.grpc:grpc-stub": {
             "locked": "1.59.0"
         },
-        "javax.annotation:javax.annotation-api": {
-            "locked": "1.3.2"
+        "jakarta.annotation:jakarta.annotation-api": {
+            "locked": "2.1.1"
         },
         "junit:junit": {
             "locked": "4.13.2"
