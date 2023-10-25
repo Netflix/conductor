@@ -167,7 +167,11 @@ public class HttpTask extends WorkflowSystemTask {
         HttpResponse response = new HttpResponse();
         try {
             ResponseEntity<String> responseEntity =
-                    restTemplate.exchange(input.getUri(), HttpMethod.valueOf(input.getMethod()), request, String.class);
+                    restTemplate.exchange(
+                            input.getUri(),
+                            HttpMethod.valueOf(input.getMethod()),
+                            request,
+                            String.class);
             if (responseEntity.getStatusCode().is2xxSuccessful() && responseEntity.hasBody()) {
                 response.body = extractBody(responseEntity.getBody());
             }
