@@ -108,9 +108,6 @@
             "locked": "1.59.0"
         },
         "jakarta.annotation:jakarta.annotation-api": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-grpc"
-            ],
             "locked": "2.1.1"
         },
         "org.apache.bval:bval-jsr": {
@@ -285,9 +282,6 @@
             "locked": "1.59.0"
         },
         "jakarta.annotation:jakarta.annotation-api": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-grpc"
-            ],
             "locked": "2.1.1"
         },
         "junit:junit": {

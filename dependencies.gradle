@@ -16,6 +16,7 @@
  */
 ext {
     revActivation = '3.0.2'
+    revApacheHttpComponentsClient5 = '5.2.1'
     revAwaitility = '3.1.6'
     revAwsSdk = '1.11.86'
     revBval = '2.0.5'
@@ -31,7 +32,8 @@ ext {
     revGuava = '30.0-jre'
     revHamcrestAllMatchers = '1.8'
     revHealth = '1.1.+'
-    revApacheHttpComponentsClient5 = '5.2.1'
+    revProtoBuf = '3.21.7'
+    revJakartaAnnotation = '2.1.1'
     revJAXB = '4.0.1'
     revJAXRS = '2.1.1'
     revJedis = '3.3.0'
