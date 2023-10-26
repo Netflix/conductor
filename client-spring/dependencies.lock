@@ -90,7 +90,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -325,7 +325,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [

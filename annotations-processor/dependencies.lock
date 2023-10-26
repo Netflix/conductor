@@ -12,7 +12,7 @@
             "locked": "31.1-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -87,7 +87,7 @@
             "locked": "31.1-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -137,7 +137,7 @@
             "locked": "31.1-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -184,7 +184,7 @@
             "locked": "31.1-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true

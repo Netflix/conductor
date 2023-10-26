@@ -21,7 +21,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -91,7 +91,7 @@
             "locked": "2.15.2"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -138,7 +138,7 @@
             "locked": "2.15.2"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -191,7 +191,7 @@
             "locked": "2.15.2"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -244,7 +244,7 @@
             "locked": "2.15.2"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true

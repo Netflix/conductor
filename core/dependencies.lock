@@ -18,7 +18,7 @@
             "locked": "2.9.3"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.jayway.jsonpath:json-path": {
             "locked": "2.4.0"
@@ -107,7 +107,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.jayway.jsonpath:json-path": {
             "locked": "2.4.0"
@@ -204,7 +204,7 @@
             "locked": "2.9.3"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.jayway.jsonpath:json-path": {
             "locked": "2.4.0"
@@ -314,7 +314,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.jayway.jsonpath:json-path": {
             "locked": "2.4.0"
