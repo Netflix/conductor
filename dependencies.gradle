@@ -28,7 +28,7 @@ ext {
     revEmbeddedRedis = '0.6'
     revEurekaClient = '1.10.10'
     revGroovy = '4.0.9'
-    revGrpc = '1.+'
+    revGrpc = '1.57.2'
     revGuava = '30.0-jre'
     revHamcrestAllMatchers = '1.8'
     revHealth = '1.1.+'

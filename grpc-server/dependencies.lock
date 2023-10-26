@@ -15,10 +15,10 @@
             "project": true
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-services": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -127,22 +127,22 @@
             "locked": "2.7"
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-services": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
@@ -245,13 +245,13 @@
             "project": true
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-services": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -372,25 +372,25 @@
             "locked": "2.7"
         },
         "io.grpc:grpc-netty": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-services": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.59.0"
+            "locked": "1.57.2"
         },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
