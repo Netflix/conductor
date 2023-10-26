@@ -282,7 +282,7 @@
             "locked": "3.1.4"
         },
         "org.springframework:spring-web": {
-            "locked": "5.3.22"
+            "locked": "6.0.12"
         }
     },
     "testRuntimeClasspath": {
@@ -469,7 +469,7 @@
             "locked": "3.1.4"
         },
         "org.springframework:spring-web": {
-            "locked": "5.3.22"
+            "locked": "6.0.12"
         }
     }
 }

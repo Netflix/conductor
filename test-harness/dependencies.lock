@@ -145,7 +145,7 @@
             "locked": "1.3.3"
         },
         "org.springframework:spring-web": {
-            "locked": "5.3.22"
+            "locked": "6.0.12"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"
@@ -754,7 +754,7 @@
             "locked": "1.3.3"
         },
         "org.springframework:spring-web": {
-            "locked": "5.3.22"
+            "locked": "6.0.12"
         },
         "org.testcontainers:elasticsearch": {
             "locked": "1.15.3"
