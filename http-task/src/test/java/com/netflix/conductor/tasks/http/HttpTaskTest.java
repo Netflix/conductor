@@ -78,8 +78,7 @@ public class HttpTaskTest {
         map.put("SomeKey", null);
         JSON_RESPONSE = objectMapper.writeValueAsString(map);
 
-        final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<>() {
-        };
+        final TypeReference<Map<String, Object>> mapOfObj = new TypeReference<>() {};
         MockServerClient client =
                 new MockServerClient(mockServer.getHost(), mockServer.getServerPort());
         client.when(HttpRequest.request().withPath("/post").withMethod("POST"))
@@ -362,13 +361,13 @@ public class HttpTaskTest {
         SystemTaskRegistry systemTaskRegistry = mock(SystemTaskRegistry.class);
 
         new DeciderService(
-                new IDGenerator(),
-                parametersUtils,
-                metadataDAO,
-                externalPayloadStorageUtils,
-                systemTaskRegistry,
-                Collections.emptyMap(),
-                Duration.ofMinutes(60))
+                        new IDGenerator(),
+                        parametersUtils,
+                        metadataDAO,
+                        externalPayloadStorageUtils,
+                        systemTaskRegistry,
+                        Collections.emptyMap(),
+                        Duration.ofMinutes(60))
                 .decide(workflow);
     }
 }

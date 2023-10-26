@@ -51,16 +51,19 @@ public class DefaultRestTemplateProvider implements RestTemplateProvider {
 
     @Override
     public @NonNull RestTemplate getRestTemplate(@NonNull HttpTask.Input input) {
-        Duration timeout = Duration.ofMillis(Optional.ofNullable(input.getReadTimeOut()).orElse(defaultReadTimeout));
+        Duration timeout =
+                Duration.ofMillis(
+                        Optional.ofNullable(input.getReadTimeOut()).orElse(defaultReadTimeout));
         threadLocalRestTemplateBuilder.get().setReadTimeout(timeout);
-        RestTemplate restTemplate = threadLocalRestTemplateBuilder.get().setReadTimeout(timeout).build();
+        RestTemplate restTemplate =
+                threadLocalRestTemplateBuilder.get().setReadTimeout(timeout).build();
         HttpComponentsClientHttpRequestFactory requestFactory =
                 new HttpComponentsClientHttpRequestFactory();
         SocketConfig.Builder builder = SocketConfig.custom();
-        builder.setSoTimeout(Timeout.of(
-                Optional.ofNullable(input.getReadTimeOut()).orElse(defaultReadTimeout),
-                TimeUnit.MILLISECONDS
-        ));
+        builder.setSoTimeout(
+                Timeout.of(
+                        Optional.ofNullable(input.getReadTimeOut()).orElse(defaultReadTimeout),
+                        TimeUnit.MILLISECONDS));
         requestFactory.setConnectTimeout(
                 Optional.ofNullable(input.getConnectionTimeOut()).orElse(defaultConnectTimeout));
         restTemplate.setRequestFactory(requestFactory);
