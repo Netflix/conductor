@@ -336,6 +336,15 @@ public class WorkflowExecutor {
         for (TaskModel task : workflow.getTasks()) {
             switch (task.getStatus()) {
                 case FAILED:
+                    if (task.getTaskType().equalsIgnoreCase(TaskType.JOIN.toString())) {
+                        task.setStatus(IN_PROGRESS);
+                        addTaskToQueue(task);
+                        // Task doesn't have to be updated yet. Will be updated along with other
+                        // Workflow tasks downstream.
+                    } else {
+                        retriableMap.put(task.getReferenceTaskName(), task);
+                    }
+                    break;
                 case FAILED_WITH_TERMINAL_ERROR:
                 case TIMED_OUT:
                     retriableMap.put(task.getReferenceTaskName(), task);
