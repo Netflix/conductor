@@ -449,12 +449,6 @@
             ],
             "locked": "1.57.1"
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-server"
-            ],
-            "locked": "1.0.3"
-        },
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-awssqs-event-queue",

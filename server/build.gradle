@@ -40,7 +40,6 @@ dependencies {
     implementation "redis.clients:jedis:${revJedis}"
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation "io.orkes.queues:orkes-conductor-queues:${revOrkesQueues}"
 
     implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
 

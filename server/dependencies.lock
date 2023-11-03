@@ -41,9 +41,7 @@
         "com.netflix.conductor:conductor-rest": {
             "project": true
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "locked": "1.0.3"
-        },
+
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.20.0"
         },
@@ -296,9 +294,7 @@
             ],
             "locked": "1.57.2"
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "locked": "1.0.3"
-        },
+
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-awssqs-event-queue",
@@ -743,9 +739,7 @@
             ],
             "locked": "1.57.2"
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "locked": "1.0.3"
-        },
+
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-awssqs-event-queue",
@@ -1030,9 +1024,7 @@
         "io.grpc:grpc-testing": {
             "locked": "1.57.2"
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "locked": "1.0.3"
-        },
+
         "junit:junit": {
             "locked": "4.13.2"
         },
@@ -1297,9 +1289,7 @@
         "io.grpc:grpc-testing": {
             "locked": "1.57.2"
         },
-        "io.orkes.queues:orkes-conductor-queues": {
-            "locked": "1.0.3"
-        },
+
         "io.reactivex:rxjava": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-awssqs-event-queue",
