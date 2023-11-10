@@ -72,7 +72,7 @@ public class RedisEventHandlerDAO extends BaseDynoDAO implements EventHandlerDAO
             throw new NotFoundException(
                     "EventHandler with name %s not found!", eventHandler.getName());
         }
-        if(!existing.getEvent().equals(eventHandler.getEvent())){
+        if (!existing.getEvent().equals(eventHandler.getEvent())) {
             removeIndex(existing);
         }
         index(eventHandler);
