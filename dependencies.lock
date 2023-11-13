@@ -38,9 +38,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.2"
         },
@@ -104,9 +101,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.17.2"
         },
@@ -159,9 +153,6 @@
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
-        },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -230,9 +221,6 @@
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
-        },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
         },
         "junit:junit": {
             "locked": "4.13.2"

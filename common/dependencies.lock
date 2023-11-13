@@ -90,16 +90,15 @@
         },
         "com.google.guava:guava": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "32.0.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "firstLevelTransitive": [
@@ -199,9 +198,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -209,7 +205,7 @@
             "project": true
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -309,12 +305,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -322,7 +312,7 @@
             "project": true
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -398,9 +388,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -414,7 +401,7 @@
             "locked": "5.13.0"
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -517,12 +504,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -536,7 +517,7 @@
             "locked": "5.13.0"
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"

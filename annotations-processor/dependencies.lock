@@ -42,10 +42,10 @@
             "locked": "4.3.1"
         },
         "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -146,12 +146,6 @@
                 "com.netflix.conductor:conductor-annotations"
             ],
             "locked": "2.13.5"
-        },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations"
-            ],
-            "locked": "32.0.0-jre"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -264,13 +258,10 @@
             "locked": "4.3.1"
         },
         "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations"
-            ],
-            "locked": "32.0.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -356,10 +347,10 @@
             "locked": "4.3.1"
         },
         "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true
@@ -475,13 +466,10 @@
             "locked": "4.3.1"
         },
         "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations"
-            ],
-            "locked": "32.0.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
-            "locked": "3.21.7"
+            "locked": "3.21.12"
         },
         "com.netflix.conductor:conductor-annotations": {
             "project": true

@@ -38,9 +38,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -48,10 +45,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -153,13 +150,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -176,10 +166,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -188,7 +178,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -241,7 +231,7 @@
     },
     "protobufToolsLocator_grpc": {
         "io.grpc:protoc-gen-grpc-java": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         }
     },
     "protobufToolsLocator_protoc": {
@@ -327,13 +317,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -350,10 +333,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -362,7 +345,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -447,9 +430,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.24.3"
         },
@@ -457,10 +437,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -577,13 +557,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -600,10 +573,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -618,7 +591,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -756,13 +729,6 @@
             ],
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
@@ -779,10 +745,10 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.58.0"
+            "locked": "1.57.2"
         },
         "javax.annotation:javax.annotation-api": {
             "locked": "1.3.2"
@@ -797,7 +763,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [

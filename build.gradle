@@ -8,18 +8,18 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0'
+        classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:10.0.0'
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.7.16'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.+'
     }
 }
 
 plugins {
-    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
+    id 'io.spring.dependency-management' version '1.1.3'
     id 'java'
     id 'application'
     id 'jacoco'
-    id 'nebula.netflixoss' version '10.6.0'
+    id 'com.netflix.nebula.netflixoss' version '11.3.2'
     id 'org.sonarqube' version '3.4.0.2513'
 }
 
@@ -47,13 +47,16 @@ apply from: "$rootDir/dependencies.gradle"
 apply from: "$rootDir/springboot-bom-overrides.gradle"
 
 allprojects {
-    apply plugin: 'nebula.netflixoss'
+    apply plugin: 'com.netflix.nebula.netflixoss'
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'java-library'
     apply plugin: 'project-report'
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
 
     group = 'com.netflix.conductor'
 
@@ -143,14 +146,6 @@ allprojects {
                 // the strict bounds, effectively allowing any 2.x version greater than 2.17.2
                 // could also remove the upper bound entirely if we wanted too
                 strictly '[2.17.2,3.0)'
-            }
-        }
-        implementation('com.google.guava:guava') {
-            version {
-                // this is the preferred version this library will use
-                prefer '32.0.0-jre'
-                // the strict bounds, effectively allowing any 32.x version between 32.0.0 and 32.1.1
-                strictly '[32.0.0-jre,32.1.1-jre)'
             }
         }
         implementation('org.yaml:snakeyaml') {

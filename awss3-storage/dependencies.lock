@@ -41,9 +41,6 @@
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
         },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
-        },
         "com.netflix.conductor:conductor-common": {
             "project": true
         },
@@ -173,14 +170,6 @@
             ],
             "locked": "2.9.3"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
@@ -250,7 +239,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -350,9 +339,6 @@
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "locked": "2.15.0"
-        },
-        "com.google.guava:guava": {
-            "locked": "32.0.0-jre"
         },
         "com.netflix.conductor:conductor-common": {
             "project": true
@@ -495,14 +481,6 @@
             ],
             "locked": "2.9.3"
         },
-        "com.google.guava:guava": {
-            "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-annotations",
-                "com.netflix.conductor:conductor-common",
-                "com.netflix.conductor:conductor-core"
-            ],
-            "locked": "32.0.0-jre"
-        },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
@@ -578,7 +556,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
