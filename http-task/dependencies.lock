@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     },
     "compileClasspath": {
@@ -33,10 +33,10 @@
             "locked": "2.20.0"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     },
     "runtimeClasspath": {
@@ -247,13 +247,13 @@
             "locked": "5.12.0"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.testcontainers:mockserver": {
             "locked": "1.18.3"
@@ -438,13 +438,13 @@
             "locked": "15.4"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-web": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.testcontainers:mockserver": {
             "locked": "1.18.3"

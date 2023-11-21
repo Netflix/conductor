@@ -1,7 +1,7 @@
 {
     "annotationProcessor": {
         "org.springframework.boot:spring-boot-configuration-processor": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     },
     "annotationsProcessorCodegen": {
@@ -121,10 +121,10 @@
             "locked": "1.6.15"
         },
         "org.springframework.boot:spring-boot-starter": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     },
     "runtimeClasspath": {
@@ -224,13 +224,13 @@
             "locked": "5.9.3"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     },
     "testRuntimeClasspath": {
@@ -292,13 +292,13 @@
             "locked": "5.9.3"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-test": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         },
         "org.springframework.boot:spring-boot-starter-validation": {
-            "locked": "3.1.4"
+            "locked": "3.1.5"
         }
     }
 }
