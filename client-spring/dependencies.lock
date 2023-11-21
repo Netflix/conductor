@@ -221,7 +221,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.0.9"
+            "locked": "1.7.36"
         },
         "org.springframework.boot:spring-boot-starter": {
             "locked": "3.1.5"
@@ -462,7 +462,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.0.9"
+            "locked": "1.7.36"
         },
         "org.springframework.boot:spring-boot-starter": {
             "locked": "3.1.5"

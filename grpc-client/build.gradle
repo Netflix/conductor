@@ -19,7 +19,7 @@ dependencies {
     implementation "io.grpc:grpc-protobuf:${revGrpc}"
     implementation "io.grpc:grpc-stub:${revGrpc}"
     implementation "com.google.protobuf:protobuf-java:${revProtoBuf}"
-    implementation "org.slf4j:slf4j-api"
+    implementation "org.slf4j:slf4j-api:1.7.36"
     implementation "org.apache.commons:commons-lang3"
     implementation "jakarta.annotation:jakarta.annotation-api:${revJakartaAnnotation}"
     implementation "com.google.guava:guava:${revGuava}"
