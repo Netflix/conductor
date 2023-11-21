@@ -16,11 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired
 
 import com.netflix.conductor.common.metadata.tasks.Task
 import com.netflix.conductor.common.metadata.tasks.TaskDef
+import com.netflix.conductor.common.metadata.tasks.TaskType
 import com.netflix.conductor.common.metadata.workflow.RerunWorkflowRequest
 import com.netflix.conductor.common.run.Workflow
 import com.netflix.conductor.core.execution.tasks.Join
 import com.netflix.conductor.core.execution.tasks.SubWorkflow
-import com.netflix.conductor.dao.QueueDAO
 import com.netflix.conductor.test.base.AbstractSpecification
 
 import spock.lang.Shared
@@ -45,6 +45,9 @@ class ForkJoinSpec extends AbstractSpecification {
     @Shared
     def FORK_JOIN_SUB_WORKFLOW = 'integration_test_fork_join_sw'
 
+    @Shared
+    def FORK_JOIN_PERMISSIVE_WF = 'FanInOutPermissiveTest'
+
     @Autowired
     SubWorkflow subWorkflowTask
 
@@ -56,7 +59,8 @@ class ForkJoinSpec extends AbstractSpecification {
                 'nested_fork_join_with_sub_workflow_integration_test.json',
                 'simple_one_task_sub_workflow_integration_test.json',
                 'fork_join_with_optional_sub_workflow_forks_integration_test.json',
-                'fork_join_sub_workflow.json'
+                'fork_join_sub_workflow.json',
+                'fork_join_permissive_integration_test.json',
         )
     }
 
@@ -249,6 +253,110 @@ class ForkJoinSpec extends AbstractSpecification {
 
         cleanup: "Restore the task definitions that were modified as part of this feature testing"
         metadataService.updateTaskDef(persistedIntegrationTask2Definition)
+    }
+
+    /**
+     *             start
+     *              |
+     *             fork
+     *            /     \
+     *       p_task1     p_task2
+     *          |        /
+     *           \     /
+     *            \  /
+     *            join
+     *              |
+     *           s_task3
+     *              |
+     *             End
+     */
+    def "Test a simple workflow with fork join permissive failure flow"() {
+        setup: "Ensure that 'integration_task_1' has a retry count of 0"
+        def persistedIntegrationTask1Definition = workflowTestUtil.getPersistedTaskDefinition('integration_task_1').get()
+        def modifiedIntegrationTask1Definition = new TaskDef(persistedIntegrationTask1Definition.name,
+                persistedIntegrationTask1Definition.description, persistedIntegrationTask1Definition.ownerEmail, 0,
+                0, persistedIntegrationTask1Definition.responseTimeoutSeconds)
+        metadataService.updateTaskDef(modifiedIntegrationTask1Definition)
+
+        when: "A fork join workflow is started"
+        def workflowInstanceId = startWorkflow(FORK_JOIN_PERMISSIVE_WF, 1,
+                'fanoutTest', [:],
+                null)
+
+        then: "verify that the workflow has started and the starting nodes of the each fork are in scheduled state"
+        workflowInstanceId
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 4
+            tasks[0].status == Task.Status.COMPLETED
+            tasks[0].taskType == 'FORK'
+            tasks[1].workflowTask.type == TaskType.PERMISSIVE.name()
+            tasks[1].status == Task.Status.SCHEDULED
+            tasks[1].taskType == 'integration_task_1'
+            tasks[2].workflowTask.type == TaskType.PERMISSIVE.name()
+            tasks[2].status == Task.Status.SCHEDULED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+        }
+
+        when: "The first task of the fork is polled and completed"
+        def joinTaskId = workflowExecutionService.getExecutionStatus(workflowInstanceId, true).getTaskByRefName("fanouttask_join").getTaskId()
+        def polledAndAckTask1Try1 = workflowTestUtil.pollAndFailTask('integration_task_1', 'task1.worker', 'Failed...')
+
+        then: "verify that the 'integration_task_1' was polled and acknowledged"
+        workflowTestUtil.verifyPolledAndAcknowledgedTask(polledAndAckTask1Try1)
+
+        and: "The workflow has been updated and has all the required tasks in the right status to move forward"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 4
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].taskType == 'integration_task_1'
+            tasks[2].status == Task.Status.SCHEDULED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+        }
+
+        when: "The other node of the fork is completed by completing 'integration_task_2'"
+        def polledAndAckTask2Try1 = workflowTestUtil.pollAndCompleteTask('integration_task_2','task1.worker')
+
+        and: "workflow is evaluated"
+        sweep(workflowInstanceId)
+
+        then: "verify that the 'integration_task_2' was polled and acknowledged"
+        workflowTestUtil.verifyPolledAndAcknowledgedTask(polledAndAckTask2Try1)
+
+        and: "the workflow is in the failed state"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.RUNNING
+            tasks.size() == 4
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].taskType == 'integration_task_1'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[3].status == Task.Status.IN_PROGRESS
+            tasks[3].taskType == 'JOIN'
+        }
+
+        when: "JOIN task executed by the async executor"
+        asyncSystemTaskExecutor.execute(joinTask, joinTaskId)
+
+        then: "The workflow has been updated with the task status and task list"
+        with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
+            status == Workflow.WorkflowStatus.FAILED
+            tasks.size() == 4
+            tasks[1].status == Task.Status.FAILED
+            tasks[1].taskType == 'integration_task_1'
+            tasks[2].status == Task.Status.COMPLETED
+            tasks[2].taskType == 'integration_task_2'
+            tasks[3].status == Task.Status.FAILED
+            tasks[3].taskType == 'JOIN'
+        }
+
+        cleanup: "Restore the task definitions that were modified as part of this feature testing"
+        metadataService.updateTaskDef(persistedIntegrationTask1Definition)
     }
 
     def "Test retrying a failed fork join workflow"() {
