@@ -15,7 +15,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-annotations-processor"
             ],
-            "locked": "31.1-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -97,7 +97,7 @@
             "project": true
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -144,7 +144,7 @@
             "project": true
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -200,7 +200,7 @@
             "locked": "4.13.2"
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -253,7 +253,7 @@
             "locked": "4.13.2"
         },
         "org.apache.bval:bval-jsr": {
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"

@@ -33,7 +33,7 @@
             "locked": "3.1.4"
         },
         "org.springframework.data:spring-data-redis": {
-            "locked": "2.7.2"
+            "locked": "2.7.16"
         },
         "redis.clients:jedis": {
             "locked": "3.3.0"
@@ -141,7 +141,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -244,13 +244,13 @@
             "locked": "3.1.4"
         },
         "org.springframework.data:spring-data-redis": {
-            "locked": "2.7.2"
+            "locked": "3.1.4"
         },
         "org.testcontainers:spock": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         },
         "org.testcontainers:testcontainers": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         },
         "redis.clients:jedis": {
             "locked": "3.3.0"
@@ -361,7 +361,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -435,13 +435,13 @@
             "locked": "3.1.4"
         },
         "org.springframework.data:spring-data-redis": {
-            "locked": "2.7.2"
+            "locked": "3.1.4"
         },
         "org.testcontainers:spock": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         },
         "org.testcontainers:testcontainers": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         },
         "redis.clients:jedis": {
             "locked": "3.6.0"

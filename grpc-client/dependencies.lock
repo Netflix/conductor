@@ -6,7 +6,7 @@
     },
     "compileClasspath": {
         "com.google.guava:guava": {
-            "locked": "30.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.12"
@@ -68,7 +68,7 @@
             "locked": "2.15.2"
         },
         "com.google.guava:guava": {
-            "locked": "30.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -114,7 +114,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -168,7 +168,7 @@
     },
     "testCompileClasspath": {
         "com.google.guava:guava": {
-            "locked": "30.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "locked": "3.21.12"
@@ -242,7 +242,7 @@
             "locked": "2.15.2"
         },
         "com.google.guava:guava": {
-            "locked": "30.0-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -291,7 +291,7 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [

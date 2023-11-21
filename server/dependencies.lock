@@ -141,7 +141,7 @@
                 "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "32.0.1-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -280,7 +280,8 @@
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-grpc"
+                "com.netflix.conductor:conductor-grpc",
+                "com.netflix.conductor:conductor-grpc-server"
             ],
             "locked": "1.57.2"
         },
@@ -341,7 +342,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -588,7 +589,7 @@
                 "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "32.0.1-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -727,7 +728,8 @@
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-grpc"
+                "com.netflix.conductor:conductor-grpc",
+                "com.netflix.conductor:conductor-grpc-server"
             ],
             "locked": "1.57.2"
         },
@@ -788,7 +790,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -1139,7 +1141,7 @@
                 "com.netflix.conductor:conductor-awssqs-event-queue",
                 "com.netflix.conductor:conductor-es6-persistence"
             ],
-            "locked": "32.0.1-jre"
+            "locked": "32.1.2-jre"
         },
         "com.google.protobuf:protobuf-java": {
             "firstLevelTransitive": [
@@ -1278,7 +1280,8 @@
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
-                "com.netflix.conductor:conductor-grpc"
+                "com.netflix.conductor:conductor-grpc",
+                "com.netflix.conductor:conductor-grpc-server"
             ],
             "locked": "1.57.2"
         },
@@ -1345,7 +1348,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [

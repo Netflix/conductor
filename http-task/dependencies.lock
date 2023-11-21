@@ -147,7 +147,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -256,7 +256,7 @@
             "locked": "3.1.4"
         },
         "org.testcontainers:mockserver": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         }
     },
     "testRuntimeClasspath": {
@@ -370,7 +370,7 @@
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.0.5"
+            "locked": "2.0.6"
         },
         "org.apache.commons:commons-lang3": {
             "firstLevelTransitive": [
@@ -447,7 +447,7 @@
             "locked": "3.1.4"
         },
         "org.testcontainers:mockserver": {
-            "locked": "1.15.3"
+            "locked": "1.18.3"
         }
     }
 }
