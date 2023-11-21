@@ -43,7 +43,7 @@ dependencies {
 
     implementation "org.openjdk.nashorn:nashorn-core:15.4"
 
-    implementation "org.slf4j:slf4j-api:1.7.36"
+    implementation "org.slf4j:slf4j-api:${revSlf4j}"
 
     // JAXB is not bundled with Java 11, dependencies added explicitly
     // These are needed by Apache BVAL
