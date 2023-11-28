@@ -29,8 +29,8 @@
         "commons-io:commons-io": {
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "org.apache.commons:commons-lang3": {
             "locked": "3.12.0"
@@ -115,8 +115,8 @@
         "commons-io:commons-io": {
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
@@ -197,8 +197,8 @@
         "commons-io:commons-io": {
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -307,8 +307,8 @@
         "commons-io:commons-io": {
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"

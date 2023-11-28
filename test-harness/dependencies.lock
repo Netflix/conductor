@@ -90,8 +90,8 @@
         "com.netflix.dyno-queues:dyno-queues-redis": {
             "locked": "2.0.20"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -475,11 +475,11 @@
             ],
             "locked": "2.1.1"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.1.1"
+            "locked": "3.1.0"
         },
         "javax.ws.rs:jsr311-api": {
             "firstLevelTransitive": [

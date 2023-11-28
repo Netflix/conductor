@@ -139,12 +139,12 @@
             ],
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-java-sdk"
             ],
-            "locked": "2.1.1"
+            "locked": "3.1.0"
         },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
@@ -374,12 +374,12 @@
             ],
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client",
                 "com.netflix.conductor:conductor-java-sdk"
             ],
-            "locked": "2.1.1"
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"

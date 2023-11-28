@@ -665,7 +665,7 @@
         "com.netflix.conductor:conductor-grpc-server": {
             "project": true
         },
-        "com.netflix.conductor:conductor-http-task": {
+        "com.netflix.conductor:http-task": {
             "project": true
         },
         "com.netflix.conductor:conductor-json-jq-task": {

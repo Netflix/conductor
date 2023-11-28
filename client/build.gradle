@@ -20,7 +20,7 @@ dependencies {
 
     implementation project(':conductor-common')
     implementation "com.sun.jersey:jersey-client:${revJersey}"
-    implementation "javax.ws.rs:javax.ws.rs-api:${revJAXRS}"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${revJAXRS}"
     implementation "org.glassfish.jersey.core:jersey-common:${revJerseyCommon}"
 
     implementation "com.netflix.spectator:spectator-api:${revSpectator}"

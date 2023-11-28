@@ -23,8 +23,8 @@
         "com.sun.jersey:jersey-client": {
             "locked": "1.19.4"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.21.0"
@@ -136,11 +136,11 @@
             ],
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.1.1"
+            "locked": "3.1.0"
         },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
@@ -233,8 +233,8 @@
         "com.sun.jersey:jersey-client": {
             "locked": "1.19.4"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
-            "locked": "2.1.1"
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"
@@ -373,11 +373,11 @@
             ],
             "locked": "2.7"
         },
-        "javax.ws.rs:javax.ws.rs-api": {
+        "jakarta.ws.rs:jakarta.ws.rs-api": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-client"
             ],
-            "locked": "2.1.1"
+            "locked": "3.1.0"
         },
         "junit:junit": {
             "locked": "4.13.2"
