@@ -18,6 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.text.ParseException;
 import java.time.format.DateTimeParseException;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
 import com.netflix.conductor.common.metadata.tasks.TaskType;
 import com.netflix.conductor.common.metadata.workflow.WorkflowTask;
+import com.netflix.conductor.core.events.ScriptEvaluator;
 import com.netflix.conductor.core.utils.DateTimeUtils;
 
 import jakarta.validation.Constraint;
@@ -166,7 +168,32 @@ public @interface WorkflowTaskTypeConstraint {
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
             }
+
+            if (workflowTask.getCaseExpression() != null) {
+                try {
+                    validateScriptExpression(
+                            workflowTask.getCaseExpression(), workflowTask.getInputParameters());
+                } catch (Exception ee) {
+                    String message =
+                            String.format(
+                                    ee.getMessage() + ", taskType: DECISION taskName %s",
+                                    workflowTask.getName());
+                    context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                    valid = false;
+                }
+            }
+
             return valid;
+        }
+
+        private void validateScriptExpression(
+                String expression, Map<String, Object> inputParameters) {
+            try {
+                Object returnValue = ScriptEvaluator.eval(expression, inputParameters);
+            } catch (ScriptException e) {
+                throw new IllegalArgumentException(
+                        String.format("Expression is not well formatted: %s", e.getMessage()));
+            }
         }
 
         private boolean isSwitchTaskValid(
@@ -208,6 +235,21 @@ public @interface WorkflowTaskTypeConstraint {
                                 TaskType.SWITCH, workflowTask.getName());
                 context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
                 valid = false;
+            }
+
+            if ("javascript".equals(workflowTask.getEvaluatorType())
+                    && workflowTask.getExpression() != null) {
+                try {
+                    validateScriptExpression(
+                            workflowTask.getExpression(), workflowTask.getInputParameters());
+                } catch (Exception ee) {
+                    String message =
+                            String.format(
+                                    ee.getMessage() + ", taskType: SWITCH taskName %s",
+                                    workflowTask.getName());
+                    context.buildConstraintViolationWithTemplate(message).addConstraintViolation();
+                    valid = false;
+                }
             }
             return valid;
         }
