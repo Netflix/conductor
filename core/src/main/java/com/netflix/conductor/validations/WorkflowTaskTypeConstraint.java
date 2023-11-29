@@ -21,6 +21,8 @@ import java.time.format.DateTimeParseException;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.script.ScriptException;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.netflix.conductor.common.metadata.tasks.TaskDef;
@@ -33,8 +35,6 @@ import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Payload;
-
-import javax.script.ScriptException;
 
 import static com.netflix.conductor.core.execution.tasks.Terminate.getTerminationStatusParameter;
 import static com.netflix.conductor.core.execution.tasks.Terminate.validateInputStatus;
