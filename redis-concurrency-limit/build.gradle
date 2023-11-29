@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter'
-    compileOnly 'org.springframework.data:spring-data-redis'
+    compileOnly 'org.springframework.data:spring-data-redis:2.7.16' //This is a need now - will need to upgrade to Spring 3
 
     implementation project(':conductor-common')
     implementation project(':conductor-core')
