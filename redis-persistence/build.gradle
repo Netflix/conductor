@@ -16,7 +16,7 @@ dependencies {
     implementation project(':conductor-core')
     compileOnly 'org.springframework.boot:spring-boot-starter'
 
-    implementation "redis.clients:jedis:${revJedis}"
+    implementation "redis.clients:jedis:3.3.0"
     implementation "com.netflix.dyno-queues:dyno-queues-redis:${revDynoQueues}"
     implementation('com.thoughtworks.xstream:xstream:1.4.20')
 

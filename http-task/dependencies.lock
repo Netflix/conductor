@@ -15,7 +15,7 @@
             "locked": "1.1.1"
         },
         "org.apache.httpcomponents.client5:httpclient5": {
-           "locked": "5.2.1"
+            "locked": "5.2.1"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.20.0"
@@ -44,27 +44,27 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "firstLevelTransitive": [
@@ -139,9 +139,6 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
         },
-        "org.apache.httpcomponents.client5:httpclient5": {
-           "locked": "5.2.1"
-        },
         "org.apache.bval:bval-jsr": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
@@ -155,6 +152,9 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.12.0"
+        },
+        "org.apache.httpcomponents.client5:httpclient5": {
+            "locked": "5.2.1"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -201,6 +201,12 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "15.4"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.9"
         }
     },
     "testCompileClasspath": {
@@ -213,11 +219,11 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
         },
-        "org.apache.httpcomponents.client5:httpclient5": {
-           "locked": "5.2.1"
-        },
         "junit:junit": {
             "locked": "4.13.2"
+        },
+        "org.apache.httpcomponents.client5:httpclient5": {
+            "locked": "5.2.1"
         },
         "org.apache.logging.log4j:log4j-api": {
             "locked": "2.20.0"
@@ -264,27 +270,27 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "firstLevelTransitive": [
@@ -359,9 +365,6 @@
         "javax.ws.rs:jsr311-api": {
             "locked": "1.1.1"
         },
-        "org.apache.httpcomponents.client5:httpclient5": {
-           "locked": "5.2.1"
-        },
         "junit:junit": {
             "locked": "4.13.2"
         },
@@ -378,6 +381,9 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "3.12.0"
+        },
+        "org.apache.httpcomponents.client5:httpclient5": {
+            "locked": "5.2.1"
         },
         "org.apache.logging.log4j:log4j-api": {
             "firstLevelTransitive": [
@@ -436,6 +442,12 @@
                 "com.netflix.conductor:conductor-core"
             ],
             "locked": "15.4"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.9"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "locked": "3.1.5"

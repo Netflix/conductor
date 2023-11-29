@@ -47,27 +47,27 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "firstLevelTransitive": [
@@ -207,6 +207,12 @@
         },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.9"
         },
         "redis.clients:jedis": {
             "locked": "3.3.0"
@@ -264,27 +270,27 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-core": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.core:jackson-databind": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common",
                 "com.netflix.conductor:conductor-core"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.fasterxml.jackson.module:jackson-module-afterburner": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-common"
             ],
-            "locked": "2.15.2"
+            "locked": "2.15.3"
         },
         "com.github.ben-manes.caffeine:caffeine": {
             "firstLevelTransitive": [
@@ -430,6 +436,12 @@
         },
         "org.rarefiedredis.redis:redis-java": {
             "locked": "0.0.17"
+        },
+        "org.slf4j:slf4j-api": {
+            "firstLevelTransitive": [
+                "com.netflix.conductor:conductor-core"
+            ],
+            "locked": "2.0.9"
         },
         "org.springframework.boot:spring-boot-starter-log4j2": {
             "locked": "3.1.5"
