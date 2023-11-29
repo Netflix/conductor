@@ -81,7 +81,7 @@
             "locked": "2.0.4"
         },
         "redis.clients:jedis": {
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     },
     "productionRuntimeClasspath": {
@@ -547,7 +547,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     },
     "runtimeClasspath": {
@@ -1013,7 +1013,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     },
     "testCompileClasspath": {
@@ -1117,7 +1117,7 @@
             "locked": "2.0.4"
         },
         "redis.clients:jedis": {
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     },
     "testRuntimeClasspath": {
@@ -1595,7 +1595,7 @@
                 "com.netflix.conductor:conductor-redis-concurrency-limit",
                 "com.netflix.conductor:conductor-redis-persistence"
             ],
-            "locked": "3.3.0"
+            "locked": "3.6.0"
         }
     }
 }

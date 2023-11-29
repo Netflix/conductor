@@ -256,7 +256,7 @@
             "locked": "3.1.5"
         },
         "org.springframework.data:spring-data-redis": {
-            "locked": "3.1.5"
+            "locked": "2.7.16"
         },
         "org.testcontainers:spock": {
             "locked": "1.18.3"
@@ -453,7 +453,7 @@
             "locked": "3.1.5"
         },
         "org.springframework.data:spring-data-redis": {
-            "locked": "3.1.5"
+            "locked": "2.7.16"
         },
         "org.testcontainers:spock": {
             "locked": "1.18.3"
