@@ -181,7 +181,8 @@ public class WorkflowExecutor {
     }
 
     public CompletableFuture<Workflow> executeWorkflow(ConductorWorkflow conductorWorkflow, Object input) {
-        String workflowId = this.startWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(), conductorWorkflow.toWorkflowDef(), input);
+        String workflowId = this.startWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(),
+                conductorWorkflow.toWorkflowDef(), input);
         CompletableFuture<Workflow> future = new CompletableFuture<>();
         runningWorkflowFutures.put(workflowId, future);
         return future;
