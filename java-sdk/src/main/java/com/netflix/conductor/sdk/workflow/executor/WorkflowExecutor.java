@@ -12,16 +12,8 @@
  */
 package com.netflix.conductor.sdk.workflow.executor;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.netflix.conductor.client.http.MetadataClient;
 import com.netflix.conductor.client.http.TaskClient;
 import com.netflix.conductor.client.http.WorkflowClient;
@@ -34,12 +26,18 @@ import com.netflix.conductor.sdk.workflow.def.ConductorWorkflow;
 import com.netflix.conductor.sdk.workflow.def.tasks.*;
 import com.netflix.conductor.sdk.workflow.executor.task.AnnotatedWorkerExecutor;
 import com.netflix.conductor.sdk.workflow.utils.ObjectMapperProvider;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.ClientFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 public class WorkflowExecutor {
 
@@ -154,7 +152,8 @@ public class WorkflowExecutor {
         annotatedWorkerExecutor.initWorkers(packagesToScan);
     }
 
-    private String startWorkflow(String name, Integer version, WorkflowDef workflowDef, Object input) {
+    private String startWorkflow(
+            String name, Integer version, WorkflowDef workflowDef, Object input) {
         Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
 
         StartWorkflowRequest request = new StartWorkflowRequest();
@@ -180,9 +179,14 @@ public class WorkflowExecutor {
         return future;
     }
 
-    public CompletableFuture<Workflow> executeWorkflow(ConductorWorkflow conductorWorkflow, Object input) {
-        String workflowId = this.startWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(),
-                conductorWorkflow.toWorkflowDef(), input);
+    public CompletableFuture<Workflow> executeWorkflow(
+            ConductorWorkflow conductorWorkflow, Object input) {
+        String workflowId =
+                this.startWorkflow(
+                        conductorWorkflow.getName(),
+                        conductorWorkflow.getVersion(),
+                        conductorWorkflow.toWorkflowDef(),
+                        input);
         CompletableFuture<Workflow> future = new CompletableFuture<>();
         runningWorkflowFutures.put(workflowId, future);
         return future;
