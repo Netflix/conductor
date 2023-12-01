@@ -154,7 +154,7 @@ public class WorkflowExecutor {
         annotatedWorkerExecutor.initWorkers(packagesToScan);
     }
 
-    private String doExecuteWorkflow(String name, Integer version, WorkflowDef workflowDef, Object input) {
+    private String startWorkflow(String name, Integer version, WorkflowDef workflowDef, Object input) {
         CompletableFuture<Workflow> future = new CompletableFuture<>();
         Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
 
@@ -167,21 +167,20 @@ public class WorkflowExecutor {
         return workflowClient.startWorkflow(request);
     }
 
-    public String executeWorkflow(String name, Integer version, Object input) {
-        String workflowId = this.doExecuteWorkflow(name, version, input);
+    public String executeWorkflowFuture(String name, Integer version, Object input) {
+        String workflowId = this.startWorkflow(name, version, input);
         runningWorkflowFutures.put(workflowId, future);
         return workflowId;
     }
 
     public CompletableFuture<Workflow> executeWorkflow(String name, Integer version, Object input) {
-        String workflowId = this.doExecuteWorkflow(name, version, input);
+        String workflowId = this.startWorkflow(name, version, input);
         runningWorkflowFutures.put(workflowId, future);
         return future;
     }
 
-    public CompletableFuture<Workflow> executeWorkflow(
-            ConductorWorkflow conductorWorkflow, Object input) {
-        String workflowId = this.doExecuteWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(), conductorWorkflow.toWorkflowDef(), input);
+    public CompletableFuture<Workflow> executeWorkflow(ConductorWorkflow conductorWorkflow, Object input) {
+        String workflowId = this.startWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(), conductorWorkflow.toWorkflowDef(), input);
         runningWorkflowFutures.put(workflowId, future);
         return future;
     }
