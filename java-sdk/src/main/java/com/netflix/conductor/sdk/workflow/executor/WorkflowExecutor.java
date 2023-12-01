@@ -154,7 +154,7 @@ public class WorkflowExecutor {
         annotatedWorkerExecutor.initWorkers(packagesToScan);
     }
 
-    public CompletableFuture<Workflow> executeWorkflow(String name, Integer version, Object input) {
+    private String doExecuteWorkflow(String name, Integer version, WorkflowDef workflowDef, Object input) {
         CompletableFuture<Workflow> future = new CompletableFuture<>();
         Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
 
@@ -162,28 +162,27 @@ public class WorkflowExecutor {
         request.setInput(inputMap);
         request.setName(name);
         request.setVersion(version);
+        request.setWorkflowDef(conductorWorkflow.toWorkflowDef());
 
-        String workflowId = workflowClient.startWorkflow(request);
+        return workflowClient.startWorkflow(request);
+    }
+
+    public String executeWorkflow(String name, Integer version, Object input) {
+        String workflowId = this.doExecuteWorkflow(name, version, input);
+        runningWorkflowFutures.put(workflowId, future);
+        return workflowId;
+    }
+
+    public CompletableFuture<Workflow> executeWorkflow(String name, Integer version, Object input) {
+        String workflowId = this.doExecuteWorkflow(name, version, input);
         runningWorkflowFutures.put(workflowId, future);
         return future;
     }
 
     public CompletableFuture<Workflow> executeWorkflow(
             ConductorWorkflow conductorWorkflow, Object input) {
-
-        CompletableFuture<Workflow> future = new CompletableFuture<>();
-
-        Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
-
-        StartWorkflowRequest request = new StartWorkflowRequest();
-        request.setInput(inputMap);
-        request.setName(conductorWorkflow.getName());
-        request.setVersion(conductorWorkflow.getVersion());
-        request.setWorkflowDef(conductorWorkflow.toWorkflowDef());
-
-        String workflowId = workflowClient.startWorkflow(request);
+        String workflowId = this.doExecuteWorkflow(conductorWorkflow.getName(), conductorWorkflow.getVersion(), conductorWorkflow.toWorkflowDef(), input);
         runningWorkflowFutures.put(workflowId, future);
-
         return future;
     }
 
