@@ -26,6 +26,10 @@ public class TaskUtils {
 
     public static String removeIterationFromTaskRefName(String referenceTaskName) {
         String[] tokens = referenceTaskName.split(TaskUtils.LOOP_TASK_DELIMITER);
-        return tokens.length > 0 ? tokens[0] : referenceTaskName;
+        int length = tokens.length;
+        return length > 1 ? String.join(
+                TaskUtils.LOOP_TASK_DELIMITER,
+                Arrays.copyOf(tokens, length - 1)
+        ) : referenceTaskName;
     }
 }
