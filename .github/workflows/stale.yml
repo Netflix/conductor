@@ -1,8 +1,9 @@
 name: Close stale issues and pull requests
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches-ignore:
+      - '**'
 
 permissions:
   contents: read
