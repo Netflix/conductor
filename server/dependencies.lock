@@ -503,26 +503,26 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-services": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.orkes.queues:orkes-conductor-queues": {
             "locked": "1.0.3"
@@ -1165,26 +1165,26 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-services": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.orkes.queues:orkes-conductor-queues": {
             "locked": "1.0.3"
@@ -1518,13 +1518,13 @@
             "project": true
         },
         "io.grpc:grpc-protobuf": {
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-stub": {
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.orkes.queues:orkes-conductor-queues": {
             "locked": "1.0.3"
@@ -1967,29 +1967,29 @@
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-protobuf": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc",
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-services": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc-server"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-stub": {
             "firstLevelTransitive": [
                 "com.netflix.conductor:conductor-grpc"
             ],
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.grpc:grpc-testing": {
-            "locked": "1.57.2"
+            "locked": "1.59.1"
         },
         "io.orkes.queues:orkes-conductor-queues": {
             "locked": "1.0.3"

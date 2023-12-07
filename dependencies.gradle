@@ -29,7 +29,7 @@ ext {
     revEurekaClient = '1.10.10'
     revFasterXml = '2.15.3'
     revGroovy = '3.0.19'
-    revGrpc = '1.57.+'
+    revGrpc = '1.59.1'
     revGuava = '32.1.2-jre'
     revHamcrestAllMatchers = '1.8'
     revHealth = '1.1.+'
