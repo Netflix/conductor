@@ -211,8 +211,7 @@ class WorkflowAndTaskConfigurationSpec extends AbstractSpecification {
         and: "Ensure that the workflow is in completed state"
         with(workflowExecutionService.getExecutionStatus(workflowInstanceId, true)) {
             status == Workflow.WorkflowStatus.FAILED
-            reasonForIncompletion == "Task ${tasks[0].taskId} failed with status: FAILED and reason: 'NETWORK ERROR'. " +
-                    "Task ${tasks[1].taskId} failed with status: FAILED and reason: 'NETWORK ERROR'"
+            reasonForIncompletion == "Task ${tasks[1].taskId} failed with status: FAILED and reason: 'NETWORK ERROR'"
             tasks.size() == 3
             tasks[2].status == Task.Status.COMPLETED
             tasks[2].taskType == 'integration_task_2'
