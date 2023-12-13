@@ -12,6 +12,8 @@
  */
 package com.netflix.conductor.common.utils;
 
+import java.util.Arrays;
+
 public class TaskUtils {
 
     private static final String LOOP_TASK_DELIMITER = "__";
@@ -26,6 +28,25 @@ public class TaskUtils {
 
     public static String removeIterationFromTaskRefName(String referenceTaskName) {
         String[] tokens = referenceTaskName.split(TaskUtils.LOOP_TASK_DELIMITER);
-        return tokens.length > 0 ? tokens[0] : referenceTaskName;
+        int length = tokens.length;
+
+        // Check if the last element is an integer
+        if (length > 1 && isInteger(tokens[length - 1])) {
+            // Join all elements except the last one
+            return String.join(TaskUtils.LOOP_TASK_DELIMITER, Arrays.copyOf(tokens, length - 1));
+        } else {
+            // No integer at the end, return the original string
+            return referenceTaskName;
+        }
+    }
+
+    // Helper method to check if a string is an integer
+    private static boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 }
