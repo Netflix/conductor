@@ -15,7 +15,6 @@
 [![GitHub forks](https://img.shields.io/github/forks/Netflix/conductor.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/Netflix/conductor/network/)
 
 Conductor is a platform created by Netflix to orchestrate workflows that span across microservices.
-Conductor is maintained by Media Workflow Infrastructure team at Netflix.
 
 ## Releases
 The final release is [![Github release](https://img.shields.io/github/v/release/Netflix/conductor.svg)](https://GitHub.com/Netflix/conductor/releases)
