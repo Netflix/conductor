@@ -37,13 +37,15 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.apache.logging.log4j:log4j-web'
+    implementation "redis.clients:jedis:${revJedis}"
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation "io.orkes.queues:orkes-conductor-queues:${revOrkesQueues}"
 
     implementation "org.springdoc:springdoc-openapi-ui:${revOpenapi}"
 
     runtimeOnly "org.glassfish.jaxb:jaxb-runtime:${revJAXB}"
+
+    implementation "io.orkes.queues:orkes-conductor-queues:${revOrkesQueues}"
 
     testImplementation project(':conductor-rest')
     testImplementation project(':conductor-common')

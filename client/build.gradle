@@ -20,7 +20,7 @@ dependencies {
 
     implementation project(':conductor-common')
     implementation "com.sun.jersey:jersey-client:${revJersey}"
-    implementation "javax.ws.rs:javax.ws.rs-api:${revJAXRS}"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${revJAXRS}"
     implementation "org.glassfish.jersey.core:jersey-common:${revJerseyCommon}"
 
     implementation "com.netflix.spectator:spectator-api:${revSpectator}"
@@ -35,12 +35,10 @@ dependencies {
     implementation "org.apache.commons:commons-lang3"
     implementation "commons-io:commons-io:${revCommonsIo}"
 
-    implementation "org.slf4j:slf4j-api"
-
     testImplementation "org.powermock:powermock-module-junit4:${revPowerMock}"
     testImplementation "org.powermock:powermock-api-mockito2:${revPowerMock}"
 
-    testImplementation "org.codehaus.groovy:groovy-all:${revGroovy}"
+    testImplementation "org.apache.groovy:groovy-all:${revGroovy}"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"
 }

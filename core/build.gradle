@@ -43,10 +43,12 @@ dependencies {
 
     implementation "org.openjdk.nashorn:nashorn-core:15.4"
 
+    implementation "org.slf4j:slf4j-api:${revSlf4j}"
+
     // JAXB is not bundled with Java 11, dependencies added explicitly
     // These are needed by Apache BVAL
     implementation "jakarta.xml.bind:jakarta.xml.bind-api:${revJAXB}"
-    implementation "jakarta.activation:jakarta.activation-api:${revActivation}"
+    implementation "jakarta.activation:jakarta.activation-api:${revJakartaAnnotation}"
 
     // Only add it as a test dependency. The actual jaxb runtime provider is provided when building the server.
     testImplementation "org.glassfish.jaxb:jaxb-runtime:${revJAXB}"
@@ -55,7 +57,7 @@ dependencies {
     testImplementation 'org.springframework.retry:spring-retry'
     testImplementation project(':conductor-common').sourceSets.test.output
 
-    testImplementation "org.codehaus.groovy:groovy-all:${revGroovy}"
+    testImplementation "org.apache.groovy:groovy-all:${revGroovy}"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"
     testImplementation "org.junit.vintage:junit-vintage-engine"

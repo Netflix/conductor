@@ -28,16 +28,16 @@ dependencies {
     testImplementation "redis.clients:jedis:${revJedis}"
     testImplementation "com.netflix.dyno-queues:dyno-queues-redis:${revDynoQueues}"
 
-    testImplementation "org.codehaus.groovy:groovy-all:${revGroovy}"
+    testImplementation "org.apache.groovy:groovy-all:${revGroovy}"
     testImplementation "org.spockframework:spock-core:${revSpock}"
     testImplementation "org.spockframework:spock-spring:${revSpock}"
 
-    testImplementation "org.elasticsearch.client:elasticsearch-rest-client"
-    testImplementation "org.elasticsearch.client:elasticsearch-rest-high-level-client"
+    testImplementation "org.elasticsearch.client:elasticsearch-rest-client:${revElasticSearch6}"
+    testImplementation "org.elasticsearch.client:elasticsearch-rest-high-level-client:${revElasticSearch6}"
 
     testImplementation "org.testcontainers:elasticsearch:${revTestContainer}"
     testImplementation('junit:junit:4.13.2')
     testImplementation "org.junit.vintage:junit-vintage-engine"
-    testImplementation "javax.ws.rs:javax.ws.rs-api:${revJAXRS}"
+    testImplementation "jakarta.ws.rs:jakarta.ws.rs-api:${revJAXRS}"
     testImplementation "org.glassfish.jersey.core:jersey-common:${revJerseyCommon}"
 }

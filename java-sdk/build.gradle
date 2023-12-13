@@ -9,7 +9,7 @@ dependencies {
     implementation "com.google.guava:guava:${revGuava}"
     implementation "cglib:cglib:3.3.0"
     implementation "com.sun.jersey:jersey-client:${revJersey}"
-    implementation "javax.ws.rs:javax.ws.rs-api:${revJAXRS}"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${revJAXRS}"
     implementation "org.glassfish.jersey.core:jersey-common:${revJerseyCommon}"
     implementation "org.openjdk.nashorn:nashorn-core:15.4"
 
@@ -20,7 +20,7 @@ dependencies {
     testImplementation "com.fasterxml.jackson.core:jackson-core:${revFasterXml}"
     testImplementation "org.apache.commons:commons-lang3"
 
-    testImplementation "org.codehaus.groovy:groovy-all:${revGroovy}"
+    testImplementation "org.apache.groovy:groovy-all:${revGroovy}"
 
 }
 
