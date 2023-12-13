@@ -8,6 +8,7 @@
 
 
 # Conductor
+[![NetflixOSS Lifecycle](https://img.shields.io/osslifecycle/Netflix/conductor.svg)]()
 [![Github release](https://img.shields.io/github/v/release/Netflix/conductor.svg)](https://GitHub.com/Netflix/conductor/releases)
 [![License](https://img.shields.io/github/license/Netflix/conductor.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -18,8 +19,6 @@ Conductor is a platform created by Netflix to orchestrate workflows that span ac
 
 ## Releases
 The final release is [![Github release](https://img.shields.io/github/v/release/Netflix/conductor.svg)](https://GitHub.com/Netflix/conductor/releases)
-
-[2.31.8](https://github.com/Netflix/conductor/releases/tag/v2.31.8) is the **final** release of `2.31` branch. As of Feb 2022, `1.x` & `2.x` versions are no longer supported.
 
 ## Workflow Creation in Code
 Conductor supports creating workflows using JSON and Code.  
