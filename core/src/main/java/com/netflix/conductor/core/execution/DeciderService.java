@@ -264,6 +264,16 @@ public class DeciderService {
                             .filter(t -> t.getWorkflowTask() != null)
                             .filter(t -> PERMISSIVE.name().equals(t.getWorkflowTask().getType()))
                             .filter(t -> !t.getWorkflowTask().isOptional())
+                            .collect(
+                                    Collectors.toMap(
+                                            TaskModel::getReferenceTaskName,
+                                            t -> t,
+                                            (t1, t2) ->
+                                                    t1.getRetryCount() > t2.getRetryCount()
+                                                            ? t1
+                                                            : t2))
+                            .values()
+                            .stream()
                             .filter(
                                     t ->
                                             t.getStatus().isTerminal()
