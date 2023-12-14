@@ -154,36 +154,43 @@ public class WorkflowExecutor {
         annotatedWorkerExecutor.initWorkers(packagesToScan);
     }
 
-    public CompletableFuture<Workflow> executeWorkflow(String name, Integer version, Object input) {
-        CompletableFuture<Workflow> future = new CompletableFuture<>();
+    private String startWorkflow(
+            String name, Integer version, WorkflowDef workflowDef, Object input) {
         Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
 
         StartWorkflowRequest request = new StartWorkflowRequest();
         request.setInput(inputMap);
         request.setName(name);
         request.setVersion(version);
+        request.setWorkflowDef(workflowDef);
 
-        String workflowId = workflowClient.startWorkflow(request);
+        return workflowClient.startWorkflow(request);
+    }
+
+    public String executeWorkflowFuture(String name, Integer version, Object input) {
+        String workflowId = this.startWorkflow(name, version, null, input);
+        CompletableFuture<Workflow> future = new CompletableFuture<>();
+        runningWorkflowFutures.put(workflowId, future);
+        return workflowId;
+    }
+
+    public CompletableFuture<Workflow> executeWorkflow(String name, Integer version, Object input) {
+        String workflowId = this.startWorkflow(name, version, null, input);
+        CompletableFuture<Workflow> future = new CompletableFuture<>();
         runningWorkflowFutures.put(workflowId, future);
         return future;
     }
 
     public CompletableFuture<Workflow> executeWorkflow(
             ConductorWorkflow conductorWorkflow, Object input) {
-
+        String workflowId =
+                this.startWorkflow(
+                        conductorWorkflow.getName(),
+                        conductorWorkflow.getVersion(),
+                        conductorWorkflow.toWorkflowDef(),
+                        input);
         CompletableFuture<Workflow> future = new CompletableFuture<>();
-
-        Map<String, Object> inputMap = objectMapper.convertValue(input, Map.class);
-
-        StartWorkflowRequest request = new StartWorkflowRequest();
-        request.setInput(inputMap);
-        request.setName(conductorWorkflow.getName());
-        request.setVersion(conductorWorkflow.getVersion());
-        request.setWorkflowDef(conductorWorkflow.toWorkflowDef());
-
-        String workflowId = workflowClient.startWorkflow(request);
         runningWorkflowFutures.put(workflowId, future);
-
         return future;
     }
 
