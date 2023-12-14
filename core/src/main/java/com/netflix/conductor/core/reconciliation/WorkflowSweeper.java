@@ -149,9 +149,13 @@ public class WorkflowSweeper {
                         postponeDurationSeconds = taskDef.getPollTimeoutSeconds() + 1;
                     } else {
                         postponeDurationSeconds =
-                                (workflowModel.getWorkflowDefinition().getTimeoutSeconds() != 0)
-                                        ? workflowModel.getWorkflowDefinition().getTimeoutSeconds()
-                                                + 1
+                                workflowModel.getWorkflowDefinition().getTimeoutSeconds();
+                        if (postponeDurationSeconds > taskModel.getResponseTimeoutSeconds()) {
+                            postponeDurationSeconds = taskModel.getResponseTimeoutSeconds();
+                        }
+                        postponeDurationSeconds =
+                                (postponeDurationSeconds != 0)
+                                        ? postponeDurationSeconds + 1
                                         : workflowOffsetTimeout;
                     }
                 } else {
